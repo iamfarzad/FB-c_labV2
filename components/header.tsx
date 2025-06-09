@@ -60,11 +60,11 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
 
   const headerBg =
     theme === "dark"
-      ? "bg-[var(--color-gunmetal)]/95 border-[var(--color-gunmetal-lighter)]"
-      : "bg-white/95 border-[var(--color-light-silver-darker)]"
+      ? "bg-[var(--color-gunmetal)] border-[var(--color-gunmetal-lighter)]"
+      : "bg-white border-[var(--color-light-silver-darker)]"
 
   const textColor = theme === "dark" ? "text-[var(--color-light-silver)]" : "text-[var(--color-gunmetal)]"
-  const mutedTextColor = theme === "dark" ? "text-[var(--color-light-silver)]/70" : "text-[var(--color-gunmetal)]/70"
+  const mutedTextColor = theme === "dark" ? "text-[var(--color-light-silver)]/90" : "text-[var(--color-gunmetal)]/90"
 
   return (
     <header className={`sticky top-0 z-50 glassmorphism ${headerBg} border-b backdrop-blur-xl`}>

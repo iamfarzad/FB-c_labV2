@@ -21,19 +21,20 @@ export default function HomePage() {
   return (
     <Layout theme={theme} onThemeToggle={toggleTheme}>
       <div
+        className="relative"
         style={{
           backgroundColor: "var(--bg-primary)",
           color: "var(--text-primary)",
         }}
       >
         {/* Hero Section */}
-        <HeroSection theme={theme} />
+        <HeroSection theme={theme} onStartChat={() => window.location.href = '/chat'} />
 
         {/* Features Section */}
         <FeaturesSection theme={theme} />
 
         {/* CTA Section */}
-        <CTASection theme={theme} />
+        <CTASection theme={theme} onStartChat={() => window.location.href = '/chat'} />
       </div>
     </Layout>
   )

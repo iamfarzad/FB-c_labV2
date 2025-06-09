@@ -54,7 +54,7 @@ export const CodeRenderer: React.FC<CodeRendererProps> = ({ data, theme, classNa
           {data.filename && (
             <>
               <span className="text-[var(--text-primary)]/50">•</span>
-              <span className="text-sm text-[var(--text-primary)]/70">{data.filename}</span>
+              <span className="text-sm text-[var(--text-primary)]/90">{data.filename}</span>
             </>
           )}
         </div>

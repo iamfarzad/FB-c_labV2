@@ -79,7 +79,7 @@ export const VideoLearningCard: React.FC<VideoLearningCardProps> = ({
       <div className="p-4 space-y-3">
         <div>
           <h4 className={`font-medium ${textColor} line-clamp-2`}>{videoTitle || "YouTube Video"}</h4>
-          <p className={`text-sm ${textColor} opacity-70 mt-1`}>Generate an interactive learning app from this video</p>
+          <p className={`text-sm ${textColor} opacity-90 mt-1`}>Generate an interactive learning app from this video</p>
         </div>
 
         {/* Actions */}

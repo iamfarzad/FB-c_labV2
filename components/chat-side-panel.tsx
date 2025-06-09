@@ -76,7 +76,7 @@ export const ChatSidePanel: React.FC<ChatSidePanelProps> = ({
       : "bg-white/95 border-[var(--color-light-silver-darker)]"
 
   const textColor = theme === "dark" ? "text-[var(--color-light-silver)]" : "text-[var(--color-gunmetal)]"
-  const mutedTextColor = theme === "dark" ? "text-[var(--color-light-silver)]/70" : "text-[var(--color-gunmetal)]/70"
+  const mutedTextColor = theme === "dark" ? "text-[var(--color-light-silver)]/90" : "text-[var(--color-gunmetal)]/90"
   const cardBg =
     theme === "dark"
       ? "bg-[var(--color-gunmetal-lighter)]/50 border-[var(--color-gunmetal-lighter)]"
@@ -108,8 +108,8 @@ export const ChatSidePanel: React.FC<ChatSidePanelProps> = ({
             onClick={onClose}
             className={`p-2 rounded-xl glassmorphism hover:surface-glow transition-all duration-300 ${
               theme === "dark"
-                ? "text-[var(--color-light-silver)]/70 hover:text-[var(--color-light-silver)]"
-                : "text-[var(--color-gunmetal)]/70 hover:text-[var(--color-gunmetal)]"
+                        ? "text-[var(--color-light-silver)]/90 hover:text-[var(--color-light-silver)]"
+        : "text-[var(--color-gunmetal)]/90 hover:text-[var(--color-gunmetal)]"
             } focus:outline-none focus:ring-2 focus:ring-[var(--color-orange-accent)]/30 group`}
             aria-label="Close side panel"
           >

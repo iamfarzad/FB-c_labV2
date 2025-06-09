@@ -9,7 +9,7 @@ interface FeaturesSectionProps {
 
 export const FeaturesSection: React.FC<FeaturesSectionProps> = ({ theme }) => {
   const textColor = theme === "dark" ? "text-[var(--color-light-silver)]" : "text-[var(--color-gunmetal)]"
-  const mutedTextColor = theme === "dark" ? "text-[var(--color-light-silver)]/70" : "text-[var(--color-gunmetal)]/70"
+  const mutedTextColor = theme === "dark" ? "text-[var(--color-light-silver)]/90" : "text-[var(--color-gunmetal)]/90"
 
   const features = [
     {

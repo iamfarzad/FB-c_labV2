@@ -80,7 +80,7 @@ export const DynamicDataRenderer: React.FC<DynamicDataRendererProps> = ({
                 </div>
                 <div>
                   <h3 className="font-medium text-[var(--text-primary)]">{item.filename}</h3>
-                  <p className="text-sm text-[var(--text-primary)]/70">
+                  <p className="text-sm text-[var(--text-primary)]/90">
                     {(item.size / 1024).toFixed(1)} KB • {item.mimeType}
                   </p>
                 </div>

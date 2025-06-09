@@ -1,19 +1,49 @@
 "use client"
 
 import type React from "react"
-import { Inter } from "next/font/google"
+import { useState, useEffect } from "react"
+import { Rajdhani, Space_Mono } from "next/font/google"
+import { WarpBackground } from "@/components/magicui/warp-background"
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"] })
+const rajdhani = Rajdhani({ 
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-rajdhani"
+})
+
+const spaceMono = Space_Mono({ 
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-space-mono"
+})
 
 export default function ClientLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const [theme, setTheme] = useState<"light" | "dark">("light")
+
+  useEffect(() => {
+    // Detect system theme preference
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    setTheme(mediaQuery.matches ? "dark" : "light")
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      setTheme(e.matches ? "dark" : "light")
+    }
+    
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
+
+  const gridColor = theme === "dark" ? "rgba(211, 219, 221, 0.4)" : "rgba(35, 48, 56, 0.4)"
+
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${rajdhani.variable} ${spaceMono.variable} font-tech relative`}>
+
         <style jsx global>{`
           :root {
             --color-orange-accent: #FF5B04;
@@ -37,8 +67,8 @@ export default function ClientLayout({
             --bg-primary: var(--color-gunmetal);
             --bg-secondary: var(--color-gunmetal-lighter);
             --text-primary: var(--color-light-silver);
-            --glass-bg: var(--color-gunmetal-light-alpha);
-            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-bg: rgba(35, 48, 56, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.25);
             --chat-bubble-ai: var(--color-gunmetal-lighter);
             --chat-bubble-system: var(--color-orange-accent-light);
             --chat-bubble-system-text: var(--color-gunmetal);
@@ -49,8 +79,8 @@ export default function ClientLayout({
             --bg-primary: var(--color-light-silver);
             --bg-secondary: #FFFFFF;
             --text-primary: var(--color-gunmetal);
-            --glass-bg: var(--color-light-silver-dark-alpha);
-            --glass-border: rgba(0, 0, 0, 0.08);
+            --glass-bg: rgba(211, 219, 221, 0.7);
+            --glass-border: rgba(0, 0, 0, 0.15);
             --chat-bubble-ai: #FFFFFF;
             --chat-bubble-system: var(--color-orange-accent-light);
             --chat-bubble-system-text: var(--color-gunmetal);
@@ -59,10 +89,10 @@ export default function ClientLayout({
           
           .glassmorphism {
             background: var(--glass-bg);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            backdrop-filter: blur(24px) saturate(200%);
+            -webkit-backdrop-filter: blur(24px) saturate(200%);
             border: 1px solid var(--glass-border);
-            box-shadow: var(--shadow-soft);
+            box-shadow: var(--shadow-soft), 0 0 40px rgba(255, 255, 255, 0.1);
             position: relative;
           }
           
@@ -73,7 +103,7 @@ export default function ClientLayout({
             left: 0;
             right: 0;
             bottom: 0;
-            background: var(--gradient-glass);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 100%);
             border-radius: inherit;
             pointer-events: none;
             z-index: -1;
@@ -221,7 +251,9 @@ export default function ClientLayout({
             animation: shimmer 1.5s ease-out;
           }
         `}</style>
-        {children}
+        <div className="relative z-20">
+          {children}
+        </div>
       </body>
     </html>
   )

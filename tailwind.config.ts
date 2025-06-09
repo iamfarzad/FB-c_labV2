@@ -10,6 +10,22 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			'sans': ['var(--font-rajdhani)', 'Rajdhani', 'system-ui', 'sans-serif'],
+  			'mono': ['var(--font-space-mono)', 'Space Mono', 'monospace'],
+  			'tech': ['var(--font-rajdhani)', 'Rajdhani', 'sans-serif'],
+  			'tech-mono': ['var(--font-space-mono)', 'Space Mono', 'monospace'],
+  		},
+  		letterSpacing: {
+  			'tight': '-0.025em',
+  			'normal': '0.05em',
+  			'wide': '0.1em',
+  			'tech': '0.05em',
+  			'tech-wide': '0.1em',
+  		},
+  		transitionDuration: {
+  			'DEFAULT': '200ms',
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
@@ -63,9 +79,15 @@ const config: Config = {
   			}
   		},
   		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			'DEFAULT': '2px',
+  			'sm': '1px',
+  			'md': '2px', 
+  			'lg': '4px',
+  			'xl': '6px',
+  			'2xl': '8px',
+  			'3xl': '12px',
+  			'full': '9999px',
+  			'none': '0px'
   		},
   		keyframes: {
   			'accordion-down': {

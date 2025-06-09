@@ -47,7 +47,7 @@ export const LinkRenderer: React.FC<LinkRendererProps> = ({ data, theme, classNa
           </div>
 
           {data.description && (
-            <p className="text-sm text-[var(--text-primary)]/70 mt-2 line-clamp-3">{data.description}</p>
+            <p className="text-sm text-[var(--text-primary)]/90 mt-2 line-clamp-3">{data.description}</p>
           )}
 
           {data.domain && (

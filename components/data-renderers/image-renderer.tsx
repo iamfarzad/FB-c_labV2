@@ -37,7 +37,7 @@ export const ImageRenderer: React.FC<ImageRendererProps> = ({ data, theme, class
     return (
       <div className={`p-4 glassmorphism rounded-xl text-center ${className}`}>
         <div className="text-red-400 mb-2">Failed to load image</div>
-        <div className="text-sm text-[var(--text-primary)]/70">{data.url}</div>
+        <div className="text-sm text-[var(--text-primary)]/90">{data.url}</div>
       </div>
     )
   }

@@ -174,7 +174,7 @@ export const VideoLearningModal: React.FC<VideoLearningModalProps> = ({ isOpen, 
             </div>
             <div>
               <h2 className={`text-xl font-bold ${textColor} gradient-text`}>Video Learning Generator</h2>
-              <p className={`text-sm ${textColor} opacity-70`}>
+              <p className={`text-sm ${textColor} opacity-90`}>
                 Generate interactive learning apps from YouTube videos
               </p>
             </div>
@@ -291,7 +291,7 @@ export const VideoLearningModal: React.FC<VideoLearningModalProps> = ({ isOpen, 
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
                   <Play size={48} className="text-[var(--color-orange-accent)] mx-auto mb-4 opacity-50" />
-                  <p className={`${textColor} opacity-70`}>Enter a YouTube URL to generate learning content</p>
+                  <p className={`${textColor} opacity-90`}>Enter a YouTube URL to generate learning content</p>
                 </div>
               </div>
             )}
