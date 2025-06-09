@@ -1,0 +1,68 @@
+[
+  {
+    "title": "Welcome to F.B/c AI",
+    "url": "/examples/welcome",
+    "spec": "Get started with your AI assistant",
+    "code": "console.log('Welcome to F.B/c AI - Your intelligent companion!')",
+    "description": "Learn how to interact with F.B/c AI using voice, text, and vision capabilities.",
+    "category": "general",
+    "tags": ["introduction", "getting-started"],
+    "difficulty": "beginner",
+    "estimatedTime": "2 minutes"
+  },
+  {
+    "title": "Image Analysis",
+    "url": "/examples/vision",
+    "spec": "Analyze images with AI vision",
+    "code": "// Upload an image and ask F.B/c AI to describe what it sees\n// The AI can identify objects, people, text, and scenes",
+    "description": "Use the camera or upload images for AI-powered visual analysis and description.",
+    "category": "vision",
+    "tags": ["computer-vision", "image-analysis", "object-detection"],
+    "difficulty": "beginner",
+    "estimatedTime": "3 minutes"
+  },
+  {
+    "title": "Voice Conversation",
+    "url": "/examples/voice",
+    "spec": "Talk naturally with AI",
+    "code": "// Click the microphone button and speak\n// F.B/c AI will respond with both text and voice",
+    "description": "Experience natural voice conversations with speech recognition and text-to-speech.",
+    "category": "audio",
+    "tags": ["speech-recognition", "voice-chat", "tts"],
+    "difficulty": "beginner",
+    "estimatedTime": "5 minutes"
+  },
+  {
+    "title": "Creative Writing",
+    "url": "/examples/creative",
+    "spec": "Generate creative content",
+    "code": "// Ask F.B/c AI to write stories, poems, or creative content\n// Use the brainstorm tool for idea generation",
+    "description": "Collaborate with AI on creative writing projects, stories, and brainstorming sessions.",
+    "category": "creative",
+    "tags": ["creative-writing", "storytelling", "brainstorming"],
+    "difficulty": "intermediate",
+    "estimatedTime": "10 minutes"
+  },
+  {
+    "title": "Research Assistant",
+    "url": "/examples/research",
+    "spec": "Deep research and analysis",
+    "code": "// Use the deep research tool for comprehensive analysis\n// Generate summaries and insights from conversations",
+    "description": "Leverage AI for research, analysis, and generating comprehensive reports on any topic.",
+    "category": "text",
+    "tags": ["research", "analysis", "summarization"],
+    "difficulty": "intermediate",
+    "estimatedTime": "15 minutes"
+  },
+  {
+    "title": "Multi-modal Interaction",
+    "url": "/examples/multimodal",
+    "spec": "Combine voice, vision, and text",
+    "code": "// Use camera + voice + text simultaneously\n// F.B/c AI can process multiple input types at once",
+    "description": "Experience advanced multi-modal AI interactions combining voice, vision, and text inputs.",
+    "category": "general",
+    "tags": ["multimodal", "advanced", "integration"],
+    "difficulty": "advanced",
+    "estimatedTime": "20 minutes"
+  }
+]
