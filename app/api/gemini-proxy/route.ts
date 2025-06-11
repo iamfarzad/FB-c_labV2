@@ -7,14 +7,14 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-// Map model names to their latest versions
+// Map model names to Gemini 2.0 Flash - a single model for all tasks
+// https://ai.google.dev/gemini-api/docs/models#live-api
 const MODEL_MAP = {
-  // Text and general purpose
-  'gemini-pro': 'gemini-2.0-flash-001',  // Stable version
-  // Image and vision tasks
-  'gemini-pro-vision': 'gemini-2.0-flash-preview-image-generation',
-  // Chat and conversation
-  'gemini-chat': 'gemini-2.0-flash-001',
+  // Single model for all tasks
+  'gemini-pro': 'gemini-2.0-flash',
+  'gemini-pro-vision': 'gemini-2.0-flash',
+  'gemini-chat': 'gemini-2.0-flash',
+  'gemini-image': 'gemini-2.0-flash',
 } as const;
 
 // Convert role to Gemini's expected role format
@@ -97,32 +97,44 @@ export async function POST(req: NextRequest) {
             topK: 32,
             maxOutputTokens: 4096,
           },
-          // Safety settings for image generation
-          safetySettings: [
-            {
-              category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-              threshold: HarmBlockThreshold.BLOCK_NONE,
-            },
-            {
-              category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-              threshold: HarmBlockThreshold.BLOCK_NONE,
-            },
-            {
-              category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-              threshold: HarmBlockThreshold.BLOCK_NONE,
-            },
-            {
-              category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-              threshold: HarmBlockThreshold.BLOCK_NONE,
-            },
-          ],
         });
-        
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-        
-        return NextResponse.json({ text });
+
+        try {
+          // For Gemini 2.0 Flash, we use generateContentStream with a detailed, positive prompt
+          const enhancedPrompt = `Create a detailed, professional illustration of a modern, ethical AI research laboratory. 
+            Show a bright, clean space with:
+            - Researchers collaborating at high-tech workstations
+            - Holographic displays showing data visualizations
+            - Advanced but approachable robotics
+            - Natural light and green spaces
+            - A focus on human-AI collaboration
+            Style: Digital illustration, futuristic but realistic, vibrant colors, highly detailed
+            Mood: Innovative, positive, and inspiring
+            Context: ${prompt}`;
+
+          const result = await model.generateContentStream([
+            { text: enhancedPrompt },
+          ]);
+
+          // Collect the response chunks
+          let response = '';
+          for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            response += chunkText;
+          }
+          
+          return NextResponse.json({ text: response });
+        } catch (error: any) {
+          console.error('Error generating image:', error);
+          return NextResponse.json(
+            { 
+              error: 'Failed to generate image', 
+              details: error.message,
+              stack: error.stack 
+            },
+            { status: 500 }
+          );
+        }
       }
 
       case 'summarizeChat': {

@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const FALLBACK_MODEL_NAME = 'gemini-1.5-pro-latest';
+const FALLBACK_MODEL_NAME = 'gemini-2.0-flash-001';
 
 interface Part {
   text?: string;

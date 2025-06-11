@@ -83,13 +83,21 @@ export async function POST(req: Request) {
     }
 
     console.log('Content generated successfully');
-    const stream = createStreamingResponse(text);
+    
+    // Create a simple streaming response that sends the full text in one chunk
+    const stream = new ReadableStream({
+      start(controller) {
+        // Send the text as a single chunk
+        controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content: text })}\n\n`));
+        controller.close();
+      }
+    });
 
     return new Response(stream, {
       headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
       },
     });
   } catch (error: any) {
