@@ -166,7 +166,7 @@ importers:
         version: 2.5.5
       tailwindcss-animate:
         specifier: ^1.0.7
-        version: 1.0.7(tailwindcss@3.4.17(ts-node@10.9.1(@types/node@22.0.0)(typescript@5.0.2)))
+        version: 1.0.7(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@22.0.0)(typescript@5.0.2)))
       vaul:
         specifier: ^0.9.6
         version: 0.9.6(@types/react-dom@18.0.0)(@types/react@18.0.0)(react-dom@18.0.0(react@18.0.0))(react@18.0.0)
@@ -174,6 +174,9 @@ importers:
         specifier: ^3.24.1
         version: 3.24.1
     devDependencies:
+      '@types/dotenv':
+        specifier: ^8.2.3
+        version: 8.2.3
       '@types/node':
         specifier: ^22
         version: 22.0.0
@@ -183,12 +186,18 @@ importers:
       '@types/react-dom':
         specifier: ^18
         version: 18.0.0
+      dotenv:
+        specifier: ^16.5.0
+        version: 16.5.0
       postcss:
         specifier: ^8.5
         version: 8.5.0
       tailwindcss:
         specifier: ^3.4.17
-        version: 3.4.17(ts-node@10.9.1(@types/node@22.0.0)(typescript@5.0.2))
+        version: 3.4.17(ts-node@10.9.2(@types/node@22.0.0)(typescript@5.0.2))
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@types/node@22.0.0)(typescript@5.0.2)
       typescript:
         specifier: ^5
         version: 5.0.2
@@ -1344,6 +1353,10 @@ packages:
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
+  '@types/dotenv@8.2.3':
+    resolution: {integrity: sha512-g2FXjlDX/cYuc5CiQvyU/6kkbP1JtmGzh0obW50zD7OKeILVL0NSpPWLXVfqoAGQjom2/SLLx9zHq0KXvD6mbw==}
+    deprecated: This is a stub types definition. dotenv provides its own type definitions, so you do not need this installed.
+
   '@types/estree@1.0.7':
     resolution: {integrity: sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ==}
 
@@ -1750,6 +1763,10 @@ packages:
 
   dom-helpers@5.2.1:
     resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
+
+  dotenv@16.5.0:
+    resolution: {integrity: sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==}
+    engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -2890,6 +2907,20 @@ packages:
 
   ts-node@10.9.1:
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
+    hasBin: true
+    peerDependencies:
+      '@swc/core': '>=1.2.50'
+      '@swc/wasm': '>=1.2.50'
+      '@types/node': '*'
+      typescript: '>=2.7'
+    peerDependenciesMeta:
+      '@swc/core':
+        optional: true
+      '@swc/wasm':
+        optional: true
+
+  ts-node@10.9.2:
+    resolution: {integrity: sha512-f0FFpIdcHgn8zcPSbf1dRevwt047YMnaiJM3u2w2RewrB+fob/zePZcrOyQoLMMO7aBIddLcQIEK5dYjkLnGrQ==}
     hasBin: true
     peerDependencies:
       '@swc/core': '>=1.2.50'
@@ -4178,6 +4209,10 @@ snapshots:
 
   '@types/deep-eql@4.0.2': {}
 
+  '@types/dotenv@8.2.3':
+    dependencies:
+      dotenv: 16.5.0
+
   '@types/estree@1.0.7': {}
 
   '@types/estree@1.0.8': {}
@@ -4604,6 +4639,8 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.27.6
       csstype: 3.1.3
+
+  dotenv@16.5.0: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -5285,13 +5322,13 @@ snapshots:
       camelcase-css: 2.0.1
       postcss: 8.5.0
 
-  postcss-load-config@4.0.2(postcss@8.5.0)(ts-node@10.9.1(@types/node@22.0.0)(typescript@5.0.2)):
+  postcss-load-config@4.0.2(postcss@8.5.0)(ts-node@10.9.2(@types/node@22.0.0)(typescript@5.0.2)):
     dependencies:
       lilconfig: 3.1.3
       yaml: 2.8.0
     optionalDependencies:
       postcss: 8.5.0
-      ts-node: 10.9.1(@types/node@22.0.0)(typescript@5.0.2)
+      ts-node: 10.9.2(@types/node@22.0.0)(typescript@5.0.2)
 
   postcss-nested@6.2.0(postcss@8.5.0):
     dependencies:
@@ -5641,11 +5678,11 @@ snapshots:
 
   tailwind-merge@2.5.5: {}
 
-  tailwindcss-animate@1.0.7(tailwindcss@3.4.17(ts-node@10.9.1(@types/node@22.0.0)(typescript@5.0.2))):
+  tailwindcss-animate@1.0.7(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@22.0.0)(typescript@5.0.2))):
     dependencies:
-      tailwindcss: 3.4.17(ts-node@10.9.1(@types/node@22.0.0)(typescript@5.0.2))
+      tailwindcss: 3.4.17(ts-node@10.9.2(@types/node@22.0.0)(typescript@5.0.2))
 
-  tailwindcss@3.4.17(ts-node@10.9.1(@types/node@22.0.0)(typescript@5.0.2)):
+  tailwindcss@3.4.17(ts-node@10.9.2(@types/node@22.0.0)(typescript@5.0.2)):
     dependencies:
       '@alloc/quick-lru': 5.2.0
       arg: 5.0.2
@@ -5664,7 +5701,7 @@ snapshots:
       postcss: 8.5.0
       postcss-import: 15.1.0(postcss@8.5.0)
       postcss-js: 4.0.1(postcss@8.5.0)
-      postcss-load-config: 4.0.2(postcss@8.5.0)(ts-node@10.9.1(@types/node@22.0.0)(typescript@5.0.2))
+      postcss-load-config: 4.0.2(postcss@8.5.0)(ts-node@10.9.2(@types/node@22.0.0)(typescript@5.0.2))
       postcss-nested: 6.2.0(postcss@8.5.0)
       postcss-selector-parser: 6.1.2
       resolve: 1.22.10
@@ -5743,7 +5780,7 @@ snapshots:
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
 
-  ts-node@10.9.1(@types/node@22.0.0)(typescript@5.0.2):
+  ts-node@10.9.2(@types/node@22.0.0)(typescript@5.0.2):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
@@ -5760,7 +5797,6 @@ snapshots:
       typescript: 5.0.2
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
-    optional: true
 
   ts-toolbelt@6.15.5: {}
 
