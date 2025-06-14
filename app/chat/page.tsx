@@ -24,10 +24,15 @@ import {
   PanelRightOpen,
   PanelRightClose,
   ArrowLeft,
+  AlertCircle,
+  RefreshCw
 } from "lucide-react"
 import { VideoLearningModal } from "@/components/video-learning-modal"
 import { VideoLearningCard } from "@/components/video-learning-card"
 import Link from "next/link"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 
 interface ChatMessage {
   id: string
@@ -36,16 +41,55 @@ interface ChatMessage {
   timestamp: string
   imageUrl?: string
   dataItems?: DataItem[]
+  isError?: boolean
+  isWelcome?: boolean
 }
 
-export default function ChatPage() {
+// Main chat component with error boundary
+const ChatPageWithErrorBoundary = () => (
+  <ErrorBoundary
+    fallback={
+      <div className="flex flex-col items-center justify-center min-h-[80vh] p-6">
+        <Alert variant="destructive" className="max-w-2xl">
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle>Chat Unavailable</AlertTitle>
+          <AlertDescription>
+            We're having trouble loading the chat. This could be due to high demand or temporary service issues.
+            <div className="mt-4 flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Try Again
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/contact">Contact Support</a>
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      </div>
+    }
+  >
+    <ChatPage />
+  </ErrorBoundary>
+)
+
+// Main chat component
+function ChatPage() {
   // Theme state
   const [theme, setTheme] = useState<"light" | "dark">("light")
 
   // Chat state
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    // Try to load messages from session storage
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('chatMessages')
+      return saved ? JSON.parse(saved) : []
+    }
+    return []
+  })
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Tools menu state
   const [showToolsMenu, setShowToolsMenu] = useState(false)
@@ -56,10 +100,37 @@ export default function ChatPage() {
   const [aiVoiceState, setAiVoiceState] = useState<"listening" | "processing" | "idle" | "error">("idle")
 
   // Speech Recognition setup
-  const SpeechRecognition =
-    typeof window !== "undefined" ? window.SpeechRecognition || (window as any).webkitSpeechRecognition : null
-  const isSpeechSupported = !!SpeechRecognition
-  const recognition = useRef<any>(null)
+  const isSpeechSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+  const recognition = useRef<SpeechRecognition | null>(null);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if (isSpeechSupported && typeof window !== 'undefined') {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition.current = new SpeechRecognition();
+      recognition.current.continuous = false;
+      recognition.current.interimResults = false;
+      
+      recognition.current.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setCurrentTranscription(transcript);
+        setAiVoiceState('idle');
+      };
+      
+      recognition.current.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        setError('Error with speech recognition. Please try again.');
+        setAiVoiceState('error');
+      };
+    }
+    
+    return () => {
+      if (recognition.current) {
+        recognition.current.stop();
+      }
+    };
+  }, [isSpeechSupported]);
 
   // Speech Synthesis state
   const [audioQueue, setAudioQueue] = useState<string[]>([])
@@ -91,14 +162,55 @@ export default function ChatPage() {
   const [isGeneratingVideoApp, setIsGeneratingVideoApp] = useState(false)
 
   // Scroll to bottom
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, []);
 
+  // Handle initial query parameter
   useEffect(() => {
-    scrollToBottom()
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const query = params.get("q");
+      if (query) {
+        setInput(query);
+        // Remove the query parameter to avoid resubmission on refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } catch (error) {
+      console.error('Error handling query parameters:', error);
+    }
+  }, [])
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  // Auto-save messages to session storage
+  useEffect(() => {
+    if (messages.length > 0) {
+      sessionStorage.setItem('chatMessages', JSON.stringify(messages))
+    }
   }, [messages])
+
+  // Initial welcome message
+  useEffect(() => {
+    if (messages.length === 0) {
+      const welcomeMessage: ChatMessage = {
+        id: 'welcome-1',
+        role: 'assistant',
+        content: "Hi! I'm here to help you explore the power of AI. How can I assist you today?",
+        timestamp: new Date().toISOString(),
+        isWelcome: true
+      }
+      setMessages([welcomeMessage])
+    }
+  }, [])
 
   // Theme toggle
   const toggleTheme = () => {
@@ -314,22 +426,27 @@ export default function ChatPage() {
   }
 
   // Handle send message with Gemini API
-  const handleSendMessage = async () => {
-    const messageToSend = input.trim() || currentTranscription.trim()
-    if (messageToSend === "" && !isCameraActive) {
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const messageToSend = input.trim() || currentTranscription.trim();
+    
+    if (!messageToSend) {
       if (showVoiceModal) {
-        setShowVoiceModal(false)
-        setAiVoiceState("idle")
+        setShowVoiceModal(false);
+        setAiVoiceState("idle");
       }
-      return
+      return;
     }
+    
+    setError(null);
+    setIsLoading(true);
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
-      role: "user",
+      role: "user" as const,
       content: messageToSend,
       timestamp: new Date().toISOString(),
-    }
+    };
 
     setMessages((prev) => [...prev, userMessage])
     setInput("")
@@ -407,76 +524,32 @@ export default function ChatPage() {
       }
     } catch (error) {
       console.error("Error sending message:", error)
-      const errorDataItem = createDataItem("error", {
-        message: "Sorry, I encountered an error. Please try again.",
-      })
-
-      const errorMessage: ChatMessage = {
-        id: Date.now().toString(),
-        role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
-        timestamp: new Date().toISOString(),
-        dataItems: [errorDataItem],
-      }
-      setMessages((prev) => [...prev, errorMessage])
+      setError("Failed to send message. Please try again.")
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Handle tool clicks
-  const handleToolClick = async (toolName: string) => {
-    setShowToolsMenu(false)
-    const currentPrompt = input.trim() || "something generic"
-
-    let llmPrompt = ""
-
-    switch (toolName) {
-      case "search_web":
-        llmPrompt = `Act as a web search engine. Provide a concise summary of the top search results for "${currentPrompt}". Include 3-5 bullet points of key information.`
-        break
-      case "run_deep_research":
-        llmPrompt = `Perform a deep research on "${currentPrompt}". Provide a detailed, multi-paragraph overview with key findings, insights, and potential implications.`
-        break
-      case "think_longer":
-        llmPrompt = `Elaborate on the topic "${currentPrompt}" by providing a more detailed and expansive thought process. Break down the concept, discuss its nuances, and offer multiple perspectives.`
-        break
-      case "brainstorm_ideas":
-        llmPrompt = `Brainstorm 5-7 creative and distinct ideas related to "${currentPrompt}". Present them as a numbered list, with a brief explanation for each.`
-        break
-      default:
-        return
+  // Toggle voice input
+  const toggleVoiceInput = () => {
+    if (!isSpeechSupported || !recognition.current) {
+      setError("Speech recognition is not supported in your browser");
+      return;
     }
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: "user",
-      content: llmPrompt,
-      timestamp: new Date().toISOString(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-
-    // Trigger AI response
-    handleSendMessage()
-  }
-
-  // Microphone button handler
-  const handleMicButtonClick = () => {
-    if (!isSpeechSupported) return
-
-    if (aiVoiceState === "listening" || aiVoiceState === "processing") {
-      if (recognition.current) {
-        recognition.current.stop()
+    try {
+      if (aiVoiceState === "listening") {
+        recognition.current.stop();
+        setAiVoiceState("idle");
+      } else {
+        setAiVoiceState("listening");
+        setCurrentTranscription("");
+        recognition.current.start();
       }
-      setShowVoiceModal(false)
-      setAiVoiceState("idle")
-    } else {
-      setCurrentTranscription("")
-      setShowVoiceModal(true)
-      setAiVoiceState("listening")
-      recognition.current?.start()
+    } catch (error) {
+      console.error('Error with speech recognition:', error);
+      setError('Failed to access microphone. Please check permissions.');
+      setAiVoiceState('error');
     }
   }
 

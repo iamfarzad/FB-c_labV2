@@ -38,8 +38,10 @@ const config: Config = {
   				foreground: 'hsl(var(--popover-foreground))'
   			},
   			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
+  				DEFAULT: 'var(--color-orange-accent)',
+  				foreground: 'var(--color-text-on-orange)',
+  				hover: 'var(--color-orange-accent-hover)',
+  				light: 'var(--color-orange-accent-light)'
   			},
   			secondary: {
   				DEFAULT: 'hsl(var(--secondary))',
@@ -48,6 +50,39 @@ const config: Config = {
   			muted: {
   				DEFAULT: 'hsl(var(--muted))',
   				foreground: 'hsl(var(--muted-foreground))'
+  			},
+  			keyframes: {
+  				'fade-scale': {
+  					'0%': { 
+  						opacity: '0',
+  						transform: 'translateY(-50%) scale(0.95)'
+  					},
+  					'100%': { 
+  						opacity: '1',
+  						transform: 'translateY(-50%) scale(1)'
+  					}
+  				},
+  				'accordion-down': {
+  					from: {
+  						height: '0'
+  					},
+  					to: {
+  						height: 'var(--radix-accordion-content-height)'
+  					}
+  				},
+  				'accordion-up': {
+  					from: {
+  						height: 'var(--radix-accordion-content-height)'
+  					},
+  					to: {
+  						height: '0'
+  					}
+  				}
+  			},
+  			animation: {
+  				'fade-scale': 'fade-scale 0.2s ease-out',
+  				'accordion-down': 'accordion-down 0.2s ease-out',
+  				'accordion-up': 'accordion-up 0.2s ease-out'
   			},
   			accent: {
   				DEFAULT: 'hsl(var(--accent))',

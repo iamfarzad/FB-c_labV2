@@ -9,10 +9,10 @@ import { WarpBackground } from "./magicui/warp-background"
 
 interface HeroSectionProps {
   theme: "light" | "dark"
-  onStartChat: () => void
+  onStartChat?: () => void
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ theme, onStartChat }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ theme, onStartChat = () => {} }) => {
   const [isVisible, setIsVisible] = useState(false)
   const [currentFeature, setCurrentFeature] = useState(0)
 
