@@ -4,7 +4,15 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Sun, Moon, Globe, ChevronDown, Menu, X, MessageSquare } from "lucide-react"
+import { Sun, Moon, Globe, ChevronDown, Menu, X } from "lucide-react"
+import { HeroAsciiSphere } from "./magicui/hero-ascii-sphere"
+// Logo text
+const LogoText = () => (
+  <div className="flex flex-col">
+    <span className="text-xl font-bold leading-tight">F.B/c</span>
+    <span className="text-sm font-medium opacity-80">Consulting</span>
+  </div>
+)
 
 interface HeaderProps {
   theme: "light" | "dark"
@@ -27,7 +35,7 @@ const languages = [
 const navigationItems = [
   { name: "Home", href: "/" },
   { name: "About", href: "/about" },
-  { name: "Services", href: "/services" },
+  { name: "Consulting", href: "/consulting" },
   { name: "Workshop", href: "/workshop" },
   { name: "Contact", href: "/contact" },
 ]
@@ -71,15 +79,12 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-3">
-            <Link href="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <MessageSquare size={20} className="text-white" />
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-xl font-bold gradient-text">F.B/c AI</h1>
-                <p className={`text-xs ${mutedTextColor} -mt-1`}>Intelligent Assistant</p>
-              </div>
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 relative">
+              <HeroAsciiSphere />
+            </div>
+            <Link href="/">
+              <LogoText />
             </Link>
           </div>
 

@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import ClientLayout from "./ClientLayout"
 
 export const metadata: Metadata = {
-  title: "F.B/c AI - Personal Chat Assistant",
+  title: "F.B/c AI - Consulting",
   description: "A beautiful liquid glass AI chat interface with voice and vision capabilities",
     generator: 'v0.dev'
 }

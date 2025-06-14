@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { Layout } from "@/components/layout"
+import { AboutHero as HeroSection } from "@/components/about/hero-section"
+import { StorySection } from "@/components/about/story-section"
+import { WhySection } from "@/components/about/why-section"
+import { SkillsSection } from "@/components/about/skills-section"
+import { ProjectsSection } from "@/components/about/projects-section"
+import { TestimonialsSection } from "@/components/about/testimonials-section"
+import { CTASection as CtaSection } from "@/components/about/cta-section"
 
 export default function AboutPage() {
   const [theme, setTheme] = useState<"light" | "dark">("light")
@@ -17,37 +24,34 @@ export default function AboutPage() {
 
   return (
     <Layout theme={theme} onThemeToggle={toggleTheme}>
-      <div
-        className="min-h-screen py-20"
+      <div 
+        className="min-h-screen"
         style={{
           backgroundColor: "var(--bg-primary)",
           color: "var(--text-primary)",
+          paddingTop: '80px' // Adjust based on header height
         }}
       >
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center space-y-8">
-            <h1 className="text-4xl md:text-6xl font-bold gradient-text">About F.B/c AI</h1>
-            <p className="text-xl text-[var(--text-primary)] opacity-80 max-w-2xl mx-auto">
-              Learn about our mission, vision, and the team behind the intelligent assistant platform.
-            </p>
-          </div>
-
-          <div className="mt-16 space-y-12">
-            <div className="glassmorphism rounded-2xl p-8">
-              <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">Our Mission</h2>
-              <p className="text-[var(--text-primary)] opacity-80 leading-relaxed">
-                Content will be added here about the company mission and values.
-              </p>
-            </div>
-
-            <div className="glassmorphism rounded-2xl p-8">
-              <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">Our Team</h2>
-              <p className="text-[var(--text-primary)] opacity-80 leading-relaxed">
-                Content will be added here about the team members and their expertise.
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Hero Section */}
+        <HeroSection theme={theme} />
+        
+        {/* Story Section */}
+        <StorySection theme={theme} />
+        
+        {/* Why I Do This Work Section */}
+        <WhySection theme={theme} />
+        
+        {/* Skills Section */}
+        <SkillsSection theme={theme} />
+        
+        {/* Projects Section */}
+        <ProjectsSection theme={theme} />
+        
+        {/* Testimonials Section */}
+        <TestimonialsSection theme={theme} />
+        
+        {/* CTA Section */}
+        <CtaSection theme={theme} />
       </div>
     </Layout>
   )
