@@ -227,34 +227,26 @@ const ChatPage = () => {
   const startVideoProcessingActivity = (videoUrl: string, title: string) => { /* ... as implemented ... */ };
   const portGenerateImage = async (prompt: string) => { /* ... as implemented ... */ };
   const portHandleToolClick = async (toolName: string) => { /* ... as implemented ... */ };
-  const startCamera = async () => { /* ... as before ... */ };
-  const stopCamera = useCallback(() => { /* ... as before ... */ }, []);
-  const captureFrame = useCallback(() => { /* ... as before ... */ }, []);
-  const detectYouTubeUrl = (text: string): string | null => { /* ... as before ... */ };
-  const getVideoTitle = async (url: string): Promise<string> => { /* ... as before ... */ };
+  const startCamera = async () => { /* ... (rest of the function body remains unchanged) ... */ };
+  const stopCamera = useCallback(() => { /* ... (rest of the function body remains unchanged) ... */ }, []);
+  const captureFrame = useCallback(() => { /* ... (rest of the function body remains unchanged) ... */ }, []);
+  const detectYouTubeUrl = (text: string): string | null => { /* ... (rest of the function body remains unchanged) ... */ };
+  const getVideoTitle = async (url: string): Promise<string> => { /* ... (rest of the function body remains unchanged) ... */ };
   const toggleTheme = () => setTheme(prev => (prev === "light" ? "dark" : "light"));
 
-  const exportSummary = () => { // Renamed from handleDownloadTranscript and logic moved here
+  const exportSummary = () => {
     if (!messages || messages.length === 0) {
       console.warn("No messages to export for transcript.");
-      // Optionally, provide user feedback, e.g., using a toast notification system
-      // For now, a console warning is sufficient as per original plan.
       return;
     }
-
     const transcriptString = messages
       .map(message => {
         const senderName = message.type === "user" ? "User" : message.type === "ai" ? "AI" : "System";
-        // message.timestamp is already a string like "10:00 AM"
-        // If it were a Date object, message.timestamp.toLocaleString() would be appropriate.
         const time = message.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
         let contentText = "";
         if (typeof message.content === 'string') {
           contentText = message.content;
         } else if (message.content && typeof message.content === 'object') {
-          // Basic attempt to get text from a ReactNode if it has a 'text' prop or similar common patterns
-          // This is a simplistic approach and might need a more robust serialization for complex ReactNodes
           const nodeContent = message.content as any;
           if (nodeContent.props && typeof nodeContent.props.children === 'string') {
             contentText = nodeContent.props.children;
@@ -262,7 +254,6 @@ const ChatPage = () => {
              contentText = (message.content as any).text;
           } else {
             try {
-              // Fallback to JSON.stringify if no simple text representation is found
               contentText = JSON.stringify(message.content, null, 2);
             } catch (e) {
               contentText = "[Unsupported or circular content structure]";
@@ -277,10 +268,8 @@ const ChatPage = () => {
 
     if (!transcriptString.trim()) {
       console.warn("Generated transcript string is empty.");
-      // Optionally, inform the user
       return;
     }
-
     const blob = new Blob([transcriptString], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -292,14 +281,14 @@ const ChatPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleSendMessage = async (messageContent?: string) => { /* ... as before ... */ };
+  const handleSendMessage = async (messageContent?: string) => { /* ... (rest of the function body remains unchanged) ... */ };
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setInputValue(e.target.value);
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => { if (e.key === 'Enter' && !e.shiftKey && !isLoading) { e.preventDefault(); handleSendMessage(); } };
-  const handleMicButtonClick = () => { /* ... as before ... */ };
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => { /* ... as before ... */ };
-  const uploadOptions = [ /* ... as before ... */ ];
-  const quickTools = [ /* ... as before ... */ ];
-  const handleQuickToolSelect = (toolId: string) => { /* ... as before ... */ };
+  const handleMicButtonClick = () => { /* ... (rest of the function body remains unchanged) ... */ };
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => { /* ... (rest of the function body remains unchanged) ... */ };
+  const uploadOptions = [ /* ... (rest of the function body remains unchanged) ... */ ];
+  const quickTools = [ /* ... (rest of the function body remains unchanged) ... */ ];
+  const handleQuickToolSelect = (toolId: string) => { /* ... (rest of the function body remains unchanged) ... */ };
 
   return (
     <TooltipProvider>
@@ -328,7 +317,12 @@ const ChatPage = () => {
                 <TooltipContent>Download Transcript</TooltipContent>
               </Tooltip>
               <Button variant="ghost" size="icon" onClick={toggleTheme}> <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" /> <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" /> <span className="sr-only">Toggle theme</span> </Button>
-              <Button variant="ghost" size="icon" onClick={() => setShowSettings(!showSettings)}> <Settings2 className="h-5 w-5" /> <span className="sr-only">Settings</span> </Button>
+              {/*
+              <Button variant="ghost" size="icon" onClick={() => setShowSettings(!showSettings)}>
+                <Settings2 className="h-5 w-5" />
+                <span className="sr-only">Settings</span>
+              </Button>
+              */}
             </div>
           </header>
 
@@ -351,7 +345,6 @@ const ChatPage = () => {
                 <CardContent className="space-y-2">
                   <p className="text-sm text-muted-foreground">Session ID: <Badge variant="secondary">xyz-123-abc</Badge></p>
                   <p className="text-sm text-muted-foreground">Messages in session: {messages.length}</p>
-                  {/* Button removed from here */}
                 </CardContent>
               </Card>
             </aside>
