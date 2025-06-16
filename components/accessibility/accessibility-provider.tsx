@@ -81,7 +81,9 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     document.body.prepend(skipLink)
     
     return () => {
-      document.body.removeChild(skipLink)
+      if (skipLink && document.body.contains(skipLink)) {
+        document.body.removeChild(skipLink)
+      }
     }
   }, [])
 
