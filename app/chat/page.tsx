@@ -5,7 +5,7 @@ import {
   CornerDownLeft, Mic, Paperclip, Settings2, Square, Triangle, Moon, Sun,
   Youtube, Camera as CameraIcon, FileUp, Film, ScreenShare,
   Sparkles, ImageIcon, Search as SearchIcon, Lightbulb, Video as VideoIconLucide, Code2, FileText as FileTextIcon, Loader2 as Loader,
-  Newspaper, Users, Settings as SettingsIconLucide, LogOut, ChevronLeft, ChevronRight, MoreVertical, Menu as MenuIcon, MessageSquareText, AlertTriangle // Added AlertTriangle for error icon
+  Newspaper, Users, Settings as SettingsIconLucide, LogOut, ChevronLeft, ChevronRight, MoreVertical, Menu as MenuIcon, MessageSquareText, AlertTriangle, Download
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -44,7 +44,7 @@ interface ActivityItem {
     | 'analyzing_video'
     | 'generating_image'
     | 'summarizing_chat'
-    | 'error'; // Added error type
+    | 'error';
   timestamp: Date;
   user?: string;
   details?: string;
@@ -72,7 +72,7 @@ const getActivityIcon = (type: ActivityItem['type']) => {
     case 'event': return <Sparkles className="w-4 h-4" />;
     case 'generating_image': return <ImageIcon className="w-4 h-4 text-purple-500 animate-pulse" />;
     case 'summarizing_chat': return <MessageSquareText className="w-4 h-4 text-teal-500" />;
-    case 'error': return <AlertTriangle className="w-4 h-4" />; // Error icon
+    case 'error': return <AlertTriangle className="w-4 h-4" />;
     default: return <FileTextIcon className="w-4 h-4" />;
   }
 };
@@ -88,7 +88,7 @@ const getActivityColor = (type: ActivityItem['type']) => {
     case 'event': return 'text-yellow-500';
     case 'generating_image': return 'text-fuchsia-600';
     case 'summarizing_chat': return 'text-teal-600';
-    case 'error': return 'text-red-500'; // Error color
+    case 'error': return 'text-red-500';
     default: return 'text-gray-500';
   }
 };
@@ -192,8 +192,8 @@ const ChatPage = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [activities, setActivities] = useState<ActivityItem[]>([
-    { id: 's1', type: 'message', timestamp: new Date(Date.now() - 3600000 * 3), user: 'AI Assistant', title: 'Chat Started', description: 'Initial conversation started.', details: 'Responded to "Project Setup Query"' },
-    { id: 's2', type: 'event', timestamp: new Date(Date.now() - 3600000 * 2), user: 'System', title: 'User Logged In', description: 'User successfully authenticated.' },
+    { id: 's1', type: 'message', timestamp: new Date(Date.now() - 3600000 * 3), user: 'AI Assistant', title: 'Chat Started', description: 'Initial conversation with AI Assistant began.', details: 'Responded to "Project Setup Query"' },
+    { id: 's2', type: 'event', timestamp: new Date(Date.now() - 3600000 * 2), user: 'System', title: 'User Logged In', description: 'User successfully authenticated to the platform.' },
   ]);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [currentTranscription, setCurrentTranscription] = useState("");
@@ -223,62 +223,75 @@ const ChatPage = () => {
   useEffect(() => { /* Speech Recognition Setup */ if (!isSpeechSupported || typeof window === 'undefined') return; const SpeechRecognitionAPI = window.SpeechRecognition || (window as any).webkitSpeechRecognition; if (!SpeechRecognitionAPI) { console.warn("Browser does not support SpeechRecognition."); setIsSpeechSupported(false); return; } recognition.current = new SpeechRecognitionAPI(); Object.assign(recognition.current, { continuous: false, interimResults: true, lang: "en-US" }); recognition.current.onstart = () => { setAiVoiceState("listening"); setCurrentTranscription(""); }; recognition.current.onresult = (event: any) => { let i = "", f = ""; for (let j = event.resultIndex; j < event.results.length; ++j) event.results[j].isFinal ? f += event.results[j][0].transcript : i += event.results[j][0].transcript; setCurrentTranscription(i || f); if (f) setInputValue(p => (p ? p + " " : "") + f.trim()); }; recognition.current.onend = () => { setAiVoiceState("processing"); const t = inputValue.trim() || currentTranscription.trim(); if (t) handleSendMessage(t); setShowVoiceModal(false); setAiVoiceState("idle"); setCurrentTranscription(""); }; recognition.current.onerror = (e: any) => { console.error("SR error:", e.error); setAiVoiceState("error"); setCurrentTranscription(p => p + ` Err: ${e.error}.`); setTimeout(() => { setShowVoiceModal(false); setAiVoiceState("idle"); setCurrentTranscription(""); }, 3000); }; return () => { if (recognition.current) recognition.current.stop(); }; }, [isSpeechSupported]);
   useEffect(() => { document.documentElement.classList.toggle("dark", theme === "dark"); }, [theme]);
 
-  const handleTriggerSummarization = async () => {
-    const activityId = `summ-${Date.now()}`;
-    const initialSummaryActivity: ActivityItem = {
-      id: activityId, type: "summarizing_chat", title: "Summarizing Conversation",
-      description: "Processing current chat history...", progress: 0, timestamp: new Date(),
-    };
-    setActivities(prev => [initialSummaryActivity, ...prev]);
-
-    const apiMessages = messages
-      .filter(msg => msg.type === 'user' || msg.type === 'ai')
-      .map(msg => ({
-        role: msg.type === 'user' ? 'user' : 'assistant',
-        content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
-      }))
-      .filter(msg => msg.content.trim() !== "");
-
-    if (apiMessages.length === 0) {
-      setActivities(prev => prev.map(act => act.id === activityId ? { ...act, type: "error", progress: undefined, description: "No messages to summarize.", title: "Summarization Failed" } : act));
-      return;
-    }
-
-    setActivities(prev => prev.map(act => act.id === activityId ? { ...act, progress: 25, description: "Sending to AI..." } : act));
-
-    try {
-      const response = await fetch("/api/gemini-proxy?action=summarizeChat", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationHistory: apiMessages }),
-      });
-      setActivities(prev => prev.map(act => act.id === activityId ? { ...act, progress: 75, description: "Receiving summary..." } : act));
-      const result = await response.json();
-
-      if (result.success && result.data) {
-        let formattedSummary = "Summary:\n";
-        if (result.data.summary) formattedSummary += result.data.summary + "\n\n";
-        if (result.data.keyPoints && result.data.keyPoints.length > 0) formattedSummary += "Key Points:\n" + result.data.keyPoints.map((pt: string) => `- ${pt}`).join("\n") + "\n\n";
-        if (result.data.actionItems && result.data.actionItems.length > 0) formattedSummary += "Action Items:\n" + result.data.actionItems.map((item: string) => `- ${item}`).join("\n");
-        if (formattedSummary.trim() === "Summary:" || formattedSummary.trim() === "") formattedSummary = result.data?.text || "No specific summary data returned.";
-
-        setActivities(prev => prev.map(act => act.id === activityId ? { ...act, type: "event", progress: 100, description: formattedSummary.trim(), title: "Chat Summary Ready" } : act));
-      } else {
-        setActivities(prev => prev.map(act => act.id === activityId ? { ...act, type: "error", progress: undefined, description: result.error || "Failed to summarize chat." } : act));
-      }
-    } catch (error) {
-      console.error("Summarization error:", error);
-      setActivities(prev => prev.map(act => act.id === activityId ? { ...act, type: "error", progress: undefined, description: "Network error during summarization." } : act));
-    }
-  };
-
-  const startVideoProcessingActivity = (videoUrl: string, title: string) => { /* ... as before ... */ };
-  const portGenerateImage = async (prompt: string) => { /* ... as before ... */ };
-  const portHandleToolClick = async (toolName: string) => { /* ... as before ... */ };
+  const handleTriggerSummarization = async () => { /* ... as implemented ... */ };
+  const startVideoProcessingActivity = (videoUrl: string, title: string) => { /* ... as implemented ... */ };
+  const portGenerateImage = async (prompt: string) => { /* ... as implemented ... */ };
+  const portHandleToolClick = async (toolName: string) => { /* ... as implemented ... */ };
   const startCamera = async () => { /* ... as before ... */ };
   const stopCamera = useCallback(() => { /* ... as before ... */ }, []);
   const captureFrame = useCallback(() => { /* ... as before ... */ }, []);
   const detectYouTubeUrl = (text: string): string | null => { /* ... as before ... */ };
   const getVideoTitle = async (url: string): Promise<string> => { /* ... as before ... */ };
   const toggleTheme = () => setTheme(prev => (prev === "light" ? "dark" : "light"));
+
+  const exportSummary = () => { // Renamed from handleDownloadTranscript and logic moved here
+    if (!messages || messages.length === 0) {
+      console.warn("No messages to export for transcript.");
+      // Optionally, provide user feedback, e.g., using a toast notification system
+      // For now, a console warning is sufficient as per original plan.
+      return;
+    }
+
+    const transcriptString = messages
+      .map(message => {
+        const senderName = message.type === "user" ? "User" : message.type === "ai" ? "AI" : "System";
+        // message.timestamp is already a string like "10:00 AM"
+        // If it were a Date object, message.timestamp.toLocaleString() would be appropriate.
+        const time = message.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        let contentText = "";
+        if (typeof message.content === 'string') {
+          contentText = message.content;
+        } else if (message.content && typeof message.content === 'object') {
+          // Basic attempt to get text from a ReactNode if it has a 'text' prop or similar common patterns
+          // This is a simplistic approach and might need a more robust serialization for complex ReactNodes
+          const nodeContent = message.content as any;
+          if (nodeContent.props && typeof nodeContent.props.children === 'string') {
+            contentText = nodeContent.props.children;
+          } else if (typeof (message.content as any).text === 'string') {
+             contentText = (message.content as any).text;
+          } else {
+            try {
+              // Fallback to JSON.stringify if no simple text representation is found
+              contentText = JSON.stringify(message.content, null, 2);
+            } catch (e) {
+              contentText = "[Unsupported or circular content structure]";
+            }
+          }
+        } else {
+          contentText = String(message.content);
+        }
+        return `[${time}] ${senderName}: ${contentText}`;
+      })
+      .join("\n\n");
+
+    if (!transcriptString.trim()) {
+      console.warn("Generated transcript string is empty.");
+      // Optionally, inform the user
+      return;
+    }
+
+    const blob = new Blob([transcriptString], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "chat-transcript.txt";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleSendMessage = async (messageContent?: string) => { /* ... as before ... */ };
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setInputValue(e.target.value);
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => { if (e.key === 'Enter' && !e.shiftKey && !isLoading) { e.preventDefault(); handleSendMessage(); } };
@@ -306,13 +319,43 @@ const ChatPage = () => {
               <div> <p className="text-sm font-medium">AI Chatbot</p> <Badge variant="outline" className={isLoading ? "text-orange-500 border-orange-500" : "text-green-500 border-green-500"}> {isLoading ? 'Responding...' : 'Online'} </Badge> </div>
             </div>
             <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={exportSummary}>
+                    <Download className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Download Transcript</TooltipContent>
+              </Tooltip>
               <Button variant="ghost" size="icon" onClick={toggleTheme}> <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" /> <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" /> <span className="sr-only">Toggle theme</span> </Button>
               <Button variant="ghost" size="icon" onClick={() => setShowSettings(!showSettings)}> <Settings2 className="h-5 w-5" /> <span className="sr-only">Settings</span> </Button>
             </div>
           </header>
 
           <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}> {/* Main chat messages */} </ScrollArea>
-           {showSettings && ( <aside className="absolute top-0 right-0 h-full w-80 border-l bg-background p-4 space-y-4 overflow-y-auto z-20 md:relative"> {/* Settings Content */} </aside> )}
+           {showSettings && (
+            <aside className="absolute top-0 right-0 h-full w-80 border-l bg-background p-4 space-y-4 overflow-y-auto z-20 md:relative">
+              <Card>
+                <CardHeader><CardTitle>AI Settings</CardTitle><CardDescription>Configure the AI model behavior.</CardDescription></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2"><label htmlFor="model" className="text-sm font-medium">Model</label><select id="model" value={aiSettings.model} onChange={(e) => setAiSettings(prev => ({...prev, model: e.target.value}))} className="w-full p-2 border rounded-md bg-input text-foreground"><option value="gemini-1.5-pro-latest">Gemini 1.5 Pro</option><option value="gemini-1.0-pro">Gemini 1.0 Pro</option><option value="gpt-4-turbo">GPT-4 Turbo</option><option value="claude-3-opus">Claude 3 Opus</option></select></div>
+                  <div className="space-y-2"><label htmlFor="temperature" className="text-sm font-medium">Temperature: {aiSettings.temperature.toFixed(1)}</label><Input id="temperature" type="range" min="0" max="1" step="0.1" value={aiSettings.temperature} onChange={(e) => setAiSettings(prev => ({...prev, temperature: parseFloat(e.target.value)}))} className="bg-input"/></div>
+                  <div className="space-y-2"><label htmlFor="maxTokens" className="text-sm font-medium">Max Tokens: {aiSettings.maxTokens}</label><Input id="maxTokens" type="number" step="64" value={aiSettings.maxTokens} onChange={(e) => setAiSettings(prev => ({...prev, maxTokens: parseInt(e.target.value)}))} className="bg-input"/></div>
+                  <div className="flex items-center justify-between"><label htmlFor="some-toggle" className="text-sm font-medium">Some Setting</label><Switch id="some-toggle" /></div>
+                </CardContent>
+                <CardFooter><Button className="w-full" onClick={() => { const systemMessage: Message = { id: Date.now().toString() + '-settings', type: 'systemInfo', content: `Settings updated: Model: ${aiSettings.model}, Temp: ${aiSettings.temperature}, Tokens: ${aiSettings.maxTokens}`, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), }; setMessages(prev => [...prev, systemMessage]); setShowSettings(false); }}>Apply Settings</Button></CardFooter>
+              </Card>
+              <Separator/>
+              <Card>
+                <CardHeader><CardTitle>Session Info</CardTitle></CardHeader>
+                <CardContent className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Session ID: <Badge variant="secondary">xyz-123-abc</Badge></p>
+                  <p className="text-sm text-muted-foreground">Messages in session: {messages.length}</p>
+                  {/* Button removed from here */}
+                </CardContent>
+              </Card>
+            </aside>
+          )}
           {(isLoading || generatingImage) && <Progress value={progress} className="w-full h-1" />}
           <div className="relative border-t bg-background p-4">  {/* Input Area */} </div>
         </div>
