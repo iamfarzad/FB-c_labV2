@@ -1,189 +1,282 @@
+'use client';
+
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-// Debounce helper function
-function debounce(fn: (...args: any[]) => void, ms: number) {
-  let timer: NodeJS.Timeout;
-  return (...args: any[]) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      timer = null as any;
-      fn.apply(this, args);
-    }, ms);
-  };
-}
-
-export const HeroBackground2 = () => {
+export default function HeroBackground2() {
   const mountRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number>();
 
   useEffect(() => {
     if (!mountRef.current) return;
-    
-    const currentMount = mountRef.current;
-    let scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer;
-    let plane: THREE.Mesh, clock: THREE.Clock, animationFrameId: number;
-    let mousePosition = { x: 0, y: 0 };
-    
-    const init = () => {
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0a0a0a);
-      scene.fog = new THREE.Fog(0x0a0a0a, 1, 20);
-      
-      clock = new THREE.Clock();
-      camera = new THREE.PerspectiveCamera(75, currentMount.clientWidth / currentMount.clientHeight, 0.1, 1000);
-      camera.position.set(0, 3, 5);
-      camera.lookAt(0, 0, 0);
 
-      renderer = new THREE.WebGLRenderer({ 
-        alpha: true, 
-        antialias: true,
-        powerPreference: "high-performance"
-      });
-      renderer.setSize(currentMount.clientWidth, currentMount.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      currentMount.appendChild(renderer.domElement);
+    const mount = mountRef.current;
+    const width = mount.clientWidth;
+    const height = mount.clientHeight;
 
-      // Enhanced wave plane with higher resolution
-      const planeGeometry = new THREE.PlaneGeometry(20, 20, 100, 100);
+    // Clean topographic scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a0a);
+
+    // Isometric camera for map-like view
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    camera.position.set(0, 25, 25);
+    camera.lookAt(0, 0, 0);
+
+    // Clean renderer
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true,
+      alpha: true
+    });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    mount.appendChild(renderer.domElement);
+
+    // Topographic contour lines
+    const contourLines: THREE.Line[] = [];
+    const elevationLevels = 8;
+    const mapSize = 20;
+
+    // Create elevation contours
+    for (let level = 0; level < elevationLevels; level++) {
+      const elevation = level * 0.5;
+      const radius = 2 + level * 1.5;
       
-      // Create gradient material
-      const planeMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-          time: { value: 0 },
-          mouse: { value: new THREE.Vector2(0, 0) },
-          color1: { value: new THREE.Color(0xff5b04) },
-          color2: { value: new THREE.Color(0x8b5cf6) },
-          color3: { value: new THREE.Color(0x06b6d4) }
-        },
-        vertexShader: `
-          uniform float time;
-          uniform vec2 mouse;
-          varying vec3 vPosition;
-          varying float vElevation;
-          
-          void main() {
-            vec4 modelPosition = modelMatrix * vec4(position, 1.0);
-            
-            // Multiple wave layers for complexity
-            float elevation = sin(modelPosition.x * 0.3 + time * 0.8) * 0.5;
-            elevation += sin(modelPosition.z * 0.4 + time * 1.2) * 0.3;
-            elevation += sin(modelPosition.x * 0.8 + modelPosition.z * 0.6 + time * 2.0) * 0.2;
-            
-            // Mouse interaction
-            float mouseInfluence = 1.0 - distance(modelPosition.xz, mouse * 10.0) * 0.1;
-            elevation += mouseInfluence * 0.5;
-            
-            modelPosition.y += elevation;
-            
-            vPosition = modelPosition.xyz;
-            vElevation = elevation;
-            
-            gl_Position = projectionMatrix * viewMatrix * modelPosition;
-          }
-        `,
-        fragmentShader: `
-          uniform vec3 color1;
-          uniform vec3 color2;
-          uniform vec3 color3;
-          varying vec3 vPosition;
-          varying float vElevation;
-          
-          void main() {
-            // Color based on elevation and position
-            vec3 color = mix(color1, color2, vElevation + 0.5);
-            color = mix(color, color3, abs(sin(vPosition.x * 0.1)) * 0.3);
-            
-            // Add some transparency based on elevation
-            float alpha = 0.6 + vElevation * 0.4;
-            
-            gl_FragColor = vec4(color, alpha);
-          }
-        `,
+      // Create contour ring
+      const points: THREE.Vector3[] = [];
+      const segments = 64;
+      
+      for (let i = 0; i <= segments; i++) {
+        const angle = (i / segments) * Math.PI * 2;
+        
+        // Add some organic variation to make it less perfect
+        const variation = Math.sin(angle * 3) * 0.3 + Math.cos(angle * 5) * 0.2;
+        const adjustedRadius = radius + variation;
+        
+        const x = Math.cos(angle) * adjustedRadius;
+        const z = Math.sin(angle) * adjustedRadius;
+        
+        points.push(new THREE.Vector3(x, elevation, z));
+      }
+      
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      
+      // Color based on elevation
+      let color, opacity;
+      if (level < 2) {
+        color = 0xff5b04; // Orange accent for low elevations
+        opacity = 0.9;
+      } else if (level < 5) {
+        color = 0xff8f6a; // Orange light for mid elevations
+        opacity = 0.7;
+      } else {
+        color = 0xf5f5f5; // Light silver for high elevations
+        opacity = 0.5;
+      }
+      
+      const material = new THREE.LineBasicMaterial({
+        color: color,
         transparent: true,
-        wireframe: false,
-        side: THREE.DoubleSide
+        opacity: opacity
       });
-
-      plane = new THREE.Mesh(planeGeometry, planeMaterial);
-      plane.rotation.x = -Math.PI / 2;
-      scene.add(plane);
-
-      // Add ambient lighting
-      const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
-      scene.add(ambientLight);
-
-      // Add point light that follows mouse
-      const pointLight = new THREE.PointLight(0xff5b04, 1, 10);
-      pointLight.position.set(0, 2, 0);
-      scene.add(pointLight);
       
-      window.addEventListener('resize', handleResize);
-      window.addEventListener('mousemove', handleMouseMove);
-    };
+      const line = new THREE.Line(geometry, material);
+      
+      // Store properties
+      (line as any).originalOpacity = opacity;
+      (line as any).elevation = elevation;
+      (line as any).level = level;
+      
+      scene.add(line);
+      contourLines.push(line);
+    }
+
+    // Grid reference lines
+    const gridLines: THREE.Line[] = [];
+    const gridSize = 15;
+    const gridSpacing = 2;
+    
+    // Horizontal grid lines
+    for (let i = -gridSize; i <= gridSize; i += gridSpacing) {
+      const points = [
+        new THREE.Vector3(-gridSize, 0, i),
+        new THREE.Vector3(gridSize, 0, i)
+      ];
+      
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const material = new THREE.LineBasicMaterial({
+        color: 0x2a2a2a,
+        transparent: true,
+        opacity: 0.2
+      });
+      
+      const line = new THREE.Line(geometry, material);
+      scene.add(line);
+      gridLines.push(line);
+    }
+    
+    // Vertical grid lines
+    for (let i = -gridSize; i <= gridSize; i += gridSpacing) {
+      const points = [
+        new THREE.Vector3(i, 0, -gridSize),
+        new THREE.Vector3(i, 0, gridSize)
+      ];
+      
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const material = new THREE.LineBasicMaterial({
+        color: 0x2a2a2a,
+        transparent: true,
+        opacity: 0.2
+      });
+      
+      const line = new THREE.Line(geometry, material);
+      scene.add(line);
+      gridLines.push(line);
+    }
+
+    // Elevation markers (small dots at peak points)
+    const markers: THREE.Mesh[] = [];
+    
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2;
+      const radius = 3 + Math.random() * 8;
+      
+      const geometry = new THREE.SphereGeometry(0.1, 8, 8);
+      const material = new THREE.MeshBasicMaterial({
+        color: 0xff5b04,
+        transparent: true,
+        opacity: 0.8
+      });
+      
+      const marker = new THREE.Mesh(geometry, material);
+      marker.position.set(
+        Math.cos(angle) * radius,
+        2 + Math.random() * 2,
+        Math.sin(angle) * radius
+      );
+      
+      scene.add(marker);
+      markers.push(marker);
+    }
+
+    // Mouse interaction
+    const mouse = { x: 0, y: 0 };
+    const targetMouse = { x: 0, y: 0 };
 
     const handleMouseMove = (event: MouseEvent) => {
-      mousePosition.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mousePosition.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      const rect = mount.getBoundingClientRect();
+      targetMouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      targetMouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     };
 
-    const animate = () => {
-      animationFrameId = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime();
-      
-      if (plane && plane.material instanceof THREE.ShaderMaterial) {
-        // Update shader uniforms
-        plane.material.uniforms.time.value = elapsedTime;
-        plane.material.uniforms.mouse.value.set(mousePosition.x, mousePosition.y);
-        
-        // Gentle rotation
-        plane.rotation.z = Math.sin(elapsedTime * 0.1) * 0.05;
-      }
+    let time = 0;
 
-      // Dynamic camera movement
-      camera.position.x = Math.sin(elapsedTime * 0.1) * 2;
-      camera.position.z = 5 + Math.cos(elapsedTime * 0.15) * 2;
+    // Topographic animation
+    const animate = () => {
+      animationRef.current = requestAnimationFrame(animate);
+      
+      time += 0.008;
+
+      // Smooth mouse interpolation
+      mouse.x += (targetMouse.x - mouse.x) * 0.03;
+      mouse.y += (targetMouse.y - mouse.y) * 0.03;
+
+      // Animate contour lines (subtle elevation changes)
+      contourLines.forEach((line, index) => {
+        const props = line as any;
+        
+        // Subtle breathing effect
+        const breathe = Math.sin(time * 0.5 + index * 0.3) * 0.1 + 0.9;
+        (line.material as THREE.LineBasicMaterial).opacity = props.originalOpacity * breathe;
+        
+        // Slight vertical movement to simulate data changes
+        const elevationShift = Math.sin(time * 0.3 + index * 0.5) * 0.1;
+        line.position.y = props.elevation + elevationShift;
+        
+        // Mouse proximity effect
+        const mouseWorldX = mouse.x * 15;
+        const mouseWorldZ = mouse.y * 15;
+        const distanceToMouse = Math.sqrt(mouseWorldX * mouseWorldX + mouseWorldZ * mouseWorldZ);
+        
+        if (distanceToMouse < 8) {
+          const influence = (8 - distanceToMouse) / 8;
+          (line.material as THREE.LineBasicMaterial).opacity = Math.min(1, props.originalOpacity + influence * 0.4);
+          line.position.y += influence * 0.5;
+        }
+      });
+
+      // Animate grid lines
+      gridLines.forEach((line, index) => {
+        const pulse = Math.sin(time * 1.5 + index * 0.1) * 0.1 + 0.9;
+        (line.material as THREE.LineBasicMaterial).opacity = 0.2 * pulse;
+      });
+
+      // Animate markers
+      markers.forEach((marker, index) => {
+        // Gentle floating
+        const float = Math.sin(time * 1.2 + index * 0.8) * 0.2;
+        marker.position.y += float * 0.01;
+        
+        // Pulsing
+        const pulse = Math.sin(time * 2 + index) * 0.3 + 0.7;
+        (marker.material as THREE.MeshBasicMaterial).opacity = 0.8 * pulse;
+      });
+
+      // Responsive camera movement
+      camera.position.x = mouse.x * 8;
+      camera.position.z = 25 + mouse.y * 5;
       camera.lookAt(0, 0, 0);
 
-      if (renderer && scene && camera) {
-        renderer.render(scene, camera);
-      }
+      renderer.render(scene, camera);
     };
 
-    const handleResize = debounce(() => {
-      if (!camera || !renderer) return;
+    // Handle resize
+    const handleResize = () => {
+      const width = mount.clientWidth;
+      const height = mount.clientHeight;
       
-      camera.aspect = currentMount.clientWidth / currentMount.clientHeight;
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      renderer.setSize(currentMount.clientWidth, currentMount.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    }, 150);
+      renderer.setSize(width, height);
+    };
 
-    init();
+    mount.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('resize', handleResize);
     animate();
 
     return () => {
+      mount.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(animationFrameId);
-      
-      if (currentMount && renderer) {
-        currentMount.removeChild(renderer.domElement);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      if (mount && renderer.domElement) {
+        mount.removeChild(renderer.domElement);
       }
       
       // Cleanup
-      if (plane) {
-        scene.remove(plane);
-        plane.geometry.dispose();
-        if (plane.material instanceof THREE.ShaderMaterial) {
-          plane.material.dispose();
-        }
-      }
+      [...contourLines, ...gridLines].forEach(line => {
+        line.geometry.dispose();
+        (line.material as THREE.Material).dispose();
+      });
+      
+      markers.forEach(marker => {
+        marker.geometry.dispose();
+        (marker.material as THREE.Material).dispose();
+      });
+      
       renderer.dispose();
     };
   }, []);
 
-  return <div ref={mountRef} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, backgroundColor: 'var(--bg-secondary)' }} />;
-};
-
-export default HeroBackground2;
+  return (
+    <div 
+      ref={mountRef} 
+      className="w-full h-full relative overflow-hidden"
+      style={{ 
+        minHeight: '400px',
+        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)'
+      }}
+    />
+  );
+}

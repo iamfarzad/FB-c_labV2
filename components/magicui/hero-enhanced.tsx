@@ -253,13 +253,13 @@ const HeroEnhanced: React.FC<HeroEnhancedProps> = ({ theme, onStartChat }) => {
                 background: theme === 'dark' 
                   ? 'linear-gradient(135deg, rgba(31, 41, 55, 0.4), rgba(17, 24, 39, 0.4))'
                   : 'linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(243, 244, 246, 0.4))',
-                }}
-                transition={{ 
-                  duration: 8, 
-                  repeat: Infinity, 
-                  ease: "easeInOut",
-                }}
-              />
+              }}
+              transition={{ 
+                duration: 8, 
+                repeat: Infinity, 
+                ease: "easeInOut",
+              }}
+            >
               <motion.div 
                 className="absolute -bottom-2 -left-2 w-4 h-4 rounded-full bg-secondary/50 backdrop-blur-sm"
                 animate={{ 

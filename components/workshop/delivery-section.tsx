@@ -25,11 +25,10 @@ export const DeliverySection: React.FC<DeliverySectionProps> = ({ theme }) => {
         "Lunch and refreshments included"
       ],
       details: [
-        { icon: <MapPin className="h-4 w-4" />, text: "Location: TBD (Central Berlin)" },
-        { icon: <Calendar className="h-4 w-4" />, text: "Date: June 25, 2024" },
-        { icon: <Clock className="h-4 w-4" />, text: "Time: 10:00 AM - 4:00 PM CET" },
+        { icon: <MapPin className="h-4 w-4" />, text: "Location: Central Berlin" },
         { icon: <Wifi className="h-4 w-4" />, text: "WiFi and power outlets provided" },
-        { icon: <Coffee className="h-4 w-4" />, text: "Lunch & refreshments included" }
+        { icon: <Coffee className="h-4 w-4" />, text: "Lunch & refreshments included" },
+        { icon: <Users className="h-4 w-4" />, text: "Limited class size for better learning" }
       ]
     },
     {
@@ -44,16 +43,15 @@ export const DeliverySection: React.FC<DeliverySectionProps> = ({ theme }) => {
       ],
       details: [
         { icon: <Monitor className="h-4 w-4" />, text: "Platform: Zoom (link provided after registration)" },
-        { icon: <Calendar className="h-4 w-4" />, text: "Date: June 25, 2024" },
-        { icon: <Clock className="h-4 w-4" />, text: "Time: 10:00 AM - 4:00 PM CET" },
         { icon: <MessageSquare className="h-4 w-4" />, text: "Slack community access included" },
-        { icon: <Video className="h-4 w-4" />, text: "Recordings available for 30 days" }
+        { icon: <Video className="h-4 w-4" />, text: "Session recordings included" },
+        { icon: <Users className="h-4 w-4" />, text: "Interactive Q&A with instructor" }
       ]
     },
     {
       title: "Self-Paced",
       icon: <Clock className="h-6 w-6 text-[var(--color-orange-accent)]" />,
-      description: "Access the workshop materials at your own pace with pre-recorded content.",
+      description: "Access the workshop materials at your own pace with comprehensive pre-recorded content.",
       features: [
         "Full workshop recordings",
         "Downloadable resources",
@@ -62,9 +60,9 @@ export const DeliverySection: React.FC<DeliverySectionProps> = ({ theme }) => {
       ],
       details: [
         { icon: <Monitor className="h-4 w-4" />, text: "Access: 24/7 through our learning portal" },
-        { icon: <Clock className="h-4 w-4" />, text: "Start anytime" },
         { icon: <MessageSquare className="h-4 w-4" />, text: "Email support" },
-        { icon: <Zap className="h-4 w-4" />, text: "Lifetime access to updates" }
+        { icon: <Zap className="h-4 w-4" />, text: "Lifetime access to all materials" },
+        { icon: <Users className="h-4 w-4" />, text: "Self-paced learning" }
       ]
     }
   ]

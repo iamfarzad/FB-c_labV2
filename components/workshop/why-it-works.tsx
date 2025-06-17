@@ -45,7 +45,7 @@ export const WhyItWorks: React.FC<WhyItWorksProps> = ({ theme }) => {
     {
       value: "85%",
       label: "Implementation Rate",
-      description: "of attendees implement at least one AI solution within 30 days"
+      description: "of attendees successfully implement AI solutions"
     },
     {
       value: "10x",
@@ -167,7 +167,7 @@ export const WhyItWorks: React.FC<WhyItWorksProps> = ({ theme }) => {
         <div className="text-center">
           <h3 className={`text-2xl font-bold ${textColor} mb-6`}>Ready to Transform Your Business with AI?</h3>
           <p className={`text-xl ${mutedTextColor} max-w-3xl mx-auto mb-8`}>
-            Join our next workshop and start implementing AI solutions that deliver real results.
+            Join our workshop and start implementing AI solutions that deliver real results.
           </p>
           <a 
             href="#register" 
@@ -179,7 +179,7 @@ export const WhyItWorks: React.FC<WhyItWorksProps> = ({ theme }) => {
             </svg>
           </a>
           <p className={`text-sm ${mutedTextColor} mt-4`}>
-            Limited seats available. Next workshop starts in <span className="font-semibold text-[var(--color-orange-accent)]">14 days</span>
+            Limited seats available for this exclusive workshop
           </p>
         </div>
       </div>

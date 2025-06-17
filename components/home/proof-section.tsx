@@ -23,35 +23,22 @@ const FunctionCard: React.FC<FunctionCardProps> = ({
   category,
   theme = 'light' 
 }) => {
-  const isDark = theme === 'dark';
-  
-  const categoryStyles = {
-    'AI Core': 'from-blue-500 to-blue-600',
-    'Development': 'from-purple-500 to-pink-600',
-    'Productivity': 'from-green-500 to-teal-600',
-    'Data': 'from-amber-500 to-orange-600',
-    'Security': 'from-rose-500 to-red-600',
-    'Collaboration': 'from-indigo-500 to-violet-600'
-  };
-
   return (
-    <div 
-      className={`relative p-6 rounded-2xl ${isDark ? 'bg-[var(--glass-bg)]' : 'bg-white'} ${isDark ? 'border-[var(--glass-border)]' : 'border-gray-200'} border backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 feature-card`}
-    >
+    <div className="card-minimal feature-card">
       <div className="flex items-start gap-4">
-        <div className={`p-3 rounded-lg bg-gradient-to-br ${categoryStyles[category as keyof typeof categoryStyles] || 'from-gray-500 to-gray-600'} text-white`}>
+        <div className="p-3 bg-orange text-white">
           {icon}
         </div>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${categoryStyles[category as keyof typeof categoryStyles] || 'bg-gray-100 text-gray-800'} bg-opacity-20`}>
+            <span className="text-caption text-orange">
               {category}
             </span>
           </div>
-          <h3 className={`text-lg font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <h3 className="text-heading mb-1">
             {title}
           </h3>
-          <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          <p className="text-body">
             {description}
           </p>
         </div>
@@ -61,10 +48,6 @@ const FunctionCard: React.FC<FunctionCardProps> = ({
 };
 
 export const ProofSection: React.FC<ProofSectionProps> = ({ theme }) => {
-  const textColor = theme === "dark" ? "text-[var(--color-light-silver)]" : "text-[var(--color-gunmetal)]"
-  const mutedTextColor = theme === "dark" ? "text-[var(--color-light-silver)]/90" : "text-[var(--color-gunmetal)]/90"
-  const cardBg = theme === "dark" ? "bg-[var(--glass-bg)]" : "bg-white"
-  const cardBorder = theme === "dark" ? "border-[var(--glass-border)]" : "border-gray-200"
 
   const functions = [
     {
@@ -121,30 +104,21 @@ export const ProofSection: React.FC<ProofSectionProps> = ({ theme }) => {
     : functions.filter(func => func.category === activeCategory)
 
   return (
-    <section className="relative py-24 overflow-hidden">
-      {/* Background gradient overlay */}
-      <div className="absolute inset-0 -z-10 opacity-5 dark:opacity-[0.03]">
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-orange-accent)]/5 to-transparent"></div>
-      </div>
+    <section className={`py-20 relative overflow-hidden ${theme === 'dark' ? 'dark bg-[var(--color-gunmetal)]' : 'light bg-[var(--color-light-silver)]'}`}>
+      {/* Background Pattern */}
+      <div className="absolute inset-0 dot-pattern opacity-30" />
       
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-[var(--color-orange-accent)]/5 rounded-full mix-blend-multiply filter blur-3xl opacity-70 dark:opacity-30 animate-blob"></div>
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-[var(--color-orange-accent-light)]/5 rounded-full mix-blend-multiply filter blur-3xl opacity-70 dark:opacity-30 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-[var(--color-orange-accent)]/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 dark:opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
-      
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="text-center mb-20 relative">
-          <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-48 h-1 bg-gradient-to-r from-transparent via-[var(--color-orange-accent)] to-transparent opacity-50 blur-sm"></div>
-          <h2 className={`text-4xl sm:text-5xl font-bold ${textColor} mb-6 relative inline-block`}>
-            See <span className="relative">
-              <span className="relative z-10">F.B/c AI</span>
-              <span className="absolute inset-0 bg-gradient-to-r from-[var(--color-orange-accent)] via-[var(--color-orange-accent-light)] to-[var(--color-orange-accent)] bg-clip-text text-transparent">F.B/c AI</span>
-            </span> in Action
+      <div className="process-container relative z-10">
+        {/* Header */}
+        <div className="process-header">
+          <div className="inline-flex items-center gap-2 process-subtitle">
+            <Sparkles className="h-4 w-4" />
+            F.B/c AI in Action
+          </div>
+          <h2 className="process-title">
+            See <span className="text-orange">F.B/c AI</span> in Action
           </h2>
-          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-[var(--color-orange-accent-light)] to-transparent opacity-50 blur-sm"></div>
-          <p className={`text-xl ${mutedTextColor} max-w-3xl mx-auto mt-8 leading-relaxed`}>
+          <p className="process-description">
             Every feature you see here is powered by the same AI I can build for your business. Try my assistant, upload a document, or ask for a custom solution—live.
           </p>
         </div>
@@ -156,10 +130,10 @@ export const ProofSection: React.FC<ProofSectionProps> = ({ theme }) => {
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-4 py-2 text-sm font-medium transition-all ${
                   activeCategory === category
-                    ? 'bg-[var(--color-orange-accent)] text-white'
-                    : `${theme === 'dark' ? 'bg-[var(--glass-bg)] text-gray-300 hover:bg-[var(--glass-bg-hover)]' : 'bg-white text-gray-700 hover:bg-gray-100'} border ${cardBorder}`
+                    ? 'btn-primary'
+                    : 'btn-secondary'
                 }`}
               >
                 {category}
@@ -167,7 +141,7 @@ export const ProofSection: React.FC<ProofSectionProps> = ({ theme }) => {
             ))}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid-minimal">
             {filteredFunctions.map((func, index) => (
               <FunctionCard
                 key={index}

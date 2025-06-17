@@ -19,15 +19,11 @@ export const WhatToExpect: React.FC<WhatToExpectProps> = ({ theme }) => {
       title: "Hands-on Learning",
       description: "Practical exercises to apply what you learn in real-time"
     },
-    {
-      icon: <Clock className="h-6 w-6 text-[var(--color-orange-accent)]" />,
-      title: "Time-Efficient",
-      description: "Condensed 6-hour format that fits your busy schedule"
-    },
+
     {
       icon: <Users className="h-6 w-6 text-[var(--color-orange-accent)]" />,
-      title: "Small Group Setting",
-      description: "Personalized attention with limited seats available"
+      title: "Interactive Learning",
+      description: "Engaging activities and personalized attention"
     },
     {
       icon: <Award className="h-6 w-6 text-[var(--color-orange-accent)]" />,
@@ -41,8 +37,8 @@ export const WhatToExpect: React.FC<WhatToExpectProps> = ({ theme }) => {
     },
     {
       icon: <CheckCircle className="h-6 w-6 text-[var(--color-orange-accent)]" />,
-      title: "30-Day Support",
-      description: "Continued access to resources and support after the workshop"
+      title: "Ongoing Support",
+      description: "Access to resources and support after the workshop"
     }
   ]
 
@@ -121,7 +117,7 @@ export const WhatToExpect: React.FC<WhatToExpectProps> = ({ theme }) => {
                 <div>
                   <h5 className={`font-medium ${textColor} mb-2`}>What&apos;s Included</h5>
                   <ul className="space-y-2">
-                    {["Workshop materials", "Digital certificate", "30-day support access", "Lunch & refreshments"].map((item, i) => (
+                    {["Workshop materials", "Digital certificate", "Support access", "Refreshments"].map((item, i) => (
                       <li key={i} className="flex items-center">
                         <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-orange-accent)] mr-2" />
                         <span className={mutedTextColor}>{item}</span>

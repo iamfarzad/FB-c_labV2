@@ -1,117 +1,224 @@
 "use client"
 
-import React from "react"
-import { ArrowRight, CheckCircle, Sparkles } from "lucide-react"
+import React, { useMemo } from "react"
+import { ArrowRight, CheckCircle, Sparkles, Award } from "lucide-react"
 import Link from "next/link"
+import { motion } from "framer-motion"
 import { SectionLayout } from "@/components/layouts/section-layout"
+import { HTMLMotionProps } from "framer-motion"
+
+interface SectionItem {
+  id: string
+  title: string
+  scrollOffset?: number
+}
+
+interface ReasonItem {
+  title: string
+  description: string
+  icon: React.ReactNode
+  id: string
+}
 
 interface WhyWorkWithMeProps {
   theme: "light" | "dark"
 }
 
-const sections: Array<{id: string, title: string, scrollOffset?: number}> = [
-  { id: 'why-work-with-me', title: 'Why Work With Me', scrollOffset: 0 }
+const SECTIONS: SectionItem[] = [
+  { 
+    id: 'why-work-with-me', 
+    title: 'Why Work With Me', 
+    scrollOffset: 0 
+  }
+]
+
+const REASONS: Omit<ReasonItem, 'id'>[] = [
+  {
+    title: "10,000+ Hours",
+    description: "Building cutting-edge AI solutions since 2020",
+    icon: <Sparkles className="h-6 w-6" aria-hidden="true" />
+  },
+  {
+    title: "Results First",
+    description: "Delivering real business impact, not just code",
+    icon: <Award className="h-6 w-6" aria-hidden="true" />
+  },
+  {
+    title: "Industry Veteran",
+    description: "Proven track record across multiple sectors",
+    icon: <CheckCircle className="h-6 w-6" aria-hidden="true" />
+  },
+  {
+    title: "Client Focused",
+    description: "Your success is my top priority",
+    icon: <CheckCircle className="h-6 w-6" aria-hidden="true" />
+  }
 ]
 
 export const WhyWorkWithMe: React.FC<WhyWorkWithMeProps> = ({ theme }) => {
-  const textColor = theme === "dark" ? "text-[var(--color-light-silver)]" : "text-[var(--color-gunmetal)]"
-  const mutedTextColor = theme === "dark" ? "text-[var(--color-light-silver)]/90" : "text-[var(--color-gunmetal)]/90"
-  const borderColor = theme === "dark" ? "border-[var(--glass-border)]" : "border-gray-200"
-  const cardBg = theme === "dark" ? "bg-[var(--color-gunmetal-lighter)]" : "bg-white"
-  const hoverBg = theme === "dark" ? "hover:bg-[var(--color-gunmetal-light-alpha)]" : "hover:bg-gray-50"
+  // Memoize derived values
+  const { textColor, mutedTextColor, borderColor, cardBg, hoverBg } = useMemo(() => ({
+    textColor: theme === "dark" ? "text-[var(--color-light-silver)]" : "text-[var(--color-gunmetal)]",
+    mutedTextColor: theme === "dark" ? "text-[var(--color-light-silver)]/90" : "text-[var(--color-gunmetal)]/80",
+    borderColor: theme === "dark" ? "border-[var(--glass-border)]" : "border-gray-200",
+    cardBg: theme === "dark" ? "bg-[var(--glass-bg)]" : "bg-white",
+    hoverBg: theme === "dark" ? "hover:bg-[var(--glass-hover)]" : "hover:bg-gray-50"
+  }), [theme])
 
-  const reasons = [
-    {
-      title: "Proven Expertise",
-      description: "10,000+ hours building practical AI solutions since 2020",
-      icon: <Sparkles className="h-6 w-6 text-[var(--color-orange-accent)]" />
-    },
-    {
-      title: "Results-Driven",
-      description: "Focus on real business outcomes, not just technology",
-      icon: <CheckCircle className="h-6 w-6 text-[var(--color-orange-accent)]" />
-    },
-    {
-      title: "Industry Experience",
-      description: "Hands-on experience across multiple industries and use cases",
-      icon: <CheckCircle className="h-6 w-6 text-[var(--color-orange-accent)]" />
-    },
-    {
-      title: "Track Record",
-      description: "Consistently delivering measurable results for clients",
-      icon: <CheckCircle className="h-6 w-6 text-[var(--color-orange-accent)]" />
-    }
-  ]
+  // Add unique IDs to reasons for better accessibility
+  const reasons = useMemo(() => 
+    REASONS.map((reason, index) => ({
+      ...reason,
+      id: `reason-${index}`
+    })),
+    []
+  )
 
   return (
     <SectionLayout 
-      sections={sections}
+      sections={SECTIONS}
       sideTextPosition="left"
-      className={`space-y-0 ${theme === 'dark' ? 'bg-[var(--color-gunmetal)]' : 'bg-[var(--color-light-silver)]'}`}
+      className={`relative overflow-hidden ${
+        theme === 'dark' 
+          ? 'bg-[var(--color-gunmetal)]' 
+          : 'bg-gradient-to-b from-[var(--color-light-silver)] to-white'
+      }`}
+      aria-label="Why work with me section"
     >
-      {/* Why Work With Me Section */}
-      <div id="why-work-with-me" className="min-h-screen flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 opacity-5">
-          <div 
-            className="absolute inset-0" 
-            style={{
-              backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ff5b04\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
-            }}
-          />
-        </div>
-          
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className={`grid md:grid-cols-2 gap-12 items-start ${borderColor} border-t pt-16`}>
-            <div className="space-y-6 relative">
-              <div className="inline-flex items-center px-4 py-2 rounded-sm bg-[var(--color-orange-accent)]/10 border border-[var(--color-orange-accent)]/30 relative overflow-hidden group">
-                <span className="absolute inset-0 bg-[var(--color-orange-accent)]/5 group-hover:bg-[var(--color-orange-accent)]/20 transition-all duration-300"></span>
-                <span className="relative text-sm font-mono text-[var(--color-orange-accent)] uppercase tracking-wider">Why Work With Me</span>
-              </div>
-                
-              <h2 className={`text-4xl sm:text-5xl font-bold ${textColor} leading-tight`}>
-                Why <span className="relative inline-block">
-                  <span className="relative z-10">Businesses Choose Me</span>
-                  <span className="absolute bottom-1 left-0 w-full h-3 bg-[var(--color-orange-accent)]/20 -z-0 transform -rotate-1"></span>
-                </span>
-              </h2>
-                
-              <p className={`text-lg ${mutedTextColor} max-w-lg relative`}>
-                I bring a unique combination of technical expertise and business acumen to deliver AI solutions that drive real impact.
-                <span className="absolute -left-6 top-0 h-full w-0.5 bg-gradient-to-b from-transparent via-[var(--color-orange-accent)] to-transparent"></span>
-              </p>
-            
-              <Link 
-                href="/about" 
-                className="group inline-flex items-center text-[var(--color-orange-accent)] hover:text-[var(--color-orange-accent-light)] transition-all duration-300 relative"
-              >
-                <span className="font-semibold relative before:content-[''] before:absolute before:w-0 before:h-0.5 before:bottom-0 before:left-0 before:bg-[var(--color-orange-accent-light)] before:transition-all before:duration-300 group-hover:before:w-full">
-                  See My Approach
-                </span>
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
+      {/* Background */}
+      <div className="absolute inset-0 -z-10">
+        {theme === 'dark' ? (
+          <>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(255,91,4,0.1),transparent_70%)]">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0di00aC0ydjRoLTR2Mmg0djRoMnYtNGg0di0yaC00em0wLTMwVjBoLTJ2NGgtNHYyaDR2NGgydi00aDRWNGgtNHptLTMwIDMwdjRoLTJ2NGgtNHYyaDR2NGgydjRoMnYtNGg0di0yaC00em0wLTMwVjBIMnY0SDB2Mmg0djRoMnYtNGg0VjRoLTR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
             </div>
-            
-            <div className="grid sm:grid-cols-2 gap-4">
-              {reasons.map((reason, index) => (
-                <div 
-                  key={index} 
-                  className={`p-8 rounded-lg ${cardBg} border ${borderColor} shadow-xl transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl ${hoverBg}`}
-                >
-                  <div className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 p-2 bg-[var(--color-orange-accent)]/10 rounded-full">
-                      {reason.icon}
-                    </div>
-                    <div>
-                      <h3 className={`text-xl font-semibold mb-2 ${textColor}`}>{reason.title}</h3>
-                      <p className={mutedTextColor}>{reason.description}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--color-gunmetal)] opacity-90" />
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-white via-[var(--color-light-silver)]/30 to-white" />
+        )}
       </div>
+
+      <section 
+        id="why-work-with-me" 
+        className={`relative py-20 md:py-32 px-4 sm:px-6 lg:px-8 ${theme === 'dark' ? 'text-white' : 'text-[var(--color-gunmetal)]'}`}
+        aria-labelledby="why-work-with-me-heading"
+      >
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-16 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="inline-block"
+            >
+              <span className={`inline-block px-4 py-2 text-sm font-mono rounded-full mb-6 tracking-wider ${theme === 'dark' 
+                ? 'bg-gradient-to-r from-[var(--color-orange-accent)] to-[#ff8c42] text-white' 
+                : 'bg-[var(--color-orange-accent)]/10 text-[var(--color-orange-accent)]'}`}>
+                WHY CHOOSE ME
+              </span>
+            </motion.div>
+            
+            <motion.h2 
+              id="why-work-with-me-heading"
+              className={`text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <span className={theme === 'dark' 
+                ? 'bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300' 
+                : 'text-[var(--color-gunmetal)]'}>
+                AI That
+              </span>
+              <br />
+              <span className={`bg-clip-text text-transparent bg-gradient-to-r from-[var(--color-orange-accent)] to-[#ff8c42] ${theme === 'dark' ? 'animate-gradient' : ''}`}>
+                Delivers Results
+              </span>
+            </motion.h2>
+            
+            <motion.p 
+              className={`text-lg md:text-xl max-w-3xl mx-auto ${theme === 'dark' ? 'text-gray-300' : 'text-[var(--color-gunmetal)]/80'}`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              Transforming businesses with cutting-edge AI solutions that drive real impact and measurable growth.
+            </motion.p>
+          </div>
+
+          {/* Grid Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto relative">
+            {reasons.map((reason, index) => (
+              <motion.div
+                key={reason.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ 
+                  duration: 0.5, 
+                  delay: index * 0.1,
+                  ease: [0.16, 1, 0.3, 1]
+                }}
+                whileHover={{ y: -8 }}
+                className={`group relative p-6 rounded-2xl overflow-hidden transition-all duration-300 ${cardBg} ${borderColor} border ${hoverBg} 
+                  ${theme === 'dark' ? 'shadow-lg' : 'shadow-md'}`}
+              >
+                <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                  theme === 'dark' 
+                    ? 'bg-gradient-to-br from-[var(--color-orange-accent)]/10 to-transparent' 
+                    : 'bg-gradient-to-br from-[var(--color-orange-accent)]/5 to-transparent'}`} 
+                />
+                
+                <div className="relative z-10">
+                  <div className={`w-12 h-12 rounded-xl mb-4 flex items-center justify-center ${
+                    theme === 'dark' 
+                      ? 'bg-gradient-to-br from-[var(--color-orange-accent)] to-[#ff8c42] text-white' 
+                      : 'bg-[var(--color-orange-accent)]/10 text-[var(--color-orange-accent)]'}`}>
+                    {React.cloneElement(reason.icon as React.ReactElement, {
+                      className: 'h-5 w-5'
+                    })}
+                  </div>
+                  <h3 className={`text-xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-[var(--color-gunmetal)]'}`}>
+                    {reason.title}
+                  </h3>
+                  <p className={`text-sm leading-relaxed ${theme === 'dark' ? 'text-gray-300' : 'text-[var(--color-gunmetal)]/80'}`}>
+                    {reason.description}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* CTA Section */}
+          <motion.div 
+            className="mt-16 text-center"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <p className={`text-lg mb-6 ${theme === 'dark' ? 'text-gray-300' : 'text-[var(--color-gunmetal)]/80'}`}>
+              Ready to transform your business with AI?
+            </p>
+            <Link
+              href="/about"
+              className={`inline-flex items-center px-8 py-4 rounded-full font-medium transition-all duration-300 ${
+                theme === 'dark'
+                  ? 'bg-gradient-to-r from-[var(--color-orange-accent)] to-[#ff8c42] text-white hover:shadow-lg hover:shadow-[var(--color-orange-accent)]/20'
+                  : 'bg-[var(--color-orange-accent)] text-white hover:shadow-lg hover:shadow-[var(--color-orange-accent)]/30'
+              }`}
+            >
+              Get in Touch
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
     </SectionLayout>
   )
 }

@@ -6,7 +6,7 @@ import { HeroSection } from "@/components/home/hero-section"
 import { AboutMeCard } from "@/components/home/about-me-card"
 import { WhyWorkWithMe } from "@/components/home/why-work-with-me"
 import { ProofSection } from "@/components/home/proof-section"
-import { AIBuildSection } from "@/components/home/ai-solutions-section"
+import { AISolutionsSection } from "@/components/home/ai-solutions-redesigned"
 import { Results } from "@/components/home/results"
 import { TechMarquee } from "@/components/home/tech-marquee"
 import { FinalCTA } from "@/components/home/final-cta"
@@ -42,7 +42,7 @@ export default function HomePage() {
         <WhyWorkWithMe theme={theme} />
         
         {/* AI Solutions Section - Merged WhatIOffer and AIBuildSection */}
-        <AIBuildSection theme={theme} />
+        <AISolutionsSection theme={theme} />
         
         {/* Proof Section */}
         <ProofSection theme={theme} />

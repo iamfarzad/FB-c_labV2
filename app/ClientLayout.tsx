@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react"
 import { useEffect, useState } from "react"
-import { Rajdhani, Space_Mono } from "next/font/google"
+import { Rajdhani, Space_Mono, Montserrat } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AccessibilityProvider } from "@/components/accessibility/accessibility-provider"
 import { CookieConsent } from "@/components/legal/cookie-consent"
@@ -21,6 +21,13 @@ const spaceMono = Space_Mono({
   subsets: ["latin"],
   weight: ["400", "700"],
   variable: "--font-space-mono",
+  display: "swap"
+})
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-montserrat",
   display: "swap"
 })
 
@@ -65,14 +72,14 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     }
   }, [])
   
-  // Only render the loading state on client-side
-  if (!isMounted) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="animate-pulse text-2xl font-bold">Loading...</div>
-      </div>
-    )
-  }
+  // Skip loading screen to prevent blocking content
+  // if (!isMounted) {
+  //   return (
+  //     <div className="fixed inset-0 flex items-center justify-center bg-background">
+  //       <div className="animate-pulse text-2xl font-bold">Loading...</div>
+  //     </div>
+  //   )
+  // }
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -86,7 +93,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
           }}
         />
       </head>
-      <body className={`${rajdhani.variable} ${spaceMono.variable} font-tech relative min-h-screen flex flex-col`}>
+      <body className={`${rajdhani.variable} ${spaceMono.variable} ${montserrat.variable} font-sans relative min-h-screen flex flex-col`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

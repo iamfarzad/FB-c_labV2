@@ -157,14 +157,14 @@ a {
 }
 
 .light {
-  --bg-primary: var(--color-orange-accent);
+  --bg-primary: var(--color-light-silver);
   --bg-secondary: #ffffff;
   --text-primary: var(--color-gunmetal);
   --text-secondary: rgba(26, 26, 26, 0.7);
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(0, 0, 0, 0.1);
-  --surface-primary: var(--color-gunmetal);
-  --surface-secondary: rgba(26, 26, 26, 0.9);
+  --surface-primary: #ffffff;
+  --surface-secondary: rgba(255, 255, 255, 0.9);
 }
 
 /* Simplified Glassmorphism - Reduced Effects */

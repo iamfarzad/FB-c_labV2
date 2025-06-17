@@ -7,10 +7,10 @@ import { ServicesHero } from "@/components/consulting/hero-section"
 import { AIConsulting } from "@/components/consulting/ai-consulting"
 import { Workshops } from "@/components/consulting/workshops"
 import { Tools } from "@/components/consulting/tools"
-import { ProcessCards } from "@/components/consulting/process-cards"
+import { Process } from "@/components/consulting/process"
 
 export default function ServicesPage() {
-  const [theme, setTheme] = useState<"light" | "dark">("dark")
+  const [theme, setTheme] = useState<"light" | "dark">("light")
 
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"))
@@ -24,11 +24,10 @@ export default function ServicesPage() {
   return (
     <Layout theme={theme} onThemeToggle={toggleTheme}>
       <div 
-        className="min-h-screen"
+        className="relative pt-20"
         style={{
           backgroundColor: "var(--bg-primary)",
           color: "var(--text-primary)",
-          paddingTop: '80px' // Adjust based on header height
         }}
       >
         {/* Hero Section with TextParticle */}
@@ -37,8 +36,8 @@ export default function ServicesPage() {
         {/* AI Consulting Section */}
         <AIConsulting theme={theme} />
         
-        {/* Process Cards Section */}
-        <ProcessCards theme={theme} />
+        {/* Process Section */}
+        <Process theme={theme} />
         
         {/* Tools Section */}
         <Tools theme={theme} />
