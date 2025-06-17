@@ -10,6 +10,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.2.0",
     "@google/genai": "latest",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.9.1",
