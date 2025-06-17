@@ -173,8 +173,25 @@ const SidebarContent: React.FC<{ open: boolean; activities: ActivityItem[]; onSu
       )}
       <Separator className={cn("my-4", !open && "my-2")} />
       <div className={cn("flex items-center", open ? "justify-between" : "justify-center")}>
-        {open && ( <div className="flex items-center"> <Avatar className="h-8 w-8 mr-2"> <AvatarImage src="/placeholder-user.jpg" alt="User" /> <AvatarFallback>U</AvatarFallback> </Avatar> <span className="text-sm font-medium">User</span> </div> )}
-        <TooltipProvider delayDuration={0}> <Tooltip> <TooltipTrigger asChild> <Button variant="ghost" size="icon" className={cn(!open && "w-full")}> <LogOut className="h-5 w-5" /> </Button> </TooltipTrigger> <TooltipContent side={open ? "top" : "right"}>Logout</TooltipContent> </Tooltip> </TooltipProvider>
+        {open && (
+          <div className="flex items-center">
+            <Avatar className="h-8 w-8 mr-2">
+              <AvatarImage src="/placeholder-user.jpg" alt="User" />
+              <AvatarFallback>U</AvatarFallback>
+            </Avatar>
+            <span className="text-sm font-medium">User</span>
+          </div>
+        )}
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className={cn(!open && "w-full")}>
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side={open ? "top" : "right"}>Logout</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );
@@ -712,10 +729,19 @@ function ChatPageContent() {
           <header className="flex items-center justify-between p-4 border-b bg-background">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                <MenuIcon className="h-5 w-5" /> <span className="sr-only">Toggle Sidebar</span>
+                <MenuIcon className="h-5 w-5" />
+                <span className="sr-only">Toggle Sidebar</span>
               </Button>
-              <Avatar className="h-8 w-8"> <AvatarImage src="/placeholder-logo.svg" alt="AI Avatar" /> <AvatarFallback>AI</AvatarFallback> </Avatar>
-              <div> <p className="text-sm font-medium">F.B/c AI Chat</p> <Badge variant="outline" className={isLoading ? "text-orange-500 border-orange-500" : "text-green-500 border-green-500"}> {isLoading ? 'Responding...' : 'Online'} </Badge> </div>
+              <Avatar className="h-8 w-8">
+                <AvatarImage src="/placeholder-logo.svg" alt="AI Avatar" />
+                <AvatarFallback>AI</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm font-medium">F.B/c AI Chat</p>
+                <Badge variant="outline" className={isLoading ? "text-orange-500 border-orange-500" : "text-green-500 border-green-500"}>
+                  {isLoading ? 'Responding...' : 'Online'}
+                </Badge>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Tooltip>
@@ -729,10 +755,12 @@ function ChatPageContent() {
               <Button variant="ghost" size="icon" onClick={() => setShowVideoModal(true)}>
                 <Play className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={toggleTheme}> 
-                <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" /> 
-                <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" /> 
-                <span className="sr-only">Toggle theme</span> 
+              <Button variant="ghost" size="icon" onClick={toggleTheme}>
+                <div className="relative">
+                  <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute top-0 left-0 h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                  <span className="sr-only">Toggle theme</span>
+                </div>
               </Button>
             </div>
           </header>
