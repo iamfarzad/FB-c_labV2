@@ -17,7 +17,7 @@ import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/comp
 
 import ContentContainer from '@/components/ContentContainer';
 import ExampleGallery from '@/components/ExampleGallery';
-import { DataContext, IDataContext } from '@/context';
+import { DataContext, useDataContext } from '@/context/data-context';
 import type { Example } from '@/lib/types';
 import { getYoutubeEmbedUrl, getYouTubeVideoTitle, validateYoutubeUrl } from '@/lib/youtube';
 
@@ -80,7 +80,7 @@ const VideoLearningToolPageContent: React.FC = () => {
   const [learningPath, setLearningPath] = useState<LearningModule[]>([]);
   const [currentModule, setCurrentModule] = useState<LearningModule | null>(null);
   const [overallProgress, setOverallProgress] = useState(0);
-  const dataContext = useContext<IDataContext | undefined>(DataContext); // Allow undefined initially
+  const dataContext = useContext(DataContext); // Allow undefined initially
 
   useEffect(() => {
     if (videoUrl) {
@@ -158,7 +158,7 @@ const VideoLearningToolPageContent: React.FC = () => {
             </CardHeader>
             <CardContent>
               {/* Refactored: Progress track to bg-secondary (default themeable) */}
-              <Progress value={overallProgress} className="w-full mb-4 h-3" indicatorClassName="bg-gradient-to-r from-primary to-accent" />
+              <Progress value={overallProgress} className="w-full mb-4 h-3" />
               <ScrollArea className="h-[300px] pr-3">
                 <ul className="space-y-3">
                   {learningPath.map(module => (
@@ -200,7 +200,9 @@ const VideoLearningToolPageContent: React.FC = () => {
               ) : <p className="text-muted-foreground">Select a module to see details.</p>}
             </CardContent>
           </Card>
-          <ContentContainer contentBasis={videoUrl} onLoadingStateChange={(loading: boolean) => console.log("Content loading:", loading)} />
+          <ContentContainer contentBasis={videoUrl} onLoadingStateChange={(loading: boolean) => console.log("Content loading:", loading)}>
+            <div className="text-sm text-muted-foreground">Additional learning resources will appear here.</div>
+          </ContentContainer>
           <ExampleGallery title="Related Examples From Context" onSelectExample={() => {}} selectedExample={dataContext?.defaultExample || null} />
         </aside>
       </div>

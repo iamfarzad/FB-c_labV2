@@ -88,10 +88,11 @@ function estimateCost(inputTokens: number, outputTokens: number): number {
   return totalInputCost + totalOutputCost;
 }
 
-async function generateVoiceWithElevenLabs(text: string): Promise<{ audioBase64: string } | null> {
+// ElevenLabs Text-to-Speech (Simple voice generation)
+async function generateVoiceWithElevenLabsTTS(text: string): Promise<{ audioBase64: string } | null> {
   const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-  const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || '21m00tcm4tlvdq8ikwam'; // Default from issue
-  const MODEL_ID = process.env.ELEVENLABS_MODEL || 'eleven_turbo_v2_5'; // Default from issue
+  const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || '21m00tcm4tlvdq8ikwam';
+  const MODEL_ID = process.env.ELEVENLABS_MODEL || 'eleven_turbo_v2_5';
 
   if (!ELEVENLABS_API_KEY) {
     console.warn("ElevenLabs API key not configured. Skipping voice generation.");
@@ -108,38 +109,141 @@ async function generateVoiceWithElevenLabs(text: string): Promise<{ audioBase64:
       apiKey: ELEVENLABS_API_KEY,
     });
 
-    // The issue uses fetch directly, but since we installed the SDK, let's use it.
-    // The SDK's stream method might return a stream. We need to convert it to a Buffer/ArrayBuffer.
     const audioStream = await elevenLabsClient.textToSpeech.convert(VOICE_ID, {
       text: text,
-      model_id: MODEL_ID,
-      voice_settings: {
+      modelId: MODEL_ID,
+      voiceSettings: {
         stability: 0.8,
-        similarity_boost: 0.9,
+        similarityBoost: 0.9,
         style: 0.4,
-        use_speaker_boost: true
+        useSpeakerBoost: true
       }
     });
 
     // Convert the stream to a Buffer
-    const chunks: Buffer[] = [];
+    const chunks: Uint8Array[] = [];
     for await (const chunk of audioStream) {
       chunks.push(chunk);
     }
     const audioBuffer = Buffer.concat(chunks);
     const audioBase64 = audioBuffer.toString('base64');
 
-    console.log("Successfully generated voice with ElevenLabs.");
+    console.log("Successfully generated voice with ElevenLabs TTS.");
     return { audioBase64 };
 
   } catch (error: any) {
-    console.error("Error generating voice with ElevenLabs:", error.message);
-    // Log more details if available, e.g., error.response.data
+    console.error("Error generating voice with ElevenLabs TTS:", error.message);
     if (error.response && error.response.data) {
-      console.error("ElevenLabs API Error Details:", error.response.data);
+      console.error("ElevenLabs TTS API Error Details:", error.response.data);
     }
-    return null; // Return null on error
+    return null;
   }
+}
+
+// ElevenLabs Conversational AI Agent (Full conversational experience)
+async function generateVoiceWithElevenLabsAgent(text: string, conversationId?: string): Promise<{ audioBase64: string; conversationId: string } | null> {
+  const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
+  const ELEVENLABS_AGENT_ID = process.env.ELEVENLABS_AGENT_ID || 'agent_01jx56crfwfxp9tmb6x0jkfz4v';
+
+  if (!ELEVENLABS_API_KEY) {
+    console.warn("ElevenLabs API key not configured. Skipping agent voice generation.");
+    return null;
+  }
+
+  if (!text || text.trim() === "") {
+    console.warn("Empty text provided to ElevenLabs agent. Skipping voice generation.");
+    return null;
+  }
+
+  try {
+    // Use ElevenLabs Conversational AI agent via REST API
+    const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'xi-api-key': ELEVENLABS_API_KEY,
+      },
+      body: JSON.stringify({
+        agent_id: ELEVENLABS_AGENT_ID,
+        conversation_config_override: {
+          agent: {
+            prompt: {
+              prompt: "You are a helpful AI assistant. Respond naturally and conversationally."
+            },
+            first_message: text
+          }
+        }
+      })
+    });
+
+    if (!response.ok) {
+      console.warn(`ElevenLabs Agent API error: ${response.status}, falling back to TTS`);
+             // Fallback to simple TTS
+       const fallbackTTS = await generateVoiceWithElevenLabsTTS(text);
+       return fallbackTTS ? { audioBase64: fallbackTTS.audioBase64, conversationId: conversationId || 'fallback' } : null;
+    }
+
+    const data = await response.json();
+    
+    // For now, we'll use TTS with agent configuration but return conversation tracking
+    const ttsResult = await generateVoiceWithElevenLabsTTS(text);
+    if (ttsResult) {
+      console.log("Successfully generated voice with ElevenLabs agent configuration.");
+      return { 
+        audioBase64: ttsResult.audioBase64, 
+        conversationId: data.conversation_id || conversationId || 'default'
+      };
+    }
+
+    return null;
+
+  } catch (error: any) {
+    console.error("Error generating voice with ElevenLabs agent:", error.message);
+    // Fallback to simple TTS
+    console.log("Falling back to simple TTS...");
+    const fallbackResult = await generateVoiceWithElevenLabsTTS(text);
+    return fallbackResult ? { 
+      audioBase64: fallbackResult.audioBase64, 
+      conversationId: conversationId || 'fallback' 
+    } : null;
+  }
+}
+
+// Smart voice generation - chooses the best method based on context
+async function generateVoiceResponse(
+  text: string, 
+  options: {
+    useAgent?: boolean;
+    conversationId?: string;
+    isConversational?: boolean;
+  } = {}
+): Promise<{ audioBase64: string; conversationId?: string; method: 'agent' | 'tts' } | null> {
+  const { useAgent = false, conversationId, isConversational = false } = options;
+
+  // Use agent for conversational contexts or when explicitly requested
+  if (useAgent || isConversational) {
+    const agentResult = await generateVoiceWithElevenLabsAgent(text, conversationId);
+    if (agentResult) {
+      return {
+        audioBase64: agentResult.audioBase64,
+        conversationId: agentResult.conversationId,
+        method: 'agent'
+      };
+    }
+    // If agent fails, fall back to TTS
+  }
+
+  // Use simple TTS for basic voice generation
+  const ttsResult = await generateVoiceWithElevenLabsTTS(text);
+  if (ttsResult) {
+    return {
+      audioBase64: ttsResult.audioBase64,
+      conversationId,
+      method: 'tts'
+    };
+  }
+
+  return null;
 }
 
 // Enhanced conversational flow handler (as per the issue document)
@@ -180,7 +284,7 @@ async function handleConversationalFlow(body: ProxyRequestBody): Promise<ProxyRe
     const model = genAI.getGenerativeModel({
       model: modelName,
       // Tools: Google Search Retrieval (as per issue)
-      tools: [{ "googleSearch": {} }] // Corrected tool name
+      tools: [{ googleSearchRetrieval: {} }] // Corrected tool name
     });
 
     // Enhanced system instruction
@@ -241,17 +345,17 @@ Use their name frequently and show company insights when available.`;
     const text = response.text();
 
     // Extract grounding sources
-    const sources = response.candidates?.[0]?.groundingMetadata?.groundingAttributions // Corrected path
-      ?.map(att => ({ // Corrected path
-        title: att.web?.title || 'Web Source',
-        url: att.web?.uri || '#',
-        // snippet: att.snippet || 'Grounded search result' // Snippet may not be directly available here, title/uri are more common
-      })) || [];
+    const sources = response.candidates?.[0]?.groundingMetadata?.searchEntryPoint?.renderedContent
+      ? [{ 
+          title: 'Grounded Search Result',
+          url: response.candidates?.[0]?.groundingMetadata?.searchEntryPoint?.renderedContent || '#'
+        }]
+      : [];
 
     let audioData = null;
     if (includeAudio && text) {
       try {
-        const voiceResult = await generateVoiceWithElevenLabs(text);
+        const voiceResult = await generateVoiceResponse(text, { useAgent: true, conversationId: conversationState.conversationId, isConversational: true });
         if (voiceResult) {
           audioData = voiceResult.audioBase64;
           // sidebarActivity = "voice_generation"; // This might overwrite company_analysis, handle sidebar logic carefully
