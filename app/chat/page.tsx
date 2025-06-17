@@ -1,7 +1,14 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { Send, MessageSquare, ArrowLeft, Mic, Camera, Image, Menu, X, Play, BookOpen } from "lucide-react"
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  Send, MessageSquare, ArrowLeft, Mic, Camera, Image, Menu, X, Play, BookOpen,
+  CornerDownLeft, Paperclip, Settings2, Square, Triangle, Moon, Sun,
+  Youtube, Camera as CameraIcon, FileUp, Film, ScreenShare,
+  Sparkles, ImageIcon, Search as SearchIcon, Lightbulb, Video as VideoIconLucide, Code2, FileText as FileTextIcon, Loader2 as Loader,
+  Newspaper, Users, Settings as SettingsIconLucide, LogOut, ChevronLeft, ChevronRight, MoreVertical, Menu as MenuIcon, MessageSquareText, AlertTriangle, Download
+} from 'lucide-react';
+
 import Link from "next/link"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { DynamicDataRenderer } from "@/components/dynamic-data-renderer"
@@ -12,6 +19,21 @@ import { WebcamModal } from "@/components/webcam-modal"
 import { ChatSidePanel } from "@/components/chat-side-panel"
 import { VideoLearningModal } from "@/components/video-learning-modal"
 
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
+
 interface ChatMessage {
   id: string
   role: "user" | "assistant"
@@ -20,11 +42,177 @@ interface ChatMessage {
   dataItems?: DataItem[]
 }
 
+interface Message {
+  id: string;
+  type: 'user' | 'ai' | 'systemInfo';
+  content: string | React.ReactNode;
+  avatarSrc?: string;
+  timestamp?: string;
+}
+
+interface ActivityItem {
+  id: string;
+  type:
+    | 'message'
+    | 'file'
+    | 'image'
+    | 'video_processing'
+    | 'video_complete'
+    | 'event'
+    | 'analyzing_video'
+    | 'generating_image'
+    | 'summarizing_chat'
+    | 'error';
+  timestamp: Date;
+  user?: string;
+  details?: string;
+  avatar?: string;
+  title?: string;
+  description?: string;
+  progress?: number;
+  link?: string;
+}
+
+interface AISettings {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+}
+
+const getActivityIcon = (type: ActivityItem['type']) => {
+  switch (type) {
+    case 'message': return <SearchIcon className="w-4 h-4" />;
+    case 'file': return <FileUp className="w-4 h-4" />;
+    case 'image': return <ImageIcon className="w-4 h-4" />;
+    case 'analyzing_video': return <Film className="w-4 h-4 text-yellow-500 animate-pulse" />;
+    case 'video_processing': return <Loader className="w-4 h-4 animate-spin" />;
+    case 'video_complete': return <Youtube className="w-4 h-4 text-red-500" />;
+    case 'event': return <Sparkles className="w-4 h-4" />;
+    case 'generating_image': return <ImageIcon className="w-4 h-4 text-purple-500 animate-pulse" />;
+    case 'summarizing_chat': return <MessageSquareText className="w-4 h-4 text-teal-500" />;
+    case 'error': return <AlertTriangle className="w-4 h-4" />;
+    default: return <FileTextIcon className="w-4 h-4" />;
+  }
+};
+
+const getActivityColor = (type: ActivityItem['type']) => {
+  switch (type) {
+    case 'message': return 'text-blue-500';
+    case 'file': return 'text-green-500';
+    case 'image': return 'text-purple-500';
+    case 'analyzing_video': return 'text-yellow-500';
+    case 'video_processing': return 'text-orange-500';
+    case 'video_complete': return 'text-red-500';
+    case 'event': return 'text-yellow-500';
+    case 'generating_image': return 'text-fuchsia-600';
+    case 'summarizing_chat': return 'text-teal-600';
+    case 'error': return 'text-red-500';
+    default: return 'text-gray-500';
+  }
+};
+
+const SidebarContent: React.FC<{ open: boolean; activities: ActivityItem[]; onSummarizeChat?: () => void; }> = ({ open, activities, onSummarizeChat }) => {
+  return (
+    <div className={cn("h-full flex flex-col bg-card/50 backdrop-blur-lg border-r", open ? "p-4" : "p-2 items-center")}>
+      <div className={cn("flex items-center mb-6", open ? "justify-between" : "justify-center")}>
+        {open && <h1 className="text-xl font-bold gradient-text">AI Hub</h1>}
+      </div>
+      <nav className="flex-grow">
+        {[
+          { icon: Newspaper, label: 'Threads', id: 'threads' },
+          { icon: Users, label: 'Shared With Me', id: 'shared' },
+          { icon: SettingsIconLucide, label: 'Settings', id: 'settings_nav' },
+        ].map(item => (
+          <TooltipProvider key={item.id} delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" className={cn("w-full flex items-center mb-2", open ? "justify-start" : "justify-center")}>
+                  <item.icon className={cn("h-5 w-5", open && "mr-3")} />
+                  {open && <span className="text-sm">{item.label}</span>}
+                </Button>
+              </TooltipTrigger>
+              {!open && <TooltipContent side="right">{item.label}</TooltipContent>}
+            </Tooltip>
+          </TooltipProvider>
+        ))}
+      </nav>
+      {open && (
+        <div className="mt-auto">
+          <h2 className="text-sm font-semibold mb-2 text-muted-foreground">Recent Activity</h2>
+          <ScrollArea className="h-[200px]">
+            {activities.map(activity => (
+              <div key={activity.id} className="flex items-start mb-3 p-2 rounded-md hover:bg-muted transition-colors">
+                <div className={cn("mr-3 mt-1", getActivityColor(activity.type))}>
+                  {getActivityIcon(activity.type)}
+                </div>
+                <div>
+                  <p className="text-xs font-medium">{activity.title || activity.details}</p>
+                  {activity.description && <p className="text-xs text-muted-foreground">{activity.description}</p>}
+                  {typeof activity.progress === 'number' && activity.progress < 100 && (
+                    <Progress value={activity.progress} className="h-1 w-full mt-1" />
+                  )}
+                   <p className="text-xs text-muted-foreground">
+                    {activity.user || 'System'} - {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                  {activity.link && activity.type === 'video_complete' && (
+                     <a href={activity.link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Open App</a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </ScrollArea>
+          {onSummarizeChat && open && (
+            <div className="mt-2 pt-2 border-t border-border">
+              <Button variant="outline" size="sm" className="w-full" onClick={onSummarizeChat}>
+                <MessageSquareText className="w-4 h-4 mr-2" />
+                Summarize Chat
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+      <Separator className={cn("my-4", !open && "my-2")} />
+      <div className={cn("flex items-center", open ? "justify-between" : "justify-center")}>
+        {open && ( <div className="flex items-center"> <Avatar className="h-8 w-8 mr-2"> <AvatarImage src="/placeholder-user.jpg" alt="User" /> <AvatarFallback>U</AvatarFallback> </Avatar> <span className="text-sm font-medium">User</span> </div> )}
+        <TooltipProvider delayDuration={0}> <Tooltip> <TooltipTrigger asChild> <Button variant="ghost" size="icon" className={cn(!open && "w-full")}> <LogOut className="h-5 w-5" /> </Button> </TooltipTrigger> <TooltipContent side={open ? "top" : "right"}>Logout</TooltipContent> </Tooltip> </TooltipProvider>
+      </div>
+    </div>
+  );
+};
+
+const Sidebar: React.FC<{ open: boolean; setOpen: (open: boolean) => void; animate?: boolean; activities: ActivityItem[]; onSummarizeChat?: () => void; }> = ({ open, setOpen, animate = true, activities, onSummarizeChat }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const effectiveOpen = open || isHovered;
+  const variants = { open: { width: animate ? 288 : 'auto', transition: { type: "spring", stiffness: 300, damping: 30 } }, closed: { width: animate ? 68 : 'auto', transition: { type: "spring", stiffness: 300, damping: 30 } }, };
+  useEffect(() => {}, [open, isHovered]);
+  return (
+    <motion.div layout initial={false} animate={effectiveOpen ? "open" : "closed"} variants={variants} className={cn("h-full relative z-30 flex flex-col", effectiveOpen ? "shadow-lg" : "", open ? "flex" : "hidden md:flex" )} onMouseEnter={() => { if (!open) setIsHovered(true); }} onMouseLeave={() => { if (!open) setIsHovered(false); }}>
+      <div className={cn("h-full overflow-hidden", effectiveOpen ? "w-72" : "w-[68px]")}>
+        <SidebarContent open={effectiveOpen} activities={activities} onSummarizeChat={onSummarizeChat} />
+      </div>
+      <Button variant="ghost" size="icon" className={cn("absolute top-1/2 -right-4 transform -translate-y-1/2 bg-card border rounded-full h-8 w-8 z-40 shadow-md hover:bg-muted", !open && isHovered ? "opacity-100" : open ? "opacity-100" : "opacity-0" )} onClick={() => setOpen(!open)}>
+        {open ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+      </Button>
+    </motion.div>
+  );
+};
+
 function ChatPageContent() {
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Enhanced state for advanced features
+  const [progress, setProgress] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [activities, setActivities] = useState<ActivityItem[]>([
+    { id: 's1', type: 'message', timestamp: new Date(Date.now() - 3600000 * 3), user: 'AI Assistant', title: 'Chat Started', description: 'Initial conversation with AI Assistant began.', details: 'Responded to "Project Setup Query"' },
+    { id: 's2', type: 'event', timestamp: new Date(Date.now() - 3600000 * 2), user: 'System', title: 'User Logged In', description: 'User successfully authenticated to the platform.' },
+  ]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [aiSettings, setAiSettings] = useState<AISettings>({ model: 'gemini-1.5-pro-latest', temperature: 0.7, maxTokens: 1024 });
 
   // Voice input state
   const [showVoiceModal, setShowVoiceModal] = useState(false)
@@ -79,7 +267,6 @@ function ChatPageContent() {
       }
       
       recognition.current.onend = () => {
-        // Reset state when recognition ends (use callback to get current state)
         setAiVoiceState(currentState => {
           if (currentState === 'listening') {
             setShowVoiceModal(false)
@@ -117,7 +304,6 @@ function ChatPageContent() {
     }
 
     return () => {
-      // Cleanup camera stream when modal closes
       if (videoRef.current?.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream
         stream.getTracks().forEach(track => track.stop())
@@ -126,16 +312,127 @@ function ChatPageContent() {
     }
   }, [showWebcamModal])
 
+  // Enhanced activity tracking functions
+  const addActivity = (activity: Omit<ActivityItem, 'id' | 'timestamp'>) => {
+    const newActivity: ActivityItem = {
+      ...activity,
+      id: Date.now().toString(),
+      timestamp: new Date()
+    };
+    setActivities(prev => [newActivity, ...prev.slice(0, 9)]); // Keep last 10 activities
+  };
+
+  const handleTriggerSummarization = async () => {
+    if (messages.length === 0) return;
+    
+    addActivity({
+      type: 'summarizing_chat',
+      title: 'Generating Chat Summary',
+      description: 'AI is analyzing the conversation...',
+      user: 'System',
+      progress: 0
+    });
+
+    // Simulate progress
+    let progressValue = 0;
+    const progressInterval = setInterval(() => {
+      progressValue += 10;
+      setActivities(prev => prev.map(activity => 
+        activity.type === 'summarizing_chat' && activity.progress !== undefined
+          ? { ...activity, progress: progressValue }
+          : activity
+      ));
+      
+      if (progressValue >= 100) {
+        clearInterval(progressInterval);
+        setActivities(prev => prev.map(activity => 
+          activity.type === 'summarizing_chat'
+            ? { ...activity, title: 'Chat Summary Complete', description: 'Summary generated successfully', progress: 100 }
+            : activity
+        ));
+      }
+    }, 200);
+  };
+
+  const startVideoProcessingActivity = (videoUrl: string, title: string) => {
+    addActivity({
+      type: 'video_processing',
+      title: `Processing: ${title}`,
+      description: 'Generating interactive learning app...',
+      user: 'AI Assistant',
+      progress: 0
+    });
+
+    // Simulate video processing
+    setTimeout(() => {
+      setActivities(prev => prev.map(activity => 
+        activity.type === 'video_processing'
+          ? { 
+              ...activity, 
+              type: 'video_complete',
+              title: `Learning App Ready: ${title}`,
+              description: 'Interactive learning experience generated',
+              progress: 100,
+              link: `/video-learning-tool?videoUrl=${encodeURIComponent(videoUrl)}`
+            }
+          : activity
+      ));
+    }, 3000);
+  };
+
+  const detectYouTubeUrl = (text: string): string | null => {
+    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = text.match(youtubeRegex);
+    return match ? match[0] : null;
+  };
+
+  const getVideoTitle = async (url: string): Promise<string> => {
+    // Simplified title extraction
+    return `Video from ${url.substring(0, 30)}...`;
+  };
+
+  const toggleTheme = () => setTheme(prev => (prev === "light" ? "dark" : "light"));
+
+  const exportSummary = () => {
+    if (messages.length === 0) return
+    const transcript = messages.map(msg => {
+      const timestamp = msg.timestamp || new Date().toLocaleTimeString()
+      const sender = msg.role === "user" ? "User" : "AI"
+      return `[${timestamp}] ${sender}: ${msg.content}`
+    }).join('\n\n')
+    const blob = new Blob([transcript], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'chat-transcript.txt'
+    a.click()
+    URL.revokeObjectURL(url)
+    
+    addActivity({
+      type: 'file',
+      title: 'Transcript Downloaded',
+      description: 'Chat conversation exported to file',
+      user: 'System'
+    });
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     console.log("=== FORM SUBMIT DEBUG ===")
     console.log("Form submitted with input:", input)
-    console.log("Input length:", input.length)
-    console.log("Trimmed input:", input.trim())
     
     if (!input.trim()) {
       console.log("Empty input, returning early")
       return
+    }
+
+    // Check for YouTube URL
+    const youtubeUrl = detectYouTubeUrl(input);
+    if (youtubeUrl) {
+      const title = await getVideoTitle(youtubeUrl);
+      startVideoProcessingActivity(youtubeUrl, title);
+      setInput("");
+      return;
     }
 
     const userMessage: ChatMessage = {
@@ -149,9 +446,14 @@ function ChatPageContent() {
     setInput("")
     setIsLoading(true)
 
-    console.log("About to make API call...") // Debug log
+    // Add activity for new message
+    addActivity({
+      type: 'message',
+      title: 'New Message Sent',
+      description: input.substring(0, 50) + (input.length > 50 ? '...' : ''),
+      user: 'User'
+    });
 
-    // Real AI API call
     try {
       const currentImageData = getCurrentImage()
       
@@ -173,7 +475,6 @@ function ChatPageContent() {
       let assistantMessage = ""
       const assistantMessageId = (Date.now() + 1).toString()
 
-      // Add empty assistant message first
       setMessages(prev => [...prev, {
         id: assistantMessageId,
         role: "assistant",
@@ -186,162 +487,146 @@ function ChatPageContent() {
         if (done) break
 
         const chunk = new TextDecoder().decode(value)
-        console.log("Received chunk:", chunk) // Debug log
-        
         const lines = chunk.split("\n").filter(line => line.trim())
 
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             try {
               const data = JSON.parse(line.slice(6))
-              console.log("Parsed data:", data) // Debug log
               
               if (data.content) {
                 assistantMessage += data.content
-
-                // Parse the message content into data items
-                const dataItems = parseDataFromText(assistantMessage)
-
-                setMessages((prev) => {
-                  const newMessages = [...prev]
-                  const existingIndex = newMessages.findIndex((m) => m.id === assistantMessageId)
-
-                  if (existingIndex >= 0) {
-                    newMessages[existingIndex] = {
-                      ...newMessages[existingIndex],
-                      content: assistantMessage,
-                      dataItems: dataItems.length > 0 ? dataItems : undefined,
-                    }
-                  }
-
-                  return newMessages
-                })
+                setMessages(prev => prev.map(msg => 
+                  msg.id === assistantMessageId 
+                    ? { ...msg, content: assistantMessage }
+                    : msg
+                ))
               }
-            } catch (e) {
-              console.error("Error parsing SSE data:", e, "Line:", line)
+            } catch (error) {
+              console.error("Error parsing JSON:", error)
             }
           }
         }
       }
+
+      // Parse data items from the final response
+      const dataItems = parseDataFromText(assistantMessage)
+      if (dataItems.length > 0) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === assistantMessageId 
+            ? { ...msg, dataItems }
+            : msg
+        ))
+      }
+
+      // Add activity for AI response
+      addActivity({
+        type: 'message',
+        title: 'AI Response Received',
+        description: assistantMessage.substring(0, 50) + (assistantMessage.length > 50 ? '...' : ''),
+        user: 'AI Assistant'
+      });
+
     } catch (error) {
       console.error("Error sending message:", error)
-      const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
-        timestamp: new Date().toISOString(),
-      }
-      setMessages(prev => [...prev, errorMessage])
+      
+      addActivity({
+        type: 'error',
+        title: 'Message Failed',
+        description: 'Failed to send message to AI',
+        user: 'System'
+      });
     } finally {
       setIsLoading(false)
+      clearImages()
     }
   }
 
   const toggleVoiceInput = () => {
-    console.log("=== MICROPHONE BUTTON DEBUG ===")
-    console.log("Button clicked, current state:", aiVoiceState)
-    console.log("Speech supported:", isSpeechSupported)
-    console.log("Recognition available:", !!recognition.current)
-    console.log("Window object:", typeof window)
-    
-    if (!isSpeechSupported || !recognition.current) {
-      console.log("BLOCKED: Speech not supported or recognition not available")
+    if (!isSpeechSupported) {
+      alert("Speech recognition is not supported in this browser.")
       return
     }
 
     if (aiVoiceState === "listening") {
-      try {
-        recognition.current.stop()
-      } catch (e) {
-        console.log("Recognition already stopped")
-      }
+      recognition.current?.stop()
       setAiVoiceState("idle")
       setShowVoiceModal(false)
     } else {
+      setShowVoiceModal(true)
       setAiVoiceState("listening")
       setCurrentTranscription("")
-      setShowVoiceModal(true)
       
       try {
-        recognition.current.start()
-      } catch (e) {
-        console.error("Failed to start recognition:", e)
-        // Reset state if start fails
+        recognition.current?.start()
+      } catch (error) {
+        console.error("Error starting speech recognition:", error)
         setAiVoiceState("error")
-        setTimeout(() => {
-          setAiVoiceState("idle")
-          setShowVoiceModal(false)
-        }, 2000)
+        setShowVoiceModal(false)
       }
     }
   }
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("=== IMAGE UPLOAD DEBUG ===")
-    console.log("File input changed")
     const file = event.target.files?.[0]
-    console.log("Selected file:", file)
-    
     if (file) {
-      console.log("File details:", { name: file.name, size: file.size, type: file.type })
       const reader = new FileReader()
       reader.onload = (e) => {
-        const result = e.target?.result as string
-        console.log("File read successfully, data length:", result.length)
-        setUploadedImage(result)
-        setCapturedImage(null) // Clear captured image if uploading
+        const base64String = e.target?.result as string
+        setUploadedImage(base64String)
+        
+        addActivity({
+          type: 'image',
+          title: 'Image Uploaded',
+          description: `Uploaded: ${file.name}`,
+          user: 'User'
+        });
       }
       reader.readAsDataURL(file)
     }
   }
 
   const handleCameraCapture = () => {
-    console.log("=== CAMERA CAPTURE DEBUG ===")
-    if (videoRef.current && canvasRef.current && isCameraActive) {
+    if (videoRef.current && canvasRef.current) {
       const canvas = canvasRef.current
       const video = videoRef.current
       
-      // Set canvas dimensions to match video
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
       
-      // Draw video frame to canvas
       const ctx = canvas.getContext('2d')
       if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-        
-        // Convert canvas to data URL
+        ctx.drawImage(video, 0, 0)
         const imageData = canvas.toDataURL('image/jpeg', 0.8)
-        console.log("Image captured, data length:", imageData.length)
-        
         setCapturedImage(imageData)
-        setUploadedImage(null) // Clear uploaded image if capturing
         setShowWebcamModal(false)
         
         // Stop camera stream
-        const stream = video.srcObject as MediaStream
-        if (stream) {
+        if (video.srcObject) {
+          const stream = video.srcObject as MediaStream
           stream.getTracks().forEach(track => track.stop())
         }
         setIsCameraActive(false)
+        
+        addActivity({
+          type: 'image',
+          title: 'Photo Captured',
+          description: 'Camera photo taken successfully',
+          user: 'User'
+        });
       }
-    } else {
-      console.log("Cannot capture: video, canvas, or camera not ready")
     }
   }
 
   const clearImages = () => {
     setCapturedImage(null)
     setUploadedImage(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ""
-    }
   }
 
   const getCurrentImage = () => capturedImage || uploadedImage
 
   return (
-    <>
+    <TooltipProvider>
       {/* Voice Input Modal */}
       {showVoiceModal && (
         <VoiceInputModal
@@ -369,7 +654,6 @@ function ChatPageContent() {
                 onClick={() => {
                   setShowWebcamModal(false)
                   setIsCameraActive(false)
-                  // Stop camera stream
                   if (videoRef.current?.srcObject) {
                     const stream = videoRef.current.srcObject as MediaStream
                     stream.getTracks().forEach(track => track.stop())
@@ -409,7 +693,7 @@ function ChatPageContent() {
             )}
           </div>
         </div>
-              )}
+      )}
 
       {/* Video Learning Modal */}
       {showVideoModal && (
@@ -420,225 +704,161 @@ function ChatPageContent() {
         />
       )}
 
-      {/* Main Chat Interface */}
-    <div className="flex h-screen bg-background">
-      {/* Side Panel */}
-      {showSidePanel && (
-        <div className="w-80 border-r bg-gray-50">
-          <ChatSidePanel
-            chatHistory={messages}
-            onClose={() => setShowSidePanel(false)}
-            theme="light"
-            onDownloadTranscript={() => {
-              const transcript = messages.map(m => `${m.role}: ${m.content}`).join('\n\n')
-              const blob = new Blob([transcript], { type: 'text/plain' })
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement('a')
-              a.href = url
-              a.download = 'chat-transcript.txt'
-              a.click()
-              URL.revokeObjectURL(url)
-            }}
-            onSummarizeChat={() => {
-              console.log("Summarize chat clicked")
-              // TODO: Implement chat summarization
-            }}
-            onGenerateFollowUpBrief={() => {
-              console.log("Generate follow-up brief clicked")
-              // TODO: Implement follow-up brief generation
-            }}
-          />
-        </div>
-      )}
+      {/* Main Chat Interface with Advanced Sidebar */}
+      <div className={cn("flex h-[calc(100vh-4rem)] w-full bg-background text-foreground")}>
+        <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} animate={true} activities={activities} onSummarizeChat={handleTriggerSummarization} />
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="flex items-center justify-between p-4 border-b bg-white">
-          <div className="flex items-center space-x-3">
-            <Link href="/" className="p-2 rounded hover:bg-gray-100">
-              <ArrowLeft size={20} />
-            </Link>
-            <button
-              onClick={() => setShowSidePanel(!showSidePanel)}
-              className="p-2 rounded hover:bg-gray-100"
-            >
-              {showSidePanel ? <X size={20} /> : <Menu size={20} />}
-            </button>
-            <MessageSquare size={20} className="text-orange-500" />
-            <h1 className="text-xl font-bold">F.B/c AI Chat</h1>
-          </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => {
-                if (messages.length === 0) return
-                const transcript = messages.map(msg => {
-                  const timestamp = msg.timestamp || new Date().toLocaleTimeString()
-                  const sender = msg.role === "user" ? "User" : "AI"
-                  return `[${timestamp}] ${sender}: ${msg.content}`
-                }).join('\n\n')
-                const blob = new Blob([transcript], { type: 'text/plain' })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement('a')
-                a.href = url
-                a.download = 'chat-transcript.txt'
-                a.click()
-                URL.revokeObjectURL(url)
-              }}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-              title="Download Transcript"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            <button
-              onClick={() => setShowVideoModal(true)}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200 transition-colors text-sm"
-            >
-              <Play size={16} />
-              <span>Learn</span>
-            </button>
-            <div className="text-sm text-gray-500">
-              {messages.length > 0 && `${messages.length} messages`}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="flex items-center justify-between p-4 border-b bg-background">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                <MenuIcon className="h-5 w-5" /> <span className="sr-only">Toggle Sidebar</span>
+              </Button>
+              <Avatar className="h-8 w-8"> <AvatarImage src="/placeholder-logo.svg" alt="AI Avatar" /> <AvatarFallback>AI</AvatarFallback> </Avatar>
+              <div> <p className="text-sm font-medium">F.B/c AI Chat</p> <Badge variant="outline" className={isLoading ? "text-orange-500 border-orange-500" : "text-green-500 border-green-500"}> {isLoading ? 'Responding...' : 'Online'} </Badge> </div>
             </div>
-          </div>
-        </header>
+            <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={exportSummary}>
+                    <Download className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Download Transcript</TooltipContent>
+              </Tooltip>
+              <Button variant="ghost" size="icon" onClick={() => setShowVideoModal(true)}>
+                <Play className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={toggleTheme}> 
+                <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" /> 
+                <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" /> 
+                <span className="sr-only">Toggle theme</span> 
+              </Button>
+            </div>
+          </header>
 
-      {/* Messages */}
-      <main className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 && (
-          <div className="text-center text-gray-500 mt-20">
-            <MessageSquare size={48} className="mx-auto mb-4 text-orange-500" />
-            <h2 className="text-xl font-bold mb-2">Welcome to F.B/c AI</h2>
-            <p>Start a conversation with your AI assistant.</p>
-          </div>
-        )}
-
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`rounded-lg p-3 max-w-[70%] ${
-                msg.role === "user"
-                  ? "bg-orange-500 text-white"
-                  : "bg-gray-100 text-gray-900"
-              }`}
-                         >
-               {msg.role === "assistant" && msg.dataItems ? (
-                 <DynamicDataRenderer data={msg.dataItems} theme="light" />
-               ) : (
-                 <p>{msg.content}</p>
-               )}
-             </div>
-          </div>
-        ))}
-
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-100 rounded-lg p-3">
-              <div className="flex items-center space-x-2">
-                <div className="animate-spin w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full"></div>
-                <span>AI is thinking...</span>
+          <ScrollArea className="flex-1 p-4">
+            {messages.length === 0 && (
+              <div className="text-center text-gray-500 mt-20">
+                <MessageSquare size={48} className="mx-auto mb-4 text-orange-500" />
+                <h2 className="text-xl font-bold mb-2">Welcome to F.B/c AI</h2>
+                <p>Start a conversation with your AI assistant.</p>
               </div>
+            )}
+
+            {messages.map((msg) => (
+              <div key={msg.id} className={`flex mb-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`rounded-lg p-3 max-w-[70%] ${
+                    msg.role === "user"
+                      ? "bg-orange-500 text-white"
+                      : "bg-gray-100 text-gray-900"
+                  }`}
+                >
+                  {msg.role === "assistant" && msg.dataItems ? (
+                    <DynamicDataRenderer data={msg.dataItems} theme="light" />
+                  ) : (
+                    <p>{msg.content}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {isLoading && (
+              <div className="flex justify-start mb-4">
+                <div className="bg-gray-100 rounded-lg p-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full"></div>
+                    <span>AI is thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </ScrollArea>
+
+          {(isLoading) && <Progress value={progress} className="w-full h-1" />}
+          
+          <form onSubmit={handleSendMessage} className="p-4 border-t">
+            {getCurrentImage() && (
+              <div className="mb-3 relative inline-block">
+                <img 
+                  src={getCurrentImage()!} 
+                  alt="Selected" 
+                  className="w-20 h-20 object-cover rounded-lg border"
+                />
+                <button
+                  type="button"
+                  onClick={clearImages}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+                title="Upload Image"
+              >
+                <Image size={20} />
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setShowWebcamModal(true)}
+                className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+                title="Take Photo"
+              >
+                <Camera size={20} />
+              </button>
+              
+              <button
+                type="button"
+                onClick={toggleVoiceInput}
+                className={`p-2 transition-colors ${
+                  aiVoiceState === "listening" 
+                    ? "text-red-500 hover:text-red-600" 
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                title={aiVoiceState === "listening" ? "Stop Recording" : "Voice Input"}
+              >
+                <Mic size={20} />
+              </button>
+              
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type your message... (or paste a YouTube URL)"
+                className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                disabled={isLoading}
+              />
+              
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Send size={20} />
+              </button>
             </div>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </main>
-
-      {/* Input */}
-      <form onSubmit={handleSendMessage} className="p-4 border-t">
-        {/* Image Preview */}
-        {getCurrentImage() && (
-          <div className="mb-3 relative inline-block">
-            <img 
-              src={getCurrentImage()!} 
-              alt="Selected" 
-              className="w-20 h-20 object-cover rounded-lg border"
-            />
-            <button
-              type="button"
-              onClick={clearImages}
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-            >
-              ×
-            </button>
-          </div>
-        )}
-        
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={toggleVoiceInput}
-            disabled={!isSpeechSupported}
-            className={`px-3 py-2 rounded-lg transition-colors ${
-              aiVoiceState === "listening" 
-                ? "bg-red-500 text-white animate-pulse" 
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            } disabled:opacity-50`}
-            title={aiVoiceState === "listening" ? "Stop Recording" : "Voice Input"}
-          >
-            <Mic size={20} />
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => {
-              console.log("=== CAMERA BUTTON DEBUG ===")
-              console.log("Camera button clicked")
-              setShowWebcamModal(true)
-              console.log("Webcam modal should open")
-            }}
-            className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
-            title="Take Photo"
-          >
-            <Camera size={20} />
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => {
-              console.log("=== IMAGE BUTTON DEBUG ===")
-              console.log("Image upload button clicked")
-              console.log("File input ref:", fileInputRef.current)
-              fileInputRef.current?.click()
-              console.log("File input click triggered")
-            }}
-            className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
-            title="Upload Image"
-          >
-            <Image size={20} />
-          </button>
-          
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="hidden"
-          />
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message or use voice..."
-          className="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-        />
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Send size={20} />
-          </button>
+          </form>
         </div>
-      </form>
       </div>
-    </div>
-    </>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        className="hidden"
+      />
+    </TooltipProvider>
   )
 }
 
