@@ -105,8 +105,16 @@ const AIShowcaseWithErrorBoundary = () => (
 // Main AI Showcase component
 function AIShowcase() {
   const [conversationState, setConversationState] = useState<ConversationState>(() => {
-    const saved = sessionStorage.getItem('aiShowcase')
-    return saved ? JSON.parse(saved) : {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('aiShowcase')
+      return saved ? JSON.parse(saved) : {
+        sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        stage: 'greeting',
+        messages: [],
+        capabilitiesShown: []
+      }
+    }
+    return {
       sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       stage: 'greeting',
       messages: [],
@@ -135,7 +143,9 @@ function AIShowcase() {
 
   // Auto-save session state
   useEffect(() => {
-    sessionStorage.setItem('aiShowcase', JSON.stringify(conversationState))
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('aiShowcase', JSON.stringify(conversationState))
+    }
   }, [conversationState])
 
   // Initial AI greeting
@@ -440,3 +450,5 @@ Ready to implement these AI solutions in your business? Let's schedule your free
     </div>
   )
 }
+
+export default AIShowcaseWithErrorBoundary

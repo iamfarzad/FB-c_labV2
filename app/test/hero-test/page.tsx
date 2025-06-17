@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { HeroEnhanced } from "@/components/magicui/hero-enhanced"
+import HeroEnhanced from "@/components/magicui/hero-enhanced"
 
 export default function HeroTestPage() {
   const [theme, setTheme] = useState<"light" | "dark">("light")
