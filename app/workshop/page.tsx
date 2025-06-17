@@ -4,11 +4,11 @@ import { useState, useEffect } from "react"
 import { Layout } from "@/components/layout"
 import { WorkshopHero as HeroSection } from "@/components/workshop/hero-section"
 import { WhatToExpect } from "@/components/workshop/what-to-expect"
-import { FormatSection } from "@/components/workshop/format-section"
 import { ToolsSection } from "@/components/workshop/tools-section"
 import { DeliverySection } from "@/components/workshop/delivery-section"
 import { WhyItWorks } from "@/components/workshop/why-it-works"
 import { CTASection as CtaSection } from "@/components/workshop/cta-section"
+import { GridPattern } from "@/components/ui/grid-pattern"
 
 export default function WorkshopPage() {
   const [theme, setTheme] = useState<"light" | "dark">("light")
@@ -33,13 +33,10 @@ export default function WorkshopPage() {
         }}
       >
         {/* Hero Section */}
-        <HeroSection theme={theme} />
+        <HeroSection />
         
         {/* What to Expect Section */}
         <WhatToExpect theme={theme} />
-        
-        {/* Workshop Format Section */}
-        <FormatSection theme={theme} />
         
         {/* Tools Section */}
         <ToolsSection theme={theme} />

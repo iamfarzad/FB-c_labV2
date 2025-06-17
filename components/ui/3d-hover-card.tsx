@@ -86,7 +86,7 @@ export const ThreeDHoverCard = ({
             animate={{ opacity: isHovered ? 0.05 : 0.02 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20" />
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-amber-500/20" />
           </motion.div>
           
           <motion.div 
@@ -95,160 +95,10 @@ export const ThreeDHoverCard = ({
               background: 'linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03))',
               opacity: isHovered ? 1 : 0,
               transition: 'opacity 0.3s ease',
-              boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)',
+              boxShadow: '0 0 15px rgba(255, 91, 4, 0.3)',
             }}
           />
         </motion.div>
-      </LayoutGroup>
-    </div>
-  );
-};
-                >
-                  {description}
-                </motion.p>
-              </motion.div>
-
-              {/* 3D Cube Container - Moved to the right */}
-              <motion.div
-                className="cube-container"
-                style={{
-                  flex: "0 0 45%",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  position: "relative",
-                  height: "300px",
-                  perspective: "1000px"
-                }}
-              >
-                {/* 3D Cube */}
-                <motion.div
-                  className="absolute"
-                  style={{
-                    width: "200px",
-                    height: "200px",
-                    position: "relative",
-                    transformStyle: "preserve-3d",
-                    transform: "rotateX(-15deg) rotateY(15deg)",
-                    transition: "transform 0.5s ease"
-                  }}
-                  animate={{
-                    rotateY: isHovered ? "45deg" : "15deg",
-                    rotateX: isHovered ? "-30deg" : "-15deg",
-                    scale: isHovered ? 1.1 : 1
-                  }}
-                >
-                  {/* Cube Faces */}
-                  <motion.div
-                    className="cube"
-                    style={{
-                      position: "relative",
-                      width: "100%",
-                      height: "100%",
-                      transformStyle: "preserve-3d"
-                    }}
-                  >
-                    {/* Front */}
-                    <motion.div 
-                      className="cube-face cube-face-front"
-                      style={{
-                        position: "absolute",
-                        width: "200px",
-                        height: "200px",
-                        background: "rgba(255, 255, 255, 0.1)",
-                        border: "2px solid var(--color-orange-accent)",
-                        transform: "translateZ(100px)",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    />
-                    
-                    {/* Back */}
-                    <motion.div 
-                      className="cube-face cube-face-back"
-                      style={{
-                        position: "absolute",
-                        width: "200px",
-                        height: "200px",
-                        background: "rgba(255, 255, 255, 0.1)",
-                        border: "2px solid var(--color-orange-accent)",
-                        transform: "rotateY(180deg) translateZ(100px)",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    />
-                    
-                    {/* Right */}
-                    <motion.div 
-                      className="cube-face cube-face-right"
-                      style={{
-                        position: "absolute",
-                        width: "200px",
-                        height: "200px",
-                        background: "rgba(255, 255, 255, 0.1)",
-                        border: "2px solid var(--color-orange-accent)",
-                        transform: "rotateY(90deg) translateZ(100px)",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    />
-                    
-                    {/* Left */}
-                    <motion.div 
-                      className="cube-face cube-face-left"
-                      style={{
-                        position: "absolute",
-                        width: "200px",
-                        height: "200px",
-                        background: "rgba(255, 255, 255, 0.1)",
-                        border: "2px solid var(--color-orange-accent)",
-                        transform: "rotateY(-90deg) translateZ(100px)",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    />
-                    
-                    {/* Top */}
-                    <motion.div 
-                      className="cube-face cube-face-top"
-                      style={{
-                        position: "absolute",
-                        width: "200px",
-                        height: "200px",
-                        background: "rgba(255, 255, 255, 0.1)",
-                        border: "2px solid var(--color-orange-accent)",
-                        transform: "rotateX(90deg) translateZ(100px)",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    />
-                    
-                    {/* Bottom */}
-                    <motion.div 
-                      className="cube-face cube-face-bottom"
-                      style={{
-                        position: "absolute",
-                        width: "200px",
-                        height: "200px",
-                        background: "rgba(255, 255, 255, 0.1)",
-                        border: "2px solid var(--color-orange-accent)",
-                        transform: "rotateX(-90deg) translateZ(100px)",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    />
-                  </motion.div>
-                </motion.div>
-              </motion.div>
-            </motion.div>
-          </Transition>
-        </Variants>
       </LayoutGroup>
     </div>
   );

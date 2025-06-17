@@ -3,16 +3,20 @@
 import React from "react"
 import { ArrowRight, Calendar, Clock, Zap } from "lucide-react"
 import Link from "next/link"
+import { cn } from "@/lib/utils"
+import { GridPattern } from "@/components/ui/grid-pattern"
+import { useTheme } from "next-themes"
 
-interface WorkshopHeroProps {
-  theme: "light" | "dark"
-}
+interface WorkshopHeroProps {}
 
-export const WorkshopHero: React.FC<WorkshopHeroProps> = ({ theme }) => {
-  const textColor = theme === "dark" ? "text-[var(--color-light-silver)]" : "text-[var(--color-gunmetal)]"
-  const mutedTextColor = theme === "dark" ? "text-[var(--color-light-silver)]/90" : "text-[var(--color-gunmetal)]/90"
-  const cardBg = theme === "dark" ? "bg-[var(--glass-bg)]" : "bg-white"
-  const cardBorder = theme === "dark" ? "border-[var(--glass-border)]" : "border-gray-200"
+export const WorkshopHero: React.FC<WorkshopHeroProps> = ({}) => {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+  
+  const textColor = isDark ? "text-[var(--color-light-silver)]" : "text-[var(--color-gunmetal)]"
+  const mutedTextColor = isDark ? "text-[var(--color-light-silver)]/90" : "text-[var(--color-gunmetal)]/90"
+  const cardBg = isDark ? "bg-[var(--glass-bg)]" : "bg-white"
+  const cardBorder = isDark ? "border-[var(--glass-border)]" : "border-gray-200"
 
   return (
     <section className="relative py-20 md:py-32 overflow-hidden">
@@ -20,13 +24,27 @@ export const WorkshopHero: React.FC<WorkshopHeroProps> = ({ theme }) => {
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-orange-accent)]/5 to-transparent" />
       </div>
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <GridPattern
+          width={72}
+          height={56}
+          x={-1}
+          y={-1}
+          className={cn(
+            'absolute inset-0 h-full w-full',
+            isDark 
+              ? 'fill-gray-100/10 stroke-gray-100/5' 
+              : 'fill-gray-900/5 stroke-gray-900/10'
+          )}
+        />
+      </div>
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
             <div className="inline-flex items-center px-4 py-2 rounded-none bg-[var(--color-orange-accent)]/10 border border-[var(--color-orange-accent)]/30 mb-6">
               <Zap className="h-5 w-5 text-[var(--color-orange-accent)] mr-2" />
-              <span className="text-sm font-tech-mono text-[var(--color-orange-accent)] uppercase tracking-tech-wide">Free Workshop</span>
+              <span className="text-sm font-tech-mono text-[var(--color-orange-accent)] uppercase tracking-tech-wide">Workshop</span>
             </div>
             
             <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-bold ${textColor} mb-6 leading-tight`}>
@@ -37,14 +55,10 @@ export const WorkshopHero: React.FC<WorkshopHeroProps> = ({ theme }) => {
               Join my free 1-day workshop and learn how to implement AI solutions that drive real business results. No technical experience required.
             </p>
             
-            <div className="flex flex-wrap gap-4 mb-8">
-              <div className="flex items-center bg-[var(--color-orange-accent)]/10 px-4 py-2 rounded-lg">
-                <Calendar className="h-5 w-5 text-[var(--color-orange-accent)] mr-2" />
-                <span className={mutedTextColor}>Next Session: June 25, 2024</span>
-              </div>
-              <div className="flex items-center bg-[var(--color-orange-accent)]/10 px-4 py-2 rounded-lg">
-                <Clock className="h-5 w-5 text-[var(--color-orange-accent)] mr-2" />
-                <span className={mutedTextColor}>10:00 AM - 4:00 PM CET</span>
+            <div className="mb-8">
+              <div className="inline-flex items-center bg-[var(--color-orange-accent)]/10 px-4 py-2 rounded-lg">
+                <Zap className="h-5 w-5 text-[var(--color-orange-accent)] mr-2" />
+                <span className={mutedTextColor}>Hands-on AI Training</span>
               </div>
             </div>
             
@@ -87,7 +101,7 @@ export const WorkshopHero: React.FC<WorkshopHeroProps> = ({ theme }) => {
                       <Zap className="h-10 w-10 text-white" />
                     </div>
                     <h3 className="text-2xl font-bold text-white">AI Workshop</h3>
-                    <p className="text-white/80 mt-2">Free 1-Day Intensive</p>
+                    <p className="text-white/80 mt-2">Hands-on Learning</p>
                   </div>
                 </div>
               </div>
@@ -114,7 +128,7 @@ export const WorkshopHero: React.FC<WorkshopHeroProps> = ({ theme }) => {
                 <div className="pt-4 border-t border-[var(--glass-border)]">
                   <p className={`text-sm ${mutedTextColor} mb-4`}>
                     <Zap className="inline-block h-4 w-4 text-[var(--color-orange-accent)] mr-1" />
-                    Next session starts in <span className="font-semibold text-[var(--color-orange-accent)]">14 days</span>
+                    Limited seats available
                   </p>
                   <Link 
                     href="#register" 

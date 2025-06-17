@@ -43,20 +43,22 @@ export function AboutMeCard({ theme = 'light' }: AboutMeCardProps) {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <span className="inline-block text-sm md:text-base font-semibold text-orange-accent mb-2">
-              I believe in
-            </span>
-            
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
-              <span className="block">Creating practical,</span>
-              <span className="text-orange-accent">real-world solutions</span>
-              <span className="block">that deliver</span>
-              <span>actual business value</span>
-            </h2>
-            
-            <p className="text-lg text-gray-600 dark:text-gray-300 mt-6">
-              With a focus on simplicity and effectiveness, I help businesses transform their ideas into impactful digital experiences.
-            </p>
+            <div className="font-montserrat">
+              <span className="inline-block text-xs md:text-sm font-semibold tracking-widest text-gray-500 dark:text-gray-400 uppercase mb-4">
+                I believe
+              </span>
+              
+              <h2 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight tracking-tight">
+                <span className="block">Creating <span className="text-orange-accent font-medium">practical</span>,</span>
+                <span className="font-extrabold">real-world solutions</span>
+                <span className="block">that <span className="text-orange-accent font-normal">deliver</span></span>
+                <span className="font-extrabold text-orange-accent">actual business value</span>
+              </h2>
+              
+              <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mt-8 max-w-2xl leading-relaxed">
+                With a focus on simplicity and effectiveness, I help businesses transform their ideas into impactful digital experiences.
+              </p>
+            </div>
             
             <div className="pt-4">
               <Link 
@@ -85,53 +87,55 @@ export function AboutMeCard({ theme = 'light' }: AboutMeCardProps) {
             </div>
           </motion.div>
 
-          {/* Image */}
+          {/* Image with Tilt Effect */}
           <motion.div 
-            className="relative h-[400px] lg:h-[500px] rounded-2xl overflow-hidden shadow-2xl"
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
+            className="h-[400px] lg:h-[500px] w-full"
           >
-            <Image
-              src="/farzad-bayat_profile_2AI.JPG"
-              alt="Farzad Bayat - AI Consultant & Developer"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover object-center"
-              priority
-            />
-            
-            {/* Interactive overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
-              <div className="flex gap-3">
-                <a 
-                  href="/farzad-bayat_profile_2AI.JPG" 
-                  download="farzad-bayat-profile.jpg"
-                  className="p-3 bg-white/90 rounded-full hover:bg-white transition-colors"
-                  aria-label="Download profile image"
-                >
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width="20" 
-                    height="20" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
+            <div className="relative h-full w-full rounded-2xl overflow-hidden shadow-2xl group">
+              <Image
+                src="/farzad-bayat_profile_2AI.JPG"
+                alt="Farzad Bayat - AI Consultant & Developer"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                priority
+              />
+              
+              {/* Interactive overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6 z-10">
+                <div className="flex gap-3">
+                  <a 
+                    href="/farzad-bayat_profile_2AI.JPG" 
+                    download="farzad-bayat-profile.jpg"
+                    className="p-3 bg-white/90 rounded-full hover:bg-white transition-colors"
+                    aria-label="Download profile image"
                   >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                </a>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                  </a>
+                </div>
               </div>
+              
+              {/* Corner accents */}
+              <div className="absolute inset-0 border-2 border-transparent group-hover:border-orange-accent/30 transition-all duration-500 rounded-2xl pointer-events-none" />
             </div>
-            
-            {/* Corner accents */}
-            <div className="absolute inset-0 border-2 border-transparent hover:border-orange-accent/30 transition-all duration-500 rounded-2xl pointer-events-none" />
           </motion.div>
         </div>
       </div>

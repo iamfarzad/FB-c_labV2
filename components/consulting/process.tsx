@@ -19,21 +19,14 @@ interface ProcessStepProps {
 
 const ProcessStep: React.FC<ProcessStepProps> = ({ step, index, length, theme = "light" }) => {
   const isDark = theme === "dark"
-  const colors = [
-    "from-[#ff5b04] to-[#ff8f6a]",
-    "from-purple-500 to-blue-500",
-    "from-pink-500 to-rose-500",
-    "from-amber-500 to-orange-500",
-    "from-emerald-500 to-teal-500"
-  ]
-
+  const accentGradient = "bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)]"
   const Icon = step.icon
 
   return (
     <div className="relative flex group">
-      <div className={`absolute left-6 top-0 bottom-0 w-0.5 ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
+      <div className={`absolute left-6 top-0 bottom-0 w-0.5 ${isDark ? 'bg-[var(--glass-border)]' : 'bg-gray-200'}`}>
         <div 
-          className={`absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${colors[index % colors.length]} shadow-lg`}
+          className={`absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${accentGradient} shadow-lg`}
         >
           <Icon className="w-4 h-4 text-white" />
         </div>
@@ -42,14 +35,14 @@ const ProcessStep: React.FC<ProcessStepProps> = ({ step, index, length, theme = 
       <div className={cn("ml-12 pb-12 relative flex-1", index === length - 1 && 'pb-0')}>
         <div className={cn(
           "p-6 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
-          isDark ? 'bg-gray-800/50 backdrop-blur-sm border border-gray-700/50' : 'bg-background border border-border',
+          isDark ? 'bg-[var(--glass-bg)] backdrop-blur-sm border border-[var(--glass-border)]' : 'bg-white border border-gray-200',
           "hover:shadow-[0_0_0_1px_var(--color-orange-accent)]"
         )}>
-          <h3 className={cn("text-xl font-semibold mb-2 flex items-center", isDark ? 'text-foreground' : 'text-foreground/90')}>
-            <span className="mr-3 text-sm font-mono text-muted-foreground">0{index + 1}</span>
+          <h3 className={cn("text-xl font-semibold mb-2 flex items-center", isDark ? 'text-[var(--color-light-silver)]' : 'text-[var(--color-gunmetal)]')}>
+            <span className="mr-3 text-sm font-mono text-[var(--color-orange-accent)]">0{index + 1}</span>
             {step.title}
           </h3>
-          <p className={cn("text-sm leading-relaxed text-muted-foreground", isDark ? 'text-muted-foreground/80' : 'text-muted-foreground/90')}>
+          <p className={cn("text-sm leading-relaxed", isDark ? 'text-[var(--color-light-silver)]/90' : 'text-[var(--color-gunmetal)]/90')}>
             {step.description}
           </p>
         </div>
@@ -105,19 +98,28 @@ export const Process: React.FC<ProcessProps> = ({ theme = "light", className }) 
   ]
 
   return (
-    <section className={cn("py-20 relative overflow-hidden", isDark ? 'bg-background' : 'bg-background/95', className)}>
+    <section className={cn("py-20 relative overflow-hidden", className)} style={{
+      backgroundColor: 'var(--bg-primary)',
+      color: 'var(--text-primary)'
+    }}>
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <span className={cn(
-            "inline-block px-4 py-1 rounded-full text-sm font-medium mb-4",
-            isDark ? 'bg-foreground/5 text-foreground' : 'bg-accent/50 text-foreground'
+            "inline-block px-4 py-1.5 rounded-full text-sm font-medium mb-4",
+            isDark ? 'bg-[var(--glass-bg)] text-[var(--color-light-silver)]' : 'bg-[var(--color-orange-accent)/10] text-[var(--color-orange-accent)]'
           )}>
             Our Process
           </span>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#ff5b04] to-[#ff8f6a]">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{
+            background: 'linear-gradient(to right, var(--color-orange-accent), var(--color-orange-accent-light))',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>
             How We Work
           </h2>
-          <p className="text-lg max-w-2xl mx-auto text-muted-foreground/90">
+          <p className="text-lg max-w-2xl mx-auto" style={{
+            color: isDark ? 'var(--color-light-silver)' : 'var(--color-gunmetal)'
+          }}>
             A structured approach to delivering exceptional AI solutions tailored to your business needs.
           </p>
         </div>
