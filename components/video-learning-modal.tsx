@@ -2,10 +2,8 @@
 
 import type React from "react"
 import { useState, useRef } from "react"
-import { X, Play, Loader2, FileText, Code, Eye } from "lucide-react"
-import { parseJSON, parseHTML } from "@/lib/parse"
-import { SPEC_FROM_VIDEO_PROMPT, CODE_REGION_OPENER, CODE_REGION_CLOSER, SPEC_ADDENDUM } from "@/lib/prompts"
-import { generateText } from "@/lib/text-generation"
+import { X, Play } from "lucide-react"
+
 
 interface VideoLearningModalProps {
   isOpen: boolean
@@ -13,55 +11,16 @@ interface VideoLearningModalProps {
   theme: "light" | "dark"
 }
 
-interface Example {
-  title: string
-  url: string
-  spec: string
-  code: string
-  description?: string
-  category?: string
-}
+
 
 export const VideoLearningModal: React.FC<VideoLearningModalProps> = ({ isOpen, onClose, theme }) => {
   const [videoUrl, setVideoUrl] = useState("")
   const [isValidating, setIsValidating] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [generatedContent, setGeneratedContent] = useState<{
-    spec: string
-    code: string
-  } | null>(null)
-  const [activeTab, setActiveTab] = useState<"render" | "code" | "spec">("render")
   const [error, setError] = useState<string | null>(null)
 
   const inputRef = useRef<HTMLInputElement>(null)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
 
-  const examples: Example[] = [
-    {
-      title: "Interactive Binary Tree Visualizer",
-      url: "https://www.youtube.com/watch?v=example1",
-      spec: "Learn binary tree data structures through interactive visualization",
-      code: "<h1>Binary Tree Explorer</h1>",
-      description: "Understand how binary trees work with drag-and-drop nodes",
-      category: "computer-science",
-    },
-    {
-      title: "Physics Wave Simulator",
-      url: "https://www.youtube.com/watch?v=example2", 
-      spec: "Explore wave mechanics with interactive controls",
-      code: "<h1>Wave Physics Lab</h1>",
-      description: "Visualize how frequency and amplitude affect wave behavior",
-      category: "physics",
-    },
-    {
-      title: "Chemistry Molecule Builder",
-      url: "https://www.youtube.com/watch?v=example3",
-      spec: "Build molecules and see chemical bonding in action",
-      code: "<h1>Molecular Chemistry Lab</h1>",
-      description: "Create compounds and understand atomic interactions",
-      category: "chemistry",
-    },
-  ]
+
 
   const getYouTubeVideoId = (url: string): string | null => {
     try {
@@ -105,67 +64,7 @@ export const VideoLearningModal: React.FC<VideoLearningModalProps> = ({ isOpen, 
     return { isValid: false, error: "Invalid YouTube URL" }
   }
 
-  const generateSpecFromVideo = async (videoUrl: string): Promise<string> => {
-    console.log("=== GENERATING SPEC FROM VIDEO ===")
-    console.log("Video URL:", videoUrl)
-    
-    try {
-      // Generate a random educational topic for demonstration
-      const topics = [
-        "data structures and algorithms (like binary trees or sorting)",
-        "physics concepts (like wave mechanics or gravity)",
-        "mathematics (like calculus derivatives or geometry)",
-        "chemistry (like molecular bonding or periodic table)",
-        "biology (like cell division or DNA structure)",
-        "computer science (like networking protocols or databases)",
-        "astronomy (like planetary motion or star formation)",
-        "economics (like supply and demand or market forces)"
-      ]
-      
-      const randomTopic = topics[Math.floor(Math.random() * topics.length)]
-      
-      const enhancedPrompt = `${SPEC_FROM_VIDEO_PROMPT}
 
-Please create an interactive learning app focused on: ${randomTopic}
-
-The app should:
-1. Be highly interactive and engaging
-2. Include visual demonstrations
-3. Allow users to experiment and see results
-4. Have clear explanations of concepts
-5. Be suitable for learners at an intermediate level
-
-Generate a creative and educational web app specification.`
-
-      const specResponse = await generateText({
-        modelName: "gemini-2.0-flash-exp",
-        prompt: enhancedPrompt,
-        videoUrl: videoUrl,
-      })
-
-      console.log("Raw spec response:", specResponse)
-      
-      const parsedResponse = parseJSON(specResponse)
-      console.log("Parsed response:", parsedResponse)
-      
-      let spec = parsedResponse.spec || specResponse
-      spec += SPEC_ADDENDUM
-      return spec
-    } catch (error) {
-      console.error("Error generating spec:", error)
-      throw new Error(`Failed to generate specification: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    }
-  }
-
-  const generateCodeFromSpec = async (spec: string): Promise<string> => {
-    const codeResponse = await generateText({
-      modelName: "gemini-2.0-flash-exp",
-      prompt: spec,
-    })
-
-    const code = parseHTML(codeResponse, CODE_REGION_OPENER, CODE_REGION_CLOSER)
-    return code
-  }
 
   const handleSubmit = async () => {
     const url = inputRef.current?.value.trim() || ""
@@ -182,28 +81,19 @@ Generate a creative and educational web app specification.`
         return
       }
 
-      setVideoUrl(url)
-      setIsValidating(false)
-      setIsGenerating(true)
-
-      // Generate specification
-      const spec = await generateSpecFromVideo(url)
-
-      // Generate code from specification
-      const code = await generateCodeFromSpec(spec)
-
-      setGeneratedContent({ spec, code })
-      setActiveTab("render")
+      // Redirect to the dedicated video learning tool page
+      const encodedUrl = encodeURIComponent(url)
+      window.open(`/video-learning-tool?videoUrl=${encodedUrl}`, '_blank')
+      onClose() // Close the modal after opening the page
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
       setIsValidating(false)
-      setIsGenerating(false)
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !isValidating && !isGenerating) {
+    if (e.key === "Enter" && !isValidating) {
       handleSubmit()
     }
   }
@@ -255,16 +145,16 @@ Generate a creative and educational web app specification.`
                 placeholder="https://www.youtube.com/watch?v=..."
                 className="w-full p-3 rounded-xl glassmorphism focus:ring-2 focus:ring-[var(--color-orange-accent)]/30 text-[var(--text-primary)]"
                 onKeyDown={handleKeyDown}
-                disabled={isValidating || isGenerating}
+                disabled={isValidating}
               />
             </div>
 
             <button
               onClick={handleSubmit}
-              disabled={isValidating || isGenerating}
+              disabled={isValidating}
               className="w-full p-3 rounded-xl glass-button text-[var(--color-text-on-orange)] disabled:opacity-50"
             >
-              {isValidating ? "Validating..." : isGenerating ? "Generating..." : "Generate Learning App"}
+              {isValidating ? "Validating..." : "Open Learning Tool"}
             </button>
 
             {error && (
@@ -277,80 +167,25 @@ Generate a creative and educational web app specification.`
                 <iframe src={getYoutubeEmbedUrl(videoUrl)} className="w-full h-full" allowFullScreen />
               </div>
             )}
-
-            {/* Loading State */}
-            {isGenerating && (
-              <div className="flex items-center justify-center p-8">
-                <div className="text-center">
-                  <Loader2 size={32} className="animate-spin text-[var(--color-orange-accent)] mx-auto mb-2" />
-                  <p className={`text-sm ${textColor}`}>Generating learning content...</p>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Right Panel */}
           <div className="flex-1 flex flex-col">
-            {generatedContent && (
-              <>
-                {/* Tabs */}
-                <div className="flex border-b border-[var(--glass-border)]">
-                  {[
-                    { id: "render", label: "Preview", icon: Eye },
-                    { id: "code", label: "Code", icon: Code },
-                    { id: "spec", label: "Specification", icon: FileText },
-                  ].map(({ id, label, icon: Icon }) => (
-                    <button
-                      key={id}
-                      onClick={() => setActiveTab(id as any)}
-                      className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-all duration-200 ${
-                        activeTab === id
-                          ? "bg-[var(--color-orange-accent)] text-white"
-                          : `${textColor} hover:bg-[var(--color-orange-accent)]/10`
-                      }`}
-                    >
-                      <Icon size={16} />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Tab Content */}
-                <div className="flex-1 overflow-hidden">
-                  {activeTab === "render" && (
-                    <iframe
-                      ref={iframeRef}
-                      srcDoc={generatedContent.code}
-                      className="w-full h-full border-none"
-                      sandbox="allow-scripts"
-                    />
-                  )}
-
-                  {activeTab === "code" && (
-                    <div className="h-full overflow-auto p-4">
-                      <pre className={`text-sm ${textColor} whitespace-pre-wrap font-mono`}>
-                        {generatedContent.code}
-                      </pre>
-                    </div>
-                  )}
-
-                  {activeTab === "spec" && (
-                    <div className="h-full overflow-auto p-4">
-                      <div className={`${textColor} whitespace-pre-wrap leading-relaxed`}>{generatedContent.spec}</div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            {!generatedContent && !isGenerating && (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <Play size={48} className="text-[var(--color-orange-accent)] mx-auto mb-4 opacity-50" />
-                  <p className={`${textColor} opacity-90`}>Enter a YouTube URL to generate learning content</p>
-                </div>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center max-w-md">
+                <Play size={48} className="text-[var(--color-orange-accent)] mx-auto mb-4 opacity-50" />
+                <h3 className={`text-lg font-semibold ${textColor} mb-2`}>Interactive Learning Generator</h3>
+                <p className={`${textColor} opacity-90 text-sm leading-relaxed`}>
+                  Transform any YouTube video into an interactive learning experience. Our AI will create:
+                </p>
+                <ul className={`${textColor} opacity-80 text-sm mt-3 space-y-1 text-left`}>
+                  <li>• Learning modules and quizzes</li>
+                  <li>• Interactive exercises</li>
+                  <li>• Progress tracking</li>
+                  <li>• Key concept summaries</li>
+                </ul>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
