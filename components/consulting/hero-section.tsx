@@ -24,7 +24,15 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }> {
 }
 
 // Dynamically import CanvasRevealEffect with no SSR
-const CanvasRevealEffect = dynamic<{
+const CanvasRevealEffectBase = dynamic(() => import('@/components/ui/canvas-reveal-effect'), {
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-orange-accent)]/5 to-transparent" />
+  )
+});
+
+// Wrapper component with error boundary
+const CanvasRevealEffect = (props: {
   animationSpeed?: number;
   colors: number[][];
   dotSize?: number;
@@ -32,20 +40,10 @@ const CanvasRevealEffect = dynamic<{
   reverse?: boolean;
   opacities?: number[];
   containerClassName?: string;
-}>(
-  () => import('@/components/ui/canvas-reveal-effect').then(mod => ({
-    default: (props: any) => (
-      <ErrorBoundary>
-        <mod.default {...props} />
-      </ErrorBoundary>
-    )
-  })),
-  { 
-    ssr: false,
-    loading: () => (
-      <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-orange-accent)]/5 to-transparent" />
-    )
-  }
+}) => (
+  <ErrorBoundary>
+    <CanvasRevealEffectBase {...props} />
+  </ErrorBoundary>
 );
 
 interface ServicesHeroProps {

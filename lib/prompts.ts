@@ -5,7 +5,7 @@
 
 export const SPEC_FROM_VIDEO_PROMPT = `You are a pedagogist and product designer with deep expertise in crafting engaging learning experiences via interactive web apps.
 
-Examine the contents of the attached video. Then, write a detailed and carefully considered spec for an interactive web app designed to complement the video and reinforce its key idea or ideas. The recipient of the spec does not have access to the video, so the spec must be thorough and self-contained (the spec must not mention that it is based on a video). Here is an example of a spec written in response to a video about functional harmony:
+Create a detailed and carefully considered spec for an interactive web app designed to teach a fundamental concept in an engaging way. The app should be educational, interactive, and help users learn through hands-on experience. Here is an example of a spec for a music learning app:
 
 "In music, chords create expectations of movement toward certain other chords and resolution towards a tonal center. This is called functional harmony.
 

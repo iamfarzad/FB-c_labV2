@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import ClientLayout from "./ClientLayout"
+import './globals.css'
 
 export const metadata: Metadata = {
   title: "F.B/c AI - Consulting",
@@ -15,6 +16,3 @@ export default function RootLayout({
 }) {
   return <ClientLayout>{children}</ClientLayout>
 }
-
-
-import './globals.css'

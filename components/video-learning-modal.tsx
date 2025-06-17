@@ -38,12 +38,28 @@ export const VideoLearningModal: React.FC<VideoLearningModalProps> = ({ isOpen, 
 
   const examples: Example[] = [
     {
-      title: "Welcome to F.B/c AI",
-      url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      spec: "Get started with your AI assistant",
-      code: "<h1>Welcome to F.B/c AI</h1>",
-      description: "Learn how to interact with F.B/c AI",
-      category: "general",
+      title: "Interactive Binary Tree Visualizer",
+      url: "https://www.youtube.com/watch?v=example1",
+      spec: "Learn binary tree data structures through interactive visualization",
+      code: "<h1>Binary Tree Explorer</h1>",
+      description: "Understand how binary trees work with drag-and-drop nodes",
+      category: "computer-science",
+    },
+    {
+      title: "Physics Wave Simulator",
+      url: "https://www.youtube.com/watch?v=example2", 
+      spec: "Explore wave mechanics with interactive controls",
+      code: "<h1>Wave Physics Lab</h1>",
+      description: "Visualize how frequency and amplitude affect wave behavior",
+      category: "physics",
+    },
+    {
+      title: "Chemistry Molecule Builder",
+      url: "https://www.youtube.com/watch?v=example3",
+      spec: "Build molecules and see chemical bonding in action",
+      code: "<h1>Molecular Chemistry Lab</h1>",
+      description: "Create compounds and understand atomic interactions",
+      category: "chemistry",
     },
   ]
 
@@ -90,15 +106,55 @@ export const VideoLearningModal: React.FC<VideoLearningModalProps> = ({ isOpen, 
   }
 
   const generateSpecFromVideo = async (videoUrl: string): Promise<string> => {
-    const specResponse = await generateText({
-      modelName: "gemini-2.0-flash-exp",
-      prompt: SPEC_FROM_VIDEO_PROMPT,
-      videoUrl: videoUrl,
-    })
+    console.log("=== GENERATING SPEC FROM VIDEO ===")
+    console.log("Video URL:", videoUrl)
+    
+    try {
+      // Generate a random educational topic for demonstration
+      const topics = [
+        "data structures and algorithms (like binary trees or sorting)",
+        "physics concepts (like wave mechanics or gravity)",
+        "mathematics (like calculus derivatives or geometry)",
+        "chemistry (like molecular bonding or periodic table)",
+        "biology (like cell division or DNA structure)",
+        "computer science (like networking protocols or databases)",
+        "astronomy (like planetary motion or star formation)",
+        "economics (like supply and demand or market forces)"
+      ]
+      
+      const randomTopic = topics[Math.floor(Math.random() * topics.length)]
+      
+      const enhancedPrompt = `${SPEC_FROM_VIDEO_PROMPT}
 
-    let spec = parseJSON(specResponse).spec
-    spec += SPEC_ADDENDUM
-    return spec
+Please create an interactive learning app focused on: ${randomTopic}
+
+The app should:
+1. Be highly interactive and engaging
+2. Include visual demonstrations
+3. Allow users to experiment and see results
+4. Have clear explanations of concepts
+5. Be suitable for learners at an intermediate level
+
+Generate a creative and educational web app specification.`
+
+      const specResponse = await generateText({
+        modelName: "gemini-2.0-flash-exp",
+        prompt: enhancedPrompt,
+        videoUrl: videoUrl,
+      })
+
+      console.log("Raw spec response:", specResponse)
+      
+      const parsedResponse = parseJSON(specResponse)
+      console.log("Parsed response:", parsedResponse)
+      
+      let spec = parsedResponse.spec || specResponse
+      spec += SPEC_ADDENDUM
+      return spec
+    } catch (error) {
+      console.error("Error generating spec:", error)
+      throw new Error(`Failed to generate specification: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   const generateCodeFromSpec = async (spec: string): Promise<string> => {
