@@ -915,9 +915,9 @@ function calculateLeadScore(conversationHistory: any[], userInfo: any): number {
   if (!userInfo || !userInfo.email) return 0;
 
   const domain = userInfo.email?.split('@').pop() || '';
-  if (!['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com'].includes(domain)) {
-    score += 20;
-  }
+    if (!['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com'].includes(domain)) {
+      score += 20;
+    }
   if (conversationHistory && conversationHistory.length > 8) {
     score += 10;
   }
@@ -938,8 +938,8 @@ function calculateLeadScore(conversationHistory: any[], userInfo: any): number {
   }
   const capabilityKeywords = ['image', 'video', 'document', 'analyze', 'generate', 'code'];
   const capabilityMentions = capabilityKeywords.filter(keyword =>
-    conversationText.includes(keyword)
-  ).length;
+      conversationText.includes(keyword)
+    ).length;
   if (capabilityMentions >= 3) {
     score += 20;
   }
@@ -1811,20 +1811,20 @@ CONVERSATIONAL GOAL: ${newConversationState.aiGuidance || 'Respond to the user a
             responseResult.data.conversationStateForNextTurn = tempState;
 
             if (action !== "health" && action !== "leadCapture") {
-                const supabase = getSupabase();
+            const supabase = getSupabase();
                 await supabase.channel(tempState.sessionId!)
-                    .send({
-                        type: 'broadcast', event: 'ai-response',
-                        payload: {
+                .send({
+                    type: 'broadcast', event: 'ai-response',
+                    payload: {
                             text: responseResult.data.text || `Completed ${action}.`,
                             sources: responseResult.data.sources,
                             audioData: null,
                             sidebarActivity: tempState.sidebarActivity,
                             conversationStateForNextTurn: tempState,
-                            sender: 'ai',
-                            timestamp: Date.now()
-                        }
-                    });
+                        sender: 'ai',
+                        timestamp: Date.now()
+                    }
+                });
             }
         } else if (responseResult.success && responseResult.data && responseResult.data.conversationStateForNextTurn) {
             if (action !== "health" && action !== "leadCapture" && action !== "conversationalFlow") {

@@ -1,6 +1,6 @@
 // components/AIShowcase.tsx
 "use client"
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 interface Message {
@@ -42,6 +42,11 @@ export default function AIShowcase() {
 
   const [sidebarActivity, setSidebarActivity] = useState<SidebarActivity | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  console.log("Attempting to load Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+  console.log("Attempting to load Supabase Anon Key:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  
   const [supabase] = useState(() => createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -182,6 +187,56 @@ export default function AIShowcase() {
     }
   }
 
+  const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsLoading(true);
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+        const base64Data = (reader.result as string).split(',')[1];
+        const mimeType = file.type;
+
+        const body = {
+            prompt: `Analyze this document: ${file.name}`,
+            documentData: base64Data,
+            mimeType,
+            sessionId: conversationState.sessionId
+        };
+
+        try {
+            const response = await fetch(`/api/gemini-proxy?action=analyzeDocument`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.error || `Failed to trigger document_analysis`);
+            }
+        } catch (error) {
+            console.error('Error sending document:', error);
+            const errorMessage: Message = {
+              id: (Date.now() + 1).toString(),
+              text: "I apologize, but I couldn't analyze that document. Please try a different one.",
+              sender: 'ai',
+              timestamp: new Date()
+            }
+            setConversationState(prev => ({
+              ...prev,
+              messages: [...prev.messages, errorMessage]
+            }))
+            setIsLoading(false);
+        }
+    };
+    reader.onerror = (error) => {
+        console.error('Error reading file:', error);
+        setIsLoading(false);
+    };
+  }
+
   const triggerCapabilityDemo = async (capability: string) => {
     const demos: { [key: string]: string } = { // Added index signature
       'image_generation': 'Generate a business visualization for my industry',
@@ -200,23 +255,20 @@ export default function AIShowcase() {
         case 'image_generation':
           action = 'generateImage';
           break;
-        case 'video_analysis':
+        case 'video_analysis': {
           action = 'analyzeVideo';
-          // Extract URL for video analysis
-          const videoUrlMatch = demos[capability].match(/https:\/\/[^\s]+/);
-          if (videoUrlMatch) {
-            body.videoUrl = videoUrlMatch[0];
-            body.prompt = demos[capability].replace(videoUrlMatch[0], '').trim();
+          const videoUrl = prompt("Please enter the YouTube video URL to analyze:", "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+          if (!videoUrl) {
+            setIsLoading(false);
+            return;
           }
+          body.videoUrl = videoUrl;
+          body.prompt = `Analyze this YouTube video for business insights: ${videoUrl}`;
           break;
+        }
         case 'document_analysis':
-          action = 'analyzeDocument';
-          // For document analysis, you'd typically have a file upload mechanism.
-          // This is a placeholder for how you might trigger it.
-          // You'll need to handle documentData and mimeType.
-          body.documentData = "base64_encoded_document_data_placeholder"; // Placeholder
-          body.mimeType = "application/pdf"; // Placeholder
-          break;
+          fileInputRef.current?.click();
+          return;
         case 'code_execution':
           action = 'executeCode';
           body.businessContext = "General business calculation";
@@ -249,13 +301,16 @@ export default function AIShowcase() {
         // AI response (including sidebar updates) will be handled by Supabase broadcast
       } catch (error) {
         console.error(`Error triggering ${capability}:`, error);
-        const errMessage: Message = {
-          id: Date.now().toString(),
-          text: `Sorry, I couldn't demonstrate ${capability} right now.`,
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: `I apologize, but I encountered an error trying to perform: ${capability}. Please try again.`,
           sender: 'ai',
-          timestamp: new Date(),
-        };
-        setConversationState(prev => ({ ...prev, messages: [...prev.messages, errMessage] }));
+          timestamp: new Date()
+        }
+        setConversationState(prev => ({
+          ...prev,
+          messages: [...prev.messages, errorMessage]
+        }))
         setIsLoading(false);
       }
     }
@@ -449,7 +504,7 @@ Ready to implement these AI solutions in your business? Let's schedule your free
                 )}
 
                 <div className={`text-xs mt-1 ${message.sender === 'user' ? 'text-blue-200' : 'text-gray-500'}`}> {/* Adjusted timestamp color */}
-                  {message.timestamp.toLocaleTimeString()}
+                  {new Date(message.timestamp).toLocaleTimeString()}
                 </div>
               </div>
             </div>
