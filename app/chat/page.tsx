@@ -29,19 +29,6 @@ import { VideoLearningModal } from "@/components/video-learning-modal"
 import { VideoLearningCard } from "@/components/video-learning-card"
 import Link from "next/link"
 import { motion, Variants } from "framer-motion"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 
 interface ChatMessage {
@@ -51,6 +38,29 @@ interface ChatMessage {
   timestamp: string
   imageUrl?: string
   dataItems?: DataItem[]
+  audioData?: string
+  sources?: any[]
+}
+
+interface CompanyInfo {
+  name?: string;
+  domain?: string;
+  analysis?: string;
+}
+
+interface ConversationState {
+  sessionId: string
+  name?: string
+  email?: string
+  companyInfo?: CompanyInfo
+  stage: string
+  messages: ChatMessage[]
+  messagesInStage: number;
+  aiGuidance?: string;
+  sidebarActivity?: string;
+  isLimitReached?: boolean;
+  showBooking?: boolean;
+  capabilitiesShown: string[]
 }
 
 export default function ChatPage() {
@@ -61,6 +71,16 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [conversationState, setConversationState] = useState<ConversationState>(() => {
+    // In a real app, you might load this from sessionStorage or a backend
+    return {
+      sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      stage: 'greeting',
+      messages: [],
+      messagesInStage: 0,
+      capabilitiesShown: []
+    }
+  })
 
   // Tools menu state
   const [showToolsMenu, setShowToolsMenu] = useState(false)
@@ -72,7 +92,7 @@ export default function ChatPage() {
 
   // Speech Recognition setup
   const SpeechRecognition =
-    typeof window !== "undefined" ? window.SpeechRecognition || (window as any).webkitSpeechRecognition : null
+    typeof window !== "undefined" ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition : null
   const isSpeechSupported = !!SpeechRecognition
   const recognition = useRef<any>(null)
 
@@ -272,210 +292,113 @@ export default function ChatPage() {
 
   // Generate image function
   const generateImage = async (prompt: string) => {
-    setShowToolsMenu(false)
     setGeneratingImage(true)
-
-    try {
-      const response = await fetch("/api/gemini-proxy?action=generateImage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      })
-
-      const result = await response.json()
-
-      if (result.success && result.data) {
-        const dataItems = [
-          createDataItem("text", {
-            text: `I've created a detailed description for your image request: "${prompt}"`,
-            format: "markdown",
-          }),
-          createDataItem("text", {
-            text: result.data.description,
-            format: "markdown",
-          }),
-          createDataItem("text", {
-            text: result.data.note,
-            format: "markdown",
-          }),
-        ]
-
-        const newMessage: ChatMessage = {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: `I've created a detailed description for your image request: "${prompt}"\n\n${result.data.description}\n\n${result.data.note}`,
-          timestamp: new Date().toISOString(),
-          dataItems,
-        }
-        setMessages((prev) => [...prev, newMessage])
-      }
-    } catch (error) {
-      console.error("Error generating image description:", error)
-      const errorDataItem = createDataItem("error", {
-        message: "Sorry, I encountered an error while creating the image description. Please try again.",
-      })
-
-      const errorMessage: ChatMessage = {
-        id: Date.now().toString(),
-        role: "assistant",
-        content: "Sorry, I encountered an error while creating the image description. Please try again.",
-        timestamp: new Date().toISOString(),
-        dataItems: [errorDataItem],
-      }
-      setMessages((prev) => [...prev, errorMessage])
-    } finally {
-      setGeneratingImage(false)
-    }
+    // This function will now be handled via the main conversational flow
+    // by triggering a tool click with a specific prompt.
+    handleToolClick('generate_image', prompt);
   }
 
-  // Handle send message with Gemini API
+  // Send message
   const handleSendMessage = async () => {
-    const messageToSend = input.trim() || currentTranscription.trim()
-    if (messageToSend === "" && !isCameraActive) {
-      if (showVoiceModal) {
-        setShowVoiceModal(false)
-        setAiVoiceState("idle")
-      }
-      return
-    }
+    if (!input.trim() && !currentCameraFrame) return
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
-      content: messageToSend,
+      content: input,
       timestamp: new Date().toISOString(),
     }
 
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-    setCurrentTranscription("")
     setIsLoading(true)
+    setInput("")
+
+    // Update conversation state
+    const newState: ConversationState = {
+      ...conversationState,
+      messages: [...conversationState.messages, userMessage],
+      messagesInStage: (conversationState.messagesInStage || 0) + 1
+    };
+    
+    if (newState.stage === 'greeting' && !newState.name) {
+      newState.name = input;
+      newState.stage = 'email_request';
+    } else if (newState.stage === 'email_request' && input.includes('@')) {
+      newState.email = input;
+      newState.stage = 'email_collected';
+    }
+    
+    setConversationState(newState);
+    setMessages(newState.messages);
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/gemini-proxy?action=conversationalFlow", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
-          imageData: null,
-          cameraFrame: isCameraActive ? currentCameraFrame : null,
+          prompt: input,
+          currentConversationState: newState,
+          messageCount: newState.messages.length,
+          includeAudio: true // Or manage this with a state
         }),
       })
 
-      if (!response.ok) throw new Error("Failed to get response")
-
-      const reader = response.body?.getReader()
-      if (!reader) throw new Error("No reader available")
-
-      let assistantMessage = ""
-      const assistantMessageId = (Date.now() + 1).toString()
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const chunk = new TextDecoder().decode(value)
-        const lines = chunk.split("\n")
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.slice(6))
-              if (data.content) {
-                assistantMessage += data.content
-
-                // Parse the message content into data items
-                const dataItems = parseDataFromText(assistantMessage)
-
-                setMessages((prev) => {
-                  const newMessages = [...prev]
-                  const existingIndex = newMessages.findIndex((m) => m.id === assistantMessageId)
-
-                  if (existingIndex >= 0) {
-                    newMessages[existingIndex] = {
-                      ...newMessages[existingIndex],
-                      content: assistantMessage,
-                      dataItems,
-                    }
-                  } else {
-                    newMessages.push({
-                      id: assistantMessageId,
-                      role: "assistant",
-                      content: assistantMessage,
-                      timestamp: new Date().toISOString(),
-                      dataItems,
-                    })
-                  }
-
-                  return newMessages
-                })
-              }
-            } catch (e) {
-              // Ignore parsing errors for incomplete chunks
-            }
-          }
-        }
+      if (!response.ok) {
+        throw new Error("API response was not ok.")
       }
+      
+      // The response is now handled by the Supabase broadcast listener,
+      // which will update the state accordingly.
+      // We just need to wait for the broadcast.
 
-      if (assistantMessage) {
-        speakMessage(assistantMessage)
-      }
     } catch (error) {
       console.error("Error sending message:", error)
-      const errorDataItem = createDataItem("error", {
-        message: "Sorry, I encountered an error. Please try again.",
-      })
-
-      const errorMessage: ChatMessage = {
+      const assistantMessage: ChatMessage = {
         id: Date.now().toString(),
         role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
+        content: "Sorry, I ran into a problem. Please try again.",
         timestamp: new Date().toISOString(),
-        dataItems: [errorDataItem],
       }
-      setMessages((prev) => [...prev, errorMessage])
+      setMessages((prev) => [...prev, assistantMessage])
     } finally {
       setIsLoading(false)
+      setShowToolsMenu(false)
     }
   }
 
-  // Handle tool clicks
-  const handleToolClick = async (toolName: string) => {
-    setShowToolsMenu(false)
-    const currentPrompt = input.trim() || "something generic"
+  const handleToolClick = async (toolName: string, prompt?: string) => {
+    let action = '';
+    const body: any = { currentConversationState: conversationState };
 
-    let llmPrompt = ""
-
-    switch (toolName) {
-      case "search_web":
-        llmPrompt = `Act as a web search engine. Provide a concise summary of the top search results for "${currentPrompt}". Include 3-5 bullet points of key information.`
-        break
-      case "run_deep_research":
-        llmPrompt = `Perform a deep research on "${currentPrompt}". Provide a detailed, multi-paragraph overview with key findings, insights, and potential implications.`
-        break
-      case "think_longer":
-        llmPrompt = `Elaborate on the topic "${currentPrompt}" by providing a more detailed and expansive thought process. Break down the concept, discuss its nuances, and offer multiple perspectives.`
-        break
-      case "brainstorm_ideas":
-        llmPrompt = `Brainstorm 5-7 creative and distinct ideas related to "${currentPrompt}". Present them as a numbered list, with a brief explanation for each.`
-        break
-      default:
-        return
+    switch(toolName) {
+        case 'generate_image':
+            action = 'generateImage';
+            body.prompt = prompt || 'A futuristic cityscape';
+            break;
+        // Add other tools here
     }
+    
+    if (!action) return;
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: "user",
-      content: llmPrompt,
-      timestamp: new Date().toISOString(),
+    setIsLoading(true);
+    try {
+        const response = await fetch(`/api/gemini-proxy?action=${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to execute tool: ${toolName}`);
+        }
+        // Response handled by Supabase
+    } catch (error) {
+        console.error(`Error using tool ${toolName}:`, error);
+    } finally {
+        setIsLoading(false);
     }
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-
-    // Trigger AI response
-    handleSendMessage()
-  }
+  };
 
   // Microphone button handler
   const handleMicButtonClick = () => {
@@ -610,7 +533,7 @@ export default function ChatPage() {
           isListening={aiVoiceState === "listening"}
           currentTranscription={currentTranscription}
           aiState={aiVoiceState}
-          onClose={handleMicButtonClick}
+          onClose={() => setShowVoiceModal(false)}
           theme={theme}
         />
       )}
