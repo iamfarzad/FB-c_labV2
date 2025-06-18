@@ -1,8 +1,8 @@
 // /api/gemini.ts - Complete enhanced version
-import { GoogleGenAI } from "@google/genai"
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai"
 import { createClient } from '@supabase/supabase-js'
 import type { VercelRequest, VercelResponse } from "@vercel/node"
-import { ElevenLabs } from '@elevenlabs/elevenlabs-js';
+import { ElevenLabsClient } from 'elevenlabs';
 
 // Define Message interface
 interface Message {
@@ -56,17 +56,17 @@ interface ProxyResponse {
   }
 }
 
-let genAIInstance: GoogleGenAI | null = null
+let genAIInstance: GoogleGenAI | null = null;
 
 function getGenAI(): GoogleGenAI {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not set.")
+    throw new Error("GEMINI_API_KEY is not set.");
   }
   if (!genAIInstance) {
-    genAIInstance = new GoogleGenAI({ apiKey })
+    genAIInstance = new GoogleGenAI({ apiKey: apiKey });
   }
-  return genAIInstance
+  return genAIInstance;
 }
 
 function getSupabase() {
@@ -172,7 +172,7 @@ Use their name frequently and show company insights when available.`
 
     // Extract grounding sources
     const sources = response.candidates?.[0]?.groundingMetadata?.groundingAttributions
-      ?.map(attribution => ({
+      ?.map((attribution: any) => ({
         title: attribution.web?.title || 'Web Source',
         url: attribution.web?.uri || '#',
         snippet: attribution.web?.title || 'Grounded search result'
@@ -248,7 +248,7 @@ async function generateVoiceWithElevenLabs(text: string): Promise<{ audioBase64:
     throw new Error("ElevenLabs API key not configured")
   }
 
-  const elevenlabs = new ElevenLabs({
+  const elevenlabs = new ElevenLabsClient({
     apiKey: ELEVENLABS_API_KEY,
   });
 
@@ -908,25 +908,19 @@ function determineNextStage(
     };
 }
 
+// --- calculateLeadScore, extractCapabilitiesShown, generateEmailContent (helpers for leadCapture) ---
+
 function calculateLeadScore(conversationHistory: any[], userInfo: any): number {
-  let score = 0
+  let score = 0;
+  if (!userInfo || !userInfo.email) return 0;
 
-  // Company email (not generic) +20
-  // Ensure userInfo and userInfo.email are checked for null or undefined if necessary
-  const userEmail = userInfo?.email;
-  if (userEmail) {
-    const domain = userEmail.split('@').pop() || '';
-    if (!['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com'].includes(domain)) {
-      score += 20;
-    }
+  const domain = userInfo.email?.split('@').pop() || '';
+  if (!['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com'].includes(domain)) {
+    score += 20;
   }
-
-  // Conversation engagement +10
   if (conversationHistory && conversationHistory.length > 8) {
     score += 10;
   }
-
-  // Business terms mentioned +15
   const conversationText = JSON.stringify(conversationHistory || []).toLowerCase();
   if (conversationText.includes('automation') ||
       conversationText.includes('efficiency') ||
@@ -935,8 +929,6 @@ function calculateLeadScore(conversationHistory: any[], userInfo: any): number {
       conversationText.includes('process')) {
     score += 15;
   }
-
-  // Pricing/timeline questions +25
   if (conversationText.includes('cost') ||
       conversationText.includes('price') ||
       conversationText.includes('when') ||
@@ -944,58 +936,48 @@ function calculateLeadScore(conversationHistory: any[], userInfo: any): number {
       conversationText.includes('budget')) {
     score += 25;
   }
-
-  // Multiple AI capabilities requested +20
   const capabilityKeywords = ['image', 'video', 'document', 'analyze', 'generate', 'code'];
-  let capabilityMentions = 0;
-  if (conversationHistory) { // Check if conversationHistory is not null
-    capabilityMentions = capabilityKeywords.filter(keyword =>
-      conversationText.includes(keyword)
-    ).length;
-  }
-
+  const capabilityMentions = capabilityKeywords.filter(keyword =>
+    conversationText.includes(keyword)
+  ).length;
   if (capabilityMentions >= 3) {
     score += 20;
   }
-
   return Math.min(score, 100);
 }
 
-function extractCapabilitiesShown(conversationHistory: any[] | undefined): string[] { // Added undefined check
+function extractCapabilitiesShown(conversationHistory: any[]): string[] {
   const capabilities = [];
-  if (!conversationHistory) return capabilities; // Return empty if undefined
-
-  const conversationText = JSON.stringify(conversationHistory).toLowerCase();
-
+  const conversationText = JSON.stringify(conversationHistory || []).toLowerCase();
   if (conversationText.includes('searching') || conversationText.includes('grounding')) {
-    capabilities.push('Google Search Integration')
+    capabilities.push('Google Search Integration');
   }
   if (conversationText.includes('voice') || conversationText.includes('audio')) {
-    capabilities.push('Voice Generation')
+    capabilities.push('Voice Generation');
   }
   if (conversationText.includes('image') || conversationText.includes('visual')) {
-    capabilities.push('Image Analysis/Generation')
+    capabilities.push('Image Analysis/Generation');
   }
   if (conversationText.includes('video')) {
-    capabilities.push('Video Understanding')
+    capabilities.push('Video Understanding');
   }
   if (conversationText.includes('document') || conversationText.includes('pdf')) {
-    capabilities.push('Document Processing')
+    capabilities.push('Document Processing');
   }
   if (conversationText.includes('code') || conversationText.includes('calculation')) {
-    capabilities.push('Code Execution')
+    capabilities.push('Code Execution');
   }
   if (conversationText.includes('website') || conversationText.includes('url')) {
-    capabilities.push('URL Analysis')
+    capabilities.push('URL Analysis');
   }
-
-  return capabilities
+  return capabilities;
 }
 
-function generateEmailContent(name: string, email: string, summary: string): string {
+function generateEmailContent(name: string, email: string, summary: string, leadScore: number, companyName?: string): string {
   return `Hi ${name},
 
-Thank you for experiencing F.B/c's AI showcase! I'm excited about the potential I see for your business.
+Thank you for experiencing F.B/c's AI showcase! I'm excited about the potential I see for ${companyName || 'your business'}.
+Your AI Readiness Score during the showcase was: ${leadScore}/100.
 
 **Your Personalized AI Consultation Summary**
 
@@ -1005,11 +987,11 @@ ${summary}
 
 I'd love to dive deeper into how we can implement these AI solutions in your business.
 
-🎯 **For Team Training**: Our interactive AI workshops get your employees up to speed with practical, hands-on learning
-🚀 **For Custom Implementation**: We build and deploy AI solutions tailored to your specific needs
+🎯 **For Team Training**: Our interactive AI workshops get your employees up to speed with practical, hands-on learning.
+🚀 **For Custom Implementation**: We build and deploy AI solutions tailored to your specific needs.
 
 📅 **Book Your Free Strategy Session**
-Let's discuss your specific requirements and create a custom roadmap for your success: [CALENDAR_LINK]
+Let's discuss your specific requirements and create a custom roadmap for your success: [Your Booking Calendar Link Here - e.g., Calendly]
 
 **Why F.B/c?**
 - Proven AI implementation experience
@@ -1020,12 +1002,594 @@ Let's discuss your specific requirements and create a custom roadmap for your su
 Best regards,
 Farzad Bayat
 Founder, F.B/c AI Consulting
-bayatfarzad@gmail.com
+bayatfarzad@gmail.com (Replace with actual contact)
 
 P.S. The AI capabilities you experienced today are just the beginning. Imagine what your team could accomplish with these tools at their disposal! 🚀
 
 ---
-This summary was generated using the same AI technology we can implement for your business.`
+This summary was generated using the same AI technology we can implement for your business.`;
+}
+
+// --- Capability Handlers ---
+
+async function handleImageGeneration(body: ProxyRequestBody, baseSystemInstruction: string): Promise<ProxyResponse> {
+  try {
+    const { prompt, currentConversationState, messageCount } = body; // Added messageCount
+    const userInfo = { name: currentConversationState?.name, email: currentConversationState?.email, companyInfo: currentConversationState?.companyInfo };
+
+    if (!prompt) {
+      return { success: false, error: "No prompt provided for image generation", status: 400 };
+    }
+
+    const genAI = getGenAI();
+    const enhancedPrompt = `Create a detailed visual description for a business concept related to: "${prompt}"
+Context: User ${userInfo.name || 'Anonymous'} from ${userInfo.companyInfo?.name || 'Unknown company'} is exploring AI.
+Describe a professional business setting, clear visual metaphors for AI/technology, corporate color scheme, and elements resonating with business decision-makers.
+This description will be used to conceptually visualize an image.`;
+
+    const dynamicSystemInstruction = `${baseSystemInstruction}
+CURRENT STAGE: ${currentConversationState?.stage || 'capability_interaction'}.
+USER: ${userInfo.name || 'Guest'}.
+CONVERSATIONAL GOAL: Generate a compelling visual description for an image based on the user's prompt.`;
+
+    const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    ];
+    const generationConfig = { temperature: 0.7, topP: 0.9, topK: 35 }; // Adjusted slightly
+
+    const geminiResult = await genAI.models.generateContent({
+        model: "gemini-1.5-flash-latest",
+        contents: [{role: 'user', parts: [{text: enhancedPrompt}]}],
+        systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]}, // Using the more specific dynamic instruction
+        safetySettings: safetySettings,
+        generationConfig: generationConfig
+    });
+
+    const text = geminiResult.response.text();
+
+    const supabase = getSupabase();
+    await supabase.channel(currentConversationState?.sessionId || 'ai-showcase')
+      .send({
+        type: 'broadcast', event: 'sidebar-update',
+        payload: { activity: 'image_generation', message: '🎨 Generating business visualization concept...', timestamp: Date.now() }
+      });
+
+    // Determine the next conversation state
+    let nextConversationState = currentConversationState;
+    if (currentConversationState) { // Guard if currentConversationState could be undefined
+        nextConversationState = determineNextStage(currentConversationState, `System: Image description generated for "${prompt}".`, messageCount || 0);
+        nextConversationState.stage = 'post_capability_feedback';
+        nextConversationState.messagesInStage = 0;
+        nextConversationState.aiGuidance = `The image description for "${prompt}" has been generated. Ask the user for their feedback or if they have questions about it.`;
+        nextConversationState.sidebarActivity = 'image_generation_complete';
+    }
+
+    return {
+      success: true,
+      data: {
+        text: `Generated business visualization concept for: "${prompt}"
+
+Description: ${text}`,
+        description: text,
+        note: "Image generation description created for business presentation.",
+        sidebarActivity: "image_generation_complete",
+        conversationStateForNextTurn: nextConversationState
+      }
+    };
+  } catch (error: any) {
+    console.error("Error in handleImageGeneration:", error);
+    // Return a valid ProxyResponse with error
+    const errorState = body.currentConversationState ?
+        determineNextStage(body.currentConversationState, "Error during image generation.", body.messageCount || 0) :
+        undefined;
+    if (errorState) {
+        errorState.sidebarActivity = "image_generation_error";
+    }
+    return {
+        success: false,
+        error: error.message || "Failed to generate image description",
+        status: 500,
+        data: { conversationStateForNextTurn: errorState }
+    };
+  }
+}
+
+async function handleVideoAnalysis(body: ProxyRequestBody, baseSystemInstruction: string): Promise<ProxyResponse> {
+  try {
+    const { videoUrl, prompt = "Analyze this video for business insights", analysisType = "summary", currentConversationState, messageCount } = body;
+    const userInfo = { name: currentConversationState?.name, email: currentConversationState?.email, companyInfo: currentConversationState?.companyInfo };
+
+    if (!videoUrl) {
+      return { success: false, error: "No video URL provided", status: 400 };
+    }
+
+    const genAI = getGenAI();
+    let analysisPromptText = prompt;
+    switch (analysisType) {
+      case "business_insights":
+        analysisPromptText = `Analyze this business video, available at the URI ${videoUrl}, and extract: 1. Key business concepts discussed. 2. Potential automation opportunities. 3. AI implementation suggestions. 4. ROI considerations. Additional context: ${prompt}`;
+        break;
+      case "competitive_analysis":
+        analysisPromptText = `Analyze this video, available at the URI ${videoUrl}, for competitive intelligence: 1. Business strategies mentioned. 2. Technology stack insights. 3. Market positioning. 4. Opportunities for improvement. Additional context: ${prompt}`;
+        break;
+      default:
+        analysisPromptText = `Please provide a general analysis of the video found at ${videoUrl}. Context: ${prompt}`;
+        break;
+    }
+
+    const dynamicSystemInstruction = `${baseSystemInstruction}
+CURRENT STAGE: ${currentConversationState?.stage || 'capability_interaction'}.
+USER: ${userInfo.name || 'Guest'}.
+CONVERSATIONAL GOAL: Analyze the provided video URI and respond to the user's query.`;
+
+    const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    ];
+    const generationConfig = { temperature: 0.7, topP: 0.9, topK: 40 };
+
+    const videoPart = {
+        fileData: {
+            mimeType: "video/mp4",
+            fileUri: videoUrl
+        }
+    };
+    const textPart = { text: analysisPromptText };
+
+    const geminiResult = await genAI.models.generateContent({
+        model: "gemini-1.5-flash-latest",
+        contents: [{ role: 'user', parts: [videoPart, textPart] }],
+        systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]},
+        safetySettings: safetySettings,
+        generationConfig: generationConfig
+    });
+
+    const text = geminiResult.response.text();
+
+    const supabase = getSupabase();
+    await supabase.channel(currentConversationState?.sessionId || 'ai-showcase')
+      .send({
+        type: 'broadcast', event: 'sidebar-update',
+        payload: { activity: 'video_analysis', message: '🎥 Analyzing video content...', timestamp: Date.now() }
+      });
+
+    let nextConversationState = currentConversationState;
+    if (currentConversationState) {
+        nextConversationState = determineNextStage(currentConversationState, `System: Video analysis completed for ${videoUrl}.`, messageCount || 0);
+        nextConversationState.stage = 'post_capability_feedback';
+        nextConversationState.messagesInStage = 0;
+        nextConversationState.aiGuidance = `The video analysis for "${videoUrl}" has been generated. Ask the user for their feedback or if they have questions about it.`;
+        nextConversationState.sidebarActivity = 'video_analysis_complete';
+    }
+
+    return {
+      success: true,
+      data: {
+        text,
+        videoUrl,
+        analysisType,
+        sidebarActivity: "video_analysis_complete",
+        conversationStateForNextTurn: nextConversationState
+      }
+    };
+  } catch (error: any) {
+    console.error("Error in handleVideoAnalysis:", error);
+    const errorState = body.currentConversationState ?
+        determineNextStage(body.currentConversationState, "Error during video analysis.", body.messageCount || 0) :
+        undefined;
+    if (errorState) {
+        errorState.sidebarActivity = "video_analysis_error";
+    }
+    return {
+        success: false,
+        error: error.message || "Failed to analyze video",
+        status: 500,
+        data: { conversationStateForNextTurn: errorState }
+    };
+  }
+}
+
+async function handleDocumentAnalysis(body: ProxyRequestBody, baseSystemInstruction: string): Promise<ProxyResponse> {
+  try {
+    const { documentData, mimeType = "application/pdf", prompt = "Analyze this document for business insights", currentConversationState, messageCount } = body;
+    const userInfo = { name: currentConversationState?.name, email: currentConversationState?.email, companyInfo: currentConversationState?.companyInfo };
+
+    if (!documentData) {
+      return { success: false, error: "No document data provided", status: 400 };
+    }
+
+    const genAI = getGenAI();
+    const businessAnalysisPromptText = `Analyze the provided business document (mime-type: ${mimeType}) and provide: 1. **Executive Summary**: Key points in 2-3 sentences. 2. **Business Opportunities**: Areas where AI could help. 3. **Process Improvements**: Workflow optimizations possible. 4. **ROI Potential**: Quantifiable benefits. 5. **Implementation Roadmap**: Practical next steps. Original user request: ${prompt}`;
+
+    const dynamicSystemInstruction = `${baseSystemInstruction}
+CURRENT STAGE: ${currentConversationState?.stage || 'capability_interaction'}.
+USER: ${userInfo.name || 'Guest'}.
+CONVERSATIONAL GOAL: Analyze the provided document and respond to the user's query.`;
+
+    const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    ];
+    const generationConfig = { temperature: 0.6, topP: 0.9, topK: 35 };
+
+    // --- Conceptual File API Usage ---
+    // In a real scenario, you would upload the file first if it's large or for repeated use.
+    // const documentBuffer = Buffer.from(documentData, 'base64');
+    // let fileApiResponse;
+    // try {
+    //   // fileApiResponse = await genAI.files.uploadFile({ // Method for @google/genai
+    //   //   file: documentBuffer,
+    //   //   mimeType: mimeType,
+    //   //   displayName: `user_upload_${Date.now()}`
+    //   // }); // The exact SDK call might be genAI.uploadFile(...) or genAI.files.create(...)
+    //   // console.log('File API Response (conceptual):', fileApiResponse);
+    // } catch (uploadError) {
+    //   console.error("Error uploading file via File API (conceptual):", uploadError);
+    //   // Decide if to throw or fallback to inline
+    // }
+    // // If using File API, the part would be:
+    // // const documentPart = { fileData: { mimeType: fileApiResponse.file.mimeType, fileUri: fileApiResponse.file.uri } };
+    // For this refactoring, continuing with inlineData as per original plan for this handler,
+    // assuming files are small enough or this is a first-pass implementation before full File API integration.
+
+    const documentPart = {
+        inlineData: {
+            data: documentData, // Base64 encoded string
+            mimeType: mimeType
+        }
+    };
+    const textPart = { text: businessAnalysisPromptText };
+
+    const geminiResult = await genAI.models.generateContent({
+        model: "gemini-1.5-flash-latest",
+        contents: [{ role: 'user', parts: [documentPart, textPart] }],
+        systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]},
+        safetySettings: safetySettings,
+        generationConfig: generationConfig
+    });
+
+    const text = geminiResult.response.text();
+
+    const supabase = getSupabase();
+    await supabase.channel(currentConversationState?.sessionId || 'ai-showcase')
+      .send({
+        type: 'broadcast', event: 'sidebar-update',
+        payload: { activity: 'document_analysis', message: '📄 Processing business document...', timestamp: Date.now() }
+      });
+
+    const inputTokens = estimateTokens(prompt) + estimateTokens(businessAnalysisPromptText) + estimateTokens(documentData)/2;
+    const outputTokens = estimateTokens(text);
+
+    let nextConversationState = currentConversationState;
+    if (currentConversationState) {
+        nextConversationState = determineNextStage(currentConversationState, `System: Document analysis completed.`, messageCount || 0);
+        nextConversationState.stage = 'post_capability_feedback';
+        nextConversationState.messagesInStage = 0;
+        nextConversationState.aiGuidance = `The document analysis has been generated. Ask the user for their feedback or if they have questions about it.`;
+        nextConversationState.sidebarActivity = 'document_analysis_complete';
+    }
+
+    return {
+      success: true,
+      data: {
+        text,
+        sidebarActivity: "document_analysis_complete",
+        conversationStateForNextTurn: nextConversationState
+      },
+      usage: { inputTokens, outputTokens, cost: estimateCost(inputTokens, outputTokens) }
+    };
+  } catch (error: any) {
+    console.error("Error in handleDocumentAnalysis:", error);
+    const errorState = body.currentConversationState ?
+        determineNextStage(body.currentConversationState, "Error during document analysis.", body.messageCount || 0) :
+        undefined;
+    if (errorState) {
+        errorState.sidebarActivity = "document_analysis_error";
+    }
+    return {
+        success: false,
+        error: error.message || "Failed to analyze document",
+        status: 500,
+        data: { conversationStateForNextTurn: errorState }
+    };
+  }
+}
+
+async function handleCodeExecution(body: ProxyRequestBody, baseSystemInstruction: string): Promise<ProxyResponse> {
+  try {
+    const { prompt, businessContext = "General business calculation", currentConversationState, messageCount } = body;
+    const userInfo = { name: currentConversationState?.name, email: currentConversationState?.email, companyInfo: currentConversationState?.companyInfo };
+
+    if (!prompt) {
+      return { success: false, error: "No code execution prompt provided", status: 400 };
+    }
+
+    const genAI = getGenAI();
+    const codePromptText = `Create and execute Python code to solve this business problem: "${prompt}"
+Business context: ${businessContext}.
+Requirements: Write practical, business-relevant Python code. Execute it and show results. Explain the business value.
+Focus on demonstrating how AI can solve real business problems with code. The output should clearly present the code, its execution result, and a brief explanation of its business value.`;
+
+    const dynamicSystemInstruction = `${baseSystemInstruction}
+CURRENT STAGE: ${currentConversationState?.stage || 'capability_interaction'}.
+USER: ${userInfo.name || 'Guest'}.
+CONVERSATIONAL GOAL: Generate and execute Python code based on the user's request and explain its relevance.`;
+
+    const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    ];
+    const generationConfig = { temperature: 0.5, topP: 0.9, topK: 30 };
+
+    const geminiResult = await genAI.models.generateContent({
+        model: "gemini-1.5-flash-latest",
+        contents: [{role: 'user', parts: [{text: codePromptText}]}],
+        systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]},
+        tools: [{ codeExecution: {} }],
+        safetySettings: safetySettings,
+        generationConfig: generationConfig
+    });
+
+    const text = geminiResult.response.text();
+
+    const supabase = getSupabase();
+    await supabase.channel(currentConversationState?.sessionId || 'ai-showcase')
+      .send({
+        type: 'broadcast', event: 'sidebar-update',
+        payload: { activity: 'code_execution', message: '⚡ Executing business calculations...', timestamp: Date.now() }
+      });
+
+    let nextConversationState = currentConversationState;
+    if (currentConversationState) {
+        nextConversationState = determineNextStage(currentConversationState, `System: Code execution completed for prompt "${prompt}".`, messageCount || 0);
+        nextConversationState.stage = 'post_capability_feedback';
+        nextConversationState.messagesInStage = 0;
+        nextConversationState.aiGuidance = `The code execution for "${prompt}" has completed. Ask the user for their feedback or if they have questions about the results or the code.`;
+        nextConversationState.sidebarActivity = 'code_execution_complete';
+    }
+
+    return {
+      success: true,
+      data: {
+        text,
+        sidebarActivity: "code_execution_complete",
+        note: "Live code execution for business problem solving",
+        conversationStateForNextTurn: nextConversationState
+      }
+    };
+  } catch (error: any) {
+    console.error("Error in handleCodeExecution:", error);
+    const errorState = body.currentConversationState ?
+        determineNextStage(body.currentConversationState, "Error during code execution.", body.messageCount || 0) :
+        undefined;
+    if (errorState) {
+        errorState.sidebarActivity = "code_execution_error";
+    }
+    return {
+        success: false,
+        error: error.message || "Failed to execute code",
+        status: 500,
+        data: { conversationStateForNextTurn: errorState }
+    };
+  }
+}
+
+async function handleURLAnalysis(body: ProxyRequestBody, baseSystemInstruction: string): Promise<ProxyResponse> {
+  try {
+    const { urlContext, analysisType = "business_analysis", currentConversationState, messageCount } = body;
+    const userInfo = { name: currentConversationState?.name, email: currentConversationState?.email, companyInfo: currentConversationState?.companyInfo };
+
+    if (!urlContext) {
+      return { success: false, error: "No URL provided for analysis", status: 400 };
+    }
+
+    const genAI = getGenAI();
+    const urlAnalysisPromptText = `Analyze the website at the provided URL: ${urlContext}.
+Focus on ${analysisType}.
+Provide business intelligence analysis covering these points if applicable:
+1.  **Company Overview**: What they do, their market position.
+2.  **Technology Stack**: Visible technologies and tools (if discernible).
+3.  **AI Opportunities**: Where AI could improve their operations or offerings.
+4.  **Competitive Advantages**: What they do well.
+5.  **Improvement Areas**: Potential optimization opportunities.
+6.  **AI Implementation Roadmap Hints**: Specific recommendations or ideas.
+Focus on actionable insights for business improvement.`;
+
+    const dynamicSystemInstruction = `${baseSystemInstruction}
+CURRENT STAGE: ${currentConversationState?.stage || 'capability_interaction'}.
+USER: ${userInfo.name || 'Guest'}.
+CONVERSATIONAL GOAL: Analyze the provided website URL using Google Search and provide business intelligence.`;
+
+    const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    ];
+    const generationConfig = { temperature: 0.75, topP: 0.95, topK: 45 };
+
+    const geminiResult = await genAI.models.generateContent({
+        model: "gemini-1.5-flash-latest",
+        contents: [{role: 'user', parts: [{text: urlAnalysisPromptText}]}],
+        systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]},
+        tools: [{ googleSearch: {} }],
+        safetySettings: safetySettings,
+        generationConfig: generationConfig
+    });
+
+    const text = geminiResult.response.text();
+    const sources = geminiResult.response.candidates?.[0]?.groundingMetadata?.groundingAttributions
+            ?.map((attr:any) => ({ title: attr.web?.title || 'Web Source', url: attr.web?.uri || '#', snippet: attr.web?.title || 'Grounded search result' })) || [];
+
+
+    const supabase = getSupabase();
+    await supabase.channel(currentConversationState?.sessionId || 'ai-showcase')
+      .send({
+        type: 'broadcast', event: 'sidebar-update',
+        payload: { activity: 'url_analysis', message: '🌐 Analyzing website for business intelligence...', timestamp: Date.now() }
+      });
+
+    let nextConversationState = currentConversationState;
+    if (currentConversationState) {
+        nextConversationState = determineNextStage(currentConversationState, `System: URL analysis completed for ${urlContext}.`, messageCount || 0);
+        nextConversationState.stage = 'post_capability_feedback';
+        nextConversationState.messagesInStage = 0;
+        nextConversationState.aiGuidance = `The URL analysis for "${urlContext}" has been completed. Ask the user for their feedback or if they have questions about the insights provided.`;
+        nextConversationState.sidebarActivity = 'url_analysis_complete';
+    }
+
+    return {
+      success: true,
+      data: {
+        text,
+        sources: sources,
+        urlContext,
+        sidebarActivity: "url_analysis_complete",
+        conversationStateForNextTurn: nextConversationState
+      }
+    };
+  } catch (error: any) {
+    console.error("Error in handleURLAnalysis:", error);
+    const errorState = body.currentConversationState ?
+        determineNextStage(body.currentConversationState, "Error during URL analysis.", body.messageCount || 0) :
+        undefined;
+    if (errorState) {
+        errorState.sidebarActivity = "url_analysis_error";
+    }
+    return {
+        success: false,
+        error: error.message || "Failed to analyze URL",
+        status: 500,
+        data: { conversationStateForNextTurn: errorState }
+    };
+  }
+}
+
+async function handleLeadCapture(body: ProxyRequestBody, baseSystemInstruction: string): Promise<ProxyResponse> {
+  try {
+    const { currentConversationState, messageCount } = body;
+    const conversationHistory = currentConversationState?.messages;
+    const userInfo = {
+        name: currentConversationState?.name,
+        email: currentConversationState?.email,
+        companyInfo: currentConversationState?.companyInfo
+    };
+
+    if (!conversationHistory || !userInfo.name || !userInfo.email) {
+      return { success: false, error: "Missing required lead information (name, email, or history)", status: 400 };
+    }
+
+    const genAI = getGenAI();
+    const leadCaptureSystemInstruction = `${baseSystemInstruction}
+CONVERSATIONAL GOAL: Generate a concise and professional summary and a consultant brief based on the provided conversation history and user details. Focus on clarity and actionability.`;
+
+    const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    ];
+    const generationConfigSummarization = { temperature: 0.5, topP: 0.85, topK: 30 };
+
+    const capabilitiesShownText = extractCapabilitiesShown(conversationHistory).join(', ') || 'General discussion';
+    const historyForSummaryPrompt = conversationHistory.length > 10 ? conversationHistory.slice(-10) : conversationHistory;
+
+
+    const summaryPromptText = `Create a comprehensive F.B/c AI consultation summary for ${userInfo.name}.
+AI CAPABILITIES DEMONSTRATED: ${capabilitiesShownText}.
+CONVERSATION ANALYSIS (selected highlights): ${JSON.stringify(historyForSummaryPrompt)}
+CREATE STRUCTURED SUMMARY: 1. Executive Summary (key insights). 2. AI Capabilities Showcased. 3. Business Opportunities for ${userInfo.companyInfo?.name || 'their company'}. 4. Recommended Solutions (Training vs Consulting). 5. Next Steps (call-to-action for consultation).
+Make it professional, actionable, and compelling for ${userInfo.name}.`;
+
+    const summaryGeminiResult = await genAI.models.generateContent({
+        model: "gemini-1.5-flash-latest",
+        contents: [{role: 'user', parts: [{text: summaryPromptText}]}],
+        systemInstruction: {role: 'system', parts: [{text: leadCaptureSystemInstruction}]},
+        safetySettings: safetySettings,
+        generationConfig: generationConfigSummarization
+    });
+    const summary = summaryGeminiResult.response.text();
+
+    const briefPromptText = `Create a detailed consultant brief for Farzad's follow-up with ${userInfo.name}.
+Contact: ${userInfo.name}, Email: ${userInfo.email}, Company: ${userInfo.companyInfo?.name || 'N/A'}, Industry: ${userInfo.companyInfo?.industry || 'N/A'}.
+AI Capabilities that resonated: ${capabilitiesShownText}.
+Key Pain Points expressed during conversation. AI Readiness Level (impression). Decision Authority (impression). Budget Indicators (if any). Urgency Level (impression). Service Fit (Training/Consulting).
+FOLLOW-UP STRATEGY: Key talking points, relevant case studies, recommended solution approach, pricing considerations.
+CONVERSATION INSIGHTS (key interactions): ${JSON.stringify(historyForSummaryPrompt)}
+Provide actionable intelligence for converting this lead.`;
+
+    const briefGeminiResult = await genAI.models.generateContent({
+        model: "gemini-1.5-flash-latest",
+        contents: [{role: 'user', parts: [{text: briefPromptText}]}],
+        systemInstruction: {role: 'system', parts: [{text: leadCaptureSystemInstruction}]},
+        safetySettings: safetySettings,
+        generationConfig: generationConfigSummarization
+    });
+    const brief = briefGeminiResult.response.text();
+
+    const supabase = getSupabase();
+    const leadScore = calculateLeadScore(conversationHistory, userInfo);
+
+    const { data: leadData, error: supabaseError } = await supabase
+      .from('lead_summaries')
+      .insert({
+        name: userInfo.name, email: userInfo.email,
+        company_name: userInfo.companyInfo?.name,
+        conversation_summary: summary, consultant_brief: brief,
+        lead_score: leadScore,
+        ai_capabilities_shown: extractCapabilitiesShown(conversationHistory)
+      })
+      .select();
+
+    if (supabaseError) throw new Error(`Failed to store lead: ${supabaseError.message}`);
+    if (!leadData || leadData.length === 0) throw new Error("Lead data was not returned after insert.");
+
+
+    let nextConversationState = currentConversationState;
+    if (currentConversationState) {
+        nextConversationState = determineNextStage(currentConversationState, `System: Lead capture complete for ${userInfo.name}.`, messageCount || 0);
+        nextConversationState.stage = 'finalizing';
+        nextConversationState.messagesInStage = 0;
+        nextConversationState.aiGuidance = `Lead capture process is complete. The summary and brief have been generated. Thank the user and indicate that Farzad will be in touch if they requested a consultation.`;
+        nextConversationState.sidebarActivity = 'lead_capture_complete';
+        nextConversationState.isLimitReached = true;
+        nextConversationState.showBooking = true;
+    }
+
+    return {
+      success: true,
+      data: {
+        summary, brief, leadScore,
+        emailContent: generateEmailContent(userInfo.name!, userInfo.email!, summary, leadScore, userInfo.companyInfo?.name),
+        leadId: leadData[0].id,
+        sidebarActivity: "lead_capture_complete",
+        conversationStateForNextTurn: nextConversationState
+      }
+    };
+  } catch (error: any) {
+    console.error("Error in handleLeadCapture:", error);
+    const errorState = body.currentConversationState ?
+        determineNextStage(body.currentConversationState, "Error during lead capture.", body.messageCount || 0) :
+        undefined;
+    if (errorState) {
+        errorState.sidebarActivity = "lead_capture_error";
+    }
+    return {
+        success: false,
+        error: error.message || "Failed to process lead capture",
+        status: 500,
+        data: { conversationStateForNextTurn: errorState }
+    };
+  }
 }
 
 // Main handler
@@ -1112,25 +1676,33 @@ USER: ${newConversationState.name || 'Guest'}.
 COMPANY: ${newConversationState.companyInfo?.name || 'Not specified'}
 CONVERSATIONAL GOAL: ${newConversationState.aiGuidance || 'Respond to the user appropriately based on the conversation history and current stage.'}`;
 
-                const genAI = getGenAI();
-                const model = genAI.getGenerativeModel({
-                    model: "gemini-1.5-flash-latest",
-                    tools: [{ googleSearch: {} }],
-                    systemInstruction: { role: "system", parts: [{ text: dynamicSystemInstruction }] }
-                });
+                const genAI = getGenAI(); // genAI instance from the updated getGenAI
 
-                const geminiHistory = (tempCurrentConversationState.messages || []).map((msg: Message) => ({
+                const geminiHistory = (tempCurrentConversationState.messages || []).map((msg: Message) => ({ // Ensure geminiHistory is defined before use
                     role: msg.sender === 'ai' ? 'model' : 'user',
                     parts: [{ text: msg.text }]
                 }));
 
-                const geminiResult = await model.generateContent({
+                const generationConfig = { temperature: 0.75, topP: 0.9, topK: 40 };
+                const safetySettings = [
+                    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+                    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+                    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+                    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+                ];
+
+                const result = await genAI.models.generateContent({
+                    model: "gemini-1.5-flash-latest",
                     contents: [...geminiHistory, { role: 'user', parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.75, topP: 0.9, topK: 40 }
+                    systemInstruction: { role: "system", parts: [{ text: dynamicSystemInstruction }] },
+                    tools: [{ googleSearch: {} }],
+                    generationConfig: generationConfig,
+                    safetySettings: safetySettings,
                 });
 
-                const responseText = geminiResult.response.text();
-                const sources = geminiResult.response.candidates?.[0]?.groundingMetadata?.groundingAttributions
+                const response = result.response;
+                const responseText = response.text();
+                const sources = response.candidates?.[0]?.groundingMetadata?.groundingAttributions
                     ?.map((attr:any) => ({ title: attr.web?.title || 'Web Source', url: attr.web?.uri || '#', snippet: attr.web?.title || 'Grounded search result' })) || [];
 
                 let audioData = null;
@@ -1177,50 +1749,99 @@ CONVERSATIONAL GOAL: ${newConversationState.aiGuidance || 'Respond to the user a
         const {
             currentConversationState = {
                 stage: 'capability_selection', messages: [], messagesInStage: 0,
-                sessionId: `sess_${Date.now()}_${Math.random().toString(36).substring(2,9)}`,
-                aiGuidance: "Awaiting capability selection.",
+                sessionId: `sess_${Date.now()}_${Math.random().toString(36).substring(2,9)}`, // Default sessionID if none from client
+                aiGuidance: "Awaiting capability selection.", // Default guidance
                 sidebarActivity: ""
             },
+            // messageCount is not strictly needed for most direct capability calls here, but good to have if state needs update
         } = body;
 
-        let postCapabilityState = { ...currentConversationState, stage: 'post_capability_feedback', messagesInStage: 0, aiGuidance: `Capability ${action} shown. Ask for feedback.`, sidebarActivity: `${action}_complete`};
+        // Base system instruction might be needed by some handlers if they make LLM calls
+        const baseSystemInstruction = `You are F.B/c AI Assistant, a friendly, highly intelligent, and slightly witty AI. Your primary role is to showcase AI capabilities for business transformation, understand user needs, and guide them towards a consultation with Farzad Bayat. Be conversational, engaging, and helpful. Use the user's name and company details (if known) to personalize responses. Avoid lists unless specifically asked. Keep responses concise and focused on the current conversational goal.`;
 
-        let capabilityResponseText = `[Placeholder: Output for ${action}.]`;
+        // Ensure sessionId is present in currentConversationState for handlers
+        if (!currentConversationState.sessionId) {
+            currentConversationState.sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2,9)}`;
+        }
 
-        if (action === "health") {
-             responseResult = { success: true, data: { status: "healthy", capabilities: "all_gemini_features_active", conversationStateForNextTurn: currentConversationState } };
-        } else if (action === "leadCapture"){
-             // NOTE: This is a simplified placeholder. The original handleLeadCapture had more complex logic.
-             // That logic (calling Gemini for summary/brief, DB insert) should be merged here or called from here.
-             // For now, using the placeholder logic from the subtask description.
-             const finalState = { ...currentConversationState, stage: 'finalizing', aiGuidance: "Lead capture process is complete. Thank the user."};
-             responseResult = { success: true, data: { text: "Your information and summary are being processed. Thank you!", conversationStateForNextTurn: finalState }};
-        } else if (["generateImage", "analyzeVideo", "analyzeDocument", "executeCode", "analyzeURL"].includes(action)) {
-            // NOTE: These actions previously called dedicated handler functions (e.g., handleImageGeneration).
-            // That logic (calling Gemini with specific prompts/tools, etc.) should be merged here or called.
-            // For now, using the placeholder logic.
-            const supabase = getSupabase();
-            await supabase.channel(postCapabilityState.sessionId!)
-                .send({
-                    type: 'broadcast', event: 'ai-response',
-                    payload: {
-                        text: capabilityResponseText,
-                        sidebarActivity: postCapabilityState.sidebarActivity,
-                        conversationStateForNextTurn: postCapabilityState,
-                        sender: 'ai',
-                        timestamp: Date.now()
+        switch (action) {
+            case "generateImage":
+                responseResult = await handleImageGeneration(body, baseSystemInstruction);
+                break;
+            case "analyzeVideo":
+                responseResult = await handleVideoAnalysis(body, baseSystemInstruction);
+                break;
+            case "analyzeDocument":
+                responseResult = await handleDocumentAnalysis(body, baseSystemInstruction);
+                break;
+            case "executeCode":
+                responseResult = await handleCodeExecution(body, baseSystemInstruction);
+                break;
+            case "analyzeURL":
+                responseResult = await handleURLAnalysis(body, baseSystemInstruction);
+                break;
+            case "leadCapture":
+                responseResult = await handleLeadCapture(body, baseSystemInstruction);
+                break;
+            case "health":
+                responseResult = {
+                    success: true,
+                    data: {
+                        status: "healthy",
+                        capabilities: "all_gemini_features_active",
+                        // Return current state or a minimal state for health check
+                        conversationStateForNextTurn: currentConversationState
                     }
-                });
-            responseResult = {
-                success: true,
-                data: {
-                    text: capabilityResponseText,
-                    sidebarActivity: postCapabilityState.sidebarActivity,
-                    conversationStateForNextTurn: postCapabilityState
-                }
-            };
-        } else {
-             responseResult = { success: false, error: "Unknown or unhandled action: " + action, status: 400 };
+                };
+                break;
+            default:
+                responseResult = { success: false, error: "Unknown or unhandled action: " + action, status: 400 };
+                break;
+        }
+
+        if (responseResult.success && responseResult.data && !responseResult.data.conversationStateForNextTurn) {
+            let tempState = currentConversationState;
+            if (action !== "health" && action !== "leadCapture") {
+                 tempState = determineNextStage(currentConversationState, `System: User triggered action ${action}.`, body.messageCount || 0);
+                 tempState.stage = 'post_capability_feedback';
+                 tempState.messagesInStage = 0;
+                 tempState.aiGuidance = `The AI capability '${action}' was just demonstrated. Now, ask the user for their feedback or if they have questions about it.`;
+                 tempState.sidebarActivity = `${action}_complete`;
+            }
+            responseResult.data.conversationStateForNextTurn = tempState;
+
+            if (action !== "health" && action !== "leadCapture") {
+                const supabase = getSupabase();
+                await supabase.channel(tempState.sessionId!)
+                    .send({
+                        type: 'broadcast', event: 'ai-response',
+                        payload: {
+                            text: responseResult.data.text || `Completed ${action}.`,
+                            sources: responseResult.data.sources,
+                            audioData: null,
+                            sidebarActivity: tempState.sidebarActivity,
+                            conversationStateForNextTurn: tempState,
+                            sender: 'ai',
+                            timestamp: Date.now()
+                        }
+                    });
+            }
+        } else if (responseResult.success && responseResult.data && responseResult.data.conversationStateForNextTurn) {
+            if (action !== "health" && action !== "leadCapture" && action !== "conversationalFlow") {
+                 const supabase = getSupabase();
+                 await supabase.channel(responseResult.data.conversationStateForNextTurn.sessionId!)
+                    .send({
+                        type: 'broadcast', event: 'ai-response',
+                        payload: {
+                            text: responseResult.data.text || `Completed ${action}.`,
+                            sources: responseResult.data.sources,
+                            sidebarActivity: responseResult.data.sidebarActivity || `${action}_complete`,
+                            conversationStateForNextTurn: responseResult.data.conversationStateForNextTurn,
+                            sender: 'ai',
+                            timestamp: Date.now()
+                        }
+                    });
+            }
         }
     }
 
