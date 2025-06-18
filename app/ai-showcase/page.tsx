@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import AIShowcase from "@/components/ai/AIShowcase"
+import AIShowcase from "@/components/AIShowcase"
 
 export default function AIShowcasePage() {
   // Set page title
