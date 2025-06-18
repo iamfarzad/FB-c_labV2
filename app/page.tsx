@@ -2,9 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { Layout } from "@/components/layout"
-import { HeroSection } from "@/components/hero-section"
-import { FeaturesSection } from "@/components/features-section"
-import { CTASection } from "@/components/cta-section"
+import { HeroSection } from "@/components/home/hero-section"
+import { AboutMeCard } from "@/components/home/about-me-card"
+import { WhyWorkWithMe } from "@/components/home/why-work-with-me"
+import { ProofSection } from "@/components/home/proof-section"
+import { AISolutionsSection } from "@/components/home/ai-solutions-redesigned"
+import { Results } from "@/components/home/results"
+import { TechMarquee } from "@/components/home/tech-marquee"
+import { FinalCTA } from "@/components/home/final-cta"
 
 export default function HomePage() {
   const [theme, setTheme] = useState<"light" | "dark">("light")
@@ -20,7 +25,7 @@ export default function HomePage() {
 
   return (
     <Layout theme={theme} onThemeToggle={toggleTheme}>
-      <div
+      <div 
         className="relative"
         style={{
           backgroundColor: "var(--bg-primary)",
@@ -28,13 +33,28 @@ export default function HomePage() {
         }}
       >
         {/* Hero Section */}
-        <HeroSection theme={theme} onStartChat={() => window.location.href = '/chat'} />
-
-        {/* Features Section */}
-        <FeaturesSection theme={theme} />
-
-        {/* CTA Section */}
-        <CTASection theme={theme} onStartChat={() => window.location.href = '/chat'} />
+        <HeroSection theme={theme} />
+        
+        {/* About Me Card */}
+        <AboutMeCard theme={theme} />
+        
+        {/* Why Work With Me */}
+        <WhyWorkWithMe theme={theme} />
+        
+        {/* AI Solutions Section - Merged WhatIOffer and AIBuildSection */}
+        <AISolutionsSection theme={theme} />
+        
+        {/* Proof Section */}
+        <ProofSection theme={theme} />
+        
+        {/* Results */}
+        <Results theme={theme} />
+        
+        {/* AI Logos Marquee */}
+        <TechMarquee />
+        
+        {/* Final CTA */}
+        <FinalCTA theme={theme} />
       </div>
     </Layout>
   )

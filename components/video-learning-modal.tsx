@@ -2,10 +2,8 @@
 
 import type React from "react"
 import { useState, useRef } from "react"
-import { X, Play, Loader2, FileText, Code, Eye } from "lucide-react"
-import { parseJSON, parseHTML } from "@/lib/parse"
-import { SPEC_FROM_VIDEO_PROMPT, CODE_REGION_OPENER, CODE_REGION_CLOSER, SPEC_ADDENDUM } from "@/lib/prompts"
-import { generateText } from "@/lib/text-generation"
+import { X, Play } from "lucide-react"
+
 
 interface VideoLearningModalProps {
   isOpen: boolean
@@ -13,39 +11,16 @@ interface VideoLearningModalProps {
   theme: "light" | "dark"
 }
 
-interface Example {
-  title: string
-  url: string
-  spec: string
-  code: string
-  description?: string
-  category?: string
-}
+
 
 export const VideoLearningModal: React.FC<VideoLearningModalProps> = ({ isOpen, onClose, theme }) => {
   const [videoUrl, setVideoUrl] = useState("")
   const [isValidating, setIsValidating] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [generatedContent, setGeneratedContent] = useState<{
-    spec: string
-    code: string
-  } | null>(null)
-  const [activeTab, setActiveTab] = useState<"render" | "code" | "spec">("render")
   const [error, setError] = useState<string | null>(null)
 
   const inputRef = useRef<HTMLInputElement>(null)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
 
-  const examples: Example[] = [
-    {
-      title: "Welcome to F.B/c AI",
-      url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      spec: "Get started with your AI assistant",
-      code: "<h1>Welcome to F.B/c AI</h1>",
-      description: "Learn how to interact with F.B/c AI",
-      category: "general",
-    },
-  ]
+
 
   const getYouTubeVideoId = (url: string): string | null => {
     try {
@@ -89,27 +64,7 @@ export const VideoLearningModal: React.FC<VideoLearningModalProps> = ({ isOpen, 
     return { isValid: false, error: "Invalid YouTube URL" }
   }
 
-  const generateSpecFromVideo = async (videoUrl: string): Promise<string> => {
-    const specResponse = await generateText({
-      modelName: "gemini-2.0-flash-exp",
-      prompt: SPEC_FROM_VIDEO_PROMPT,
-      videoUrl: videoUrl,
-    })
 
-    let spec = parseJSON(specResponse).spec
-    spec += SPEC_ADDENDUM
-    return spec
-  }
-
-  const generateCodeFromSpec = async (spec: string): Promise<string> => {
-    const codeResponse = await generateText({
-      modelName: "gemini-2.0-flash-exp",
-      prompt: spec,
-    })
-
-    const code = parseHTML(codeResponse, CODE_REGION_OPENER, CODE_REGION_CLOSER)
-    return code
-  }
 
   const handleSubmit = async () => {
     const url = inputRef.current?.value.trim() || ""
@@ -126,28 +81,19 @@ export const VideoLearningModal: React.FC<VideoLearningModalProps> = ({ isOpen, 
         return
       }
 
-      setVideoUrl(url)
-      setIsValidating(false)
-      setIsGenerating(true)
-
-      // Generate specification
-      const spec = await generateSpecFromVideo(url)
-
-      // Generate code from specification
-      const code = await generateCodeFromSpec(spec)
-
-      setGeneratedContent({ spec, code })
-      setActiveTab("render")
+      // Redirect to the dedicated video learning tool page
+      const encodedUrl = encodeURIComponent(url)
+      window.open(`/video-learning-tool?videoUrl=${encodedUrl}`, '_blank')
+      onClose() // Close the modal after opening the page
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
       setIsValidating(false)
-      setIsGenerating(false)
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !isValidating && !isGenerating) {
+    if (e.key === "Enter" && !isValidating) {
       handleSubmit()
     }
   }
@@ -199,16 +145,16 @@ export const VideoLearningModal: React.FC<VideoLearningModalProps> = ({ isOpen, 
                 placeholder="https://www.youtube.com/watch?v=..."
                 className="w-full p-3 rounded-xl glassmorphism focus:ring-2 focus:ring-[var(--color-orange-accent)]/30 text-[var(--text-primary)]"
                 onKeyDown={handleKeyDown}
-                disabled={isValidating || isGenerating}
+                disabled={isValidating}
               />
             </div>
 
             <button
               onClick={handleSubmit}
-              disabled={isValidating || isGenerating}
+              disabled={isValidating}
               className="w-full p-3 rounded-xl glass-button text-[var(--color-text-on-orange)] disabled:opacity-50"
             >
-              {isValidating ? "Validating..." : isGenerating ? "Generating..." : "Generate Learning App"}
+              {isValidating ? "Validating..." : "Open Learning Tool"}
             </button>
 
             {error && (
@@ -221,80 +167,25 @@ export const VideoLearningModal: React.FC<VideoLearningModalProps> = ({ isOpen, 
                 <iframe src={getYoutubeEmbedUrl(videoUrl)} className="w-full h-full" allowFullScreen />
               </div>
             )}
-
-            {/* Loading State */}
-            {isGenerating && (
-              <div className="flex items-center justify-center p-8">
-                <div className="text-center">
-                  <Loader2 size={32} className="animate-spin text-[var(--color-orange-accent)] mx-auto mb-2" />
-                  <p className={`text-sm ${textColor}`}>Generating learning content...</p>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Right Panel */}
           <div className="flex-1 flex flex-col">
-            {generatedContent && (
-              <>
-                {/* Tabs */}
-                <div className="flex border-b border-[var(--glass-border)]">
-                  {[
-                    { id: "render", label: "Preview", icon: Eye },
-                    { id: "code", label: "Code", icon: Code },
-                    { id: "spec", label: "Specification", icon: FileText },
-                  ].map(({ id, label, icon: Icon }) => (
-                    <button
-                      key={id}
-                      onClick={() => setActiveTab(id as any)}
-                      className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-all duration-200 ${
-                        activeTab === id
-                          ? "bg-[var(--color-orange-accent)] text-white"
-                          : `${textColor} hover:bg-[var(--color-orange-accent)]/10`
-                      }`}
-                    >
-                      <Icon size={16} />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Tab Content */}
-                <div className="flex-1 overflow-hidden">
-                  {activeTab === "render" && (
-                    <iframe
-                      ref={iframeRef}
-                      srcDoc={generatedContent.code}
-                      className="w-full h-full border-none"
-                      sandbox="allow-scripts"
-                    />
-                  )}
-
-                  {activeTab === "code" && (
-                    <div className="h-full overflow-auto p-4">
-                      <pre className={`text-sm ${textColor} whitespace-pre-wrap font-mono`}>
-                        {generatedContent.code}
-                      </pre>
-                    </div>
-                  )}
-
-                  {activeTab === "spec" && (
-                    <div className="h-full overflow-auto p-4">
-                      <div className={`${textColor} whitespace-pre-wrap leading-relaxed`}>{generatedContent.spec}</div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            {!generatedContent && !isGenerating && (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <Play size={48} className="text-[var(--color-orange-accent)] mx-auto mb-4 opacity-50" />
-                  <p className={`${textColor} opacity-90`}>Enter a YouTube URL to generate learning content</p>
-                </div>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center max-w-md">
+                <Play size={48} className="text-[var(--color-orange-accent)] mx-auto mb-4 opacity-50" />
+                <h3 className={`text-lg font-semibold ${textColor} mb-2`}>Interactive Learning Generator</h3>
+                <p className={`${textColor} opacity-90 text-sm leading-relaxed`}>
+                  Transform any YouTube video into an interactive learning experience. Our AI will create:
+                </p>
+                <ul className={`${textColor} opacity-80 text-sm mt-3 space-y-1 text-left`}>
+                  <li>• Learning modules and quizzes</li>
+                  <li>• Interactive exercises</li>
+                  <li>• Progress tracking</li>
+                  <li>• Key concept summaries</li>
+                </ul>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

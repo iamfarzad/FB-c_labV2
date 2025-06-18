@@ -1,15 +1,13 @@
 // app/video-learning-tool/page.tsx
 'use client';
 
-import React, { useState, useEffect, useContext, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-// import { Player } from "@livepeer/react"; // Not used in current placeholder
 import Link from "next/link";
 import { ArrowLeft, Share2, Star, CheckCircle, Zap, YoutubeIcon, AlertTriangle, Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Not used
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,7 +15,7 @@ import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/comp
 
 import ContentContainer from '@/components/ContentContainer';
 import ExampleGallery from '@/components/ExampleGallery';
-import { DataContext, IDataContext } from '@/context';
+import { useDataContext } from '@/context/data-context';
 import type { Example } from '@/lib/types';
 import { getYoutubeEmbedUrl, getYouTubeVideoTitle, validateYoutubeUrl } from '@/lib/youtube';
 
@@ -53,7 +51,6 @@ const VideoPlayerComponent: React.FC<{ videoUrl: string }> = ({ videoUrl }) => {
   if (!isValid) return <div className="text-center p-4 text-red-500">Invalid YouTube URL provided.</div>;
 
   return (
-    // Refactored: bg-muted, border-border (or rely on Card if wrapped)
     <div className="aspect-video bg-muted rounded-lg overflow-hidden shadow-lg border-2 border-primary/50">
       {iframeSrc ? (
         <iframe
@@ -80,7 +77,7 @@ const VideoLearningToolPageContent: React.FC = () => {
   const [learningPath, setLearningPath] = useState<LearningModule[]>([]);
   const [currentModule, setCurrentModule] = useState<LearningModule | null>(null);
   const [overallProgress, setOverallProgress] = useState(0);
-  const dataContext = useContext<IDataContext | undefined>(DataContext); // Allow undefined initially
+  const dataContext = useDataContext();
 
   useEffect(() => {
     if (videoUrl) {
@@ -120,91 +117,84 @@ const VideoLearningToolPageContent: React.FC = () => {
 
   return (
     <TooltipProvider>
-    {/* Refactored: bg-background text-foreground */}
-    <div className="min-h-screen bg-background text-foreground p-4 md:p-8">
-      <header className="mb-8">
-        {/* Button text color will adapt via variant. text-primary might be too strong if primary is dark. Default is fine. */}
-        <Button variant="ghost" size="sm" asChild className="mb-4 hover:text-primary">
-          <Link href="/chat"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Chat</Link>
-        </Button>
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent mb-2">
-          Interactive Learning: {videoTitle}
-        </h1>
-        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-          <Badge variant="secondary" className="flex items-center space-x-1">
-            <YoutubeIcon className="h-4 w-4 text-red-500"/>
-            <span>YouTube Video</span>
-          </Badge>
-          <Badge variant="outline" className="flex items-center space-x-1 cursor-pointer hover:border-primary/80">
-            <Star className="h-4 w-4 text-yellow-400"/>
-            <span>Add to Favorites</span>
-          </Badge>
-           <Badge variant="outline" className="flex items-center space-x-1 cursor-pointer hover:border-primary/80">
-            <Share2 className="h-4 w-4"/>
-            <span>Share</span>
-          </Badge>
+      <div className="min-h-screen bg-background text-foreground p-4 md:p-8">
+        <header className="mb-8">
+          <Button variant="ghost" size="sm" asChild className="mb-4 hover:text-primary">
+            <Link href="/chat"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Chat</Link>
+          </Button>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent mb-2">
+            Interactive Learning: {videoTitle}
+          </h1>
+          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+            <Badge variant="secondary" className="flex items-center space-x-1">
+              <YoutubeIcon className="h-4 w-4 text-red-500"/>
+              <span>YouTube Video</span>
+            </Badge>
+            <Badge variant="outline" className="flex items-center space-x-1 cursor-pointer hover:border-primary/80">
+              <Star className="h-4 w-4 text-yellow-400"/>
+              <span>Add to Favorites</span>
+            </Badge>
+             <Badge variant="outline" className="flex items-center space-x-1 cursor-pointer hover:border-primary/80">
+              <Share2 className="h-4 w-4"/>
+              <span>Share</span>
+            </Badge>
+          </div>
+        </header>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          <main className="md:col-span-2 space-y-6">
+            <VideoPlayerComponent videoUrl={videoUrl} />
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center"><Zap className="mr-2 h-6 w-6 text-primary"/> Learning Modules</CardTitle>
+                <CardDescription className="text-muted-foreground">Complete modules to master the content.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Progress value={overallProgress} className="w-full mb-4 h-3" indicatorClassName="bg-gradient-to-r from-primary to-accent" />
+                <ScrollArea className="h-[300px] pr-3">
+                  <ul className="space-y-3">
+                    {learningPath.map(module => (
+                      <li key={module.id}
+                          className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer
+                                      ${module.completed ? 'bg-green-600/10 border-green-500/30 text-green-700 dark:text-green-400'
+                                                         : 'bg-card hover:bg-muted/50 border-border'}`}
+                          onClick={() => setCurrentModule(module)}>
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{module.title} ({module.type.replace('_', ' ')})</span>
+                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleModuleCompletion(module.id, !module.completed); }}>
+                            {module.completed ? <CheckCircle className="h-5 w-5 text-green-500"/> : <CheckCircle className="h-5 w-5 text-muted-foreground"/>}
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </main>
+
+          <aside className="space-y-6 md:sticky md:top-8 h-fit">
+             <Card>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center"><Info className="mr-2 h-5 w-5 text-primary"/>Module Details</CardTitle>
+              </CardHeader>
+              <CardContent className="min-h-[150px] text-card-foreground">
+                {currentModule ? (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">{currentModule.title}</h3>
+                    <p className="text-sm text-muted-foreground">{currentModule.content || `Details for ${currentModule.type.replace('_', ' ')}...`}</p>
+                    {currentModule.type === 'quiz' && <Button className="mt-2 w-full bg-primary/80 hover:bg-primary">Start Quiz</Button>}
+                  </div>
+                ) : <p className="text-muted-foreground">Select a module to see details.</p>}
+              </CardContent>
+            </Card>
+            <ContentContainer contentBasis={videoUrl} onLoadingStateChange={(loading: boolean) => console.log("Content loading:", loading)}>
+              <div className="text-sm text-muted-foreground">Additional learning resources will appear here.</div>
+            </ContentContainer>
+            <ExampleGallery title="Related Examples From Context" onSelectExample={() => {}} selectedExample={dataContext?.defaultExample || null} />
+          </aside>
         </div>
-      </header>
-
-      <div className="grid md:grid-cols-3 gap-8">
-        <main className="md:col-span-2 space-y-6">
-          <VideoPlayerComponent videoUrl={videoUrl} />
-          {/* Refactored: Uses default Card styling (themeable) */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl flex items-center"><Zap className="mr-2 h-6 w-6 text-primary"/> Learning Modules</CardTitle>
-              {/* Refactored: text-muted-foreground */}
-              <CardDescription className="text-muted-foreground">Complete modules to master the content.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Refactored: Progress track to bg-secondary (default themeable) */}
-              <Progress value={overallProgress} className="w-full mb-4 h-3" indicatorClassName="bg-gradient-to-r from-primary to-accent" />
-              <ScrollArea className="h-[300px] pr-3">
-                <ul className="space-y-3">
-                  {learningPath.map(module => (
-                    <li key={module.id}
-                        // Refactored: themeable list item styles
-                        className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer
-                                    ${module.completed ? 'bg-green-600/10 border-green-500/30 text-green-700 dark:text-green-400'
-                                                       : 'bg-card hover:bg-muted/50 border-border'}`}
-                        onClick={() => setCurrentModule(module)}>
-                      <div className="flex items-center justify-between">
-                        {/* Text color will inherit from li or Card an be themeable */}
-                        <span className="font-medium">{module.title} ({module.type.replace('_', ' ')})</span>
-                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleModuleCompletion(module.id, !module.completed); }}>
-                          {module.completed ? <CheckCircle className="h-5 w-5 text-green-500"/> : <CheckCircle className="h-5 w-5 text-muted-foreground"/>}
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </main>
-
-        <aside className="space-y-6 md:sticky md:top-8 h-fit">
-           {/* Refactored: Uses default Card styling */}
-           <Card>
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center"><Info className="mr-2 h-5 w-5 text-primary"/>Module Details</CardTitle>
-            </CardHeader>
-            {/* Refactored: text-card-foreground (default for CardContent) or text-muted-foreground */}
-            <CardContent className="min-h-[150px] text-card-foreground">
-              {currentModule ? (
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">{currentModule.title}</h3>
-                  <p className="text-sm text-muted-foreground">{currentModule.content || `Details for ${currentModule.type.replace('_', ' ')}...`}</p>
-                  {currentModule.type === 'quiz' && <Button className="mt-2 w-full bg-primary/80 hover:bg-primary">Start Quiz</Button>}
-                </div>
-              ) : <p className="text-muted-foreground">Select a module to see details.</p>}
-            </CardContent>
-          </Card>
-          <ContentContainer contentBasis={videoUrl} onLoadingStateChange={(loading: boolean) => console.log("Content loading:", loading)} />
-          <ExampleGallery title="Related Examples From Context" onSelectExample={() => {}} selectedExample={dataContext?.defaultExample || null} />
-        </aside>
       </div>
-    </div>
     </TooltipProvider>
   );
 }

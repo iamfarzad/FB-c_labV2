@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     
     switch (action) {
       case 'generateText': {
-        const { prompt } = await req.json();
+        const { prompt, videoUrl } = await req.json();
         if (!prompt) {
           return NextResponse.json(
             { error: 'Prompt is required' },
@@ -69,11 +69,18 @@ export async function POST(req: NextRequest) {
             temperature: 0.7,
             topP: 0.9,
             topK: 40,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 4096, // Increased for longer responses
           },
         });
         
-        const result = await model.generateContent(prompt);
+        // For now, we'll ignore the videoUrl since Gemini 2.0 Flash doesn't support video URLs directly
+        // Instead, we'll modify the prompt to indicate this limitation
+        let finalPrompt = prompt;
+        if (videoUrl) {
+          finalPrompt = `${prompt}\n\nNote: Please generate a general interactive learning app specification since video analysis is not available. Focus on creating an engaging educational web app.`;
+        }
+        
+        const result = await model.generateContent(finalPrompt);
         const response = await result.response;
         const text = response.text();
         
