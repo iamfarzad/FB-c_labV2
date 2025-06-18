@@ -24,3 +24,6 @@ export function useDataContext() {
   }
   return context
 }
+
+// Make the existing DataContextType available as IDataContext for compatibility
+export type IDataContext = DataContextType;

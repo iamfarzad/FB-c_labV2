@@ -106,8 +106,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
               <CookieConsent />
               
               {/* Global Styles */}
-              <style jsx global>{
-                `
+              <style jsx global>{`
                   :root {
                     --color-orange-accent: #FF5B04;
                     --color-gunmetal: #233038;
@@ -219,8 +218,12 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
                   }
                   
                   @keyframes float {
-                    0%, 100% { transform: translateY(0px); }
-                    50% { transform: translateY(-10px); }
+                    0%, 100% {
+                      transform: translateY(0px);
+                    }
+                    50% {
+                      transform: translateY(-15px);
+                    }
                   }
                   
                   .pulse-glow {
@@ -333,8 +336,51 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
                       scroll-behavior: auto !important;
                     }
                   }
-                `
-              }</style>
+                  
+                  .hide-scrollbar::-webkit-scrollbar {
+                    display: none;
+                  }
+                  
+                  .hide-scrollbar {
+                    -ms-overflow-style: none;  
+                    scrollbar-width: none;  
+                  }
+                  
+                  .card-hover-glow {
+                    transition: box-shadow 0.3s ease, transform 0.3s ease;
+                  }
+                  
+                  .card-hover-glow:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 0 25px 0px var(--surface-glow);
+                  }
+                  
+                  .button-3d-hover {
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                  }
+                  
+                  .button-3d-hover:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                  }
+                  
+                  .button-3d-hover:active {
+                    transform: translateY(0);
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                  }
+                  
+                  .tech-marquee-item {
+                    transition: transform 0.3s ease, filter 0.3s ease;
+                    filter: grayscale(100%);
+                    opacity: 0.6;
+                  }
+                  
+                  .tech-marquee-item:hover {
+                    transform: scale(1.1);
+                    filter: grayscale(0%);
+                    opacity: 1;
+                  }
+              `}</style>
             </div>
           </AccessibilityProvider>
         </ThemeProvider>
