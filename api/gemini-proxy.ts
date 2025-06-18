@@ -1,8 +1,8 @@
 // /api/gemini.ts - Complete enhanced version
-import { GoogleGenerativeAI } from "@google/generative-ai" // Changed from GoogleGenAI
+import { GoogleGenAI } from "@google/genai"
 import { createClient } from '@supabase/supabase-js'
 import type { VercelRequest, VercelResponse } from "@vercel/node"
-import ElevenLabs from '@elevenlabs/elevenlabs-js'; // Changed from elevenlabs
+import { ElevenLabs } from '@elevenlabs/elevenlabs-js';
 
 // Define Message interface
 interface Message {
@@ -56,15 +56,15 @@ interface ProxyResponse {
   }
 }
 
-let genAIInstance: GoogleGenerativeAI | null = null // Changed from GoogleGenAI
+let genAIInstance: GoogleGenAI | null = null
 
-function getGenAI(): GoogleGenerativeAI { // Changed from GoogleGenAI
+function getGenAI(): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not set.")
   }
   if (!genAIInstance) {
-    genAIInstance = new GoogleGenerativeAI(apiKey) // Changed from GoogleGenAI
+    genAIInstance = new GoogleGenAI({ apiKey })
   }
   return genAIInstance
 }
