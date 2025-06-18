@@ -45,7 +45,6 @@
     "@react-three/drei": "9.97.1",
     "@react-three/fiber": "^8.15.16",
     "@supabase/supabase-js": "^2.50.0",
-    "@types/gsap": "^3.0.0",
     "@types/three": "^0.177.0",
     "@vercel/blob": "^1.1.1",
     "@vercel/node": "latest",
@@ -82,7 +81,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/dotenv": "^8.2.3",
+
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
