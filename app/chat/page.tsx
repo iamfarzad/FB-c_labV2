@@ -28,6 +28,21 @@ import {
 import { VideoLearningModal } from "@/components/video-learning-modal"
 import { VideoLearningCard } from "@/components/video-learning-card"
 import Link from "next/link"
+import { motion, Variants } from "framer-motion"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { cn } from "@/lib/utils"
 
 interface ChatMessage {
   id: string
