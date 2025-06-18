@@ -1099,7 +1099,8 @@ Description: ${text}`,
 
 async function handleVideoAnalysis(body: ProxyRequestBody, baseSystemInstruction: string): Promise<ProxyResponse> {
   try {
-    const { videoUrl, prompt = "Analyze this video for business insights", analysisType = "summary", currentConversationState } = body;
+    const { videoUrl, prompt = "Analyze this video for business insights", analysisType = "summary", currentConversationState, messageCount } = body;
+    const userInfo = { name: currentConversationState?.name, email: currentConversationState?.email, companyInfo: currentConversationState?.companyInfo };
 
     if (!videoUrl) {
       return { success: false, error: "No video URL provided", status: 400 };
@@ -1109,18 +1110,45 @@ async function handleVideoAnalysis(body: ProxyRequestBody, baseSystemInstruction
     let analysisPromptText = prompt;
     switch (analysisType) {
       case "business_insights":
-        analysisPromptText = `Analyze this business video content from ${videoUrl} and extract: 1. Key business concepts. 2. Potential automation opportunities. 3. AI implementation suggestions. Video context: ${prompt}`;
+        analysisPromptText = `Analyze this business video, available at the URI ${videoUrl}, and extract: 1. Key business concepts discussed. 2. Potential automation opportunities. 3. AI implementation suggestions. 4. ROI considerations. Additional context: ${prompt}`;
         break;
       case "competitive_analysis":
-        analysisPromptText = `Analyze this video from ${videoUrl} for competitive intelligence: 1. Business strategies. 2. Technology stack insights. 3. Market positioning. Video context: ${prompt}`;
+        analysisPromptText = `Analyze this video, available at the URI ${videoUrl}, for competitive intelligence: 1. Business strategies mentioned. 2. Technology stack insights. 3. Market positioning. 4. Opportunities for improvement. Additional context: ${prompt}`;
+        break;
+      default:
+        analysisPromptText = `Please provide a general analysis of the video found at ${videoUrl}. Context: ${prompt}`;
         break;
     }
 
-     const geminiResult = await genAI.models.generateContent({
+    const dynamicSystemInstruction = `${baseSystemInstruction}
+CURRENT STAGE: ${currentConversationState?.stage || 'capability_interaction'}.
+USER: ${userInfo.name || 'Guest'}.
+CONVERSATIONAL GOAL: Analyze the provided video URI and respond to the user's query.`;
+
+    const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    ];
+    const generationConfig = { temperature: 0.7, topP: 0.9, topK: 40 };
+
+    const videoPart = {
+        fileData: {
+            mimeType: "video/mp4",
+            fileUri: videoUrl
+        }
+    };
+    const textPart = { text: analysisPromptText };
+
+    const geminiResult = await genAI.models.generateContent({
         model: "gemini-1.5-flash-latest",
-        contents: [{role: 'user', parts: [{text: `Regarding a video at ${videoUrl}, ${analysisPromptText}`}]}],
-        systemInstruction: {role: 'system', parts: [{text: baseSystemInstruction}]}
+        contents: [{ role: 'user', parts: [videoPart, textPart] }],
+        systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]},
+        safetySettings: safetySettings,
+        generationConfig: generationConfig
     });
+
     const text = geminiResult.response.text();
 
     const supabase = getSupabase();
@@ -1130,35 +1158,103 @@ async function handleVideoAnalysis(body: ProxyRequestBody, baseSystemInstruction
         payload: { activity: 'video_analysis', message: '🎥 Analyzing video content...', timestamp: Date.now() }
       });
 
+    let nextConversationState = currentConversationState;
+    if (currentConversationState) {
+        nextConversationState = determineNextStage(currentConversationState, `System: Video analysis completed for ${videoUrl}.`, messageCount || 0);
+        nextConversationState.stage = 'post_capability_feedback';
+        nextConversationState.messagesInStage = 0;
+        nextConversationState.aiGuidance = `The video analysis for "${videoUrl}" has been generated. Ask the user for their feedback or if they have questions about it.`;
+        nextConversationState.sidebarActivity = 'video_analysis_complete';
+    }
+
     return {
       success: true,
-      data: { text, videoUrl, analysisType, sidebarActivity: "video_analysis_complete" }
+      data: {
+        text,
+        videoUrl,
+        analysisType,
+        sidebarActivity: "video_analysis_complete",
+        conversationStateForNextTurn: nextConversationState
+      }
     };
   } catch (error: any) {
     console.error("Error in handleVideoAnalysis:", error);
-    return { success: false, error: error.message || "Failed to analyze video", status: 500 };
+    const errorState = body.currentConversationState ?
+        determineNextStage(body.currentConversationState, "Error during video analysis.", body.messageCount || 0) :
+        undefined;
+    if (errorState) {
+        errorState.sidebarActivity = "video_analysis_error";
+    }
+    return {
+        success: false,
+        error: error.message || "Failed to analyze video",
+        status: 500,
+        data: { conversationStateForNextTurn: errorState }
+    };
   }
 }
 
 async function handleDocumentAnalysis(body: ProxyRequestBody, baseSystemInstruction: string): Promise<ProxyResponse> {
   try {
-    const { documentData, mimeType = "application/pdf", prompt = "Analyze this document for business insights", currentConversationState } = body;
+    const { documentData, mimeType = "application/pdf", prompt = "Analyze this document for business insights", currentConversationState, messageCount } = body;
+    const userInfo = { name: currentConversationState?.name, email: currentConversationState?.email, companyInfo: currentConversationState?.companyInfo };
 
     if (!documentData) {
       return { success: false, error: "No document data provided", status: 400 };
     }
 
     const genAI = getGenAI();
-    const businessAnalysisPromptText = `Analyze this business document (content provided as base64 data, mime-type: ${mimeType}) and provide: 1. Executive Summary. 2. Business Opportunities. 3. Process Improvements. Original request: ${prompt}`;
+    const businessAnalysisPromptText = `Analyze the provided business document (mime-type: ${mimeType}) and provide: 1. **Executive Summary**: Key points in 2-3 sentences. 2. **Business Opportunities**: Areas where AI could help. 3. **Process Improvements**: Workflow optimizations possible. 4. **ROI Potential**: Quantifiable benefits. 5. **Implementation Roadmap**: Practical next steps. Original user request: ${prompt}`;
 
-    // NOTE: Actual document data (e.g., base64 string) is in `documentData`.
-    // The new SDK might require it in `parts: [{ inlineData: { data: documentData, mimeType } }]`
-    // For now, the prompt simulates this, as direct file upload/data inclusion needs specific SDK handling.
+    const dynamicSystemInstruction = `${baseSystemInstruction}
+CURRENT STAGE: ${currentConversationState?.stage || 'capability_interaction'}.
+USER: ${userInfo.name || 'Guest'}.
+CONVERSATIONAL GOAL: Analyze the provided document and respond to the user's query.`;
+
+    const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    ];
+    const generationConfig = { temperature: 0.6, topP: 0.9, topK: 35 };
+
+    // --- Conceptual File API Usage ---
+    // In a real scenario, you would upload the file first if it's large or for repeated use.
+    // const documentBuffer = Buffer.from(documentData, 'base64');
+    // let fileApiResponse;
+    // try {
+    //   // fileApiResponse = await genAI.files.uploadFile({ // Method for @google/genai
+    //   //   file: documentBuffer,
+    //   //   mimeType: mimeType,
+    //   //   displayName: `user_upload_${Date.now()}`
+    //   // }); // The exact SDK call might be genAI.uploadFile(...) or genAI.files.create(...)
+    //   // console.log('File API Response (conceptual):', fileApiResponse);
+    // } catch (uploadError) {
+    //   console.error("Error uploading file via File API (conceptual):", uploadError);
+    //   // Decide if to throw or fallback to inline
+    // }
+    // // If using File API, the part would be:
+    // // const documentPart = { fileData: { mimeType: fileApiResponse.file.mimeType, fileUri: fileApiResponse.file.uri } };
+    // For this refactoring, continuing with inlineData as per original plan for this handler,
+    // assuming files are small enough or this is a first-pass implementation before full File API integration.
+
+    const documentPart = {
+        inlineData: {
+            data: documentData, // Base64 encoded string
+            mimeType: mimeType
+        }
+    };
+    const textPart = { text: businessAnalysisPromptText };
+
     const geminiResult = await genAI.models.generateContent({
         model: "gemini-1.5-flash-latest",
-        contents: [{role: 'user', parts: [{text: `Regarding a document (mime-type ${mimeType}), ${businessAnalysisPromptText}. The document content itself is not directly processable in this simulated text-only call.`}]}],
-        systemInstruction: {role: 'system', parts: [{text: baseSystemInstruction}]}
+        contents: [{ role: 'user', parts: [documentPart, textPart] }],
+        systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]},
+        safetySettings: safetySettings,
+        generationConfig: generationConfig
     });
+
     const text = geminiResult.response.text();
 
     const supabase = getSupabase();
@@ -1168,23 +1264,48 @@ async function handleDocumentAnalysis(body: ProxyRequestBody, baseSystemInstruct
         payload: { activity: 'document_analysis', message: '📄 Processing business document...', timestamp: Date.now() }
       });
 
-    const inputTokens = estimateTokens(prompt) + estimateTokens(businessAnalysisPromptText);
+    const inputTokens = estimateTokens(prompt) + estimateTokens(businessAnalysisPromptText) + estimateTokens(documentData)/2;
     const outputTokens = estimateTokens(text);
+
+    let nextConversationState = currentConversationState;
+    if (currentConversationState) {
+        nextConversationState = determineNextStage(currentConversationState, `System: Document analysis completed.`, messageCount || 0);
+        nextConversationState.stage = 'post_capability_feedback';
+        nextConversationState.messagesInStage = 0;
+        nextConversationState.aiGuidance = `The document analysis has been generated. Ask the user for their feedback or if they have questions about it.`;
+        nextConversationState.sidebarActivity = 'document_analysis_complete';
+    }
 
     return {
       success: true,
-      data: { text, sidebarActivity: "document_analysis_complete" },
+      data: {
+        text,
+        sidebarActivity: "document_analysis_complete",
+        conversationStateForNextTurn: nextConversationState
+      },
       usage: { inputTokens, outputTokens, cost: estimateCost(inputTokens, outputTokens) }
     };
   } catch (error: any) {
     console.error("Error in handleDocumentAnalysis:", error);
-    return { success: false, error: error.message || "Failed to analyze document", status: 500 };
+    const errorState = body.currentConversationState ?
+        determineNextStage(body.currentConversationState, "Error during document analysis.", body.messageCount || 0) :
+        undefined;
+    if (errorState) {
+        errorState.sidebarActivity = "document_analysis_error";
+    }
+    return {
+        success: false,
+        error: error.message || "Failed to analyze document",
+        status: 500,
+        data: { conversationStateForNextTurn: errorState }
+    };
   }
 }
 
 async function handleCodeExecution(body: ProxyRequestBody, baseSystemInstruction: string): Promise<ProxyResponse> {
   try {
-    const { prompt, businessContext = "General business calculation", currentConversationState } = body;
+    const { prompt, businessContext = "General business calculation", currentConversationState, messageCount } = body;
+    const userInfo = { name: currentConversationState?.name, email: currentConversationState?.email, companyInfo: currentConversationState?.companyInfo };
 
     if (!prompt) {
       return { success: false, error: "No code execution prompt provided", status: 400 };
@@ -1194,14 +1315,30 @@ async function handleCodeExecution(body: ProxyRequestBody, baseSystemInstruction
     const codePromptText = `Create and execute Python code to solve this business problem: "${prompt}"
 Business context: ${businessContext}.
 Requirements: Write practical, business-relevant Python code. Execute it and show results. Explain the business value.
-Focus on demonstrating how AI can solve real business problems with code. Output should include the code, execution result, and explanation.`;
+Focus on demonstrating how AI can solve real business problems with code. The output should clearly present the code, its execution result, and a brief explanation of its business value.`;
+
+    const dynamicSystemInstruction = `${baseSystemInstruction}
+CURRENT STAGE: ${currentConversationState?.stage || 'capability_interaction'}.
+USER: ${userInfo.name || 'Guest'}.
+CONVERSATIONAL GOAL: Generate and execute Python code based on the user's request and explain its relevance.`;
+
+    const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    ];
+    const generationConfig = { temperature: 0.5, topP: 0.9, topK: 30 };
 
     const geminiResult = await genAI.models.generateContent({
         model: "gemini-1.5-flash-latest",
         contents: [{role: 'user', parts: [{text: codePromptText}]}],
-        systemInstruction: {role: 'system', parts: [{text: baseSystemInstruction}]},
-        tools: [{codeExecution: {}}]
+        systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]},
+        tools: [{ codeExecution: {} }],
+        safetySettings: safetySettings,
+        generationConfig: generationConfig
     });
+
     const text = geminiResult.response.text();
 
     const supabase = getSupabase();
@@ -1211,57 +1348,135 @@ Focus on demonstrating how AI can solve real business problems with code. Output
         payload: { activity: 'code_execution', message: '⚡ Executing business calculations...', timestamp: Date.now() }
       });
 
+    let nextConversationState = currentConversationState;
+    if (currentConversationState) {
+        nextConversationState = determineNextStage(currentConversationState, `System: Code execution completed for prompt "${prompt}".`, messageCount || 0);
+        nextConversationState.stage = 'post_capability_feedback';
+        nextConversationState.messagesInStage = 0;
+        nextConversationState.aiGuidance = `The code execution for "${prompt}" has completed. Ask the user for their feedback or if they have questions about the results or the code.`;
+        nextConversationState.sidebarActivity = 'code_execution_complete';
+    }
+
     return {
       success: true,
-      data: { text, sidebarActivity: "code_execution_complete", note: "Live code execution for business problem solving" }
+      data: {
+        text,
+        sidebarActivity: "code_execution_complete",
+        note: "Live code execution for business problem solving",
+        conversationStateForNextTurn: nextConversationState
+      }
     };
   } catch (error: any) {
     console.error("Error in handleCodeExecution:", error);
-    return { success: false, error: error.message || "Failed to execute code", status: 500 };
+    const errorState = body.currentConversationState ?
+        determineNextStage(body.currentConversationState, "Error during code execution.", body.messageCount || 0) :
+        undefined;
+    if (errorState) {
+        errorState.sidebarActivity = "code_execution_error";
+    }
+    return {
+        success: false,
+        error: error.message || "Failed to execute code",
+        status: 500,
+        data: { conversationStateForNextTurn: errorState }
+    };
   }
 }
 
 async function handleURLAnalysis(body: ProxyRequestBody, baseSystemInstruction: string): Promise<ProxyResponse> {
   try {
-    const { urlContext, analysisType = "business_analysis", currentConversationState } = body;
+    const { urlContext, analysisType = "business_analysis", currentConversationState, messageCount } = body;
+    const userInfo = { name: currentConversationState?.name, email: currentConversationState?.email, companyInfo: currentConversationState?.companyInfo };
 
     if (!urlContext) {
-      return { success: false, error: "No URL provided", status: 400 };
+      return { success: false, error: "No URL provided for analysis", status: 400 };
     }
 
     const genAI = getGenAI();
-    const urlAnalysisPromptText = `Analyze this website: ${urlContext}
-Provide business intelligence: 1. Company Overview. 2. Technology Stack (if visible). 3. AI Opportunities. 4. Competitive Advantages. 5. Improvement Areas.
+    const urlAnalysisPromptText = `Analyze the website at the provided URL: ${urlContext}.
+Focus on ${analysisType}.
+Provide business intelligence analysis covering these points if applicable:
+1.  **Company Overview**: What they do, their market position.
+2.  **Technology Stack**: Visible technologies and tools (if discernible).
+3.  **AI Opportunities**: Where AI could improve their operations or offerings.
+4.  **Competitive Advantages**: What they do well.
+5.  **Improvement Areas**: Potential optimization opportunities.
+6.  **AI Implementation Roadmap Hints**: Specific recommendations or ideas.
 Focus on actionable insights for business improvement.`;
+
+    const dynamicSystemInstruction = `${baseSystemInstruction}
+CURRENT STAGE: ${currentConversationState?.stage || 'capability_interaction'}.
+USER: ${userInfo.name || 'Guest'}.
+CONVERSATIONAL GOAL: Analyze the provided website URL using Google Search and provide business intelligence.`;
+
+    const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    ];
+    const generationConfig = { temperature: 0.75, topP: 0.95, topK: 45 };
 
     const geminiResult = await genAI.models.generateContent({
         model: "gemini-1.5-flash-latest",
         contents: [{role: 'user', parts: [{text: urlAnalysisPromptText}]}],
-        systemInstruction: {role: 'system', parts: [{text: baseSystemInstruction}]},
-        tools: [{googleSearch: {}}]
+        systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]},
+        tools: [{ googleSearch: {} }],
+        safetySettings: safetySettings,
+        generationConfig: generationConfig
     });
+
     const text = geminiResult.response.text();
+    const sources = geminiResult.response.candidates?.[0]?.groundingMetadata?.groundingAttributions
+            ?.map((attr:any) => ({ title: attr.web?.title || 'Web Source', url: attr.web?.uri || '#', snippet: attr.web?.title || 'Grounded search result' })) || [];
+
 
     const supabase = getSupabase();
     await supabase.channel(currentConversationState?.sessionId || 'ai-showcase')
       .send({
         type: 'broadcast', event: 'sidebar-update',
-        payload: { activity: 'url_analysis', message: '🌐 Analyzing website...', timestamp: Date.now() }
+        payload: { activity: 'url_analysis', message: '🌐 Analyzing website for business intelligence...', timestamp: Date.now() }
       });
+
+    let nextConversationState = currentConversationState;
+    if (currentConversationState) {
+        nextConversationState = determineNextStage(currentConversationState, `System: URL analysis completed for ${urlContext}.`, messageCount || 0);
+        nextConversationState.stage = 'post_capability_feedback';
+        nextConversationState.messagesInStage = 0;
+        nextConversationState.aiGuidance = `The URL analysis for "${urlContext}" has been completed. Ask the user for their feedback or if they have questions about the insights provided.`;
+        nextConversationState.sidebarActivity = 'url_analysis_complete';
+    }
 
     return {
       success: true,
-      data: { text, urlContext, sidebarActivity: "url_analysis_complete" }
+      data: {
+        text,
+        sources: sources,
+        urlContext,
+        sidebarActivity: "url_analysis_complete",
+        conversationStateForNextTurn: nextConversationState
+      }
     };
   } catch (error: any) {
     console.error("Error in handleURLAnalysis:", error);
-    return { success: false, error: error.message || "Failed to analyze URL", status: 500 };
+    const errorState = body.currentConversationState ?
+        determineNextStage(body.currentConversationState, "Error during URL analysis.", body.messageCount || 0) :
+        undefined;
+    if (errorState) {
+        errorState.sidebarActivity = "url_analysis_error";
+    }
+    return {
+        success: false,
+        error: error.message || "Failed to analyze URL",
+        status: 500,
+        data: { conversationStateForNextTurn: errorState }
+    };
   }
 }
 
 async function handleLeadCapture(body: ProxyRequestBody, baseSystemInstruction: string): Promise<ProxyResponse> {
   try {
-    const { currentConversationState } = body;
+    const { currentConversationState, messageCount } = body;
     const conversationHistory = currentConversationState?.messages;
     const userInfo = {
         name: currentConversationState?.name,
@@ -1274,37 +1489,57 @@ async function handleLeadCapture(body: ProxyRequestBody, baseSystemInstruction: 
     }
 
     const genAI = getGenAI();
+    const leadCaptureSystemInstruction = `${baseSystemInstruction}
+CONVERSATIONAL GOAL: Generate a concise and professional summary and a consultant brief based on the provided conversation history and user details. Focus on clarity and actionability.`;
+
+    const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    ];
+    const generationConfigSummarization = { temperature: 0.5, topP: 0.85, topK: 30 };
+
+    const capabilitiesShownText = extractCapabilitiesShown(conversationHistory).join(', ') || 'General discussion';
+    const historyForSummaryPrompt = conversationHistory.length > 10 ? conversationHistory.slice(-10) : conversationHistory;
+
+
     const summaryPromptText = `Create a comprehensive F.B/c AI consultation summary for ${userInfo.name}.
-AI CAPABILITIES DEMONSTRATED: ${extractCapabilitiesShown(conversationHistory).join(', ') || 'General discussion'}.
-CONVERSATION ANALYSIS (selected highlights): ${JSON.stringify(conversationHistory.slice(-5))}
+AI CAPABILITIES DEMONSTRATED: ${capabilitiesShownText}.
+CONVERSATION ANALYSIS (selected highlights): ${JSON.stringify(historyForSummaryPrompt)}
 CREATE STRUCTURED SUMMARY: 1. Executive Summary (key insights). 2. AI Capabilities Showcased. 3. Business Opportunities for ${userInfo.companyInfo?.name || 'their company'}. 4. Recommended Solutions (Training vs Consulting). 5. Next Steps (call-to-action for consultation).
 Make it professional, actionable, and compelling for ${userInfo.name}.`;
 
     const summaryGeminiResult = await genAI.models.generateContent({
         model: "gemini-1.5-flash-latest",
         contents: [{role: 'user', parts: [{text: summaryPromptText}]}],
-        systemInstruction: {role: 'system', parts: [{text: baseSystemInstruction}]}
+        systemInstruction: {role: 'system', parts: [{text: leadCaptureSystemInstruction}]},
+        safetySettings: safetySettings,
+        generationConfig: generationConfigSummarization
     });
     const summary = summaryGeminiResult.response.text();
 
     const briefPromptText = `Create a detailed consultant brief for Farzad's follow-up with ${userInfo.name}.
 Contact: ${userInfo.name}, Email: ${userInfo.email}, Company: ${userInfo.companyInfo?.name || 'N/A'}, Industry: ${userInfo.companyInfo?.industry || 'N/A'}.
-Analyze what AI capabilities resonated. Key Pain Points expressed. AI Readiness Level. Decision Authority signs. Budget Indicators. Urgency. Service Fit (Training/Consulting).
-FOLLOW-UP STRATEGY: Key talking points, case studies, solution approach, pricing thoughts.
-CONVERSATION INSIGHTS: ${JSON.stringify(conversationHistory.slice(-10))}
+AI Capabilities that resonated: ${capabilitiesShownText}.
+Key Pain Points expressed during conversation. AI Readiness Level (impression). Decision Authority (impression). Budget Indicators (if any). Urgency Level (impression). Service Fit (Training/Consulting).
+FOLLOW-UP STRATEGY: Key talking points, relevant case studies, recommended solution approach, pricing considerations.
+CONVERSATION INSIGHTS (key interactions): ${JSON.stringify(historyForSummaryPrompt)}
 Provide actionable intelligence for converting this lead.`;
 
     const briefGeminiResult = await genAI.models.generateContent({
         model: "gemini-1.5-flash-latest",
         contents: [{role: 'user', parts: [{text: briefPromptText}]}],
-        systemInstruction: {role: 'system', parts: [{text: baseSystemInstruction}]}
+        systemInstruction: {role: 'system', parts: [{text: leadCaptureSystemInstruction}]},
+        safetySettings: safetySettings,
+        generationConfig: generationConfigSummarization
     });
     const brief = briefGeminiResult.response.text();
 
     const supabase = getSupabase();
     const leadScore = calculateLeadScore(conversationHistory, userInfo);
 
-    const { data: leadData, error } = await supabase
+    const { data: leadData, error: supabaseError } = await supabase
       .from('lead_summaries')
       .insert({
         name: userInfo.name, email: userInfo.email,
@@ -1315,20 +1550,45 @@ Provide actionable intelligence for converting this lead.`;
       })
       .select();
 
-    if (error) throw new Error(`Failed to store lead: ${error.message}`);
+    if (supabaseError) throw new Error(`Failed to store lead: ${supabaseError.message}`);
+    if (!leadData || leadData.length === 0) throw new Error("Lead data was not returned after insert.");
+
+
+    let nextConversationState = currentConversationState;
+    if (currentConversationState) {
+        nextConversationState = determineNextStage(currentConversationState, `System: Lead capture complete for ${userInfo.name}.`, messageCount || 0);
+        nextConversationState.stage = 'finalizing';
+        nextConversationState.messagesInStage = 0;
+        nextConversationState.aiGuidance = `Lead capture process is complete. The summary and brief have been generated. Thank the user and indicate that Farzad will be in touch if they requested a consultation.`;
+        nextConversationState.sidebarActivity = 'lead_capture_complete';
+        nextConversationState.isLimitReached = true;
+        nextConversationState.showBooking = true;
+    }
 
     return {
       success: true,
       data: {
         summary, brief, leadScore,
         emailContent: generateEmailContent(userInfo.name!, userInfo.email!, summary, leadScore, userInfo.companyInfo?.name),
-        leadId: leadData?.[0]?.id,
-        sidebarActivity: "lead_capture_complete"
+        leadId: leadData[0].id,
+        sidebarActivity: "lead_capture_complete",
+        conversationStateForNextTurn: nextConversationState
       }
     };
   } catch (error: any) {
     console.error("Error in handleLeadCapture:", error);
-    return { success: false, error: error.message || "Failed to process lead capture", status: 500 };
+    const errorState = body.currentConversationState ?
+        determineNextStage(body.currentConversationState, "Error during lead capture.", body.messageCount || 0) :
+        undefined;
+    if (errorState) {
+        errorState.sidebarActivity = "lead_capture_error";
+    }
+    return {
+        success: false,
+        error: error.message || "Failed to process lead capture",
+        status: 500,
+        data: { conversationStateForNextTurn: errorState }
+    };
   }
 }
 
