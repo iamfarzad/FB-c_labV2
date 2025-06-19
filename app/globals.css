@@ -64,11 +64,7 @@ a {
   --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   --glass-backdrop: blur(10px);
   
-  /* Dark Mode Variables */
-  --dark-text-primary: #f5f5f5;
-  --dark-text-secondary: #b0b0b0;
-
-  /* Shadcn/UI Design Tokens */
+  /* Shadcn/UI Design Tokens - Light Mode */
   --background: 0 0% 100%;
   --foreground: 0 0% 3.9%;
   --card: 0 0% 100%;
@@ -98,6 +94,14 @@ a {
   --sidebar-foreground: 240 5.3% 26.1%;
   --sidebar-primary: 240 5.9% 10%;
   --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 0 0% 96.1%;
+  --sidebar-accent-foreground: 0 0% 9%;
+  --sidebar-border: 0 0% 89.8%;
+  --sidebar-ring: 0 0% 3.9%;
+  
+  /* Dark Mode Variables */
+  --dark-text-primary: #f5f5f5;
+  --dark-text-secondary: #b0b0b0;
   --sidebar-accent: 240 4.8% 95.9%;
   --sidebar-accent-foreground: 240 5.9% 10%;
   --sidebar-border: 220 13% 91%;
@@ -174,6 +178,83 @@ a {
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-minimal);
+}
+
+/* Chat Page Specific Styles */
+.chat-container {
+  @apply flex flex-col h-screen bg-background;
+}
+
+.chat-messages {
+  @apply flex-1 overflow-y-auto p-4 space-y-4;
+  scroll-behavior: smooth;
+}
+
+.chat-input-container {
+  @apply border-t border-border bg-background p-4;
+}
+
+.chat-input-wrapper {
+  @apply flex items-end gap-2 max-w-4xl mx-auto w-full;
+}
+
+.chat-message {
+  @apply max-w-3xl mx-4 p-4 rounded-lg;
+}
+
+.chat-message.user {
+  @apply bg-primary/10 ml-auto;
+}
+
+.chat-message.assistant {
+  @apply bg-muted mr-auto;
+}
+
+/* Voice Modal */
+.voice-modal {
+  @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50;
+}
+
+.voice-modal-content {
+  @apply bg-background rounded-lg p-6 max-w-md w-full mx-4 shadow-xl;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  @apply w-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/30;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .chat-message {
+    @apply mx-2;
+  }
+  
+  .chat-input-wrapper {
+    @apply px-2;
+  }
 }
 
 /* Geometric Button System - Sharp & Fast */
