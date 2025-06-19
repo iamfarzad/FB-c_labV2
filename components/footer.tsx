@@ -4,19 +4,19 @@ import type React from "react"
 import Link from "next/link"
 import { MessageSquare, Mail, Phone, MapPin, Github, Twitter, Linkedin, Youtube } from "lucide-react"
 import { LegalDialog } from "@/components/ui/legal-dialog"
+import { Button } from "@/components/ui/button" // Import Button component
 
 interface FooterProps {
-  theme: "light" | "dark"
+  // theme prop is no longer needed as we'll use Tailwind's dark mode
 }
 
-export const Footer: React.FC<FooterProps> = ({ theme }) => {
-  const footerBg =
-    theme === "dark"
-      ? "bg-[var(--color-gunmetal)] border-[var(--color-gunmetal-lighter)]"
-      : "bg-white border-[var(--color-light-silver-darker)]"
-
-  const textColor = theme === "dark" ? "text-[var(--color-light-silver)]" : "text-[var(--color-gunmetal)]"
-  const mutedTextColor = theme === "dark" ? "text-[var(--color-light-silver)]/90" : "text-[var(--color-gunmetal)]/90"
+export const Footer: React.FC<FooterProps> = () => {
+  // footerBg, textColor, mutedTextColor are removed. Styling will be done via Tailwind dark mode.
+  // Assumed:
+  // Light mode footer: bg-white, border-light-silver-darker
+  // Dark mode footer: bg-gunmetal, border-gunmetal-lighter
+  // Text: text-gunmetal (light), text-light-silver (dark) -> maps to text-foreground
+  // Muted Text: text-gunmetal/90 (light), text-light-silver/90 (dark) -> maps to text-muted-foreground or text-foreground/90
 
   // Legal content for dialogs
   const legalContent = {
@@ -115,22 +115,22 @@ export const Footer: React.FC<FooterProps> = ({ theme }) => {
   ]
 
   return (
-    <footer className={`glassmorphism ${footerBg} border-t backdrop-blur-xl`}>
+    <footer className="glassmorphism bg-white dark:bg-gunmetal border-t border-light-silver-darker dark:border-gunmetal-lighter backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
         <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-orange-accent to-orange-accent-light flex items-center justify-center shadow-lg">
                 <MessageSquare size={20} className="text-white" />
               </div>
               <div>
                 <h3 className="text-lg font-bold gradient-text">F.B/c AI</h3>
-                <p className={`text-xs ${mutedTextColor}`}>Intelligent Assistant</p>
+                <p className="text-xs text-muted-foreground">Intelligent Assistant</p>
               </div>
             </div>
-            <p className={`text-sm ${mutedTextColor} leading-relaxed`}>
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Empowering businesses with cutting-edge AI solutions. Transform your workflow with our intelligent
               assistant platform.
             </p>
@@ -138,13 +138,13 @@ export const Footer: React.FC<FooterProps> = ({ theme }) => {
 
           {/* Company Links */}
           <div>
-            <h4 className={`text-sm font-semibold ${textColor} mb-4 uppercase tracking-wider`}>Company</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider">Company</h4>
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className={`text-sm ${mutedTextColor} hover:text-[var(--color-orange-accent)] transition-colors duration-200`}
+                    className="text-sm text-muted-foreground hover:text-orange-accent transition-colors duration-200"
                   >
                     {link.name}
                   </Link>
@@ -155,12 +155,12 @@ export const Footer: React.FC<FooterProps> = ({ theme }) => {
 
           {/* Contact Section */}
           <div>
-            <h4 className={`text-sm font-semibold ${textColor} mb-4 uppercase tracking-wider`}>Contact</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider">Contact</h4>
             <div className="space-y-3">
               {contactInfo.map((item, index) => (
                 <div key={index} className="flex items-center space-x-2">
-                  <item.icon size={16} className="text-[var(--color-orange-accent)]" />
-                  <span className={`text-sm ${mutedTextColor}`}>{item.text}</span>
+                  <item.icon size={16} className="text-orange-accent" />
+                  <span className="text-sm text-muted-foreground">{item.text}</span>
                 </div>
               ))}
             </div>
@@ -168,15 +168,15 @@ export const Footer: React.FC<FooterProps> = ({ theme }) => {
 
           {/* Legal Links */}
           <div>
-            <h4 className={`text-sm font-semibold ${textColor} mb-4 uppercase tracking-wider`}>Legal</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider">Legal</h4>
             <ul className="space-y-3">
               {footerLinks.legal.map((link) => (
                 <li key={link.name}>
-                  <LegalDialog 
+                  <LegalDialog
                     title={link.name}
                     trigger={
-                      <button 
-                        className={`text-sm ${mutedTextColor} hover:text-[var(--color-orange-accent)] transition-colors duration-200 text-left`}
+                      <button
+                        className="text-sm text-muted-foreground hover:text-orange-accent transition-colors duration-200 text-left"
                       >
                         {link.name}
                       </button>
@@ -191,11 +191,11 @@ export const Footer: React.FC<FooterProps> = ({ theme }) => {
         </div>
 
         {/* Newsletter Signup */}
-        <div className="py-8 border-t border-[var(--glass-border)]">
+        <div className="py-8 border-t border-border/50"> {/* Use border-border/50 for glass consistency */}
           <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
             <div>
-              <h4 className={`text-lg font-semibold ${textColor} mb-2`}>Stay Updated</h4>
-              <p className={`text-sm ${mutedTextColor}`}>
+              <h4 className="text-lg font-semibold text-foreground mb-2">Stay Updated</h4>
+              <p className="text-sm text-muted-foreground">
                 Get the latest updates on AI innovations and product releases.
               </p>
             </div>
@@ -203,19 +203,19 @@ export const Footer: React.FC<FooterProps> = ({ theme }) => {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 md:w-64 px-4 py-2 rounded-xl glassmorphism focus:ring-2 focus:ring-[var(--color-orange-accent)]/30 text-[var(--text-primary)] placeholder-[var(--text-primary)]/50 transition-all duration-300"
+                className="flex-1 md:w-64 px-4 py-2 rounded-xl glassmorphism focus:ring-2 focus:ring-orange-accent/30 text-foreground placeholder-foreground/50 transition-all duration-300"
               />
-              <button className="px-6 py-2 rounded-xl glass-button text-[var(--color-text-on-orange)] font-medium transition-all duration-300">
+              <Button variant="glass" className="text-text-on-orange font-medium"> {/* Use Button component */}
                 Subscribe
-              </button>
+              </Button>
             </div>
           </div>
         </div>
 
         {/* Bottom Footer */}
-        <div className="py-6 border-t border-[var(--glass-border)] flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+        <div className="py-6 border-t border-border/50 flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0"> {/* Use border-border/50 */}
           <div className="flex items-center space-x-4">
-            <p className={`text-sm ${mutedTextColor}`}>© {new Date().getFullYear()} F.B/c AI. All rights reserved.</p>
+            <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} F.B/c AI. All rights reserved.</p>
           </div>
 
           {/* Social Links */}
@@ -226,7 +226,7 @@ export const Footer: React.FC<FooterProps> = ({ theme }) => {
                 href={social.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-lg glassmorphism hover:surface-glow transition-all duration-300 text-[var(--text-primary)] group"
+                className="p-2 rounded-lg glassmorphism hover:surface-glow transition-all duration-300 text-foreground group"
                 aria-label={social.name}
               >
                 <social.icon size={16} className="group-hover:scale-110 transition-transform" />

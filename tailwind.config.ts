@@ -62,6 +62,17 @@ const config: Config = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        // Adding custom colors from globals.css
+        'orange-accent': 'var(--color-orange-accent)',
+        'gunmetal': 'var(--color-gunmetal)',
+        'light-silver': 'var(--color-light-silver)',
+        'gunmetal-light-alpha': 'var(--color-gunmetal-light-alpha)',
+        'light-silver-dark-alpha': 'var(--color-light-silver-dark-alpha)',
+        'gunmetal-lighter': 'var(--color-gunmetal-lighter)',
+        'light-silver-darker': 'var(--color-light-silver-darker)',
+        'orange-accent-hover': 'var(--color-orange-accent-hover)',
+        'orange-accent-light': 'var(--color-orange-accent-light)',
+        'text-on-orange': 'var(--color-text-on-orange)',
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',
@@ -81,15 +92,31 @@ const config: Config = {
         }
       },
       borderRadius: {
-        'DEFAULT': '2px',
-        'sm': '1px',
-        'md': '2px',
-        'lg': '4px',
-        'xl': '6px',
-        '2xl': '8px',
-        '3xl': '12px',
+        'DEFAULT': 'var(--radius)', // Typically 4px from Shadcn/UI
+        'sm': 'calc(var(--radius) - 2px)', // Example: 2px if --radius is 4px
+        'md': 'var(--radius)', // Matches 'DEFAULT'
+        'lg': 'var(--border-radius-minimal)', // 4px from globals.css
+        'xl': 'calc(var(--border-radius-minimal) + 2px)', // Example: 6px
+        '2xl': 'var(--border-radius-medium)', // 8px from globals.css
+        '3xl': 'calc(var(--border-radius-medium) + 4px)', // Example: 12px
         'full': '9999px',
-        'none': '0px'
+        'none': '0px',
+        // Explicitly adding the custom variables
+        'minimal': 'var(--border-radius-minimal)',
+        'medium': 'var(--border-radius-medium)',
+      },
+      boxShadow: {
+        'minimal': 'var(--shadow-minimal)',
+        'elevated': 'var(--shadow-elevated)',
+        // Retain existing shadows if any, or add more from a default theme if needed
+        'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        'DEFAULT': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        'md': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        'xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        'inner': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
+        'none': 'none',
       },
       keyframes: {
         'fade-scale': {

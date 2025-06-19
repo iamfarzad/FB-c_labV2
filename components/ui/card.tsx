@@ -14,7 +14,7 @@ const Card = React.forwardRef<
     className={cn(
       "rounded-lg border bg-card text-card-foreground shadow-sm transition-all",
       glass && "bg-background/80 backdrop-blur-sm border-border/50",
-      hoverable && "hover:shadow-md hover:border-orange-500/50",
+      hoverable && "hover:shadow-md hover:border-primary/50", // Updated to use theme's primary color
       className
     )}
     {...props}

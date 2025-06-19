@@ -2,15 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@keyframes marquee-var {
-  from {
-    transform: translateX(0%);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
 /* For reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   [class*="marquee"] {
@@ -53,10 +44,6 @@ a {
   --gradient-orange: linear-gradient(135deg, #ff5b04 0%, #ff8f6a 100%);
   --border-radius-minimal: 4px;
   --border-radius-medium: 8px;
-  
-  /* Text Colors */
-  --text-primary: #1a1a1a;
-  --text-secondary: #4a4a4a;
   
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.1);
@@ -114,8 +101,8 @@ a {
   /* Custom Dark Mode */
   --bg-primary: var(--color-gunmetal);
   --bg-secondary: var(--color-gunmetal-lighter);
-  --text-primary: var(--color-light-silver);
-  --text-secondary: rgba(245, 245, 245, 0.7);
+  /* --text-primary: var(--color-light-silver); -- Replaced by Shadcn/UI's --foreground in dark mode */
+  /* --text-secondary: rgba(245, 245, 245, 0.7); -- Replaced by Shadcn/UI's --muted-foreground or similar */
   --glass-bg: rgba(26, 26, 26, 0.8);
   --glass-border: rgba(255, 255, 255, 0.1);
   --surface-primary: var(--color-gunmetal-lighter);
@@ -159,8 +146,8 @@ a {
 .light {
   --bg-primary: var(--color-light-silver);
   --bg-secondary: #ffffff;
-  --text-primary: var(--color-gunmetal);
-  --text-secondary: rgba(26, 26, 26, 0.7);
+  /* --text-primary: var(--color-gunmetal); -- Replaced by Shadcn/UI's --foreground in light mode */
+  /* --text-secondary: rgba(26, 26, 26, 0.7); -- Replaced by Shadcn/UI's --muted-foreground or similar */
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(0, 0, 0, 0.1);
   --surface-primary: #ffffff;
@@ -174,238 +161,6 @@ a {
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-minimal);
-}
-
-/* Geometric Button System - Sharp & Fast */
-.btn-primary {
-  background: var(--surface-primary);
-  color: var(--color-orange-accent);
-  border: 2px solid var(--color-orange-accent);
-  padding: 12px 24px;
-  font-family: var(--font-tech);
-  font-weight: 600;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-tech-wide);
-  transition: all 0.2s ease;
-  cursor: pointer;
-  border-radius: 0px;
-}
-
-.btn-primary:hover {
-  background: var(--color-orange-accent);
-  color: var(--surface-primary);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(255, 91, 4, 0.2);
-}
-
-.btn-primary:focus {
-  outline: 2px solid var(--color-orange-accent);
-  outline-offset: 2px;
-}
-
-.btn-secondary {
-  background: transparent;
-  color: var(--text-primary);
-  border: 2px solid var(--glass-border);
-  padding: 12px 24px;
-  font-family: var(--font-tech);
-  font-weight: 500;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-tech);
-  transition: all 0.2s ease;
-  cursor: pointer;
-  border-radius: 0px;
-}
-
-.btn-secondary:hover {
-  background: var(--glass-bg);
-  border-color: var(--color-orange-accent);
-  color: var(--color-orange-accent);
-  transform: translateY(-1px);
-}
-
-.btn-secondary:focus {
-  outline: 2px solid var(--color-orange-accent);
-  outline-offset: 2px;
-}
-
-/* Geometric Card System */
-.card-minimal {
-  background: var(--surface-primary);
-  border: 2px solid var(--color-orange-accent);
-  border-radius: 0px;
-  padding: 20px;
-  transition: all 0.2s ease;
-}
-
-.card-minimal:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(255, 91, 4, 0.15);
-  border-color: var(--color-orange-accent-light);
-}
-
-.card-glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--glass-border);
-  border-radius: 0px;
-  padding: 20px;
-  transition: all 0.2s ease;
-}
-
-.card-glass:hover {
-  border-color: var(--color-orange-accent);
-  transform: translateY(-2px);
-}
-
-/* Technical Typography System */
-.text-display {
-  font-family: var(--font-tech);
-  font-size: 2.5rem;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: var(--letter-spacing-tech-wide);
-  color: var(--text-primary);
-  text-transform: uppercase;
-}
-
-.text-heading {
-  font-family: var(--font-tech);
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: var(--letter-spacing-tech);
-  color: var(--text-primary);
-}
-
-.text-body {
-  font-family: var(--font-tech);
-  font-size: 1rem;
-  font-weight: 400;
-  line-height: 1.5;
-  letter-spacing: var(--letter-spacing-tech);
-  color: var(--text-secondary);
-}
-
-.text-caption {
-  font-family: var(--font-tech-mono);
-  font-size: 0.875rem;
-  font-weight: 500;
-  line-height: 1.4;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-tech-wide);
-}
-
-.text-mono {
-  font-family: var(--font-tech-mono);
-  letter-spacing: var(--letter-spacing-tech);
-}
-
-/* Grid System */
-.grid-minimal {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-}
-
-.grid-dashboard {
-  display: grid;
-  gap: 20px;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-}
-
-/* Dot Pattern Background */
-.dot-pattern {
-  background-image: radial-gradient(circle at 2px 2px, rgba(255, 91, 4, 0.15) 1px, transparent 0);
-  background-size: 40px 40px;
-}
-
-/* Minimal Animations */
-.fade-in-minimal {
-  animation: fadeInMinimal 0.3s ease-out;
-}
-
-@keyframes fadeInMinimal {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.slide-up-minimal {
-  animation: slideUpMinimal 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideUpMinimal {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Focus States */
-.focus-minimal:focus {
-  outline: 2px solid var(--color-orange-accent);
-  outline-offset: 2px;
-}
-
-/* Scrollbar Styling */
-.scrollbar-minimal::-webkit-scrollbar {
-  width: 6px;
-}
-
-.scrollbar-minimal::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollbar-minimal::-webkit-scrollbar-thumb {
-  background: var(--color-orange-accent);
-  border-radius: 3px;
-}
-
-.scrollbar-minimal::-webkit-scrollbar-thumb:hover {
-  background: var(--color-orange-accent-hover);
-}
-
-/* Status Indicators */
-.status-active {
-  position: relative;
-}
-
-.status-active::before {
-  content: "";
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 8px;
-  height: 8px;
-  background: var(--color-orange-accent);
-  border-radius: 50%;
-  border: 2px solid var(--bg-primary);
-}
-
-/* Geometric Dividers */
-.divider-minimal {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
-  margin: 20px 0;
-}
-
-.divider-accent {
-  height: 2px;
-  background: var(--color-orange-accent);
-  margin: 24px 0;
 }
 
 /* Modern Chat Bubbles */
@@ -609,28 +364,6 @@ a {
   }
 }
 
-.chat-bubble-minimal {
-  background: var(--surface-primary);
-  border: 1px solid var(--color-orange-accent);
-  border-radius: var(--border-radius-minimal);
-  padding: 16px 20px;
-  max-width: 70%;
-  position: relative;
-}
-
-.chat-bubble-user {
-  background: var(--color-orange-accent);
-  color: var(--surface-primary);
-  border: none;
-  margin-left: auto;
-}
-
-.chat-bubble-assistant {
-  background: var(--surface-primary);
-  color: var(--color-orange-accent);
-  border: 1px solid var(--color-orange-accent);
-}
-
 /* Input System */
 /* Glassmorphism Effect */
 .glassmorphism {
@@ -642,106 +375,14 @@ a {
   border-radius: 16px;
 }
 
-.input-minimal {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--border-radius-minimal);
-  padding: 12px 16px;
-  color: var(--text-primary);
-  font-size: 14px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.input-minimal:focus {
-  outline: none;
-  border-color: var(--color-orange-accent);
-  box-shadow: 0 0 0 3px rgba(255, 91, 4, 0.1);
-}
-
-.input-minimal::placeholder {
-  color: var(--text-secondary);
-}
-
-/* Loading States */
-.loading-minimal {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--glass-border);
-  border-radius: 50%;
-  border-top-color: var(--color-orange-accent);
-  animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Utility Classes */
-.text-orange {
-  color: var(--color-orange-accent);
-}
-.bg-orange {
-  background-color: var(--color-orange-accent);
-}
-.border-orange {
-  border-color: var(--color-orange-accent);
-}
-
-.text-primary {
-  color: var(--text-primary);
-}
-.text-secondary {
-  color: var(--text-secondary);
-}
-.bg-primary {
-  background-color: var(--bg-primary);
-}
-.bg-secondary {
-  background-color: var(--bg-secondary);
-}
-
-.surface-primary {
-  background-color: var(--surface-primary);
-}
-.surface-secondary {
-  background-color: var(--surface-secondary);
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
-  .text-display {
-    font-size: 2rem;
-  }
-  .text-heading {
-    font-size: 1.25rem;
-  }
-  .grid-minimal {
-    grid-template-columns: 1fr;
-  }
-  .grid-dashboard {
-    grid-template-columns: 1fr;
-  }
   .chat-bubble-minimal {
     max-width: 85%;
   }
 }
 
 @media (max-width: 480px) {
-  .text-display {
-    font-size: 1.75rem;
-  }
-  .btn-primary,
-  .btn-secondary {
-    padding: 10px 20px;
-    font-size: 13px;
-  }
-  .card-minimal,
-  .card-glass {
-    padding: 16px;
-  }
 }
 
 /* Base Typography & Layout */
@@ -764,11 +405,35 @@ a {
   }
 
   h1 {
-    @apply text-display;
+    /* Replicates .text-display properties:
+      font-family: var(--font-tech); -> already in h1,h2,h3...
+      font-size: 2.5rem;
+      font-weight: 700; -> already in h1,h2,h3... (600, but 700 for display)
+      line-height: 1.1;
+      letter-spacing: var(--letter-spacing-tech-wide); -> already in h1,h2,h3...
+      color: var(--text-primary); -> comes from body via text-foreground
+      text-transform: uppercase;
+    */
+    font-size: 2.5rem;
+    font-weight: 700; /* Overriding the 600 from h1,h2,h3... */
+    line-height: 1.1;
+    text-transform: uppercase;
   }
 
   h2, h3 {
-    @apply text-heading;
+    /* Replicates .text-heading properties:
+      font-family: var(--font-tech); -> already in h1,h2,h3...
+      font-size: 1.5rem;
+      font-weight: 600; -> already in h1,h2,h3...
+      line-height: 1.2;
+      letter-spacing: var(--letter-spacing-tech); -> covered by letter-spacing-tech-wide from h1,h2,h3...
+      color: var(--text-primary); -> comes from body via text-foreground
+    */
+    font-size: 1.5rem;
+    line-height: 1.2;
+    /* letter-spacing is var(--letter-spacing-tech-wide) from the generic h1-h6 rule,
+       .text-heading used var(--letter-spacing-tech). Assuming -wide is preferred or will be adjusted per component basis.
+    */
   }
 
   .font-tech {

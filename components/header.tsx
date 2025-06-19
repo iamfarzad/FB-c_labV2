@@ -15,7 +15,7 @@ const LogoText = () => (
 )
 
 interface HeaderProps {
-  theme: "light" | "dark"
+  // theme prop is no longer needed as we'll use Tailwind's dark mode
   onThemeToggle: () => void
 }
 
@@ -66,16 +66,15 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
     console.log("Language changed to:", language.code)
   }
 
-  const headerBg =
-    theme === "dark"
-      ? "bg-[var(--color-gunmetal)] border-[var(--color-gunmetal-lighter)]"
-      : "bg-white border-[var(--color-light-silver-darker)]"
-
-  const textColor = theme === "dark" ? "text-[var(--color-light-silver)]" : "text-[var(--color-gunmetal)]"
-  const mutedTextColor = theme === "dark" ? "text-[var(--color-light-silver)]/90" : "text-[var(--color-gunmetal)]/90"
+  // headerBg, textColor, mutedTextColor are removed. Styling will be done via Tailwind dark mode.
+  // Assumed:
+  // Light mode header: bg-white, border-light-silver-darker
+  // Dark mode header: bg-gunmetal, border-gunmetal-lighter
+  // Text: text-gunmetal (light), text-light-silver (dark) -> maps to text-foreground
+  // Muted Text: text-gunmetal/90 (light), text-light-silver/90 (dark) -> maps to text-muted-foreground or text-foreground/90
 
   return (
-    <header className={`sticky top-0 z-50 glassmorphism ${headerBg} border-b backdrop-blur-xl`}>
+    <header className="sticky top-0 z-50 glassmorphism bg-white dark:bg-gunmetal border-b border-light-silver-darker dark:border-gunmetal-lighter backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -96,13 +95,13 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
                 href={item.href}
                 className={`relative px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 ${
                   pathname === item.href
-                    ? "text-[var(--color-orange-accent)]"
-                    : `${textColor} hover:text-[var(--color-orange-accent)]`
+                    ? "text-orange-accent" // Use direct Tailwind class
+                    : "text-foreground hover:text-orange-accent" // Use text-foreground
                 }`}
               >
                 {item.name}
                 {pathname === item.href && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] rounded-full" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-accent to-orange-accent-light rounded-full" />
                 )}
               </Link>
             ))}
@@ -114,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
-                className="flex items-center space-x-2 p-2 rounded-xl glassmorphism hover:surface-glow transition-all duration-300 text-[var(--text-primary)] group"
+                className="flex items-center space-x-2 p-2 rounded-xl glassmorphism hover:surface-glow transition-all duration-300 text-foreground group" // Use text-foreground
                 aria-label="Select language"
               >
                 <Globe size={18} className="group-hover:rotate-12 transition-transform" />
@@ -127,7 +126,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
 
               {/* Language Dropdown */}
               {isLanguageDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 glassmorphism rounded-xl shadow-2xl border border-[var(--glass-border)] slide-in">
+                <div className="absolute right-0 mt-2 w-48 glassmorphism rounded-xl shadow-2xl border border-border/50 slide-in"> {/* Use border-border/50 */}
                   <div className="py-2">
                     {languages.map((language) => (
                       <button
@@ -135,14 +134,14 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
                         onClick={() => handleLanguageSelect(language)}
                         className={`w-full flex items-center space-x-3 px-4 py-2 text-sm transition-all duration-200 ${
                           selectedLanguage.code === language.code
-                            ? "bg-[var(--color-orange-accent)]/10 text-[var(--color-orange-accent)]"
-                            : `${textColor} hover:bg-[var(--color-orange-accent)]/5 hover:text-[var(--color-orange-accent)]`
+                            ? "bg-orange-accent/10 text-orange-accent" // Use direct Tailwind class
+                            : "text-foreground hover:bg-orange-accent/5 hover:text-orange-accent" // Use text-foreground
                         }`}
                       >
                         <span className="text-lg">{language.flag}</span>
                         <span className="font-medium">{language.name}</span>
                         {selectedLanguage.code === language.code && (
-                          <div className="ml-auto w-2 h-2 rounded-full bg-[var(--color-orange-accent)]" />
+                          <div className="ml-auto w-2 h-2 rounded-full bg-orange-accent" /> // Use direct Tailwind class
                         )}
                       </button>
                     ))}
@@ -154,20 +153,18 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
             {/* Theme Toggle */}
             <button
               onClick={onThemeToggle}
-              className="p-2 rounded-xl glassmorphism hover:surface-glow transition-all duration-300 text-[var(--text-primary)] group"
+              className="p-2 rounded-xl glassmorphism hover:surface-glow transition-all duration-300 text-foreground group" // Use text-foreground
               aria-label="Toggle theme"
             >
-              {theme === "light" ? (
-                <Moon size={18} className="group-hover:rotate-12 transition-transform" />
-              ) : (
-                <Sun size={18} className="group-hover:rotate-12 transition-transform" />
-              )}
+              {/* Icon display will be handled by the global theme state, not a prop here */}
+              <Moon size={18} className="hidden dark:inline-block group-hover:rotate-12 transition-transform" />
+              <Sun size={18} className="dark:hidden inline-block group-hover:rotate-12 transition-transform" />
             </button>
 
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl glassmorphism hover:surface-glow transition-all duration-300 text-[var(--text-primary)] group"
+              className="md:hidden p-2 rounded-xl glassmorphism hover:surface-glow transition-all duration-300 text-foreground group" // Use text-foreground
               aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? (
@@ -190,8 +187,8 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`block px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
                     pathname === item.href
-                      ? "bg-[var(--color-orange-accent)]/10 text-[var(--color-orange-accent)]"
-                      : `${textColor} hover:bg-[var(--color-orange-accent)]/5 hover:text-[var(--color-orange-accent)]`
+                      ? "bg-orange-accent/10 text-orange-accent" // Use direct Tailwind class
+                      : "text-foreground hover:bg-orange-accent/5 hover:text-orange-accent" // Use text-foreground
                   }`}
                 >
                   {item.name}
