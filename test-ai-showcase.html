@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Showcase Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .response {
+            background: #f0f0f0;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin-top: 20px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>F.B/c AI Showcase Test</h1>
+    
+    <div>
+        <h2>Test Conversation Flow</h2>
+        <button onclick="testGreeting()">1. Test Greeting</button>
+        <button onclick="testName()">2. Provide Name</button>
+        <button onclick="testEmail()">3. Provide Email</button>
+        <button onclick="testChallenge()">4. Business Challenge</button>
+        <button onclick="testCapability()">5. Test Capability</button>
+    </div>
+    
+    <div id="log">
+        <div>Test log will appear here...</div>
+    </div>
+    
+    <script>
+        let conversationState = {
+            stage: 'greeting',
+            messages: [],
+            sessionId: 'test-' + Date.now()
+        };
+        
+        function log(message, data) {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> ${message}`;
+            if (data) {
+                entry.innerHTML += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            }
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        async function sendMessage(prompt) {
+            log('Sending message: ' + prompt);
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/gemini?action=conversationalFlow', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        currentConversationState: conversationState,
+                        messageCount: conversationState.messages.length,
+                        includeAudio: false
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('AI Response:', result.data);
+                    
+                    // Update conversation state
+                    conversationState.messages.push({
+                        id: Date.now().toString(),
+                        text: prompt,
+                        sender: 'user',
+                        timestamp: new Date()
+                    });
+                    
+                    conversationState.messages.push({
+                        id: (Date.now() + 1).toString(),
+                        text: result.data.text,
+                        sender: 'ai',
+                        timestamp: new Date()
+                    });
+                    
+                    if (result.data.conversationState) {
+                        conversationState = {
+                            ...conversationState,
+                            ...result.data.conversationState
+                        };
+                    }
+                } else {
+                    log('Error:', result);
+                }
+            } catch (error) {
+                log('Network error:', error.message);
+            }
+        }
+        
+        function testGreeting() {
+            sendMessage("Hello, I'm interested in AI for my business");
+        }
+        
+        function testName() {
+            sendMessage("John Smith");
+        }
+        
+        function testEmail() {
+            sendMessage("john@techcompany.com");
+        }
+        
+        function testChallenge() {
+            sendMessage("We need to automate our customer service and improve response times");
+        }
+        
+        function testCapability() {
+            sendMessage("Show me how AI can analyze documents");
+        }
+        
+        // Initial log
+        log('AI Showcase Test Ready. Click buttons in order to test the conversation flow.');
+    </script>
+</body>
+</html> 

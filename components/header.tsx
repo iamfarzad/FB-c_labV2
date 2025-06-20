@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Sun, Moon, Globe, ChevronDown, Menu, X } from "lucide-react"
+import { Sun, Moon, Globe, ChevronDown, Menu, X, Video } from "lucide-react"
 import { HeroAsciiSphere } from "./magicui/hero-ascii-sphere"
 // Logo text
 const LogoText = () => (
@@ -109,6 +109,14 @@ export const Header: React.FC<HeaderProps> = ({ onThemeToggle }) => {
 
           {/* Right Side Controls */}
           <div className="flex items-center space-x-3">
+            {/* Video to App Button */}
+            <Link
+              href="/video-learning-tool"
+              className="hidden md:flex items-center space-x-2 px-4 py-2 rounded-xl glass-button text-[var(--color-text-on-orange)] hover:scale-105 transition-all duration-300"
+            >
+              <Video size={16} />
+              <span className="text-sm font-medium">Video to App</span>
+            </Link>
             {/* Language Selector */}
             <div className="relative" ref={dropdownRef}>
               <button
@@ -194,6 +202,16 @@ export const Header: React.FC<HeaderProps> = ({ onThemeToggle }) => {
                   {item.name}
                 </Link>
               ))}
+              
+              {/* Mobile Video to App Button */}
+              <Link
+                href="/video-learning-tool"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center space-x-2 mx-4 mt-4 px-4 py-3 rounded-xl glass-button text-[var(--color-text-on-orange)] transition-all duration-300"
+              >
+                <Video size={16} />
+                <span className="text-sm font-medium">Video to App</span>
+              </Link>
             </nav>
           </div>
         )}

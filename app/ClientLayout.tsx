@@ -7,6 +7,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { AccessibilityProvider } from "@/components/accessibility/accessibility-provider"
 import { CookieConsent } from "@/components/legal/cookie-consent"
 import { initPerformanceOptimizations } from "@/lib/performance"
+import { DataContext } from "@/context/data-context"
+import type { Example } from "@/lib/types"
 import "./globals.css"
 
 // Initialize fonts with preload and display swap for better performance
@@ -58,6 +60,8 @@ interface ClientLayoutProps {
 
 export default function ClientLayout({ children }: ClientLayoutProps) {
   const [isMounted, setIsMounted] = useState(false)
+  const [examples, setExamples] = useState<Example[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     // Mark as mounted for client-side rendering
@@ -65,6 +69,19 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     
     // Initialize performance optimizations
     const cleanup = initPerformanceOptimizations()
+    
+    // Load examples data
+    setIsLoading(true)
+    fetch("/data/examples.json")
+      .then((res) => res.json())
+      .then((fetchedData: Example[]) => {
+        setExamples(fetchedData)
+        setIsLoading(false)
+      })
+      .catch((error) => {
+        console.error("Failed to load examples:", error)
+        setIsLoading(false)
+      })
     
     // Cleanup function
     return () => {
@@ -80,6 +97,22 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   //     </div>
   //   )
   // }
+
+  const empty: Example = {
+    title: "",
+    url: "",
+    spec: "",
+    code: "",
+    description: "",
+    category: "general",
+  }
+
+  const dataContextValue = {
+    examples,
+    isLoading,
+    setExamples,
+    defaultExample: examples.length > 0 ? examples[0] : empty,
+  }
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -101,9 +134,10 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
           disableTransitionOnChange
         >
           <AccessibilityProvider>
-            <div className="min-h-screen bg-background">
-              {children}
-              <CookieConsent />
+            <DataContext.Provider value={dataContextValue}>
+              <div className="min-h-screen bg-background">
+                {children}
+                <CookieConsent />
 
               {/* Global Styles */}
               <style jsx global>{`
@@ -381,7 +415,8 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
                     opacity: 1;
                   }
               `}</style>
-            </div>
+              </div>
+            </DataContext.Provider>
           </AccessibilityProvider>
         </ThemeProvider>
       </body>

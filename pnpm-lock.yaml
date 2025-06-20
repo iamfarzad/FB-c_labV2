@@ -23,6 +23,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: latest
         version: 1.12.1
+      '@monaco-editor/react':
+        specifier: ^4.7.0
+        version: 4.7.0(monaco-editor@0.52.2)(react-dom@18.0.0(react@18.0.0))(react@18.0.0)
       '@radix-ui/react-accordion':
         specifier: 1.2.2
         version: 1.2.2(@types/react-dom@18.0.0)(@types/react@18.0.0)(react-dom@18.0.0(react@18.0.0))(react@18.0.0)
@@ -113,6 +116,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.50.0
         version: 2.50.0
+      '@types/react-tabs':
+        specifier: ^5.0.5
+        version: 5.0.5(react@18.0.0)
       '@types/three':
         specifier: ^0.177.0
         version: 0.177.0
@@ -194,6 +200,9 @@ importers:
       react-screen-capture:
         specifier: ^1.1.1
         version: 1.1.1(react@18.0.0)
+      react-tabs:
+        specifier: ^6.1.0
+        version: 6.1.0(react@18.0.0)
       react-webcam:
         specifier: ^7.2.0
         version: 7.2.0(react-dom@18.0.0(react@18.0.0))(react@18.0.0)
@@ -517,6 +526,16 @@ packages:
   '@modelcontextprotocol/sdk@1.12.1':
     resolution: {integrity: sha512-KG1CZhZfWg+u8pxeM/mByJDScJSrjjxLc8fwQqbsS8xCjBmQfMNEBTotYdNanKekepnfRI85GtgQlctLFpcYPw==}
     engines: {node: '>=18'}
+
+  '@monaco-editor/loader@1.5.0':
+    resolution: {integrity: sha512-hKoGSM+7aAc7eRTRjpqAZucPmoNOC4UUbknb/VNoTkEIkCPhqV8LfbsgM1webRM7S/z21eHEx9Fkwx8Z/C/+Xw==}
+
+  '@monaco-editor/react@4.7.0':
+    resolution: {integrity: sha512-cyzXQCtO47ydzxpQtCGSQGOC8Gk3ZUeBXFAxD+CWXYFo5OqZyZUonFl0DwUlTyAfRHntBfw2p3w4s9R6oe1eCA==}
+    peerDependencies:
+      monaco-editor: '>= 0.25.0 < 1'
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   '@next/env@14.2.16':
     resolution: {integrity: sha512-fLrX5TfJzHCbnZ9YUSnGW63tMV3L4nSfhgOQ0iCcX21Pt+VSTDuaLsSuL8J/2XAiVA5AnzvXDpf6pMs60QxOag==}
@@ -1539,6 +1558,10 @@ packages:
     resolution: {integrity: sha512-HHM3nxyUZ3zAylX8ZEyrDNd2XZOnQ0D5XfunJF5FLQnZbHHYq4UWvW1QfelQNXv1ICNkwYhfxjwfnqivYB6bFg==}
     peerDependencies:
       '@types/react': '*'
+
+  '@types/react-tabs@5.0.5':
+    resolution: {integrity: sha512-3CZTmjR7nNrZnYbnxp/DtK5e82mhM22dN47aYObmYLcp9fC1XjIEF0mLzGKFl1fR6/R8X7DyGh9hO6lON6LVkQ==}
+    deprecated: This is a stub types definition. react-tabs provides its own type definitions, so you do not need this installed.
 
   '@types/react@18.0.0':
     resolution: {integrity: sha512-7+K7zEQYu7NzOwQGLR91KwWXXDzmTFODRVizJyIALf6RfLv2GDpqpknX64pvRVILXCpXi7O/pua8NGk44dLvJw==}
@@ -2700,6 +2723,9 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  monaco-editor@0.52.2:
+    resolution: {integrity: sha512-GEQWEZmfkOGLdd3XK8ryrfWz3AIP8YymVXiPHEdewrUq7mh0qrKrfHLNCXcbB6sTnMLnOZ3ztSiKcciFUkIJwQ==}
+
   motion-dom@12.18.1:
     resolution: {integrity: sha512-dR/4EYT23Snd+eUSLrde63Ws3oXQtJNw/krgautvTfwrN/2cHfCZMdu6CeTxVfRRWREW3Fy1f5vobRDiBb/q+w==}
 
@@ -3077,6 +3103,11 @@ packages:
       '@types/react':
         optional: true
 
+  react-tabs@6.1.0:
+    resolution: {integrity: sha512-6QtbTRDKM+jA/MZTTefvigNxo0zz+gnBTVFw2CFVvq+f2BuH0nF0vDLNClL045nuTAdOoK/IL1vTP0ZLX0DAyQ==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+
   react-transition-group@4.4.5:
     resolution: {integrity: sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==}
     peerDependencies:
@@ -3242,6 +3273,9 @@ packages:
   stackblur-canvas@2.7.0:
     resolution: {integrity: sha512-yf7OENo23AGJhBriGx0QivY5JP6Y1HbrrDI6WLt6C5auYZXlQrheoY8hD4ibekFKz1HOfE48Ww8kMWMnJD/zcQ==}
     engines: {node: '>=0.1.14'}
+
+  state-local@1.0.7:
+    resolution: {integrity: sha512-HTEHMNieakEnoe33shBYcZ7NX83ACUjCu8c40iOGEZsngj9zRnkqS9j1pqQPXwobB0ZcVTk27REb7COQ0UR59w==}
 
   stats-gl@2.4.2:
     resolution: {integrity: sha512-g5O9B0hm9CvnM36+v7SFl39T7hmAlv541tU81ME8YeSb3i1CIP5/QdDeSB3A0la0bKNHpxpwxOVRo2wFTYEosQ==}
@@ -3938,6 +3972,17 @@ snapshots:
       zod-to-json-schema: 3.24.5(zod@3.24.1)
     transitivePeerDependencies:
       - supports-color
+
+  '@monaco-editor/loader@1.5.0':
+    dependencies:
+      state-local: 1.0.7
+
+  '@monaco-editor/react@4.7.0(monaco-editor@0.52.2)(react-dom@18.0.0(react@18.0.0))(react@18.0.0)':
+    dependencies:
+      '@monaco-editor/loader': 1.5.0
+      monaco-editor: 0.52.2
+      react: 18.0.0
+      react-dom: 18.0.0(react@18.0.0)
 
   '@next/env@14.2.16': {}
 
@@ -4961,6 +5006,12 @@ snapshots:
   '@types/react-reconciler@0.28.9(@types/react@18.0.0)':
     dependencies:
       '@types/react': 18.0.0
+
+  '@types/react-tabs@5.0.5(react@18.0.0)':
+    dependencies:
+      react-tabs: 6.1.0(react@18.0.0)
+    transitivePeerDependencies:
+      - react
 
   '@types/react@18.0.0':
     dependencies:
@@ -6146,6 +6197,8 @@ snapshots:
 
   mkdirp@3.0.1: {}
 
+  monaco-editor@0.52.2: {}
+
   motion-dom@12.18.1:
     dependencies:
       motion-utils: 12.18.1
@@ -6460,6 +6513,12 @@ snapshots:
     optionalDependencies:
       '@types/react': 18.0.0
 
+  react-tabs@6.1.0(react@18.0.0):
+    dependencies:
+      clsx: 2.1.1
+      prop-types: 15.8.1
+      react: 18.0.0
+
   react-transition-group@4.4.5(react-dom@18.0.0(react@18.0.0))(react@18.0.0):
     dependencies:
       '@babel/runtime': 7.27.6
@@ -6667,6 +6726,8 @@ snapshots:
 
   stackblur-canvas@2.7.0:
     optional: true
+
+  state-local@1.0.7: {}
 
   stats-gl@2.4.2(@types/three@0.177.0)(three@0.152.2):
     dependencies:

@@ -17,7 +17,7 @@ import ContentContainer from '@/components/ContentContainer';
 import ExampleGallery from '@/components/ExampleGallery';
 import { useDataContext } from '@/context/data-context';
 import type { Example } from '@/lib/types';
-import { getYoutubeEmbedUrl, getVideoTitle, validateYoutubeUrl } from '@/lib/youtube';
+import { getYoutubeEmbedUrl, getYouTubeVideoTitle, validateYoutubeUrl } from '@/lib/youtube';
 
 interface LearningModule {
   id: string;
@@ -29,11 +29,6 @@ interface LearningModule {
   startTime?: number;
   endTime?: number;
 }
-
-const getYouTubeVideoTitle = async (url: string): Promise<string> => {
-  // Placeholder implementation
-  return "Dummy YouTube Title";
-};
 
 const VideoPlayerComponent: React.FC<{ videoUrl: string }> = ({ videoUrl }) => {
   const [iframeSrc, setIframeSrc] = useState('');
@@ -88,11 +83,13 @@ const VideoLearningToolPageContent: React.FC = () => {
   useEffect(() => {
     if (videoUrl) {
       getYouTubeVideoTitle(videoUrl).then(setVideoTitle);
+      
+      // For now, use placeholder modules - the real video analysis will be implemented via ContentContainer
       setTimeout(() => {
         setLearningPath([
           { id: '1', title: 'Introduction', type: 'video_segment', completed: false, startTime: 0, endTime: 120 },
           { id: '2', title: 'Key Concept 1', type: 'reading', completed: false, content: 'Detailed explanation of key concept 1...' },
-          { id: '3', title: 'Quiz 1', type: 'quiz', completed: false, questions: [{q: 'Q1?'}, {q: 'Q2?'}] },
+          { id: '3', title: 'Quiz 1', type: 'quiz', completed: false, questions: [] },
           { id: '4', title: 'Advanced Topic', type: 'video_segment', completed: false, startTime: 120, endTime: 240 },
         ]);
       }, 1000);
@@ -194,9 +191,12 @@ const VideoLearningToolPageContent: React.FC = () => {
                 ) : <p className="text-muted-foreground">Select a module to see details.</p>}
               </CardContent>
             </Card>
-            <ContentContainer contentBasis={videoUrl} onLoadingStateChange={(loading: boolean) => console.log("Content loading:", loading)}>
-              <div className="text-sm text-muted-foreground">Additional learning resources will appear here.</div>
-            </ContentContainer>
+            <div className="h-[400px]">
+              <ContentContainer 
+                contentBasis={videoUrl} 
+                onLoadingStateChange={(loading: boolean) => console.log("Content loading:", loading)}
+              />
+            </div>
             <ExampleGallery title="Related Examples From Context" onSelectExample={() => {}} selectedExample={dataContext?.defaultExample || null} />
           </aside>
         </div>

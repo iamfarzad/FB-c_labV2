@@ -13,7 +13,9 @@ import {
   Lightbulb, ArrowLeft, MessageSquare, PanelRightClose, PanelRightOpen, Video, Copy,
   Image as ImageIcon, X, ListChecks, Sparkles, AlertTriangle, Edit3, MessageCircle, Zap,
   CheckCircle, Users, Settings as SettingsIcon, LogOut, ChevronLeft, ChevronRight, ExternalLink,
-  MessageSquareText, Menu, MoreHorizontal, ArrowDown
+  MessageSquareText, Menu, MoreHorizontal, ArrowDown, MicOff, Camera, Upload, FileText, Code,
+  Globe, Share, Monitor, Eye, ThumbsUp, ThumbsDown, Activity, Loader2, Clock, Phone, Mail,
+  Calendar, ScreenShare, StopCircle
 } from 'lucide-react';
 import { VoiceInputModal } from "@/components/voice-input-modal";
 import { WebcamModal } from "@/components/webcam-modal";
@@ -28,6 +30,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { detectYouTubeUrl, getVideoTitle } from '@/lib/youtube';
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 
 interface Message {
   id: string;
@@ -111,12 +115,15 @@ export default function ChatPage() {
 
   const [uploadedImageBase64, setUploadedImageBase64] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const anyFileInputRef = useRef<HTMLInputElement>(null);
 
   // UI State
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
 
   // Mobile state with proper SSR check
   const [isMobile, setIsMobile] = useState(() => {
@@ -144,6 +151,9 @@ export default function ChatPage() {
   const [videoProcessingMessage, setVideoProcessingMessage] = useState('');
   const [detectedVideoUrl, setDetectedVideoUrl] = useState<string | null>(null);
   const [isGeneratingVideoApp, setIsGeneratingVideoApp] = useState(false);
+  
+  // Camera analysis timing
+  const lastCameraAnalysisRef = useRef<number>(0);
 
   // Audio and Voice State
   const [aiVoiceState, setAiVoiceState] = useState<'idle' | 'listening' | 'processing' | 'error'>('idle');
@@ -154,11 +164,7 @@ export default function ChatPage() {
   // messagesEndRef is already declared at the component start
 
   // ActivityItem interface defined once
-  const [activities, setActivities] = useState<ActivityItem[]>([
-    { id: 's1', type: 'system_message', timestamp: Date.now() - 3600000 * 3, user: 'AI Assistant', title: 'Chat Started', description: 'Initial conversation with AI Assistant began. Responded to "Project Setup Query".', status: 'completed' },
-    { id: 's2', type: 'event', timestamp: Date.now() - 3600000 * 2, user: 'System', title: 'User Logged In', description: 'User successfully authenticated to the platform.', status: 'completed' },
-    { id: 'prev_1', type: 'video_processing', title: 'Analyzing "Old Video Example"', description: 'Extracting key concepts.', timestamp: Date.now() - 1000000, progress: 30, status: 'in_progress', user: 'System' },
-  ]);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -180,26 +186,44 @@ export default function ChatPage() {
     const contentToSend = messageContent ?? input;
     if (!contentToSend.trim() && attachments.length === 0) return;
 
+    // Check for YouTube URL
+    const youtubeUrl = detectYouTubeUrl(contentToSend);
+    if (youtubeUrl) {
+      setDetectedVideoUrl(youtubeUrl);
+      const title = await getVideoTitle(youtubeUrl);
+      setVideoTitle(title);
+    }
+
     const newMessage: Message = {
       id: Date.now().toString(),
       content: contentToSend,
-      role: "user",
+      role: 'user',
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, newMessage]);
-    const currentInput = contentToSend;
-    setInput("");
+    const updatedMessages = [...messages, newMessage];
+    setMessages(updatedMessages);
+
+    setInput('');
     setAttachments([]);
     setIsLoading(true);
 
     try {
+      // Map frontend message format to backend Content format
+      const apiMessages = updatedMessages.map((msg) => ({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }],
+      }));
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: currentInput }),
+        body: JSON.stringify({ 
+          messages: apiMessages,
+          includeAudio: true // Request audio response
+        }),
       });
 
       if (!response.ok) {
@@ -211,19 +235,37 @@ export default function ChatPage() {
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         content: data.reply,
-        role: "assistant",
+        role: 'assistant',
         timestamp: new Date(),
+        audioData: data.audioData, // Add audio data from response
       };
-      setMessages(prev => [...prev, aiResponse]);
+      setMessages((prev) => [...prev, aiResponse]);
+
+      // Play audio if available
+      if (data.audioData) {
+        try {
+          const audio = new Audio(`data:audio/mpeg;base64,${data.audioData}`);
+          audio.play();
+          
+          addActivity({
+            type: 'ai_thinking',
+            title: '🔊 Voice Response Generated',
+            description: 'AI response includes synthesized voice',
+            status: 'completed'
+          });
+        } catch (error) {
+          console.error('Audio playback failed:', error);
+        }
+      }
     } catch (error) {
-      console.error("Failed to send message:", error);
+      console.error('Failed to send message:', error);
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         content: "Sorry, I couldn't get a response. Please try again.",
-        role: "assistant",
+        role: 'assistant',
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorResponse]);
+      setMessages((prev) => [...prev, errorResponse]);
     } finally {
       setIsLoading(false);
     }
@@ -315,9 +357,118 @@ export default function ChatPage() {
     setShowUploadOptions(false);
   };
 
-  const uploadMenuItems = [
-    { id: "image_upload", label: "Upload Image", icon: FileUp, action: () => { fileInputRef.current?.click(); setShowUploadOptions(false); } },
-    { id: "youtube_video", label: "YouTube Video", icon: Youtube, action: handleYouTubeVideoOptionClick }
+  const handleURLAnalysis = async () => {
+    const url = prompt("Enter a website URL to analyze for AI opportunities:", "https://");
+    if (!url || !url.startsWith('http')) {
+      return;
+    }
+    
+    setShowUploadOptions(false);
+    
+    // Add processing activity
+    addActivity({
+      type: 'analyzing',
+      title: `🌐 Analyzing Website: ${url}`,
+      description: 'Extracting business intelligence and AI opportunities...',
+      status: 'in_progress'
+    });
+
+    try {
+      const response = await fetch('/api/gemini?action=analyzeURL', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          urlContext: url,
+          analysisType: 'business_analysis',
+          prompt: `Analyze this website for AI implementation opportunities and business insights.`
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update activity
+        setActivities(prev => prev.map(act => 
+          act.title.includes(url) ? 
+          { ...act, status: 'completed' as const, description: 'Website analysis complete' } : act
+        ));
+        
+        // Add analysis result
+        const analysisMessage: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `🌐 **Website Analysis Complete: ${url}**\n\n${result.data.text}`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, analysisMessage]);
+      } else {
+        throw new Error(result.error || 'URL analysis failed');
+      }
+    } catch (error) {
+      console.error('URL analysis error:', error);
+      setActivities(prev => prev.map(act => 
+        act.title.includes(url) ? 
+        { ...act, status: 'failed' as const, description: 'Website analysis failed' } : act
+      ));
+    }
+  };
+
+  const handleImageGeneration = async () => {
+    const prompt = window.prompt("Describe the business image you want to generate:", "A professional business meeting with AI technology");
+    if (!prompt) return;
+    
+    setShowUploadOptions(false);
+    
+    addActivity({
+      type: 'image_generation',
+      title: '🎨 Generating Image Description',
+      description: `Creating visual description for: ${prompt}`,
+      status: 'in_progress'
+    });
+
+    try {
+      const response = await fetch('/api/gemini?action=generateImage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: prompt,
+          businessContext: 'Professional business visualization'
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setActivities(prev => prev.map(act => 
+          act.title.includes('Generating Image') ? 
+          { ...act, status: 'completed' as const, description: 'Image description generated' } : act
+        ));
+        
+        const imageMessage: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `🎨 **Image Description Generated**\n\n${result.data.text}`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, imageMessage]);
+      } else {
+        throw new Error(result.error || 'Image generation failed');
+      }
+    } catch (error) {
+      console.error('Image generation error:', error);
+      setActivities(prev => prev.map(act => 
+        act.title.includes('Generating Image') ? 
+        { ...act, status: 'failed' as const, description: 'Image generation failed' } : act
+      ));
+    }
+  };
+
+  const uploadMenuItems: Array<{id: string, label: string, icon: React.ElementType, action: () => void}> = [
+    { id: "image_upload", label: "Upload Image", icon: ImageIcon, action: () => { fileInputRef.current?.click(); setShowUploadOptions(false); } },
+    { id: "file_upload", label: "Upload File/Document", icon: FileText, action: () => { anyFileInputRef.current?.click(); setShowUploadOptions(false); } },
+    { id: "youtube_video", label: "YouTube Video", icon: Youtube, action: handleYouTubeVideoOptionClick },
+    { id: "url_analysis", label: "Analyze Website", icon: Globe, action: handleURLAnalysis },
+    { id: "image_generation", label: "Generate Image Description", icon: ImageIcon, action: handleImageGeneration }
   ];
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -332,6 +483,100 @@ export default function ChatPage() {
       reader.readAsDataURL(file);
     } else if (file) {
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: `Selected file "${file.name}" is not an image. Please select an image file.`, timestamp: new Date() }]);
+    }
+    if (event.target) event.target.value = "";
+  };
+
+
+
+  const handleAnyFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const fileSize = (file.size / 1024 / 1024).toFixed(2); // Size in MB
+      const fileType = file.type || 'unknown';
+      
+      // Check if it's a document that can be analyzed
+      const isAnalyzableDocument = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'application/rtf',
+        'application/vnd.oasis.opendocument.text'
+      ].includes(file.type);
+
+      if (isAnalyzableDocument) {
+        // Use document analysis for supported formats
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const arrayBuffer = reader.result as ArrayBuffer;
+          const base64String = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+          
+          // Add processing activity
+          addActivity({
+            type: 'analyzing',
+            title: `Analyzing Document: ${file.name}`,
+            description: `Processing ${fileSize}MB document for business insights...`,
+            status: 'in_progress'
+          });
+          
+          try {
+            // Call document analysis API
+            const response = await fetch('/api/gemini?action=analyzeDocument', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                documentData: base64String,
+                mimeType: file.type,
+                prompt: `Analyze this business document and provide insights, opportunities, and recommendations.`
+              })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+              // Update activity to completed
+              setActivities(prev => prev.map(act => 
+                act.title.includes(file.name) ? 
+                { ...act, status: 'completed' as const, description: 'Document analysis complete' } : act
+              ));
+              
+              // Add AI response with analysis
+              const analysisMessage: Message = {
+                id: Date.now().toString(),
+                role: 'assistant',
+                content: `📄 **Document Analysis Complete: ${file.name}**\n\n${result.data.text}`,
+                timestamp: new Date(),
+              };
+              setMessages(prev => [...prev, analysisMessage]);
+            } else {
+              throw new Error(result.error || 'Document analysis failed');
+            }
+          } catch (error) {
+            console.error('Document analysis error:', error);
+            setActivities(prev => prev.map(act => 
+              act.title.includes(file.name) ? 
+              { ...act, status: 'failed' as const, description: 'Document analysis failed' } : act
+            ));
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        // Handle other file types (images, etc.)
+        addActivity({
+          type: 'processing',
+          title: `File Uploaded: ${file.name}`,
+          description: `Processing ${fileSize}MB ${fileType} file...`,
+          status: 'completed'
+        });
+        
+        setMessages(prev => [...prev, { 
+          id: Date.now().toString(), 
+          role: 'user', 
+          content: `[File uploaded: ${file.name} (${fileSize}MB, ${fileType})] Please analyze this file.`, 
+          timestamp: new Date() 
+        }]);
+      }
     }
     if (event.target) event.target.value = "";
   };
@@ -401,10 +646,19 @@ export default function ChatPage() {
         const linkCardMessage: Message = {
           id: `linkcard-${Date.now()}`,
           role: 'assistant',
-          content: `Your learning app for "${videoTitle || 'Untitled Video'}" is ready! [Click here to open](/video-learning-tool?videoUrl=${encodeURIComponent(detectedUrl)})`,
+          content: `🎉 **Learning App Complete!**\n\nYour interactive learning app for "${videoTitle || 'Untitled Video'}" has been successfully generated!\n\n✅ **Features Created:**\n- Interactive video segments\n- Automated quizzes\n- Progress tracking\n- Key concept extraction\n- Learning objectives\n\n**[🚀 Open Learning App](/video-learning-tool?videoUrl=${encodeURIComponent(detectedUrl)})**`,
           timestamp: new Date(),
         };
         setMessages(prevMessages => [...prevMessages, linkCardMessage]);
+
+        // Add completion notification to activity feed
+        addActivity({
+          type: 'complete',
+          title: '🎉 Video Learning App Ready!',
+          description: `Interactive learning app for "${videoTitle || 'Untitled Video'}" is now available`,
+          link: `/video-learning-tool?videoUrl=${encodeURIComponent(detectedUrl)}`,
+          status: 'completed'
+        });
       }
     }, 1000);
   };
@@ -415,9 +669,33 @@ export default function ChatPage() {
       if (!context || video.videoWidth === 0 || video.videoHeight === 0) return;
       canvas.width = video.videoWidth; canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      setCurrentCameraFrame(canvas.toDataURL("image/jpeg", 0.8).split(",")[1]);
+      const imageData = canvas.toDataURL("image/jpeg", 0.8);
+      setCurrentCameraFrame(imageData.split(",")[1]);
+      
+      // Add real-time analysis every 10 seconds
+      const now = Date.now();
+      if (!lastCameraAnalysisRef.current || now - lastCameraAnalysisRef.current > 10000) {
+        lastCameraAnalysisRef.current = now;
+        
+        // Add camera analysis message
+        const cameraMessage: Message = {
+          id: `camera-${now}`,
+          role: 'user',
+          content: '📷 **Live Camera Analysis**\n\nPlease analyze what you see from my camera and provide insights.',
+          timestamp: new Date(),
+          imageUrl: imageData
+        };
+        setMessages(prev => [...prev, cameraMessage]);
+        
+        addActivity({
+          type: 'analyzing',
+          title: '📷 Camera Frame Analyzed',
+          description: 'AI analyzing live camera feed...',
+          status: 'completed'
+        });
+      }
     }
-  }, []);
+  }, [setMessages, addActivity]);
 
   const startCamera = useCallback(async () => {
     setShowWebcamModal(true);
@@ -490,26 +768,52 @@ export default function ChatPage() {
     }
   };
 
-  const SidebarContent: React.FC<{ activities: ActivityItem[], currentPath: string, className?: string, open?: boolean; onSummarizeChat?: () => void; }> = ({ activities, currentPath, className, open, onSummarizeChat }) => {
-    const navLinks = [ { href: "/threads", label: "Threads", icon: ListChecks }, { href: "/shared-with-me", label: "Shared With Me", icon: Users }, { href: "/settings", label: "Settings", icon: SettingsIcon }, ];
+  const SidebarContent: React.FC<{ activities: ActivityItem[], currentPath: string, className?: string, open?: boolean; }> = ({ activities, currentPath, className, open }) => {
+    const navLinks = [ { href: "/threads", label: "Threads", icon: ListChecks } ];
     return (
       <div className={cn("flex flex-col h-full bg-card text-card-foreground border-r", className)}>
-        <div className="p-4 border-b"><Link href="/" className="flex items-center space-x-2"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center"><Bot size={20} className="text-primary-foreground" /></div><h2 className="text-lg font-semibold">AI Platform</h2></Link></div>
-        <nav className="flex-grow px-4 py-2 space-y-1">{navLinks.map((link) => (<Link key={link.label} href={link.href} className={cn("flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors", currentPath === link.href ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-muted hover:text-foreground")}><link.icon size={18} /><span>{link.label}</span></Link>))}</nav>
-        {onSummarizeChat && open && (<div className="mt-2 mb-2 px-4"><Button variant="outline" size="sm" className="w-full" onClick={onSummarizeChat} disabled={summaryLoading}>{summaryLoading ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <MessageSquareText className="w-4 h-4 mr-2" />}Summarize Chat</Button></div>)}
-        <div className="px-4 mt-auto mb-4"><Button variant="outline" className="w-full justify-start space-x-3"><LogOut size={18} /><span>Log Out</span></Button></div>
-        <div className="flex-shrink-0 border-t p-4"><h3 className="text-sm font-semibold mb-3 text-muted-foreground px-2">Threads</h3><ScrollArea className="h-[250px]">{activities.length === 0 && (<p className="text-xs text-muted-foreground p-2">No recent activity.</p>)}{activities.map((activity) => (<div key={activity.id} className="text-xs mb-1">{activity.isPerMessageLog ? (activity.isLiveProcessing ? (<div className="p-2 border border-border rounded-md bg-muted/30 hover:bg-muted/60 transition-colors"><div className="flex items-center justify-between mb-1"><span className="font-medium text-foreground truncate flex items-center"><Sparkles size={14} className={`mr-1.5 ${getActivityColor(activity.type)} animate-pulse`} /> {activity.title || activity.details || "Processing..."}</span></div>{activity.description && <p className="text-muted-foreground truncate">{activity.description}</p>}</div>) : (<div className="flex items-center p-1.5 rounded-md hover:bg-muted/60 transition-colors cursor-pointer"><Sparkles size={14} className={`mr-1.5 ${getActivityColor(activity.type)} flex-shrink-0`} /><span className="text-muted-foreground truncate">{activity.title || activity.details || "Processed"}</span></div>)) : (<div className="flex items-start mb-2 p-2 rounded-md hover:bg-muted transition-colors">{React.createElement(activity.icon || getActivityIcon(activity.type), { size: 18, className: `mr-2.5 mt-0.5 flex-shrink-0 ${getActivityColor(activity.type)}` })}<div className="flex-grow truncate"><div className="font-medium text-foreground truncate">{activity.title || activity.details}</div>{activity.description && <p className="text-muted-foreground truncate">{activity.description}</p>}{typeof activity.progress === 'number' && activity.progress < 100 && (<Progress value={activity.progress} className="h-1.5 mt-1" />)}{activity.link && activity.status === 'completed' && (<Link href={activity.link} target="_blank" className="text-primary hover:underline text-xs flex items-center mt-0.5">View Details <ExternalLink size={12} className="ml-1" /></Link>)}<p className="text-muted-foreground/80 text-xs mt-0.5">{activity.user || 'System'} - {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p></div></div>)}</div>))}</ScrollArea></div>
+        <div className="p-4 border-b"><Link href="/" className="flex items-center space-x-2"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center"><Bot size={20} className="text-primary-foreground" /></div>{open && <h2 className="text-lg font-semibold">F.B/c Consulting</h2>}</Link></div>
+        {open && (
+          <>
+            <nav className="px-4 py-2 space-y-1">{navLinks.map((link) => (<Link key={link.label} href={link.href} className={cn("flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors", currentPath === link.href ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-muted hover:text-foreground")}><link.icon size={18} /><span>{link.label}</span></Link>))}</nav>
+            <div className="flex-grow border-t p-4"><h3 className="text-sm font-semibold mb-3 text-muted-foreground px-2">Activity</h3><ScrollArea className="h-[400px]">{activities.length === 0 && (<p className="text-xs text-muted-foreground p-2">No recent activity.</p>)}{activities.map((activity) => (<div key={activity.id} className="text-xs mb-1">{activity.isPerMessageLog ? (activity.isLiveProcessing ? (<div className="p-2 border border-border rounded-md bg-muted/30 hover:bg-muted/60 transition-colors"><div className="flex items-center justify-between mb-1"><span className="font-medium text-foreground truncate flex items-center"><Sparkles size={14} className={`mr-1.5 ${getActivityColor(activity.type)} animate-pulse`} /> {activity.title || activity.details || "Processing..."}</span></div>{activity.description && <p className="text-muted-foreground truncate">{activity.description}</p>}</div>) : (<div className="flex items-center p-1.5 rounded-md hover:bg-muted/60 transition-colors cursor-pointer"><Sparkles size={14} className={`mr-1.5 ${getActivityColor(activity.type)} flex-shrink-0`} /><span className="text-muted-foreground truncate">{activity.title || activity.details || "Processed"}</span></div>)) : (<div className="flex items-start mb-2 p-2 rounded-md hover:bg-muted transition-colors">{React.createElement(activity.icon || getActivityIcon(activity.type), { size: 18, className: `mr-2.5 mt-0.5 flex-shrink-0 ${getActivityColor(activity.type)}` })}<div className="flex-grow truncate"><div className="font-medium text-foreground truncate">{activity.title || activity.details}</div>{activity.description && <p className="text-muted-foreground truncate">{activity.description}</p>}{typeof activity.progress === 'number' && activity.progress < 100 && (<Progress value={activity.progress} className="h-1.5 mt-1" />)}{activity.link && activity.status === 'completed' && (<Link href={activity.link} target="_blank" className="text-primary hover:underline text-xs flex items-center mt-0.5">View Details <ExternalLink size={12} className="ml-1" /></Link>)}<p className="text-muted-foreground/80 text-xs mt-0.5">{activity.user || 'System'} - {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p></div></div>)}</div>))}</ScrollArea></div>
+          </>
+        )}
       </div>);
   };
 
-  const DesktopSidebar: React.FC<{ activities: ActivityItem[], currentPath: string, className?: string, onSummarizeChat?: () => void; open: boolean; setOpen: (open: boolean) => void; }> = ({ activities, currentPath, className, onSummarizeChat, open, setOpen }) => {
-    const [isHovered, setIsHovered] = useState(false); const effectiveOpen = open || isHovered;
-    return (<motion.div animate={{ width: effectiveOpen ? "288px" : "68px" }} className={cn("h-full relative z-30 hidden md:flex flex-col", className)} onMouseEnter={() => { if (!open) setIsHovered(true); }} onMouseLeave={() => { if (!open) setIsHovered(false); }} transition={{ type: "spring", stiffness: 200, damping: 25 }}><SidebarContent activities={activities} currentPath={currentPath} onSummarizeChat={onSummarizeChat} open={effectiveOpen} /><Button variant="ghost" size="icon" className={cn("absolute top-1/2 -right-4 transform -translate-y-1/2 bg-card border rounded-full h-8 w-8 z-40 shadow-md hover:bg-muted", "transition-opacity duration-300", effectiveOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100" )} onClick={() => setOpen(!open)}>{open ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</Button></motion.div>);
+  const DesktopSidebar: React.FC<{ activities: ActivityItem[], currentPath: string, className?: string, open: boolean; setOpen: (open: boolean) => void; }> = ({ activities, currentPath, className, open, setOpen }) => {
+    const [isHovered, setIsHovered] = useState(false); 
+    const effectiveOpen = open || isHovered;
+    
+    return (
+      <motion.div 
+        animate={{ width: effectiveOpen ? "288px" : "68px" }} 
+        className={cn("h-full relative z-30 hidden md:flex flex-col", className)} 
+        onMouseEnter={() => { if (!open) setIsHovered(true); }} 
+        onMouseLeave={() => { if (!open) setIsHovered(false); }} 
+        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+      >
+        <SidebarContent activities={activities} currentPath={currentPath} open={effectiveOpen} />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className={cn(
+            "absolute top-1/2 -right-4 transform -translate-y-1/2 bg-card border rounded-full h-8 w-8 z-40 shadow-md hover:bg-muted",
+            "transition-opacity duration-300",
+            effectiveOpen ? "opacity-100" : "opacity-0"
+          )} 
+          onClick={() => setOpen(!open)}
+        >
+          {open ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </Button>
+      </motion.div>
+    );
   };
 
-  const MobileSidebarSheet: React.FC<{ open: boolean, onOpenChange: (open: boolean) => void, activities: ActivityItem[], currentPath: string, onSummarizeChat?: () => void; }> = ({ open, onOpenChange, activities, currentPath, onSummarizeChat }) => {
+  const MobileSidebarSheet: React.FC<{ open: boolean, onOpenChange: (open: boolean) => void, activities: ActivityItem[], currentPath: string }> = ({ open, onOpenChange, activities, currentPath }) => {
     if (!open) return null;
-    return (<div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => onOpenChange(false)}><div className="fixed inset-y-0 left-0 w-72 bg-card shadow-xl z-50" onClick={e => e.stopPropagation()}><SidebarContent activities={activities} currentPath={currentPath} className="border-r" onSummarizeChat={onSummarizeChat} open={open} /></div></div>);
+    return (<div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => onOpenChange(false)}><div className="fixed inset-y-0 left-0 w-72 bg-card shadow-xl z-50" onClick={e => e.stopPropagation()}><SidebarContent activities={activities} currentPath={currentPath} className="border-r" open={open} /></div></div>);
   };
 
   const speakMessage = useCallback((text: string): void => {
@@ -553,6 +857,18 @@ export default function ChatPage() {
     }
   }, []);
 
+  // YouTube URL detection in input
+  useEffect(() => {
+    const detectedUrl = detectYouTubeUrl(input);
+    if (detectedUrl && detectedUrl !== detectedVideoUrl) {
+      setDetectedVideoUrl(detectedUrl);
+      getVideoTitle(detectedUrl).then(setVideoTitle);
+    } else if (!detectedUrl && detectedVideoUrl) {
+      setDetectedVideoUrl(null);
+      setVideoTitle("");
+    }
+  }, [input, detectedVideoUrl]);
+
   // Clean up speech synthesis on unmount
   useEffect(() => {
     return (): void => {
@@ -565,152 +881,344 @@ export default function ChatPage() {
   }, []);
 
   return (
-    <div className="flex h-screen bg-background">
-      <div className="flex-1 flex flex-col h-full p-0 md:p-4 justify-center items-center overflow-hidden">
-        <Card className="w-full h-full flex flex-col shadow-lg rounded-none md:rounded-lg">
-          <CardHeader className="border-b flex flex-row justify-between items-center">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-foreground">AI Chat Assistant</h1>
+    <TooltipProvider>
+      <div className={cn("flex h-screen bg-background text-foreground")}>
+        {/* Desktop Sidebar */}
+        <DesktopSidebar 
+          activities={activities} 
+          currentPath="/chat" 
+          open={sidebarOpen}
+          setOpen={setSidebarOpen}
+        />
+
+        {/* Mobile Sidebar */}
+        <MobileSidebarSheet
+          open={mobileSidebarOpen}
+          onOpenChange={setMobileSidebarOpen}
+          activities={activities}
+          currentPath="/chat"
+        />
+
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          <div className="border-b border-border p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+                className="md:hidden"
+              >
+                <Menu className="w-4 h-4" />
+              </Button>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h1 className="font-semibold">AI Assistant</h1>
+                  <p className="text-xs text-muted-foreground">Online • Ready to help</p>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label="Toggle theme"><Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" /><Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" /><span className="sr-only">Toggle theme</span></Button>
-              <Button variant="outline" size="sm" onClick={handleDownloadTranscript}><Download className="w-4 h-4 mr-2" />Export Summary</Button>
+
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleDownloadTranscript}>
+                <Download className="w-4 h-4 mr-2" />
+                Export Summary
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              >
+                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </Button>
+              <Button variant="ghost" size="icon">
+                <SettingsIcon className="w-4 h-4" />
+              </Button>
             </div>
-          </CardHeader>
-          <CardContent className="flex-grow p-0">
-            <ScrollArea className="h-[calc(100vh-14rem)] p-6">{messages.map((msg) => (<div key={msg.id} className={`mb-4 flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>{msg.role === 'assistant' && (<Avatar className="w-8 h-8 border"><AvatarFallback><Bot size={18} /></AvatarFallback></Avatar>)}<div className={`p-3 rounded-lg max-w-[70%] shadow-sm ${msg.role === 'user' ? 'bg-primary text-primary-foreground self-end' : 'bg-muted text-muted-foreground'}`}><p className="text-sm whitespace-pre-wrap">{msg.content}</p><p className="text-xs text-opacity-70 mt-1">{msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p></div>{msg.role === 'user' && (<Avatar className="w-8 h-8 border"><AvatarFallback><User size={18} /></AvatarFallback></Avatar>)}</div>))}{<div ref={messagesEndRef} />}</ScrollArea>
-          </CardContent>
-          <CardFooter className="p-4 border-t relative">
-            <div className="flex w-full items-center space-x-2">
-              <Button variant="outline" size="icon" onClick={handleMicButtonClick} disabled={!isSpeechSupported || isLoading || isCameraActive} aria-label={aiVoiceState === "listening" ? "Stop listening" : "Start listening"} className="shrink-0"><Mic className={`h-5 w-5 ${aiVoiceState === "listening" || aiVoiceState === "processing" ? "text-destructive animate-pulse" : ""}`} /></Button>
-              <Button variant="outline" size="icon" onClick={isCameraActive ? stopCamera : startCamera} disabled={isLoading || aiVoiceState === "listening"} aria-label={isCameraActive ? "Stop camera" : "Start camera"} className={`shrink-0 ${isCameraActive ? "text-destructive animate-pulse" : ""}`}><VideoIcon className="h-5 w-5" /></Button>
-              <Button variant="outline" size="icon" className="shrink-0" onClick={() => setShowToolsMenu(!showToolsMenu)} aria-label="Toggle tools menu" disabled={isLoading}><PlusIcon className={`h-5 w-5 transition-transform duration-200 ${showToolsMenu ? "rotate-45" : ""}`} /></Button>
-              <Button variant="outline" size="icon" className="shrink-0"
-                onClick={() => setShowUploadOptions(prev => !prev)}
-                disabled={isLoading || isCameraActive || aiVoiceState === "listening"}
-                aria-label="Attach file or media"
-              ><Paperclip className={`h-5 w-5 ${uploadedImageBase64 ? "text-green-500" : ""}`} /></Button>
-              <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-              <Input type="text" placeholder={aiVoiceState === "listening" ? "Listening..." : isCameraActive ? "Webcam active. Add a message or send frame." : "Type your message or use the mic..."} value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={handleKeyPress} className="flex-grow" disabled={isLoading || aiVoiceState === "listening" || aiVoiceState === "processing"}/>
-              <Button onClick={() => handleSendMessage()} disabled={isLoading || input.trim() === ''}>{isLoading ? 'Sending...' : 'Send'}</Button>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-hidden">
+            <div className="relative w-full h-full">
+              <ScrollArea className="h-full">
+                <div className="flex flex-col gap-6 p-4">
+                  {/* Video Learning Card */}
+                  {detectedVideoUrl && (
+                    <div className="mb-4">
+                      <VideoLearningCard
+                        videoUrl={detectedVideoUrl}
+                        videoTitle={videoTitle}
+                        onGenerateApp={async (url) => {
+                          setIsGeneratingVideoApp(true);
+                          await startVideoLearningAppProcessing(url, videoTitle);
+                          setIsGeneratingVideoApp(false);
+                        }}
+                        theme={theme === "dark" ? "dark" : "light"}
+                        isGenerating={isGeneratingVideoApp}
+                      />
+                    </div>
+                  )}
+
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={cn(
+                        "flex gap-3 max-w-[80%]",
+                        message.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
+                      )}
+                    >
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={message.role === "user" ? undefined : "/ai-avatar.png"} />
+                        <AvatarFallback>{message.role === "user" ? "U" : "AI"}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col gap-2">
+                        <div className={cn(
+                          "rounded-2xl px-4 py-3 max-w-md",
+                          message.role === "user" 
+                            ? "bg-primary text-primary-foreground" 
+                            : "bg-muted text-muted-foreground"
+                        )}>
+                          {message.content}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{message.timestamp.toLocaleTimeString()}</span>
+                          {message.role === "assistant" && (
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" className="w-6 h-6">
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="w-6 h-6">
+                                <ThumbsUp className="w-3 h-3" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="w-6 h-6">
+                                <ThumbsDown className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {isLoading && (
+                    <div className={cn("flex gap-3 max-w-[80%] mr-auto")}>
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src="/ai-avatar.png" />
+                        <AvatarFallback>AI</AvatarFallback>
+                      </Avatar>
+                      <div className="bg-muted rounded-2xl px-4 py-3 max-w-xs">
+                        <div className="flex items-center gap-1">
+                          {[0, 1, 2].map((i) => (
+                            <motion.div
+                              key={i}
+                              className="w-2 h-2 bg-muted-foreground/50 rounded-full"
+                              animate={{ opacity: [0.3, 1, 0.3] }}
+                              transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
             </div>
-          </CardFooter>
-        </Card>
-        {showVoiceModal && (<VoiceInputModal isListening={aiVoiceState === "listening"} currentTranscription={currentTranscription} aiState={aiVoiceState} onClose={() => { if (recognition.current) { recognition.current.stop(); } setShowVoiceModal(false); setAiVoiceState("idle"); }} theme={theme === "dark" ? "dark" : "light"}/>)}
-        {showWebcamModal && (<WebcamModal videoRef={videoRef} canvasRef={canvasRef} isCameraActive={isCameraActive} onStopCamera={stopCamera} theme={theme === "dark" ? "dark" : "light"}/>)}
-        {showToolsMenu && (
-          <div className="absolute bottom-20 left-4 mb-2 w-72 bg-background border rounded-lg shadow-xl p-4 z-20">
-            <h3 className="text-sm font-semibold mb-2">Quick Tools</h3>
-            <Button variant="ghost" className="w-full justify-start mb-1" onClick={() => portGenerateImageDescription(input || "a beautiful sunset")}>
-              Describe Image
-            </Button>
-            <Button variant="ghost" className="w-full justify-start mb-1" onClick={() => portHandleToolClick("search_web")}>
-              Knowledge Search
-            </Button>
-            <Button variant="ghost" className="w-full justify-start mb-1" onClick={() => portHandleToolClick("run_deep_research")}>
-              Deep Analysis
-            </Button>
-            <Button variant="ghost" className="w-full justify-start mb-1" onClick={() => portHandleToolClick("think_longer")}>
-              Extended Thinking
-            </Button>
-            <Button variant="ghost" className="w-full justify-start" onClick={() => portHandleToolClick("brainstorm_ideas")}>
-              Brainstorm Ideas
-            </Button>
-            {generatingImage && (
-              <div className="mt-2 flex items-center text-sm text-muted-foreground">
-                <Loader className="mr-2 h-4 w-4 animate-spin" />
-                Processing tool action...
+          </div>
+
+          {/* Input Area */}
+          <div className="border-t border-border p-4">
+            {/* Input Form */}
+            <div className="flex items-end gap-2">
+              <div className="flex-1 relative">
+                <Textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Type your message... (Use / for commands)"
+                  className="min-h-[60px] max-h-[200px] resize-none pr-24"
+                />
+                <div className="absolute bottom-2 right-2 flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowUploadOptions(!showUploadOptions)}
+                  >
+                    <Paperclip className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={startCamera}
+                    className={cn(
+                      "transition-colors",
+                      isCameraActive && "bg-green-500/10 text-green-500 hover:bg-green-500/20"
+                    )}
+                  >
+                    <Camera className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={async () => {
+                      try {
+                        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                        
+                        addActivity({
+                          type: 'analyzing',
+                          title: '🖥️ Screen Sharing Active',
+                          description: 'Capturing and analyzing screen content...',
+                          status: 'in_progress'
+                        });
+
+                        // Create video element to capture frame
+                        const video = document.createElement('video');
+                        video.srcObject = stream;
+                        video.play();
+
+                        // Wait for video to load and capture frame
+                        video.onloadedmetadata = () => {
+                          setTimeout(() => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                            const ctx = canvas.getContext('2d');
+                            ctx?.drawImage(video, 0, 0);
+                            
+                            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                            const base64Data = imageData.split(',')[1];
+                            
+                            // Add screen analysis message
+                            const screenMessage: Message = {
+                              id: Date.now().toString(),
+                              role: 'user',
+                              content: '🖥️ **Screen Captured for Analysis**\n\nPlease analyze what you see on my screen and provide insights.',
+                              timestamp: new Date(),
+                              imageUrl: imageData
+                            };
+                            setMessages(prev => [...prev, screenMessage]);
+                            
+                            // Stop the stream
+                            stream.getTracks().forEach(track => track.stop());
+                            
+                            // Update activity
+                            setActivities(prev => prev.map(act => 
+                              act.title.includes('Screen Sharing') ? 
+                              { ...act, status: 'completed' as const, description: 'Screen captured and ready for analysis' } : act
+                            ));
+                          }, 1000);
+                        };
+                      } catch (err) {
+                        console.error('Screen sharing failed:', err);
+                        addActivity({
+                          type: 'error',
+                          title: '❌ Screen Sharing Failed',
+                          description: 'Could not access screen sharing permissions',
+                          status: 'failed'
+                        });
+                      }
+                    }}
+                  >
+                    <Monitor className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleMicButtonClick}
+                    disabled={!isSpeechSupported}
+                    className={cn(
+                      "transition-colors",
+                      isRecording && "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                    )}
+                  >
+                    {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+              <Button
+                onClick={() => handleSendMessage()}
+                disabled={(!input.trim()) || isLoading}
+                className="h-[60px] px-6"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Upload Options Dropdown */}
+            {showUploadOptions && (
+              <div className="absolute bottom-16 right-4 bg-popover border rounded-md shadow-md p-1 z-50 min-w-[160px]">
+                {uploadMenuItems.map((item) => (
+                  <Button
+                    key={item.id}
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-2 h-8 px-2 py-1.5 text-sm font-normal hover:bg-accent hover:text-accent-foreground"
+                    onClick={item.action}
+                  >
+                    <item.icon className="w-3.5 h-3.5" />
+                    {item.label}
+                  </Button>
+                ))}
               </div>
             )}
+
+            {/* Footer Info */}
+            <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+              <span>Press Enter to send, Shift+Enter for new line</span>
+              <span>AI can make mistakes. Verify important information.</span>
+            </div>
           </div>
-        )}
-        {showUploadOptions && (
-          <div
-            className="absolute bottom-full left-[100px] mb-1 w-56 bg-card border rounded-lg shadow-xl p-2 z-30"
-            style={{ transform: 'translateX(-50%)', left: 'calc(3 * (2.5rem + 0.5rem) + 1.25rem)' }}
-          >
-            {uploadMenuItems.map(item => (
-              <Button
-                key={item.id}
-                variant="ghost"
-                className="w-full justify-start mb-1"
-                onClick={item.action}
-              >
-                <item.icon className="w-4 h-4 mr-2" />
-                {item.label}
-              </Button>
-            ))}
-          </div>
+        </div>
+
+        {/* Voice Input Modal */}
+        {showVoiceModal && (
+          <VoiceInputModal
+            isListening={aiVoiceState === "listening"}
+            currentTranscription={currentTranscription}
+            aiState={aiVoiceState}
+            onClose={() => {
+              if (recognition.current) {
+                recognition.current.stop();
+              }
+              setShowVoiceModal(false);
+              setAiVoiceState("idle");
+            }}
+            theme={theme === "dark" ? "dark" : "light"}
+          />
         )}
 
-        {/* AI Tools Menu */}
-        {showToolsMenu && (
-          <div className="fixed bottom-32 left-6 w-72 bg-card rounded-2xl shadow-2xl p-6 z-20 flex flex-col space-y-3 border border-border">
-            <h3 className="text-sm font-semibold mb-2">AI Tools</h3>
-            <button
-              onClick={() => portGenerateImageDescription(input || "a beautiful landscape")}
-              className="flex items-center p-4 rounded-xl hover:bg-accent transition-colors text-left w-full"
-              disabled={generatingImage}
-            >
-              <div className="p-2 rounded-lg bg-primary/10 mr-4">
-                <ImageIcon size={18} className="text-primary" />
-              </div>
-              <div>
-                <div className="font-medium">Describe an image</div>
-                <div className="text-xs text-muted-foreground">AI-powered visual description</div>
-              </div>
-            </button>
-            <button
-              onClick={() => portHandleToolClick("search_web")}
-              className="flex items-center p-4 rounded-xl hover:bg-accent transition-colors text-left w-full"
-            >
-              <div className="p-2 rounded-lg bg-primary/10 mr-4">
-                <Search size={18} className="text-primary" />
-              </div>
-              <div>
-                <div className="font-medium">Knowledge search</div>
-                <div className="text-xs text-muted-foreground">Search AI knowledge base</div>
-              </div>
-            </button>
-            <button
-              onClick={() => portHandleToolClick("run_deep_research")}
-              className="flex items-center p-4 rounded-xl hover:bg-accent transition-colors text-left w-full"
-            >
-              <div className="p-2 rounded-lg bg-primary/10 mr-4">
-                <Brain size={18} className="text-primary" />
-              </div>
-              <div>
-                <div className="font-medium">Deep analysis</div>
-                <div className="text-xs text-muted-foreground">Comprehensive research</div>
-              </div>
-            </button>
-            <button
-              onClick={() => portHandleToolClick("think_longer")}
-              className="flex items-center p-4 rounded-xl hover:bg-accent transition-colors text-left w-full"
-            >
-              <div className="p-2 rounded-lg bg-primary/10 mr-4">
-                <Loader size={18} className="text-primary" />
-              </div>
-              <div>
-                <div className="font-medium">Extended thinking</div>
-                <div className="text-xs text-muted-foreground">Detailed elaboration</div>
-              </div>
-            </button>
-            <button
-              onClick={() => portHandleToolClick("brainstorm_ideas")}
-              className="flex items-center p-4 rounded-xl hover:bg-accent transition-colors text-left w-full"
-            >
-              <div className="p-2 rounded-lg bg-primary/10 mr-4">
-                <Lightbulb size={18} className="text-primary" />
-              </div>
-              <div>
-                <div className="font-medium">Brainstorm ideas</div>
-                <div className="text-xs text-muted-foreground">Generate creative concepts</div>
-              </div>
-            </button>
-          </div>
+        {/* Webcam Modal */}
+        {showWebcamModal && (
+          <WebcamModal
+            videoRef={videoRef}
+            canvasRef={canvasRef}
+            isCameraActive={isCameraActive}
+            onStopCamera={stopCamera}
+            theme={theme === "dark" ? "dark" : "light"}
+          />
         )}
+
+        {/* Hidden File Inputs */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*"
+          className="hidden"
+        />
+
+        <input
+          type="file"
+          ref={anyFileInputRef}
+          onChange={handleAnyFileChange}
+          className="hidden"
+        />
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

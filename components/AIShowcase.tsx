@@ -55,10 +55,11 @@ export default function AIShowcase() {
 
   const [sidebarActivity, setSidebarActivity] = useState<SidebarActivity | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [supabase] = useState(() => createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  ))
+  const [supabase] = useState(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+    return createClient(url, key);
+  })
 
   // Auto-save session state
   useEffect(() => {
@@ -115,7 +116,7 @@ export default function AIShowcase() {
     if (conversationState.messages.length === 0) {
       const greeting: Message = {
         id: '1',
-        text: "Hi! I'm here to showcase how AI can transform your business. What's your name?",
+        text: "Welcome to F.B/c AI Showcase! I'm here to demonstrate how AI can transform your business. I'm Farzad's AI assistant, and I'll be showing you some amazing capabilities today. What's your name?",
         sender: 'ai',
         timestamp: new Date()
       }
@@ -153,8 +154,8 @@ export default function AIShowcase() {
     setConversationState(newState)
 
     try {
-      // Send to AI API - ALIGNED WITH NEW BACKEND
-      const response = await fetch('/api/ai-service?action=conversationalFlow', {
+      // Send to AI API
+      const response = await fetch('/api/gemini?action=conversationalFlow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -255,7 +256,7 @@ export default function AIShowcase() {
 
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/ai-service?action=${action}`, {
+        const response = await fetch(`/api/gemini?action=${action}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...body, currentConversationState: conversationState })
@@ -284,7 +285,7 @@ export default function AIShowcase() {
     // Logic to send final conversation state for lead capture
     setIsLoading(true);
     try {
-        const response = await fetch('/api/ai-service?action=leadCapture', {
+        const response = await fetch('/api/gemini?action=leadCapture', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ currentConversationState: conversationState })

@@ -59,27 +59,27 @@ export const VideoLearningCard: React.FC<VideoLearningCardProps> = ({
 
   return (
     <div
-      className={`rounded-xl border ${cardBg} overflow-hidden glassmorphism hover:surface-glow transition-all duration-300`}
+      className={`rounded-lg border ${cardBg} overflow-hidden glassmorphism hover:surface-glow transition-all duration-300 max-w-sm`}
     >
       {/* Video Thumbnail */}
-      <div className="relative aspect-video">
+      <div className="relative aspect-video h-32">
         <img
           src={getThumbnailUrl(videoUrl) || "/placeholder.svg"}
           alt={videoTitle || "YouTube Video"}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-          <div className="p-3 rounded-full bg-red-600 text-white">
-            <Play size={24} fill="currentColor" />
+          <div className="p-2 rounded-full bg-red-600 text-white">
+            <Play size={16} fill="currentColor" />
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-3">
+      <div className="p-3 space-y-2">
         <div>
-          <h4 className={`font-medium ${textColor} line-clamp-2`}>{videoTitle || "YouTube Video"}</h4>
-          <p className={`text-sm ${textColor} opacity-90 mt-1`}>Generate an interactive learning app from this video</p>
+          <h4 className={`font-medium text-sm ${textColor} line-clamp-1`}>{videoTitle || "YouTube Video"}</h4>
+          <p className={`text-xs ${textColor} opacity-90`}>Generate interactive learning app</p>
         </div>
 
         {/* Actions */}
@@ -87,17 +87,17 @@ export const VideoLearningCard: React.FC<VideoLearningCardProps> = ({
           <button
             onClick={() => onGenerateApp(videoUrl)}
             disabled={isGenerating}
-            className="flex-1 flex items-center justify-center space-x-2 p-3 rounded-lg glass-button text-[var(--color-text-on-orange)] disabled:opacity-50 transition-all duration-300"
+            className="flex-1 flex items-center justify-center space-x-1 p-2 rounded-lg glass-button text-[var(--color-text-on-orange)] disabled:opacity-50 transition-all duration-300 text-xs"
           >
             {isGenerating ? (
               <>
-                <Loader2 size={16} className="animate-spin" />
-                <span className="text-sm">Generating...</span>
+                <Loader2 size={12} className="animate-spin" />
+                <span>Generating...</span>
               </>
             ) : (
               <>
-                <FileText size={16} />
-                <span className="text-sm">Generate App</span>
+                <FileText size={12} />
+                <span>Generate App</span>
               </>
             )}
           </button>
@@ -106,9 +106,9 @@ export const VideoLearningCard: React.FC<VideoLearningCardProps> = ({
             href={videoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-3 rounded-lg glassmorphism hover:surface-glow transition-all duration-300 text-[var(--color-orange-accent)]"
+            className="p-2 rounded-lg glassmorphism hover:surface-glow transition-all duration-300 text-[var(--color-orange-accent)]"
           >
-            <ExternalLink size={16} />
+            <ExternalLink size={12} />
           </a>
         </div>
       </div>
