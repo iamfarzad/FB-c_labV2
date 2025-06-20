@@ -19,11 +19,11 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         // Custom variants from HEAD
-        primary: "bg-orange-600 text-white hover:bg-orange-700",
+        // "primary" variant removed as "default" now serves this purpose using theme's primary color (var(--color-orange-accent))
         "primary-outline":
-          "border border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/30",
+          "border border-primary text-primary bg-transparent hover:bg-primary/10 dark:hover:bg-primary/20", // Updated to use theme's primary color
         glass:
-          "bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-background/100",
+          "bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-background/100", // Kept as is, seems fine
       },
       size: {
         default: "h-10 px-4 py-2",
