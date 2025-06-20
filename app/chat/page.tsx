@@ -176,19 +176,19 @@ export default function ChatPage() {
   const [isPending, startTransition] = useTransition();
   const [attachments, setAttachments] = useState<string[]>([]);
 
-  const handleSendMessage = async () => {
-    if (!input.trim() && attachments.length === 0) return;
+  const handleSendMessage = async (messageContent?: string) => {
+    const contentToSend = messageContent ?? input;
+    if (!contentToSend.trim() && attachments.length === 0) return;
 
     const newMessage: Message = {
       id: Date.now().toString(),
-      content: input,
-      sender: "user",
+      content: contentToSend,
+      role: "user",
       timestamp: new Date(),
-      type: "text"
     };
 
     setMessages(prev => [...prev, newMessage]);
-    const currentInput = input;
+    const currentInput = contentToSend;
     setInput("");
     setAttachments([]);
     setIsLoading(true);
@@ -211,9 +211,8 @@ export default function ChatPage() {
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         content: data.reply,
-        sender: "assistant",
+        role: "assistant",
         timestamp: new Date(),
-        type: "text"
       };
       setMessages(prev => [...prev, aiResponse]);
     } catch (error) {
@@ -221,9 +220,8 @@ export default function ChatPage() {
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         content: "Sorry, I couldn't get a response. Please try again.",
-        sender: "assistant",
+        role: "assistant",
         timestamp: new Date(),
-        type: "text"
       };
       setMessages(prev => [...prev, errorResponse]);
     } finally {

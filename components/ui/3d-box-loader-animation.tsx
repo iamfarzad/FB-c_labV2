@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
 
 const Loader = () => {
   const loaderCss = `
@@ -150,13 +151,23 @@ const Loader = () => {
     @keyframes mask { 0%, 65% { opacity: 0; } 66%, 100% { opacity: 1; } }
   `;
 
-  // Map over an array to avoid repeating the JSX for each box.
-  const boxes = [...Array(8).keys()];
+  const boxContainer = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (boxContainer.current) {
+      const allBoxes = Array.from(boxContainer.current.children);
+      gsap.set(allBoxes, {
+        // ... existing code ...
+      });
+    }
+  }, []);
+
+  const boxes = Array.from(Array(8).keys());
 
   return (
     <>
       <style>{loaderCss}</style>
-      <div className="loader">
+      <div className="loader" ref={boxContainer}>
         {boxes.map(i => (
           <div key={i} className={`box box${i}`}>
             <div></div>
