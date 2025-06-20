@@ -11,9 +11,9 @@ interface Part {
 }
 
 export async function generateContentWithGemini(
-  apiKey: string, 
-  prompt: string, 
-  imageData?: string, 
+  apiKey: string,
+  prompt: string,
+  imageData?: string,
   cameraFrame?: string
 ): Promise<string> {
   try {
@@ -77,26 +77,26 @@ export async function generateContentWithGemini(
     if (!response.candidates || response.candidates.length === 0) {
       throw new Error('No response candidates returned from the API');
     }
-    
+
     const candidate = response.candidates[0];
     if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
       throw new Error('No content parts found in the API response');
     }
-    
+
     // Safely extract text from parts
     const responseText = candidate.content.parts
       .filter((part: any) => part.text) // Filter out any parts without text
       .map((part: any) => part.text)
       .join('');
-      
+
     if (!responseText) {
       throw new Error('No text content found in the API response');
     }
-    
+
     return responseText;
   } catch (error: any) {
     console.error('Error generating content with Gemini:', error);
-    
+
     // Enhanced error handling with more specific messages
     if (error.message.includes('API key not valid')) {
       throw new Error('Invalid Gemini API key. Please check your API key in the environment variables.');
@@ -107,7 +107,7 @@ export async function generateContentWithGemini(
     } else if (error.message.includes('image')) {
       throw new Error('Error processing image. Please ensure the image data is valid and in the correct format.');
     }
-    
+
     throw new Error(`Failed to generate content: ${error.message}`);
   }
 }

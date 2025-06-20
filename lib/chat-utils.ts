@@ -42,7 +42,7 @@ export function constructPrompt(messages?: Message[]): string {
       if (!message) continue;
 
       let content = '';
-      
+
       // Handle different message formats
       if (message.parts && Array.isArray(message.parts)) {
         // New format with parts array
@@ -50,7 +50,7 @@ export function constructPrompt(messages?: Message[]): string {
           .filter(part => part && typeof part.text === 'string')
           .map(part => part.text.trim())
           .filter(Boolean);
-        
+
         if (textParts.length > 0) {
           content = textParts.join('\n');
         }
@@ -67,7 +67,7 @@ export function constructPrompt(messages?: Message[]): string {
 
     // Add a final instruction to respond
     fullPrompt += 'Assistant: ';
-    
+
     return fullPrompt;
   } catch (error) {
     console.error('Error in constructPrompt:', error);
