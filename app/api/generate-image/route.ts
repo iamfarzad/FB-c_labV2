@@ -7,16 +7,6 @@ import {
 } from '@google/genai';
 import { writeFile } from 'fs';
 
-function saveBinaryFile(fileName: string, content: Buffer) {
-  writeFile(fileName, content, 'utf8', (err) => {
-    if (err) {
-      console.error(`Error writing file ${fileName}:`, err);
-      return;
-    }
-    console.log(`File ${fileName} saved to file system.`);
-  });
-}
-
 async function main() {
   const ai = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY,
@@ -45,10 +35,19 @@ async function main() {
     if (!response.generatedImages?.[i]?.image?.imageBytes) {
       continue;
     }
-    const fileName = `image_${i}.jpeg`;
-    const inlineData = response?.generatedImages?.[i]?.image?.imageBytes;
-    const buffer = Buffer.from(inlineData || '', 'base64');
-    saveBinaryFile(fileName, buffer);
+    const timestamp = new Date().getTime();
+    const fileName = `/tmp/generated-image-${timestamp}.png`;
+    
+    const imageBytes = response.generatedImages[i]?.image?.imageBytes;
+    if (imageBytes) {
+      writeFile(fileName, imageBytes, (err) => {
+        if (err) {
+          console.error(`Error writing file ${fileName}:`, err);
+          return;
+        }
+        console.log(`File ${fileName} saved to file system.`);
+      });
+    }
   }
 }
 

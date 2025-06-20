@@ -1,8 +1,0 @@
-create_file_with_block
-api/ai-service/utils/.gitkeep
-
-create_file_with_block
-api/ai-service/types/.gitkeep
-
-create_file_with_block
-api/ai-service/route.ts

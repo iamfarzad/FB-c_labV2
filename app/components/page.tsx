@@ -41,7 +41,7 @@ export default function ComponentsPage() {
           <h2 className="text-2xl font-semibold tracking-tight">Buttons</h2>
           <div className="flex flex-wrap gap-4 p-4 border rounded-lg">
             <Button>Default</Button>
-            <Button variant="primary">Primary</Button>
+            <Button variant="default">Primary</Button>
             <Button variant="secondary">Secondary</Button>
             <Button variant="outline">Outline</Button>
             <Button variant="ghost">Ghost</Button>

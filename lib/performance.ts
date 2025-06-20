@@ -163,5 +163,4 @@ export function initPerformanceOptimizations() {
   }
 }
 
-// Re-export common performance-related types
-export type { PerformanceEntry } from 'web-vitals'
+export type { ReportCallback as PerformanceEntry } from 'web-vitals'

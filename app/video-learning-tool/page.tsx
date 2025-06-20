@@ -30,6 +30,11 @@ interface LearningModule {
   endTime?: number;
 }
 
+const getYouTubeVideoTitle = async (url: string): Promise<string> => {
+  // Placeholder implementation
+  return "Dummy YouTube Title";
+};
+
 const VideoPlayerComponent: React.FC<{ videoUrl: string }> = ({ videoUrl }) => {
   const [iframeSrc, setIframeSrc] = useState('');
   const [isValid, setIsValid] = useState<boolean | null>(null);
@@ -73,7 +78,8 @@ const VideoPlayerComponent: React.FC<{ videoUrl: string }> = ({ videoUrl }) => {
 const VideoLearningToolPageContent: React.FC = () => {
   const searchParams = useSearchParams();
   const videoUrl = searchParams.get('videoUrl') || '';
-  const [videoTitle, setVideoTitle] = useState("Loading title...");
+  const [videoTitle, setVideoTitle] = useState('');
+  const [transcript, setTranscript] = useState('');
   const [learningPath, setLearningPath] = useState<LearningModule[]>([]);
   const [currentModule, setCurrentModule] = useState<LearningModule | null>(null);
   const [overallProgress, setOverallProgress] = useState(0);

@@ -14,9 +14,9 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, theme, onThemeToggle }) => {
   return (
     <div className="min-h-screen flex flex-col">
-      <Header theme={theme} onThemeToggle={onThemeToggle} />
+      <Header onThemeToggle={onThemeToggle} />
       <main className="flex-1">{children}</main>
-      <Footer theme={theme} />
+      <Footer />
       <FloatingChatButton theme={theme} />
     </div>
   )

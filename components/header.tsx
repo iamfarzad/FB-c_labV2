@@ -40,7 +40,7 @@ const navigationItems = [
   { name: "Contact", href: "/contact" },
 ]
 
-export const Header: React.FC<HeaderProps> = ({ theme, onThemeToggle }) => {
+export const Header: React.FC<HeaderProps> = ({ onThemeToggle }) => {
   const [selectedLanguage, setSelectedLanguage] = useState(languages[0])
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)

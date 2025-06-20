@@ -160,7 +160,7 @@ export function SkillCard({
               "text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300",
               "transition-colors duration-300 flex items-center"
             )}
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent) => {
               e.stopPropagation()
               setIsFlipped(false)
             }}

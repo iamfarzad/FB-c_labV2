@@ -113,18 +113,15 @@ export const ServicesHero: React.FC<ServicesHeroProps> = ({ theme }) => {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
-              asChild
-              variant="primary"
               size="lg"
-              className="group px-8 py-6 text-lg font-semibold relative overflow-hidden"
+              variant="default"
+              className="shadow-lg"
+              onClick={() => document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              <Link href="/contact">
-                <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-orange-accent-light)] to-[var(--color-orange-accent)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="relative flex items-center space-x-3">
-                  <span>Book a Free Consultation</span>
-                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
-                </div>
-              </Link>
+              <div className="relative flex items-center space-x-3">
+                <span>Book a Free Consultation</span>
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+              </div>
             </Button>
           </div>
         </div>

@@ -33,7 +33,7 @@ function LoadingSpinner({ size, className }: Logo3DProps) {
 
 export function Logo3D({ className, size = "w-10 h-10" }: Logo3DProps) {
   return (
-    <ErrorBoundary3D fallback={<Fallback size={size} className={className} />}>
+    <ErrorBoundary3D>
       <div className={`${size} ${className}`}>
         <Suspense fallback={<Logo3DLoader size={size} />}>
           <Canvas

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useTransition } from 'react';
 import { useTheme } from "next-themes";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,20 +13,21 @@ import {
   Lightbulb, ArrowLeft, MessageSquare, PanelRightClose, PanelRightOpen, Video, Copy,
   Image as ImageIcon, X, ListChecks, Sparkles, AlertTriangle, Edit3, MessageCircle, Zap,
   CheckCircle, Users, Settings as SettingsIcon, LogOut, ChevronLeft, ChevronRight, ExternalLink,
-  MessageSquareText
+  MessageSquareText, Menu, MoreHorizontal, ArrowDown
 } from 'lucide-react';
 import { VoiceInputModal } from "@/components/voice-input-modal";
 import { WebcamModal } from "@/components/webcam-modal";
 import { VideoLearningModal } from "@/components/video-learning-modal";
 import { VideoLearningCard } from "@/components/video-learning-card";
-import { DynamicDataRenderer } from "@/components/dynamic-data-renderer";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { detectYouTubeUrl, getVideoTitle } from '@/lib/youtube';
+import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Message {
   id: string;
@@ -75,6 +76,14 @@ interface ActivityItem {
   icon?: React.ElementType;
   status?: 'pending' | 'in_progress' | 'completed' | 'failed';
   details?: string;
+}
+
+interface UploadOption {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+  action: () => void;
 }
 
 export default function ChatPage() {
@@ -164,88 +173,68 @@ export default function ChatPage() {
   const isSpeechSupported = !!SpeechRecognition;
   const recognition = useRef<any>(null);
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const messageContent = textToSend || input.trim();
-    if (messageContent === '' && !currentCameraFrame && !uploadedImageBase64) {
-      if (showVoiceModal && aiVoiceState !== "listening") { setShowVoiceModal(false); setAiVoiceState("idle"); }
-      return;
-    }
+  const [isPending, startTransition] = useTransition();
+  const [attachments, setAttachments] = useState<string[]>([]);
 
-    let userMessageContent = messageContent;
-    if (uploadedImageBase64 && !userMessageContent) userMessageContent = "[Uploaded Image]";
-    else if (currentCameraFrame && !userMessageContent) userMessageContent = "[Webcam Image]";
-    else if (uploadedImageBase64 && userMessageContent) userMessageContent = `${userMessageContent} [Image Attached]`;
+  const handleSendMessage = async () => {
+    if (!input.trim() && attachments.length === 0) return;
 
-    const userMessage: Message = { id: `user-${Date.now()}`, role: 'user', content: userMessageContent, timestamp: new Date() };
-    setMessages(prev => [...prev, userMessage]);
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      content: input,
+      sender: "user",
+      timestamp: new Date(),
+      type: "text"
+    };
 
-    const imageToSendForThisMessage = uploadedImageBase64;
-    const frameToSendForThisMessage = currentCameraFrame;
+    setMessages(prev => [...prev, newMessage]);
+    const currentInput = input;
+    setInput("");
+    setAttachments([]);
+    setIsLoading(true);
 
-    const detectedUrlInMessage = detectYouTubeUrl(userMessage.content);
-    if (detectedUrlInMessage && !imageToSendForThisMessage && !frameToSendForThisMessage) {
-      (async () => {
-        try {
-          const title = await getVideoTitle(detectedUrlInMessage);
-          await startVideoLearningAppProcessing(detectedUrlInMessage, title);
-        } catch (error) {
-          console.error("Error processing YouTube URL in background:", error);
-        }
-      })();
-    }
-
-    const currentInputForApi = messageContent;
-    setInput(''); setCurrentTranscription(''); setIsLoading(true);
-    if (showVoiceModal && aiVoiceState !== "listening") { setShowVoiceModal(false); setAiVoiceState("idle"); }
-
-    const assistantMessageId = `asst-${Date.now()}`;
     try {
-      const apiRequestBody: any = { messages: [{ role: 'user', parts: [{ text: currentInputForApi || (frameToSendForThisMessage ? "[Webcam Image]" : "") || (imageToSendForThisMessage ? "[Uploaded Image]" : "")}] }] };
-      if (imageToSendForThisMessage) apiRequestBody.imageData = imageToSendForThisMessage;
-      if (frameToSendForThisMessage) apiRequestBody.cameraFrame = frameToSendForThisMessage;
-
-      setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: "...", timestamp: new Date() }]);
-      const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(apiRequestBody) });
-
-      if (imageToSendForThisMessage) setUploadedImageBase64(null);
-      if (frameToSendForThisMessage) setCurrentCameraFrame(null);
-
-      if (!response.ok) { const errData = await response.json().catch(() => ({})); throw new Error(errData.error || `API Error: ${response.status}`); }
-      if (!response.body) throw new Error('Response body is null');
-
-      const reader = response.body.getReader(); const decoder = new TextDecoder();
-      let assistantResponseContent = ''; let firstChunkProcessed = false;
-      while (true) {
-        const { done, value } = await reader.read(); if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const jsonData = line.substring('data: '.length); if (jsonData.trim() === '[DONE]') break;
-            try {
-              const parsedData = JSON.parse(jsonData);
-              if (parsedData.content) {
-                assistantResponseContent += parsedData.content;
-                setMessages(prev => prev.map(msg => msg.id === assistantMessageId ? { ...msg, content: assistantResponseContent, timestamp: new Date() } : msg));
-                firstChunkProcessed = true;
-              }
-            } catch (e) { console.error('Error parsing stream data chunk:', e, 'Chunk:', jsonData); }
-          }
-        }
-      }
-      if (!firstChunkProcessed && assistantResponseContent.trim() === '') {
-        setMessages(prev => prev.map(msg => msg.id === assistantMessageId ? { ...msg, content: "Assistant responded with empty content.", timestamp: new Date() } : msg));
-      }
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      setMessages(prev => prev.map(msg => msg.id === assistantMessageId && msg.content === "..." ? { ...msg, content: `Error: ${errorMsg}`, timestamp: new Date() } : msg));
-      setMessages(prev => {
-        if (!prev.some(m => m.id === assistantMessageId && m.content.startsWith("Error:"))) {
-          return [...prev, { id: assistantMessageId, role: 'assistant', content: `Error: ${errorMsg}`, timestamp: new Date() }];
-        } return prev;
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: currentInput }),
       });
-    } finally { setIsLoading(false); }
+
+      if (!response.ok) {
+        throw new Error('API request failed');
+      }
+
+      const data = await response.json();
+
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: data.reply,
+        sender: "assistant",
+        timestamp: new Date(),
+        type: "text"
+      };
+      setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "Sorry, I couldn't get a response. Please try again.",
+        sender: "assistant",
+        timestamp: new Date(),
+        type: "text"
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !isLoading) {
+      handleSendMessage();
+    }
   };
 
   const scrollToBottom = () => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); };
@@ -604,7 +593,7 @@ export default function ChatPage() {
                 aria-label="Attach file or media"
               ><Paperclip className={`h-5 w-5 ${uploadedImageBase64 ? "text-green-500" : ""}`} /></Button>
               <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-              <Input type="text" placeholder={aiVoiceState === "listening" ? "Listening..." : isCameraActive ? "Webcam active. Add a message or send frame." : "Type your message or use the mic..."} value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleSendMessage()} className="flex-grow" disabled={isLoading || aiVoiceState === "listening" || aiVoiceState === "processing"}/>
+              <Input type="text" placeholder={aiVoiceState === "listening" ? "Listening..." : isCameraActive ? "Webcam active. Add a message or send frame." : "Type your message or use the mic..."} value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={handleKeyPress} className="flex-grow" disabled={isLoading || aiVoiceState === "listening" || aiVoiceState === "processing"}/>
               <Button onClick={() => handleSendMessage()} disabled={isLoading || input.trim() === ''}>{isLoading ? 'Sending...' : 'Send'}</Button>
             </div>
           </CardFooter>
