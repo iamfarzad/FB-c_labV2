@@ -81,17 +81,48 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   //   )
   // }
 
+  // Add JSON-LD script to head on client side only
+  useEffect(() => {
+    // Only run on client
+    if (typeof window === 'undefined') return;
+    
+    try {
+      // Create script element
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.text = JSON.stringify(websiteSchema);
+      script.id = 'website-schema';
+      
+      // Remove existing script if it exists
+      const existingScript = document.getElementById('website-schema');
+      if (existingScript) {
+        document.head.removeChild(existingScript);
+      }
+      
+      // Add to head
+      document.head.appendChild(script);
+    } catch (error) {
+      console.error('Error adding JSON-LD script:', error);
+    }
+    
+    // Cleanup is handled by removing the script by ID
+    return () => {
+      try {
+        const script = document.getElementById('website-schema');
+        if (script) {
+          document.head.removeChild(script);
+        }
+      } catch (error) {
+        console.error('Error cleaning up JSON-LD script:', error);
+      }
+    };
+  }, []);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(websiteSchema)
-          }}
-        />
       </head>
       <body className={`${rajdhani.variable} ${spaceMono.variable} ${montserrat.variable} font-sans relative min-h-screen flex flex-col`}>
         <ThemeProvider
