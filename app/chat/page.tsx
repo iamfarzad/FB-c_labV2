@@ -28,6 +28,9 @@ import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { detectYouTubeUrl, getVideoTitle } from '@/lib/youtube';
+import { analyzeVideoForLearning } from '@/lib/video-analysis';
+import { generateText } from '@/lib/text-generation';
+import { parseDataFromText, createDataItem } from '@/lib/data-parser';
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Switch } from "@/components/ui/switch";
@@ -283,26 +286,103 @@ export default function ChatPage() {
   useEffect(() => {
     if (!isSpeechSupported || typeof window === "undefined") return;
     recognition.current = new SpeechRecognition();
-    recognition.current.continuous = false; recognition.current.interimResults = true; recognition.current.lang = "en-US";
-    recognition.current.onstart = () => { setAiVoiceState("listening"); setCurrentTranscription(""); };
+    recognition.current.continuous = false; 
+    recognition.current.interimResults = true; 
+    recognition.current.lang = "en-US";
+    
+    recognition.current.onstart = () => { 
+      setAiVoiceState("listening"); 
+      setCurrentTranscription(""); 
+      addActivity({
+        type: 'analyzing',
+        title: '🎤 Voice Recording Started',
+        description: 'Listening for voice input...',
+        status: 'in_progress'
+      });
+    };
+    
     recognition.current.onresult = (event: any) => {
       let interim = "", final = "";
       for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) final += event.results[i][0].transcript; else interim += event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          final += event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
+        }
       }
-      setCurrentTranscription(interim || final); if (final) setInput(final);
+      const currentText = interim || final;
+      setCurrentTranscription(currentText);
+      
+      // Update activity with live transcription
+      if (currentText.trim()) {
+        setActivities(prev => prev.map(act => 
+          act.title.includes('Voice Recording') ? 
+          { ...act, description: `Transcribing: "${currentText.substring(0, 50)}${currentText.length > 50 ? '...' : ''}"` } : act
+        ));
+      }
+      
+      if (final) setInput(final);
     };
+    
     recognition.current.onend = () => {
       setAiVoiceState("processing");
-      if (currentTranscription.trim()) handleSendMessage(currentTranscription.trim());
-      else { setShowVoiceModal(false); setAiVoiceState("idle"); }
+      const finalTranscript = currentTranscription.trim();
+      
+      if (finalTranscript) {
+        // Update activity with completion
+        setActivities(prev => prev.map(act => 
+          act.title.includes('Voice Recording') ? 
+          { ...act, status: 'completed' as const, description: `Voice transcribed: "${finalTranscript.substring(0, 100)}${finalTranscript.length > 100 ? '...' : ''}"` } : act
+        ));
+        
+        // Add transcript summary to activity
+        addActivity({
+          type: 'complete',
+          title: '📝 Voice Transcript Complete',
+          description: `"${finalTranscript.substring(0, 80)}${finalTranscript.length > 80 ? '...' : ''}"`,
+          status: 'completed',
+          details: finalTranscript
+        });
+        
+        // Send the message
+        handleSendMessage(finalTranscript);
+        
+                 // Close modal after brief delay
+         setTimeout(() => {
+           setShowVoiceModal(false);
+           setAiVoiceState("idle");
+           setIsRecording(false);
+         }, 1000);
+      } else {
+        // No transcript captured
+        setActivities(prev => prev.map(act => 
+          act.title.includes('Voice Recording') ? 
+          { ...act, status: 'failed' as const, description: 'No voice input detected' } : act
+        ));
+        setShowVoiceModal(false);
+        setAiVoiceState("idle");
+      }
     };
+    
     recognition.current.onerror = (event: any) => {
-      console.error("Speech error:", event.error); setAiVoiceState("error");
-      setTimeout(() => { setShowVoiceModal(false); setAiVoiceState("idle"); }, 2000);
+      console.error("Speech error:", event.error);
+      setAiVoiceState("error");
+      
+      // Update activity with error
+      setActivities(prev => prev.map(act => 
+        act.title.includes('Voice Recording') ? 
+        { ...act, status: 'failed' as const, description: `Voice recognition error: ${event.error}` } : act
+      ));
+      
+             setTimeout(() => { 
+         setShowVoiceModal(false); 
+         setAiVoiceState("idle"); 
+         setIsRecording(false);
+       }, 2000);
     };
+    
     return () => { if (recognition.current) recognition.current.stop(); };
-  }, [isSpeechSupported, SpeechRecognition, handleSendMessage]);
+  }, [isSpeechSupported, SpeechRecognition, handleSendMessage, addActivity]);
 
   const handleDownloadTranscript = () => {
     const transcript = messages.map((msg) => `${msg.role === 'user' ? 'User' : 'Assistant'} (${msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}): ${msg.content}`).join("\n\n");
@@ -720,15 +800,48 @@ export default function ChatPage() {
   }, []);
 
   const handleMicButtonClick = useCallback(() => {
-    if (!isSpeechSupported) { console.warn("Speech recognition not supported."); return; }
+    if (!isSpeechSupported) { 
+      addActivity({
+        type: 'error',
+        title: '❌ Voice Not Supported',
+        description: 'Speech recognition is not supported in this browser',
+        status: 'failed'
+      });
+      return; 
+    }
+    
     if (aiVoiceState === "listening" || aiVoiceState === "processing") {
+      // Stop current recording
       if (recognition.current) recognition.current.stop();
       setShowVoiceModal(false);
+      setAiVoiceState("idle");
+      
+      // Update activity to show cancellation
+      setActivities(prev => prev.map(act => 
+        act.title.includes('Voice Recording') ? 
+        { ...act, status: 'failed' as const, description: 'Voice recording cancelled by user' } : act
+      ));
     } else {
-      setCurrentTranscription(""); setShowVoiceModal(true);
-      try { recognition.current?.start(); } catch (e) { console.error(e); setAiVoiceState("error");}
+      // Start new recording
+      setCurrentTranscription(""); 
+      setShowVoiceModal(true);
+      setIsRecording(true);
+      
+      try { 
+        recognition.current?.start(); 
+      } catch (e) { 
+        console.error('Voice recognition start error:', e); 
+        setAiVoiceState("error");
+        setIsRecording(false);
+        addActivity({
+          type: 'error',
+          title: '❌ Voice Recording Failed',
+          description: 'Could not start voice recognition',
+          status: 'failed'
+        });
+      }
     }
-  }, [isSpeechSupported, aiVoiceState, recognition]);
+  }, [isSpeechSupported, aiVoiceState, recognition, addActivity]);
 
   // Audio queue state management with refs
   const audioQueueRef = useRef<string[]>([]);
@@ -771,15 +884,156 @@ export default function ChatPage() {
   const SidebarContent: React.FC<{ activities: ActivityItem[], currentPath: string, className?: string, open?: boolean; }> = ({ activities, currentPath, className, open }) => {
     const navLinks = [ { href: "/threads", label: "Threads", icon: ListChecks } ];
     return (
-      <div className={cn("flex flex-col h-full bg-card text-card-foreground border-r", className)}>
-        <div className="p-4 border-b"><Link href="/" className="flex items-center space-x-2"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center"><Bot size={20} className="text-primary-foreground" /></div>{open && <h2 className="text-lg font-semibold">F.B/c Consulting</h2>}</Link></div>
+      <div className={cn("flex flex-col h-full bg-card/95 backdrop-blur-sm text-card-foreground border-r border-border/50", className)}>
+        {/* Header */}
+        <div className="p-4 border-b border-border/50">
+          <Link href="/" className="flex items-center space-x-3 group">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+              <Bot size={18} className="text-white" />
+            </div>
+            {open && (
+              <div className="flex flex-col">
+                <h2 className="text-sm font-semibold text-foreground">F.B/c Consulting</h2>
+                <p className="text-xs text-muted-foreground">AI Assistant</p>
+              </div>
+            )}
+          </Link>
+        </div>
+        
         {open && (
           <>
-            <nav className="px-4 py-2 space-y-1">{navLinks.map((link) => (<Link key={link.label} href={link.href} className={cn("flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors", currentPath === link.href ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-muted hover:text-foreground")}><link.icon size={18} /><span>{link.label}</span></Link>))}</nav>
-            <div className="flex-grow border-t p-4"><h3 className="text-sm font-semibold mb-3 text-muted-foreground px-2">Activity</h3><ScrollArea className="h-[400px]">{activities.length === 0 && (<p className="text-xs text-muted-foreground p-2">No recent activity.</p>)}{activities.map((activity) => (<div key={activity.id} className="text-xs mb-1">{activity.isPerMessageLog ? (activity.isLiveProcessing ? (<div className="p-2 border border-border rounded-md bg-muted/30 hover:bg-muted/60 transition-colors"><div className="flex items-center justify-between mb-1"><span className="font-medium text-foreground truncate flex items-center"><Sparkles size={14} className={`mr-1.5 ${getActivityColor(activity.type)} animate-pulse`} /> {activity.title || activity.details || "Processing..."}</span></div>{activity.description && <p className="text-muted-foreground truncate">{activity.description}</p>}</div>) : (<div className="flex items-center p-1.5 rounded-md hover:bg-muted/60 transition-colors cursor-pointer"><Sparkles size={14} className={`mr-1.5 ${getActivityColor(activity.type)} flex-shrink-0`} /><span className="text-muted-foreground truncate">{activity.title || activity.details || "Processed"}</span></div>)) : (<div className="flex items-start mb-2 p-2 rounded-md hover:bg-muted transition-colors">{React.createElement(activity.icon || getActivityIcon(activity.type), { size: 18, className: `mr-2.5 mt-0.5 flex-shrink-0 ${getActivityColor(activity.type)}` })}<div className="flex-grow truncate"><div className="font-medium text-foreground truncate">{activity.title || activity.details}</div>{activity.description && <p className="text-muted-foreground truncate">{activity.description}</p>}{typeof activity.progress === 'number' && activity.progress < 100 && (<Progress value={activity.progress} className="h-1.5 mt-1" />)}{activity.link && activity.status === 'completed' && (<Link href={activity.link} target="_blank" className="text-primary hover:underline text-xs flex items-center mt-0.5">View Details <ExternalLink size={12} className="ml-1" /></Link>)}<p className="text-muted-foreground/80 text-xs mt-0.5">{activity.user || 'System'} - {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p></div></div>)}</div>))}</ScrollArea></div>
+            {/* Navigation */}
+            <nav className="px-3 py-2">
+              {navLinks.map((link) => (
+                <Link 
+                  key={link.label} 
+                  href={link.href} 
+                  className={cn(
+                    "flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group",
+                    currentPath === link.href 
+                      ? "bg-orange-500/10 text-orange-600 shadow-sm border border-orange-200/50" 
+                      : "hover:bg-muted/80 hover:text-foreground text-muted-foreground"
+                  )}
+                >
+                  <link.icon size={16} className="flex-shrink-0" />
+                  <span>{link.label}</span>
+                </Link>
+              ))}
+            </nav>
+            
+            {/* Activity Section */}
+            <div className="flex-grow border-t border-border/50 p-3">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-foreground">Activity Feed</h3>
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              </div>
+              
+              <ScrollArea className="h-[400px] pr-2">
+                {activities.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                      <Activity size={20} className="text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">No recent activity</p>
+                    <p className="text-xs text-muted-foreground/70 mt-1">Start a conversation to see activity</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {activities.map((activity) => (
+                      <div key={activity.id} className="group">
+                        {activity.isPerMessageLog ? (
+                          activity.isLiveProcessing ? (
+                            <div className="p-3 border border-border/50 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Sparkles size={14} className={`${getActivityColor(activity.type)} animate-pulse flex-shrink-0`} />
+                                <span className="font-medium text-foreground text-sm truncate">
+                                  {activity.title || activity.details || "Processing..."}
+                                </span>
+                              </div>
+                              {activity.description && (
+                                <p className="text-muted-foreground text-xs leading-relaxed">{activity.description}</p>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex items-center p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                              <Sparkles size={12} className={`mr-2 ${getActivityColor(activity.type)} flex-shrink-0`} />
+                              <span className="text-muted-foreground text-xs truncate">{activity.title || activity.details || "Processed"}</span>
+                            </div>
+                          )
+                        ) : (
+                          <div className="p-3 rounded-lg border border-border/30 hover:border-border/60 hover:bg-muted/30 transition-all duration-200">
+                            <div className="flex items-start gap-3">
+                              {React.createElement(activity.icon || getActivityIcon(activity.type), { 
+                                size: 16, 
+                                className: `mt-0.5 flex-shrink-0 ${getActivityColor(activity.type)}` 
+                              })}
+                              <div className="flex-grow min-w-0">
+                                <div className="flex items-center justify-between mb-1">
+                                  <h4 className="font-medium text-foreground text-sm truncate">{activity.title || activity.details}</h4>
+                                  {activity.status === 'completed' && (
+                                    <CheckCircle size={12} className="text-green-500 flex-shrink-0" />
+                                  )}
+                                </div>
+                                {activity.description && (
+                                  <p className="text-muted-foreground text-xs leading-relaxed mb-2">{activity.description}</p>
+                                )}
+                                {typeof activity.progress === 'number' && activity.progress < 100 && (
+                                  <Progress value={activity.progress} className="h-1.5 mb-2" />
+                                )}
+                                {activity.link && activity.status === 'completed' && (
+                                  <Link 
+                                    href={activity.link} 
+                                    target="_blank" 
+                                    className="inline-flex items-center text-orange-600 hover:text-orange-700 text-xs font-medium gap-1 mt-1"
+                                  >
+                                    View Details <ExternalLink size={10} />
+                                  </Link>
+                                )}
+                                {activity.details && activity.status === 'completed' && activity.title.includes('Transcript') && (
+                                  <button
+                                    onClick={() => {
+                                      const modal = document.createElement('div');
+                                      modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm';
+                                      modal.innerHTML = `
+                                        <div class="bg-card border border-border rounded-lg p-6 max-w-2xl max-h-[80vh] overflow-auto m-4">
+                                          <div class="flex items-center justify-between mb-4">
+                                            <h3 class="text-lg font-semibold text-foreground">Voice Transcript</h3>
+                                            <button class="p-2 rounded-lg hover:bg-muted" onclick="this.closest('.fixed').remove()">
+                                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                              </svg>
+                                            </button>
+                                          </div>
+                                          <div class="p-4 bg-muted/50 rounded-lg">
+                                            <p class="text-foreground whitespace-pre-wrap">${activity.details}</p>
+                                          </div>
+                                        </div>
+                                      `;
+                                      document.body.appendChild(modal);
+                                    }}
+                                    className="inline-flex items-center text-orange-600 hover:text-orange-700 text-xs font-medium gap-1 mt-1"
+                                  >
+                                    View Full Transcript <Eye size={10} />
+                                  </button>
+                                )}
+                                <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground/70">
+                                  <span>{activity.user || 'System'}</span>
+                                  <span>{new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
           </>
         )}
-      </div>);
+      </div>
+    );
   };
 
   const DesktopSidebar: React.FC<{ activities: ActivityItem[], currentPath: string, className?: string, open: boolean; setOpen: (open: boolean) => void; }> = ({ activities, currentPath, className, open, setOpen }) => {
@@ -902,28 +1156,38 @@ export default function ChatPage() {
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <div className="border-b border-border p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="border-b border-border/50 p-4 flex items-center justify-between bg-card/95 backdrop-blur-sm">
+            <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-                className="md:hidden"
+                className="md:hidden hover:bg-muted/80 transition-colors"
               >
                 <Menu className="w-4 h-4" />
               </Button>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-white" />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-sm">
+                  <Bot size={20} className="text-white" />
                 </div>
-                <div>
-                  <h1 className="font-semibold">AI Assistant</h1>
-                  <p className="text-xs text-muted-foreground">Online • Ready to help</p>
+                <div className="flex flex-col">
+                  <h1 className="text-lg font-semibold text-foreground">AI Assistant</h1>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <span className="text-xs text-muted-foreground">Online • Ready to help</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
+              <Link
+                href="/video-learning-tool"
+                className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-lg glass-button text-[var(--color-text-on-orange)] hover:scale-105 transition-all duration-300 text-sm"
+              >
+                <Video className="w-4 h-4" />
+                <span>Video to App</span>
+              </Link>
               <Button variant="outline" size="sm" onClick={handleDownloadTranscript}>
                 <Download className="w-4 h-4 mr-2" />
                 Export Summary
@@ -953,9 +1217,7 @@ export default function ChatPage() {
                         videoUrl={detectedVideoUrl}
                         videoTitle={videoTitle}
                         onGenerateApp={async (url) => {
-                          setIsGeneratingVideoApp(true);
-                          await startVideoLearningAppProcessing(url, videoTitle);
-                          setIsGeneratingVideoApp(false);
+                          setShowVideoLearningModal(true);
                         }}
                         theme={theme === "dark" ? "dark" : "light"}
                         isGenerating={isGeneratingVideoApp}
@@ -1199,6 +1461,15 @@ export default function ChatPage() {
             canvasRef={canvasRef}
             isCameraActive={isCameraActive}
             onStopCamera={stopCamera}
+            theme={theme === "dark" ? "dark" : "light"}
+          />
+        )}
+
+        {/* Video Learning Modal */}
+        {showVideoLearningModal && (
+          <VideoLearningModal
+            isOpen={showVideoLearningModal}
+            onClose={() => setShowVideoLearningModal(false)}
             theme={theme === "dark" ? "dark" : "light"}
           />
         )}
