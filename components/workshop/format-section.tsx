@@ -34,7 +34,7 @@ export {}
                       <div className="text-sm font-medium text-[var(--color-orange-accent)]">{item.time}</div>
                       <h4 className={`text-lg font-bold ${textColor} mb-1`}>{item.title}</h4>
                       <p className={mutedTextColor}>{item.description}</p>
-                      
+
                       {/* Additional details for main sessions */}
                       {index === 1 && (
                         <div className="mt-3 pl-4 border-l-2 border-[var(--color-orange-accent)]/20">
@@ -54,7 +54,7 @@ export {}
                           </ul>
                         </div>
                       )}
-                      
+
                       {index === 3 && (
                         <div className="mt-3 pl-4 border-l-2 border-[var(--color-orange-accent)]/20">
                           <p className="text-sm font-medium mb-2">You'll learn to:</p>
@@ -73,7 +73,7 @@ export {}
                           </ul>
                         </div>
                       )}
-                      
+
                       {index === 5 && (
                         <div className="mt-3 pl-4 border-l-2 border-[var(--color-orange-accent)]/20">
                           <p className="text-sm font-medium mb-2">You'll build:</p>
@@ -98,7 +98,7 @@ export {}
               </div>
             </div>
           </div>
-          
+
           <div className="p-8 border-t border-[var(--glass-border)] bg-gradient-to-r from-[var(--color-orange-accent)]/5 to-transparent">
             <div className="grid md:grid-cols-2 gap-8">
               <div>

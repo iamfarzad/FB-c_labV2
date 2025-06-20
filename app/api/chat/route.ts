@@ -38,7 +38,7 @@ Guidelines:
     }
 
     const response = await generateContentWithGemini(apiKey, prompt);
-    
+
     if (!response) {
       throw new Error('No response generated');
     }
@@ -57,7 +57,7 @@ Guidelines:
         message: response,
         capabilities: capabilities.slice(0, 3) // Limit to 3 for UI
       }),
-      { 
+      {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       }
@@ -70,7 +70,7 @@ Guidelines:
         success: false,
         error: error.message || 'Failed to generate response'
       }),
-      { 
+      {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       }
@@ -103,7 +103,7 @@ interface ChatRequest {
 export async function POST(req: Request) {
   try {
     console.log('Chat API request received');
-    
+
     // Parse and validate request body
     let requestBody: ChatRequest;
     try {
@@ -116,7 +116,7 @@ export async function POST(req: Request) {
     } catch (parseError) {
       console.error('Error parsing request body:', parseError);
       return new Response(
-        JSON.stringify({ error: 'Invalid request body' }), 
+        JSON.stringify({ error: 'Invalid request body' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -131,7 +131,7 @@ export async function POST(req: Request) {
     // Validate required fields for regular chat
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'No messages provided' }), 
+        JSON.stringify({ error: 'No messages provided' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -141,7 +141,7 @@ export async function POST(req: Request) {
     if (!apiKey) {
       console.error('GEMINI_API_KEY is not set in environment variables');
       return new Response(
-        JSON.stringify({ error: 'Server configuration error' }), 
+        JSON.stringify({ error: 'Server configuration error' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -151,7 +151,7 @@ export async function POST(req: Request) {
     if (!prompt) {
       console.error('Failed to construct prompt from messages:', messages);
       return new Response(
-        JSON.stringify({ error: 'Could not process the provided messages' }), 
+        JSON.stringify({ error: 'Could not process the provided messages' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -163,17 +163,17 @@ export async function POST(req: Request) {
 
     console.log('Generating content with Gemini API...');
     const text = await generateContentWithGemini(apiKey, prompt, cleanedImageData, cleanedCameraFrame);
-    
+
     if (!text) {
       console.error('No content generated from Gemini API');
       return new Response(
-        JSON.stringify({ error: 'No response generated' }), 
+        JSON.stringify({ error: 'No response generated' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     console.log('Content generated successfully');
-    
+
     // Create a simple streaming response that sends the full text in one chunk
     const stream = new ReadableStream({
       start(controller) {
@@ -192,18 +192,18 @@ export async function POST(req: Request) {
     });
   } catch (error: any) {
     console.error('Chat API error:', error);
-    const errorMessage = process.env.NODE_ENV === 'development' 
-      ? error.message || 'An unknown error occurred' 
+    const errorMessage = process.env.NODE_ENV === 'development'
+      ? error.message || 'An unknown error occurred'
       : 'An error occurred while processing your request';
-      
+
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: errorMessage,
-        ...(process.env.NODE_ENV === 'development' && { stack: error.stack }) 
-      }), 
-      { 
-        status: 500, 
-        headers: { 'Content-Type': 'application/json' } 
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
       }
     );
   }

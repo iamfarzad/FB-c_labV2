@@ -16,12 +16,12 @@ interface FunctionCardProps {
   theme?: 'light' | 'dark';
 }
 
-const FunctionCard: React.FC<FunctionCardProps> = ({ 
-  icon, 
-  title, 
-  description, 
+const FunctionCard: React.FC<FunctionCardProps> = ({
+  icon,
+  title,
+  description,
   category,
-  theme = 'light' 
+  theme = 'light'
 }) => {
   return (
     <div className="card-minimal feature-card">
@@ -98,16 +98,16 @@ export const ProofSection: React.FC<ProofSectionProps> = ({ theme }) => {
 
   const categories = ['All', 'Core Features', 'Developer Tools', 'Creative Tools']
   const [activeCategory, setActiveCategory] = React.useState('All')
-  
-  const filteredFunctions = activeCategory === 'All' 
-    ? functions 
+
+  const filteredFunctions = activeCategory === 'All'
+    ? functions
     : functions.filter(func => func.category === activeCategory)
 
   return (
     <section className={`py-20 relative overflow-hidden ${theme === 'dark' ? 'dark bg-[var(--color-gunmetal)]' : 'light bg-[var(--color-light-silver)]'}`}>
       {/* Background Pattern */}
       <div className="absolute inset-0 dot-pattern opacity-30" />
-      
+
       <div className="process-container relative z-10">
         {/* Header */}
         <div className="process-header">
@@ -140,7 +140,7 @@ export const ProofSection: React.FC<ProofSectionProps> = ({ theme }) => {
               </button>
             ))}
           </div>
-          
+
           <div className="grid-minimal">
             {filteredFunctions.map((func, index) => (
               <FunctionCard
@@ -165,7 +165,7 @@ export const ProofSection: React.FC<ProofSectionProps> = ({ theme }) => {
               F.B/c combines multiple AI capabilities into one seamless chat experience. Here's what makes it special:
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-6">
             <div className="p-6 rounded-xl bg-background/50 border border-border/30 hover:border-[var(--color-orange-accent)]/50 transition-colors">
               <div className="w-12 h-12 rounded-lg bg-[var(--color-orange-accent)]/10 flex items-center justify-center mb-4">
@@ -174,7 +174,7 @@ export const ProofSection: React.FC<ProofSectionProps> = ({ theme }) => {
               <h4 className="font-semibold text-lg mb-2">Voice First</h4>
               <p className="text-sm text-muted-foreground">Speak naturally and get intelligent responses in real-time</p>
             </div>
-            
+
             <div className="p-6 rounded-xl bg-background/50 border border-border/30 hover:border-[var(--color-orange-accent)]/50 transition-colors">
               <div className="w-12 h-12 rounded-lg bg-[var(--color-orange-accent)]/10 flex items-center justify-center mb-4">
                 <Video className="w-6 h-6 text-[var(--color-orange-accent)]" />
@@ -182,7 +182,7 @@ export const ProofSection: React.FC<ProofSectionProps> = ({ theme }) => {
               <h4 className="font-semibold text-lg mb-2">Video Learning</h4>
               <p className="text-sm text-muted-foreground">Extract knowledge and insights from video content</p>
             </div>
-            
+
             <div className="p-6 rounded-xl bg-background/50 border border-border/30 hover:border-[var(--color-orange-accent)]/50 transition-colors">
               <div className="w-12 h-12 rounded-lg bg-[var(--color-orange-accent)]/10 flex items-center justify-center mb-4">
                 <Code className="w-6 h-6 text-[var(--color-orange-accent)]" />
@@ -194,7 +194,7 @@ export const ProofSection: React.FC<ProofSectionProps> = ({ theme }) => {
         </div>
 
         <div className="mt-16 text-center">
-          <a 
+          <a
             href="/chat"
             className="relative inline-flex items-center px-8 py-4 overflow-hidden text-lg font-medium text-white group rounded-full bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] hover:from-[var(--color-orange-accent-light)] hover:to-[var(--color-orange-accent)] transition-all duration-500 hover:shadow-lg hover:shadow-[var(--color-orange-accent)]/30"
           >
@@ -204,11 +204,11 @@ export const ProofSection: React.FC<ProofSectionProps> = ({ theme }) => {
             </span>
             <span className="absolute inset-0 bg-gradient-to-r from-[var(--color-orange-accent-light)] to-[var(--color-orange-accent)] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
           </a>
-          
+
           {/* Animated dots */}
           <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex space-x-2">
             {[1, 2, 3].map((i) => (
-              <span 
+              <span
                 key={i}
                 className="w-2 h-2 rounded-full bg-[var(--color-orange-accent)] opacity-20"
                 style={{

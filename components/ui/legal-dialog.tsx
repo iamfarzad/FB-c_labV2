@@ -40,14 +40,14 @@ export function LegalDialog({ title, trigger, children, className }: LegalDialog
                 </DialogPrimitive.Close>
               </div>
             </div>
-            
+
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-6">
               <div className="prose prose-sm max-w-none text-muted-foreground">
                 {children}
               </div>
             </div>
-            
+
             {/* Footer */}
             <div className="flex-shrink-0 border-t bg-muted/50 px-6 py-3">
               <p className="text-xs text-muted-foreground">

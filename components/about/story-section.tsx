@@ -85,19 +85,19 @@ export function StorySection({ theme }: StorySectionProps) {
             From early experiments to meaningful solutions - my journey in tech and AI.
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           {/* Left column - Text content */}
-          <motion.div 
+          <motion.div
             className="sticky top-24"
             initial={{ opacity: 0, x: -20 }}
-            whileInView={{ 
-              opacity: 1, 
+            whileInView={{
+              opacity: 1,
               x: 0,
-              transition: { 
+              transition: {
                 duration: 0.6,
                 ease: [0.16, 0.77, 0.47, 0.97]
-              } 
+              }
             }}
             viewport={{ once: true, margin: "-10%" }}
           >
@@ -114,13 +114,13 @@ export function StorySection({ theme }: StorySectionProps) {
           {/* Right column - Timeline */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ 
-              opacity: 1, 
+            whileInView={{
+              opacity: 1,
               y: 0,
-              transition: { 
+              transition: {
                 duration: 0.6,
                 ease: [0.16, 0.77, 0.47, 0.97]
-              } 
+              }
             }}
             viewport={{ once: true, margin: "-10%" }}
             className="h-[600px] overflow-y-auto"

@@ -79,15 +79,15 @@ interface AlertWithIconProps extends React.HTMLAttributes<HTMLDivElement> {
 const AlertWithIcon = React.forwardRef<HTMLDivElement, AlertWithIconProps>(
   ({ variant = "default", title, description, className, children, ...props }, ref) => {
     const Icon = AlertIcon[variant] || AlertIcon.default
-    
+
     return (
       <Alert
         ref={ref}
         variant={
-          variant === "error" 
-            ? "destructive" 
-            : variant === "success" 
-              ? "success" 
+          variant === "error"
+            ? "destructive"
+            : variant === "success"
+              ? "success"
               : variant === "info"
                 ? "info"
                 : "default"

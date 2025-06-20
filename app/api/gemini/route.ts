@@ -184,13 +184,13 @@ async function generateVoiceWithElevenLabsAgent(text: string, conversationId?: s
     }
 
     const data = await response.json();
-    
+
     // For now, we'll use TTS with agent configuration but return conversation tracking
     const ttsResult = await generateVoiceWithElevenLabsTTS(text);
     if (ttsResult) {
       console.log("Successfully generated voice with ElevenLabs agent configuration.");
-      return { 
-        audioBase64: ttsResult.audioBase64, 
+      return {
+        audioBase64: ttsResult.audioBase64,
         conversationId: data.conversation_id || conversationId || 'default'
       };
     }
@@ -202,16 +202,16 @@ async function generateVoiceWithElevenLabsAgent(text: string, conversationId?: s
     // Fallback to simple TTS
     console.log("Falling back to simple TTS...");
     const fallbackResult = await generateVoiceWithElevenLabsTTS(text);
-    return fallbackResult ? { 
-      audioBase64: fallbackResult.audioBase64, 
-      conversationId: conversationId || 'fallback' 
+    return fallbackResult ? {
+      audioBase64: fallbackResult.audioBase64,
+      conversationId: conversationId || 'fallback'
     } : null;
   }
 }
 
 // Smart voice generation - chooses the best method based on context
 async function generateVoiceResponse(
-  text: string, 
+  text: string,
   options: {
     useAgent?: boolean;
     conversationId?: string;
@@ -346,7 +346,7 @@ Use their name frequently and show company insights when available.`;
 
     // Extract grounding sources
     const sources = response.candidates?.[0]?.groundingMetadata?.searchEntryPoint?.renderedContent
-      ? [{ 
+      ? [{
           title: 'Grounded Search Result',
           url: response.candidates?.[0]?.groundingMetadata?.searchEntryPoint?.renderedContent || '#'
         }]

@@ -40,7 +40,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ theme }) => {
           {/* Main Headline */}
           <div className="space-y-6">
             <div className="overflow-hidden">
-              <motion.h1 
+              <motion.h1
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
@@ -49,7 +49,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ theme }) => {
                 I'm Farzad Bayat
               </motion.h1>
             </div>
-            
+
             <div className="overflow-hidden">
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
@@ -63,9 +63,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ theme }) => {
                 <div className="absolute -inset-1 bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] opacity-20 blur-md -z-10 rounded-lg"></div>
               </motion.div>
             </div>
-            
+
             <div className="overflow-hidden">
-              <motion.p 
+              <motion.p
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
@@ -78,9 +78,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ theme }) => {
                 <span className="ml-2">Just proven results, practical tools, and clarity.</span>
               </motion.p>
             </div>
-            
+
             <div className="overflow-hidden">
-              <motion.p 
+              <motion.p
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6, duration: 0.6, ease: "easeOut" }}
@@ -93,7 +93,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ theme }) => {
 
           {/* AI Input */}
             <div className="max-w-xl mx-auto mt-8">
-              <AIInput 
+              <AIInput
                 placeholder="Ask me anything about AI..."
                 onSubmit={(value: string) => {
                   // Navigate to chat page with the input text
@@ -108,7 +108,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ theme }) => {
               <p className={`text-sm mt-2 text-center ${mutedTextColor} mb-4`}>
                 Try asking: "How can AI help my business?" or "What's the best AI strategy?"
               </p>
-              
+
               {/* Compact CTA Buttons */}
               <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
                 <Link href="/contact" className="text-sm">
@@ -116,9 +116,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ theme }) => {
                     Book a Call
                   </button>
                 </Link>
-                
+
                 <span className="text-[var(--color-orange-accent)]/50 text-sm">or</span>
-                
+
                 <Link href="/ai-demo" className="text-sm">
                   <button className="px-4 py-2 rounded-full bg-transparent text-[var(--color-orange-accent)] hover:bg-[var(--color-orange-accent)]/10 transition-all duration-200 text-sm font-medium border border-transparent hover:border-[var(--color-orange-accent)]/20">
                     Try AI Assistant

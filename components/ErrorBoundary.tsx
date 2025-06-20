@@ -11,7 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 interface Props {
   /** The child components to be wrapped by the error boundary */
   children?: ReactNode
-  /** 
+  /**
    * Optional custom fallback UI to display when an error occurs
    * If not provided, a default error UI will be shown
    */
@@ -30,17 +30,17 @@ interface State {
 
 /**
  * A reusable error boundary component that catches JavaScript errors in its child component tree.
- * 
+ *
  * @component
  * @example
  * // Basic usage
  * <ErrorBoundary>
  *   <MyComponent />
  * </ErrorBoundary>
- * 
+ *
  * @example
  * // With custom fallback and error handling
- * <ErrorBoundary 
+ * <ErrorBoundary
  *   fallback={<CustomErrorComponent />}
  *   onError={(error, errorInfo) => {
  *     // Log to error reporting service
@@ -83,7 +83,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <AlertTitle>Something went wrong</AlertTitle>
             <AlertDescription>
               An unexpected error occurred. Please try refreshing the page or contact support if the problem persists.
-              
+
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="mt-2">
                   <summary className="cursor-pointer text-sm">Error details</summary>
@@ -92,7 +92,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   </pre>
                 </details>
               )}
-              
+
               <div className="mt-4 flex gap-2">
                 <Button variant="outline" size="sm" onClick={this.handleReset}>
                   <RefreshCw className="mr-2 h-4 w-4" />

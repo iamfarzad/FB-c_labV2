@@ -60,7 +60,7 @@ export const WhatToExpect: React.FC<WhatToExpectProps> = ({ theme }) => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {features.map((feature, index) => (
-            <div 
+            <div
               key={index}
               className={`${cardBg} ${cardBorder} border rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
             >

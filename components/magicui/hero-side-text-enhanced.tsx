@@ -46,8 +46,8 @@ const itemVariants: Variants = {
   }
 }
 
-export const HeroSideText: React.FC<HeroSideTextProps> = ({ 
-  position, 
+export const HeroSideText: React.FC<HeroSideTextProps> = ({
+  position,
   lines,
   sections: sectionsProp,
   className = "",
@@ -69,24 +69,24 @@ export const HeroSideText: React.FC<HeroSideTextProps> = ({
     const handleScroll = () => {
       if (isAnimating) return
 
-      const scrollPosition = container === window 
-        ? window.scrollY 
+      const scrollPosition = container === window
+        ? window.scrollY
         : (container as HTMLElement).scrollTop
-      
-      const windowHeight = container === window 
-        ? window.innerHeight 
+
+      const windowHeight = container === window
+        ? window.innerHeight
         : (container as HTMLElement).clientHeight
-      
+
       const scrollPercentage = scrollPosition / (document.body.scrollHeight - windowHeight)
-      
+
       // Find the current section based on scroll position
       let newSection = 0
       for (let i = 0; i < sections.length; i++) {
         const section = sections[i]
-        const sectionThreshold = section.scrollOffset !== undefined 
-          ? section.scrollOffset 
+        const sectionThreshold = section.scrollOffset !== undefined
+          ? section.scrollOffset
           : i / (sections.length - 1)
-        
+
         if (scrollPercentage >= sectionThreshold) {
           newSection = i
         } else {
@@ -97,7 +97,7 @@ export const HeroSideText: React.FC<HeroSideTextProps> = ({
       if (newSection !== currentSection) {
         setIsAnimating(true)
         setCurrentSection(newSection)
-        
+
         // Smooth transition between texts
         setTimeout(() => {
           setDisplayedLines(sections[newSection].lines)
@@ -110,7 +110,7 @@ export const HeroSideText: React.FC<HeroSideTextProps> = ({
     container.addEventListener('scroll', handleScroll, { passive: true })
     // Initial check
     handleScroll()
-    
+
     return () => {
       container.removeEventListener('scroll', handleScroll)
     }
@@ -130,8 +130,8 @@ export const HeroSideText: React.FC<HeroSideTextProps> = ({
     >
       <div className="space-y-2">
         {displayedLines.map((line, i) => (
-          <motion.div 
-            key={`${currentSection}-${i}`} 
+          <motion.div
+            key={`${currentSection}-${i}`}
             className="overflow-hidden"
             variants={itemVariants}
             initial="hidden"
@@ -142,7 +142,7 @@ export const HeroSideText: React.FC<HeroSideTextProps> = ({
               delay: i * 0.1
             }}
           >
-            <HyperText 
+            <HyperText
               text={line}
               duration={1000}
               framerProps={{

@@ -54,28 +54,28 @@ export const SectionSideText: React.FC<SectionSideTextProps> = ({
     if (sections.length <= 1) return
 
     const container = scrollContainerRef?.current || window
-    
+
     const handleScroll = () => {
       if (isAnimating) return
 
-      const scrollPosition = container === window 
-        ? window.scrollY 
+      const scrollPosition = container === window
+        ? window.scrollY
         : (container as HTMLElement).scrollTop
-      
-      const windowHeight = container === window 
-        ? window.innerHeight 
+
+      const windowHeight = container === window
+        ? window.innerHeight
         : (container as HTMLElement).clientHeight
-      
+
       const scrollPercentage = scrollPosition / (document.body.scrollHeight - windowHeight)
-      
+
       // Find the current section based on scroll position
       let newSection = 0
       for (let i = 0; i < sections.length; i++) {
         const section = sections[i]
-        const sectionThreshold = section.scrollOffset !== undefined 
-          ? section.scrollOffset 
+        const sectionThreshold = section.scrollOffset !== undefined
+          ? section.scrollOffset
           : i / (sections.length - 1)
-        
+
         if (scrollPercentage >= sectionThreshold) {
           newSection = i
         } else {
@@ -86,7 +86,7 @@ export const SectionSideText: React.FC<SectionSideTextProps> = ({
       if (newSection !== currentSection) {
         setIsAnimating(true)
         setCurrentSection(newSection)
-        
+
         // Smooth transition between texts
         setTimeout(() => {
           setTimeout(() => setIsAnimating(false), 300)
@@ -97,7 +97,7 @@ export const SectionSideText: React.FC<SectionSideTextProps> = ({
     container.addEventListener('scroll', handleScroll, { passive: true })
     // Initial check
     handleScroll()
-    
+
     return () => {
       container.removeEventListener('scroll', handleScroll)
     }
@@ -117,7 +117,7 @@ export const SectionSideText: React.FC<SectionSideTextProps> = ({
       animate="visible"
       exit="exit"
     >
-      <motion.div 
+      <motion.div
         key={sections[currentSection].id}
         className="overflow-hidden"
         variants={itemVariants}
@@ -125,7 +125,7 @@ export const SectionSideText: React.FC<SectionSideTextProps> = ({
         animate="visible"
         exit="exit"
       >
-        <HyperText 
+        <HyperText
           text={sections[currentSection].title}
           duration={1000}
           framerProps={{

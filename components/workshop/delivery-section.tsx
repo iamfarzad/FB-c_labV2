@@ -85,7 +85,7 @@ export const DeliverySection: React.FC<DeliverySectionProps> = ({ theme }) => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {deliveryOptions.map((option, index) => (
-            <div 
+            <div
               key={index}
               className={`${cardBg} ${cardBorder} border rounded-2xl overflow-hidden flex flex-col`}
             >
@@ -95,7 +95,7 @@ export const DeliverySection: React.FC<DeliverySectionProps> = ({ theme }) => {
                 </div>
                 <h3 className={`text-xl font-bold ${textColor} mb-2`}>{option.title}</h3>
                 <p className={mutedTextColor}>{option.description}</p>
-                
+
                 <ul className="mt-6 space-y-3 mb-6">
                   {option.features.map((feature, i) => (
                     <li key={i} className="flex items-start">
@@ -107,7 +107,7 @@ export const DeliverySection: React.FC<DeliverySectionProps> = ({ theme }) => {
                   ))}
                 </ul>
               </div>
-              
+
               <div className="mt-auto p-6 pt-0">
                 <div className="border-t border-[var(--glass-border)] pt-6">
                   <h4 className={`font-semibold ${textColor} mb-3 flex items-center`}>
@@ -125,10 +125,10 @@ export const DeliverySection: React.FC<DeliverySectionProps> = ({ theme }) => {
                     ))}
                   </ul>
                 </div>
-                
+
                 <div className="mt-6">
-                  <a 
-                    href="#register" 
+                  <a
+                    href="#register"
                     className="block w-full text-center px-4 py-3 rounded-none bg-[var(--color-orange-accent)]/10 hover:bg-[var(--color-orange-accent)]/20 border border-[var(--color-orange-accent)]/30 text-[var(--color-orange-accent)] font-medium transition-colors"
                   >
                     Choose {option.title.split(' ')[0]}
@@ -161,8 +161,8 @@ export const DeliverySection: React.FC<DeliverySectionProps> = ({ theme }) => {
                   </li>
                 ))}
               </ul>
-              <a 
-                href="#contact" 
+              <a
+                href="#contact"
                 className="inline-flex items-center px-6 py-3 rounded-none bg-[var(--color-orange-accent)] hover:bg-[var(--color-orange-accent-light)] text-white font-medium transition-colors"
               >
                 Request Group Training Info

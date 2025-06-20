@@ -10,7 +10,7 @@ import HeroBackground6 from '@/components/backgrounds/HeroBackground6';
 
 export default function BackgroundPreview() {
   const [selectedBackground, setSelectedBackground] = useState(0);
-  
+
   const backgrounds = [
     { id: 0, Component: HeroBackground1, name: 'Floating Particles' },
     { id: 1, Component: HeroBackground2, name: 'Wave Animation' },
@@ -27,7 +27,7 @@ export default function BackgroundPreview() {
       <h1 className="text-4xl font-bold text-center mb-12 text-gray-800">
         Background Components Preview
       </h1>
-      
+
       <div className="flex flex-wrap justify-center gap-4 mb-8">
         {backgrounds.map((bg) => (
           <button
@@ -55,7 +55,7 @@ export default function BackgroundPreview() {
             </p>
           </div>
           <div className="h-96 relative">
-            <Suspense 
+            <Suspense
               fallback={
                 <div className="h-full flex items-center justify-center bg-gray-50">
                   <div className="text-center">
@@ -77,11 +77,11 @@ export default function BackgroundPreview() {
             About These Backgrounds
           </h3>
           <p className="text-gray-600 leading-relaxed">
-            These are interactive Three.js background components designed for modern web applications. 
+            These are interactive Three.js background components designed for modern web applications.
             Each background features smooth animations and responds to user interactions.
           </p>
         </div>
-        
+
         <div className="bg-white rounded-lg p-6 shadow-md">
           <h3 className="text-xl font-semibold mb-4 text-gray-800">
             Technical Details

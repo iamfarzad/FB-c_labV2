@@ -25,7 +25,7 @@ export default function HomePage() {
 
   return (
     <Layout theme={theme} onThemeToggle={toggleTheme}>
-      <div 
+      <div
         className="relative"
         style={{
           backgroundColor: "var(--bg-primary)",
@@ -34,25 +34,25 @@ export default function HomePage() {
       >
         {/* Hero Section */}
         <HeroSection theme={theme} />
-        
+
         {/* About Me Card */}
         <AboutMeCard theme={theme} />
-        
+
         {/* Why Work With Me */}
         <WhyWorkWithMe theme={theme} />
-        
+
         {/* AI Solutions Section - Merged WhatIOffer and AIBuildSection */}
         <AISolutionsSection theme={theme} />
-        
+
         {/* Proof Section */}
         <ProofSection theme={theme} />
-        
+
         {/* Results */}
         <Results theme={theme} />
-        
+
         {/* AI Logos Marquee */}
         <TechMarquee />
-        
+
         {/* Final CTA */}
         <FinalCTA theme={theme} />
       </div>

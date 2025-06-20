@@ -20,32 +20,32 @@ export function Carousel({
   const [currentIndex, setCurrentIndex] = React.useState(0)
   const childrenArray = React.Children.toArray(children)
   const itemsToShow = 5 // Number of items to show at once
-  
+
   // Duplicate items for infinite loop effect
   const items = [...childrenArray, ...childrenArray, ...childrenArray]
-  
+
   React.useEffect(() => {
     if (!autoPlay) return
-    
+
     const timer = setInterval(() => {
       setCurrentIndex(prev => (prev + 1) % (childrenArray.length * 3))
     }, interval)
-    
+
     return () => clearInterval(timer)
   }, [autoPlay, interval, childrenArray.length])
-  
+
   // Calculate the current offset for the infinite loop effect
   const offset = -((currentIndex % childrenArray.length) * (100 / itemsToShow))
-  
+
   return (
     <div className={cn("relative w-full overflow-hidden", className)} {...props}>
-      <div 
+      <div
         className="flex w-full transition-transform duration-1000 ease-in-out"
         style={{ transform: `translateX(${offset}%)` }}
       >
         {items.map((child, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className="flex-shrink-0 px-2"
             style={{ width: `${100 / itemsToShow}%` }}
           >

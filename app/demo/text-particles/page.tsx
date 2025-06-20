@@ -52,7 +52,7 @@ export default function TextParticles() {
 {`import { TextParticle } from "@/components/ui/text-particle"
 
 // Basic usage
-<TextParticle 
+<TextParticle
   text="Your Text"
   fontSize={80}
   particleColor="#000000"

@@ -94,7 +94,7 @@ export const ToolsSection: React.FC<ToolsSectionProps> = ({ theme }) => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {toolCategories.map((category, index) => (
-            <div 
+            <div
               key={index}
               className={`${cardBg} ${cardBorder} border rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
             >
@@ -124,7 +124,7 @@ export const ToolsSection: React.FC<ToolsSectionProps> = ({ theme }) => {
             <div>
               <h3 className={`text-2xl font-bold ${textColor} mb-6`}>Why These Tools?</h3>
               <p className={`${mutedTextColor} mb-6`}>
-                I've carefully selected these tools based on their ease of use, capabilities, and real-world applicability. 
+                I've carefully selected these tools based on their ease of use, capabilities, and real-world applicability.
                 You'll learn tools that are actually being used in businesses today, not just theoretical concepts.
               </p>
               <div className="space-y-4">

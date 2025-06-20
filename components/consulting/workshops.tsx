@@ -74,8 +74,8 @@ export const Workshops: React.FC<WorkshopsProps> = ({ theme }) => {
 
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           {workshopStructure.map((item, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className={`${cardBg} ${cardBorder} border rounded-2xl p-8 text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
             >
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] text-white mb-6 mx-auto">
@@ -99,7 +99,7 @@ export const Workshops: React.FC<WorkshopsProps> = ({ theme }) => {
               ))}
             </div>
           </div>
-          
+
           <div>
             <h3 className={`text-2xl font-bold ${textColor} mb-6`}>Delivery Options</h3>
             <div className="space-y-6">
@@ -138,8 +138,8 @@ export const Workshops: React.FC<WorkshopsProps> = ({ theme }) => {
               ))}
             </div>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link 
-                href="/workshop" 
+              <Link
+                href="/workshop"
                 className="group relative overflow-hidden px-8 py-4 rounded-none bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] text-white font-semibold text-lg shadow-2xl hover:shadow-[var(--color-orange-accent)]/25 transition-all duration-300 transform hover:scale-105"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-orange-accent-light)] to-[var(--color-orange-accent)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -148,8 +148,8 @@ export const Workshops: React.FC<WorkshopsProps> = ({ theme }) => {
                   <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </div>
               </Link>
-              <Link 
-                href="/contact" 
+              <Link
+                href="/contact"
                 className="group inline-flex items-center text-[var(--color-orange-accent)] hover:text-[var(--color-orange-accent-light)] font-medium"
               >
                 <span>Request Custom Training</span>

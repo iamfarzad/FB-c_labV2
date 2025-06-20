@@ -25,14 +25,14 @@ export function SkillCard({
 }: SkillCardProps) {
   const [isFlipped, setIsFlipped] = React.useState(false)
   const [isHovered, setIsHovered] = React.useState(false)
-  
+
   const bgGradient = `bg-gradient-to-br ${color}`
   const textColor = theme === "dark" ? "text-gray-100" : "text-gray-900"
   const mutedTextColor = theme === "dark" ? "text-gray-300/80" : "text-gray-600/90"
   const cardBg = theme === "dark" ? "bg-gray-900/80" : "bg-white/90"
-  
+
   return (
-    <div 
+    <div
       className={cn("h-full w-full cursor-pointer", className)}
       onClick={() => setIsFlipped(!isFlipped)}
       onMouseEnter={() => setIsHovered(true)}
@@ -81,8 +81,8 @@ export function SkillCard({
                     })}
                     initial={{ width: 0 }}
                     animate={{ width: `${skill.level}%` }}
-                    transition={{ 
-                      duration: 1, 
+                    transition={{
+                      duration: 1,
                       delay: 0.2 + (index * 0.1),
                       ease: [0.16, 0.77, 0.47, 0.97]
                     }}
@@ -91,7 +91,7 @@ export function SkillCard({
               </div>
             ))}
           </div>
-          <motion.div 
+          <motion.div
             className={cn(
               "absolute bottom-4 text-xs font-medium",
               isHovered ? textColor : mutedTextColor,
@@ -99,10 +99,10 @@ export function SkillCard({
             )}
           >
             Tap for details
-            <motion.span 
+            <motion.span
               className="ml-1"
               animate={{ x: isHovered ? 4 : 0 }}
-              transition={{ 
+              transition={{
                 repeat: isHovered ? Infinity : 0,
                 repeatType: "reverse",
                 duration: 0.8
@@ -144,8 +144,8 @@ export function SkillCard({
                     })}
                     initial={{ width: 0 }}
                     animate={{ width: `${skill.level}%` }}
-                    transition={{ 
-                      duration: 1, 
+                    transition={{
+                      duration: 1,
                       delay: 0.1 + (index * 0.05),
                       ease: [0.16, 0.77, 0.47, 0.97]
                     }}
@@ -154,7 +154,7 @@ export function SkillCard({
               </div>
             ))}
           </div>
-          <motion.div 
+          <motion.div
             className={cn(
               "absolute bottom-4 text-xs font-medium cursor-pointer",
               "text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300",

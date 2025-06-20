@@ -16,7 +16,7 @@ export default function ContactPage() {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      
+
       if (savedTheme) {
         setTheme(savedTheme)
       } else if (systemPrefersDark) {
@@ -30,7 +30,7 @@ export default function ContactPage() {
     if (mounted) {
       document.documentElement.classList.remove("light", "dark")
       document.documentElement.classList.add(theme)
-      
+
       // Save theme preference
       if (typeof window !== 'undefined') {
         localStorage.setItem('theme', theme)
@@ -105,7 +105,7 @@ export default function ContactPage() {
         color: theme === 'dark' ? 'var(--color-light-silver)' : 'var(--color-gunmetal)'
       }}>
         {/* Warp Background */}
-        <WarpBackground 
+        <WarpBackground
           perspective={1000}
           beamsPerSide={5}
           beamSize={5}
@@ -117,12 +117,12 @@ export default function ContactPage() {
         >
           <div className="absolute inset-0" />
         </WarpBackground>
-        
+
         {/* Gradient Overlay */}
         <div className="absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-orange-accent)]/5 to-transparent" />
         </div>
-        
+
         <div className="relative z-10">
           <ContactSection theme={theme} />
         </div>

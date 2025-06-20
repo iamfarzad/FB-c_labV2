@@ -24,7 +24,7 @@ export default function AboutPage() {
 
   return (
     <Layout theme={theme} onThemeToggle={toggleTheme}>
-      <div 
+      <div
         className="min-h-screen"
         style={{
           backgroundColor: "var(--bg-primary)",
@@ -34,22 +34,22 @@ export default function AboutPage() {
       >
         {/* Hero Section */}
         <HeroSection theme={theme} />
-        
+
         {/* Story Section */}
         <StorySection theme={theme} />
-        
+
         {/* Why I Do This Work Section */}
         <WhySection theme={theme} />
-        
+
         {/* Skills Section */}
         <SkillsSection theme={theme} />
-        
+
         {/* Projects Section */}
         <ProjectsSection theme={theme} />
-        
+
         {/* Testimonials Section */}
         <TestimonialsSection theme={theme} />
-        
+
         {/* CTA Section */}
         <CtaSection theme={theme} />
       </div>

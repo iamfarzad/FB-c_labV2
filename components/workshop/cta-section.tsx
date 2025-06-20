@@ -52,7 +52,7 @@ export const CTASection: React.FC<CTASectionProps> = ({ theme }) => {
             <p className={`text-xl ${mutedTextColor} mb-8`}>
               Join our next workshop and gain practical AI skills you can apply immediately to boost your productivity and business results.
             </p>
-            
+
             <div className="space-y-6 mb-8">
               {workshopDetails.map((item, index) => (
                 <div key={index} className="flex items-center">
@@ -66,10 +66,10 @@ export const CTASection: React.FC<CTASectionProps> = ({ theme }) => {
                 </div>
               ))}
             </div>
-            
+
             <div className="space-y-4">
-              <Link 
-                href="#pricing" 
+              <Link
+                href="#pricing"
                 className="group relative overflow-hidden w-full flex items-center justify-center px-8 py-4 rounded-none bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] text-white font-semibold text-lg shadow-2xl hover:shadow-[var(--color-orange-accent)]/25 transition-all duration-300 transform hover:scale-[1.02]"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-orange-accent-light)] to-[var(--color-orange-accent)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -81,7 +81,7 @@ export const CTASection: React.FC<CTASectionProps> = ({ theme }) => {
               </p>
             </div>
           </div>
-          
+
           <div className={`${cardBg} ${cardBorder} border rounded-2xl p-8`}>
             <h3 className={`text-2xl font-bold ${textColor} mb-6`}>What's Included</h3>
             <ul className="space-y-4 mb-8">
@@ -103,7 +103,7 @@ export const CTASection: React.FC<CTASectionProps> = ({ theme }) => {
                 </li>
               ))}
             </ul>
-            
+
             <div className="p-6 rounded-xl bg-gradient-to-br from-[var(--color-orange-accent)]/5 to-[var(--color-orange-accent-light)]/10 border border-[var(--glass-border)]">
               <h4 className={`font-bold ${textColor} mb-3 flex items-center`}>
                 <Zap className="h-5 w-5 text-[var(--color-orange-accent)] mr-2" />
@@ -132,13 +132,13 @@ export const CTASection: React.FC<CTASectionProps> = ({ theme }) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-8 text-center">
               <p className={`text-sm ${mutedTextColor} mb-4`}>
                 Have questions about the workshop?
               </p>
-              <a 
-                href="#contact" 
+              <a
+                href="#contact"
                 className="inline-flex items-center text-sm font-medium text-[var(--color-orange-accent)] hover:text-[var(--color-orange-accent-light)] transition-colors"
               >
                 Contact us for more information
@@ -147,7 +147,7 @@ export const CTASection: React.FC<CTASectionProps> = ({ theme }) => {
             </div>
           </div>
         </div>
-        
+
         <div className="mt-16 pt-12 border-t border-[var(--glass-border)]">
           <div className="max-w-4xl mx-auto text-center">
             <h3 className={`text-2xl font-bold ${textColor} mb-6`}>Not Sure If This Workshop Is Right For You?</h3>
@@ -155,14 +155,14 @@ export const CTASection: React.FC<CTASectionProps> = ({ theme }) => {
               Book a free 15-minute discovery call to discuss your goals and see if this workshop is the right fit.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link 
-                href="#book-call" 
+              <Link
+                href="#book-call"
                 className="inline-flex items-center justify-center px-6 py-3 rounded-none border border-[var(--color-orange-accent)] text-[var(--color-orange-accent)] hover:bg-[var(--color-orange-accent)]/10 transition-colors"
               >
                 Book a Free Call
               </Link>
-              <Link 
-                href="/faq" 
+              <Link
+                href="/faq"
                 className="inline-flex items-center justify-center px-6 py-3 rounded-none border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors"
               >
                 View FAQ

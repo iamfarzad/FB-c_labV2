@@ -39,7 +39,7 @@ export const ThreeDHoverCard = ({
           }}
         >
           <div className="relative z-10 h-full flex flex-col">
-            <motion.h3 
+            <motion.h3
               className="text-2xl font-bold mb-4 text-white"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -51,7 +51,7 @@ export const ThreeDHoverCard = ({
             >
               {title}
             </motion.h3>
-            <motion.p 
+            <motion.p
               className="text-gray-300 mb-6 flex-1"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -79,8 +79,8 @@ export const ThreeDHoverCard = ({
               </motion.div>
             )}
           </div>
-          
-          <motion.div 
+
+          <motion.div
             className="absolute inset-0 -z-10 rounded-2xl overflow-hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: isHovered ? 0.05 : 0.02 }}
@@ -88,8 +88,8 @@ export const ThreeDHoverCard = ({
           >
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-amber-500/20" />
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             className="absolute inset-0 rounded-2xl pointer-events-none"
             style={{
               background: 'linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03))',

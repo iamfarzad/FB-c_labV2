@@ -2,18 +2,18 @@
 
 import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { 
-  ArrowRight, 
-  Bot, 
-  CheckCircle, 
-  GraduationCap, 
-  Zap, 
-  Sparkles, 
-  Brain, 
-  Rocket, 
-  Code, 
-  Shield, 
-  Clock, 
+import {
+  ArrowRight,
+  Bot,
+  CheckCircle,
+  GraduationCap,
+  Zap,
+  Sparkles,
+  Brain,
+  Rocket,
+  Code,
+  Shield,
+  Clock,
   BarChart3,
   Cpu,
   BookOpen,
@@ -32,7 +32,7 @@ export const WhatIOffer: React.FC<WhatIOfferProps> = ({ theme }) => {
   const cardBorder = theme === "dark" ? "border-[var(--glass-border)]" : "border-gray-200"
 
   const [activeTab, setActiveTab] = useState(0);
-  
+
   const services = [
     {
       icon: Cpu,
@@ -76,7 +76,7 @@ export const WhatIOffer: React.FC<WhatIOfferProps> = ({ theme }) => {
     <section className="py-24 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -86,8 +86,8 @@ export const WhatIOffer: React.FC<WhatIOfferProps> = ({ theme }) => {
             <Zap className="h-5 w-5 text-[var(--color-orange-accent)] mr-2 animate-pulse" />
             <span className="text-sm font-tech-mono text-[var(--color-orange-accent)] uppercase tracking-wide">What I Offer</span>
           </motion.div>
-          
-          <motion.h2 
+
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -96,8 +96,8 @@ export const WhatIOffer: React.FC<WhatIOfferProps> = ({ theme }) => {
           >
             AI Solutions That <span className="gradient-text">Deliver Results</span>
           </motion.h2>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -109,7 +109,7 @@ export const WhatIOffer: React.FC<WhatIOfferProps> = ({ theme }) => {
         </div>
 
         {/* Tab Navigation */}
-        <motion.div 
+        <motion.div
           className="flex flex-wrap justify-center gap-3 mb-12"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -127,8 +127,8 @@ export const WhatIOffer: React.FC<WhatIOfferProps> = ({ theme }) => {
               }`}
             >
               <div className="flex items-center space-x-2">
-                {React.createElement(service.icon, { 
-                  className: `h-4 w-4 ${activeTab === index ? 'text-white' : 'text-[var(--color-orange-accent)]'}` 
+                {React.createElement(service.icon, {
+                  className: `h-4 w-4 ${activeTab === index ? 'text-white' : 'text-[var(--color-orange-accent)]'}`
                 })}
                 <span>{service.title}</span>
               </div>
@@ -149,32 +149,32 @@ export const WhatIOffer: React.FC<WhatIOfferProps> = ({ theme }) => {
             >
               {/* Background gradient */}
               <div className={`absolute -right-20 -top-20 w-96 h-96 rounded-full bg-gradient-to-br ${services[activeTab].color} opacity-10 blur-3xl -z-10`}></div>
-              
+
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div>
                   <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${services[activeTab].color} text-white mb-6 shadow-lg`}>
-                    {React.createElement(services[activeTab].icon, { 
+                    {React.createElement(services[activeTab].icon, {
                       className: "h-8 w-8",
-                      strokeWidth: 1.5 
+                      strokeWidth: 1.5
                     })}
                   </div>
-                  
+
                   <h3 className={`text-3xl font-bold ${textColor} mb-4`}>
                     {services[activeTab].title}
                   </h3>
-                  
+
                   <p className={`text-xl font-medium ${textColor} mb-6`}>
                     {services[activeTab].tagline}
                   </p>
-                  
+
                   <p className={`${mutedTextColor} mb-8 leading-relaxed`}>
                     {services[activeTab].description}
                   </p>
-                  
+
                   <ul className="space-y-4 mb-8">
                     {services[activeTab].items.map((item, i) => (
-                      <motion.li 
-                        key={i} 
+                      <motion.li
+                        key={i}
                         className="flex items-start group"
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -187,10 +187,10 @@ export const WhatIOffer: React.FC<WhatIOfferProps> = ({ theme }) => {
                       </motion.li>
                     ))}
                   </ul>
-                  
+
                   <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                    <Link 
-                      href="/consulting" 
+                    <Link
+                      href="/consulting"
                       className="inline-flex items-center justify-center px-8 py-3.5 rounded-full font-medium text-white bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] hover:shadow-lg hover:shadow-[var(--color-orange-accent)]/20 transition-all duration-300 group"
                     >
                       Learn more
@@ -213,13 +213,13 @@ export const WhatIOffer: React.FC<WhatIOfferProps> = ({ theme }) => {
                           terminal ~ {services[activeTab].title.toLowerCase().replace(/\s+/g, '-')}
                         </div>
                       </div>
-                      
+
                       {/* Terminal content */}
                       <div className="p-4 h-full font-mono text-sm">
                         <div className="text-green-500 dark:text-green-400 mb-4">
                           $ <span className="text-gray-800 dark:text-gray-200">analyze --service {services[activeTab].title.toLowerCase()}</span>
                         </div>
-                        
+
                         <div className="text-cyan-600 dark:text-cyan-400 mb-4">
                           <div className="flex items-start">
                             <span className="text-gray-500 dark:text-gray-400 mr-2">{'>'}</span>
@@ -230,7 +230,7 @@ export const WhatIOffer: React.FC<WhatIOfferProps> = ({ theme }) => {
                             <span>Found {services[activeTab].items.length} key benefits</span>
                           </div>
                         </div>
-                        
+
                         <div className="space-y-3 mt-6">
                           {services[activeTab].items.map((item, i) => (
                             <div key={i} className="flex items-start">
@@ -239,7 +239,7 @@ export const WhatIOffer: React.FC<WhatIOfferProps> = ({ theme }) => {
                             </div>
                           ))}
                         </div>
-                        
+
                         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                           <div className="text-purple-500 dark:text-purple-400">
                             $ <span className="text-gray-800 dark:text-gray-200">business_impact --calculate</span>
@@ -250,7 +250,7 @@ export const WhatIOffer: React.FC<WhatIOfferProps> = ({ theme }) => {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Subtle gradient overlay */}
                     <div className={`absolute -right-20 -bottom-20 w-64 h-64 rounded-full bg-gradient-to-br ${services[activeTab].color} opacity-5 dark:opacity-10 blur-3xl -z-10`}></div>
                   </div>

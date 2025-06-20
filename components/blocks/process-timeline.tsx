@@ -67,7 +67,7 @@ export const ContainerScroll = ({
   const { scrollYProgress } = useScroll({
     target: scrollRef,
   })
-  
+
   return (
     <ContainerScrollContext.Provider value={{ scrollYProgress }}>
       <div
@@ -129,7 +129,7 @@ export const ProcessCard: React.FC<ProcessCardProps> = ({
 
   // Use window.innerWidth in a safe way for SSR
   const [innerWidth, setInnerWidth] = React.useState(0)
-  
+
   React.useEffect(() => {
     setInnerWidth(window.innerWidth)
     const handleResize = () => setInnerWidth(window.innerWidth)
@@ -142,7 +142,7 @@ export const ProcessCard: React.FC<ProcessCardProps> = ({
     [start, end],
     [innerWidth, -((width ?? 0) * index) + 64 * index]
   )
-  
+
   return (
     <motion.div
       ref={ref}

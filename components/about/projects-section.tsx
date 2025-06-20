@@ -83,7 +83,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ theme }) => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project, index) => (
-            <div 
+            <div
               key={index}
               className={`${cardBg} ${cardBorder} border rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
             >
@@ -97,10 +97,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ theme }) => {
               </div>
               <div className="p-6">
                 <p className={`${mutedTextColor} mb-4`}>{project.description}</p>
-                
+
                 <div className="flex flex-wrap gap-2 mb-4">
                   {project.technologies.map((tech, techIndex) => (
-                    <span 
+                    <span
                       key={techIndex}
                       className="text-xs px-3 py-1 rounded-full bg-[var(--color-orange-accent)]/10 text-[var(--color-orange-accent)]"
                     >
@@ -108,20 +108,20 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ theme }) => {
                     </span>
                   ))}
                 </div>
-                
+
                 <div className="flex items-center justify-between pt-4 border-t border-[var(--glass-border)]">
-                  <a 
-                    href={project.link} 
-                    target="_blank" 
+                  <a
+                    href={project.link}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-sm font-medium text-[var(--color-orange-accent)] hover:text-[var(--color-orange-accent-light)]"
                   >
                     <ExternalLink className="h-4 w-4 mr-1" />
                     Live Demo
                   </a>
-                  <a 
-                    href={project.github} 
-                    target="_blank" 
+                  <a
+                    href={project.github}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-sm font-medium text-[var(--color-orange-accent)] hover:text-[var(--color-orange-accent-light)]"
                   >
@@ -135,8 +135,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ theme }) => {
         </div>
 
         <div className="text-center mt-16">
-          <Link 
-            href="/contact" 
+          <Link
+            href="/contact"
             className="group inline-flex items-center px-6 py-3 rounded-none bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] text-white font-semibold hover:shadow-lg hover:shadow-[var(--color-orange-accent)]/25 transition-all duration-300 transform hover:scale-105"
           >
             <span>Start Your Project</span>

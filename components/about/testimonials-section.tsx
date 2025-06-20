@@ -76,23 +76,23 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ theme 
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {testimonials.map((testimonial, index) => (
-            <div 
+            <div
               key={index}
               className={`${cardBg} ${cardBorder} border rounded-2xl p-6 h-full flex flex-col`}
             >
               <div className="mb-4 flex">
                 {[...Array(5)].map((_, i) => (
-                  <Star 
+                  <Star
                     key={i}
                     className={`h-5 w-5 ${i < testimonial.stars ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
                   />
                 ))}
               </div>
-              
+
               <blockquote className="flex-grow">
                 <p className={`${mutedTextColor} italic mb-6`}>"{testimonial.quote}"</p>
               </blockquote>
-              
+
               <div className="flex items-center pt-4 border-t border-[var(--glass-border)]">
                 <div className="flex-shrink-0 mr-4">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] flex items-center justify-center text-white font-bold">

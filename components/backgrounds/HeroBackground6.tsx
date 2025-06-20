@@ -27,7 +27,7 @@ export default function HeroBackground6() {
     camera.position.set(0, 0, 10);
 
     // Clean renderer
-    const renderer = new THREE.WebGLRenderer({ 
+    const renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true
     });
@@ -45,11 +45,11 @@ export default function HeroBackground6() {
       // Varying line lengths (simulating code)
       const lineLength = 2 + Math.random() * 8;
       const geometry = new THREE.PlaneGeometry(lineLength, 0.3);
-      
+
       // Color based on line type
       let color, opacity;
       const lineType = Math.random();
-      
+
       if (lineType < 0.1) {
         color = 0xff5b04; // Orange for important lines (errors/warnings)
         opacity = 0.9;
@@ -68,19 +68,19 @@ export default function HeroBackground6() {
       });
 
       const line = new THREE.Mesh(geometry, material);
-      
+
       // Position lines vertically
       line.position.set(
         -5 + Math.random() * 2, // Slight horizontal offset
         (lineCount / 2 - i) * lineHeight,
         0
       );
-      
+
       // Store properties
       (line as any).originalOpacity = opacity;
       (line as any).scrollSpeed = 0.02 + Math.random() * 0.03;
       (line as any).originalY = line.position.y;
-      
+
       scene.add(line);
       textLines.push(line);
     }
@@ -98,7 +98,7 @@ export default function HeroBackground6() {
 
     // Terminal border/frame
     const borderLines: THREE.Line[] = [];
-    
+
     // Create simple border
     const borderPoints = [
       [new THREE.Vector3(-12, 12, 0), new THREE.Vector3(12, 12, 0)], // Top
@@ -106,7 +106,7 @@ export default function HeroBackground6() {
       [new THREE.Vector3(12, -12, 0), new THREE.Vector3(-12, -12, 0)], // Bottom
       [new THREE.Vector3(-12, -12, 0), new THREE.Vector3(-12, 12, 0)] // Left
     ];
-    
+
     borderPoints.forEach(points => {
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
       const material = new THREE.LineBasicMaterial({
@@ -114,7 +114,7 @@ export default function HeroBackground6() {
         transparent: true,
         opacity: 0.3
       });
-      
+
       const line = new THREE.Line(geometry, material);
       scene.add(line);
       borderLines.push(line);
@@ -135,7 +135,7 @@ export default function HeroBackground6() {
     // Terminal-like animation
     const animate = () => {
       animationRef.current = requestAnimationFrame(animate);
-      
+
       time += 0.016;
 
       // Smooth mouse interpolation
@@ -145,22 +145,22 @@ export default function HeroBackground6() {
       // Animate text lines (scrolling effect)
       textLines.forEach((line, index) => {
         const props = line as any;
-        
+
         // Scroll up
         line.position.y += props.scrollSpeed;
-        
+
         // Reset when off screen
         if (line.position.y > 15) {
           line.position.y = -15;
-          
+
           // Randomize line properties
           const lineLength = 2 + Math.random() * 8;
           line.scale.x = lineLength / 10; // Adjust scale instead of geometry
-          
+
           // Update color
           const lineType = Math.random();
           const material = line.material as THREE.MeshBasicMaterial;
-          
+
           if (lineType < 0.1) {
             material.color.setHex(0xff5b04);
             props.originalOpacity = 0.9;
@@ -172,7 +172,7 @@ export default function HeroBackground6() {
             props.originalOpacity = 0.8;
           }
         }
-        
+
         // Typing effect (fade in as lines appear)
         const distanceFromBottom = line.position.y + 15;
         if (distanceFromBottom < 2) {
@@ -181,11 +181,11 @@ export default function HeroBackground6() {
         } else {
           (line.material as THREE.MeshBasicMaterial).opacity = props.originalOpacity;
         }
-        
+
         // Mouse proximity effect
         const mouseWorldY = mouse.y * (height / 50);
         const distanceToMouse = Math.abs(line.position.y - mouseWorldY);
-        
+
         if (distanceToMouse < 3) {
           const influence = (3 - distanceToMouse) / 3;
           (line.material as THREE.MeshBasicMaterial).opacity = Math.min(1, props.originalOpacity + influence * 0.3);
@@ -209,7 +209,7 @@ export default function HeroBackground6() {
     const handleResize = () => {
       const width = mount.clientWidth;
       const height = mount.clientHeight;
-      
+
       camera.left = width / -50;
       camera.right = width / 50;
       camera.top = height / 50;
@@ -231,27 +231,27 @@ export default function HeroBackground6() {
       if (mount && renderer.domElement) {
         mount.removeChild(renderer.domElement);
       }
-      
+
       // Cleanup
       [...textLines, cursor].forEach(element => {
         element.geometry.dispose();
         (element.material as THREE.Material).dispose();
       });
-      
+
       borderLines.forEach(line => {
         line.geometry.dispose();
         (line.material as THREE.Material).dispose();
       });
-      
+
       renderer.dispose();
     };
   }, []);
 
   return (
-    <div 
-      ref={mountRef} 
+    <div
+      ref={mountRef}
       className="w-full h-full relative overflow-hidden"
-      style={{ 
+      style={{
         minHeight: '400px',
         background: 'linear-gradient(135deg, #000000 0%, #0a0a0a 100%)'
       }}

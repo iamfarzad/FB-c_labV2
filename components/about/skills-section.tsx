@@ -111,8 +111,8 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ theme }) => {
 
   const item = {
     hidden: { opacity: 0, y: 20 },
-    show: { 
-      opacity: 1, 
+    show: {
+      opacity: 1,
       y: 0,
       transition: {
         duration: 0.6,
@@ -129,16 +129,16 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ theme }) => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div 
+        <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ 
-            opacity: 1, 
+          whileInView={{
+            opacity: 1,
             y: 0,
-            transition: { 
+            transition: {
               duration: 0.6,
               ease: [0.16, 0.77, 0.47, 0.97]
-            } 
+            }
           }}
           viewport={{ once: true, margin: "-10%" }}
         >
@@ -154,7 +154,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ theme }) => {
           </p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           variants={container}
           initial="hidden"
@@ -163,7 +163,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ theme }) => {
         >
           {skillCategories.map((category, index) => (
             <motion.div key={index} variants={item} className="h-full">
-              <SkillCard 
+              <SkillCard
                 icon={category.icon}
                 title={category.title}
                 description={category.description}
@@ -176,17 +176,17 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ theme }) => {
           ))}
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="glassmorphism rounded-2xl p-8 mt-16 overflow-hidden relative group"
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ 
-            opacity: 1, 
+          whileInView={{
+            opacity: 1,
             y: 0,
-            transition: { 
+            transition: {
               duration: 0.6,
               delay: 0.2,
               ease: [0.16, 0.77, 0.47, 0.97]
-            } 
+            }
           }}
           viewport={{ once: true, margin: "-10%" }}
         >
@@ -194,7 +194,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ theme }) => {
           <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
             <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-orange-accent)]/5 to-transparent" />
           </div>
-          
+
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
               <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] text-[var(--color-text-on-orange)] mb-4">
@@ -217,18 +217,18 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ theme }) => {
                 { name: "Technical Writing", level: 80 },
                 { name: "Mentoring", level: 85 }
               ].map((skill, index) => (
-                <motion.div 
+                <motion.div
                   key={index}
                   className="group/skill"
                   initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ 
-                    opacity: 1, 
+                  whileInView={{
+                    opacity: 1,
                     y: 0,
-                    transition: { 
+                    transition: {
                       duration: 0.5,
                       delay: 0.1 * (index % 2) + 0.1 * Math.floor(index / 2),
                       ease: [0.16, 0.77, 0.47, 0.97]
-                    } 
+                    }
                   }}
                   viewport={{ once: true, margin: "-10%" }}
                 >
@@ -241,16 +241,16 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ theme }) => {
                     </span>
                   </div>
                   <div className="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
-                    <motion.div 
+                    <motion.div
                       className="h-full rounded-full bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)]"
                       initial={{ width: 0 }}
-                      whileInView={{ 
+                      whileInView={{
                         width: `${skill.level}%`,
-                        transition: { 
+                        transition: {
                           duration: 1,
                           delay: 0.1 * (index % 2) + 0.1 * Math.floor(index / 2),
                           ease: [0.16, 0.77, 0.47, 0.97]
-                        } 
+                        }
                       }}
                       viewport={{ once: true, margin: "-10%" }}
                     />
@@ -259,7 +259,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ theme }) => {
               ))}
             </div>
           </div>
-          
+
           {/* Decorative elements */}
           <div className="absolute -right-20 -bottom-20 w-64 h-64 rounded-full bg-gradient-to-br from-[var(--color-orange-accent)]/5 to-transparent blur-3xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         </motion.div>

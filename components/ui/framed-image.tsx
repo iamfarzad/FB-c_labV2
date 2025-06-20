@@ -72,8 +72,8 @@ export function FramedImage({
 
   const frameVariants = {
     initial: { opacity: 0, y: 20 },
-    animate: { 
-      opacity: 1, 
+    animate: {
+      opacity: 1,
       y: 0,
       transition: { duration: 0.5 }
     },
@@ -116,7 +116,7 @@ export function FramedImage({
             onLoad={() => setIsLoading(false)}
             onError={() => setIsLoading(false)}
           />
-          
+
           {/* Loading overlay */}
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-100/50">
@@ -126,13 +126,13 @@ export function FramedImage({
 
           {/* Interactive controls */}
           {interactive && (isHovered || isClicked) && (
-            <motion.div 
+            <motion.div
               className="absolute inset-0 bg-black/20 flex items-center justify-center gap-4 opacity-0 hover:opacity-100 transition-opacity duration-300"
               initial={{ opacity: 0 }}
               animate={{ opacity: isHovered || isClicked ? 1 : 0 }}
             >
               {enableDownload && (
-                <button 
+                <button
                   onClick={(e) => {
                     e.stopPropagation()
                     handleDownload()
@@ -144,7 +144,7 @@ export function FramedImage({
                 </button>
               )}
               {enableFullscreen && (
-                <button 
+                <button
                   onClick={(e) => {
                     e.stopPropagation()
                     toggleFullscreen()
@@ -168,14 +168,14 @@ export function FramedImage({
       {/* Fullscreen modal */}
       <AnimatePresence>
         {isFullscreen && (
-          <motion.div 
+          <motion.div
             className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsFullscreen(false)}
           >
-            <button 
+            <button
               className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
               onClick={(e) => {
                 e.stopPropagation()
@@ -185,24 +185,24 @@ export function FramedImage({
             >
               <X className="w-8 h-8" />
             </button>
-            
+
             <div className="relative max-w-[90vw] max-h-[90vh]" onClick={e => e.stopPropagation()}>
-              <img 
-                src={src} 
-                alt={alt} 
+              <img
+                src={src}
+                alt={alt}
                 className="max-h-[90vh] max-w-full object-contain"
                 style={{ transform: `rotate(${rotation}deg)` }}
               />
-              
+
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 bg-black/70 p-2 rounded-full">
-                <button 
+                <button
                   onClick={() => setRotation(prev => (prev + 90) % 360)}
                   className="p-2 bg-white/20 hover:bg-white/40 rounded-full transition-colors"
                   aria-label="Rotate image"
                 >
                   <RotateCw className="w-6 h-6 text-white" />
                 </button>
-                <button 
+                <button
                   onClick={handleDownload}
                   className="p-2 bg-white/20 hover:bg-white/40 rounded-full transition-colors"
                   aria-label="Download image"

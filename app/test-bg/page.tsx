@@ -7,10 +7,10 @@ export default function TestBg() {
       <p style={{ color: '#666', fontSize: '1.2rem' }}>
         This is a simple test page to check if routing works.
       </p>
-      <div style={{ 
-        width: '100%', 
-        height: '300px', 
-        background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4)', 
+      <div style={{
+        width: '100%',
+        height: '300px',
+        background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4)',
         marginTop: '20px',
         borderRadius: '8px',
         display: 'flex',
@@ -24,4 +24,4 @@ export default function TestBg() {
       </div>
     </div>
   );
-} 
+}

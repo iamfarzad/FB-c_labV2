@@ -22,18 +22,18 @@ export const FinalCTA: React.FC<FinalCTAProps> = ({ theme }) => {
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] text-white mb-8 mx-auto">
               <Zap className="h-8 w-8" />
             </div>
-            
+
             <h2 className={`text-4xl sm:text-5xl font-bold ${textColor} mb-6`}>
               Ready to See What AI Can <span className="gradient-text">Really</span> Do?
             </h2>
-            
+
             <p className={`text-xl ${mutedTextColor} mb-8 max-w-2xl mx-auto`}>
               Let's identify your best use case and get started with AI that delivers business value—today.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link 
-                href="/contact" 
+              <Link
+                href="/contact"
                 className="group relative overflow-hidden px-8 py-4 rounded-none bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] text-white font-semibold text-lg shadow-2xl hover:shadow-[var(--color-orange-accent)]/25 transition-all duration-300 transform hover:scale-105"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-orange-accent-light)] to-[var(--color-orange-accent)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -43,9 +43,9 @@ export const FinalCTA: React.FC<FinalCTAProps> = ({ theme }) => {
                   <ArrowRight className="ml-1 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </div>
               </Link>
-              
-              <Link 
-                href="/ai-demo" 
+
+              <Link
+                href="/ai-demo"
                 className="group flex items-center text-[var(--color-orange-accent)] hover:text-[var(--color-orange-accent-light)] font-medium text-lg"
               >
                 <span>Try a Free Demo</span>

@@ -33,7 +33,7 @@ async function testChatAPI() {
     if (reader) {
       const decoder = new TextDecoder();
       let responseText = '';
-      
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -41,7 +41,7 @@ async function testChatAPI() {
         responseText += chunk;
         console.log('Received chunk:', chunk);
       }
-      
+
       console.log('\nFull response:', responseText);
     } else {
       const responseText = await response.text();

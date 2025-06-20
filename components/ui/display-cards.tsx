@@ -47,8 +47,8 @@ function DisplayCard({
           </span>
           <h3 className={cn(
             "text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r",
-            isDark 
-              ? "from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)]" 
+            isDark
+              ? "from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)]"
               : "from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)]",
             titleClassName
           )}>

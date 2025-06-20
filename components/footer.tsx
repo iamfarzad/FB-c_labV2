@@ -172,10 +172,10 @@ export const Footer: React.FC<FooterProps> = ({ theme }) => {
             <ul className="space-y-3">
               {footerLinks.legal.map((link) => (
                 <li key={link.name}>
-                  <LegalDialog 
+                  <LegalDialog
                     title={link.name}
                     trigger={
-                      <button 
+                      <button
                         className={`text-sm ${mutedTextColor} hover:text-[var(--color-orange-accent)] transition-colors duration-200 text-left`}
                       >
                         {link.name}

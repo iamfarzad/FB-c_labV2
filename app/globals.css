@@ -53,17 +53,17 @@ a {
   --gradient-orange: linear-gradient(135deg, #ff5b04 0%, #ff8f6a 100%);
   --border-radius-minimal: 4px;
   --border-radius-medium: 8px;
-  
+
   /* Text Colors */
   --text-primary: #1a1a1a;
   --text-secondary: #4a4a4a;
-  
+
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   --glass-backdrop: blur(10px);
-  
+
   /* Shadcn/UI Design Tokens - Light Mode */
   --background: 0 0% 100%;
   --foreground: 0 0% 3.9%;
@@ -98,7 +98,7 @@ a {
   --sidebar-accent-foreground: 0 0% 9%;
   --sidebar-border: 0 0% 89.8%;
   --sidebar-ring: 0 0% 3.9%;
-  
+
   /* Dark Mode Variables */
   --dark-text-primary: #f5f5f5;
   --dark-text-secondary: #b0b0b0;
@@ -251,7 +251,7 @@ a {
   .chat-message {
     @apply mx-2;
   }
-  
+
   .chat-input-wrapper {
     @apply px-2;
   }
@@ -656,19 +656,19 @@ a {
   .process-section {
     padding: 60px 0;
   }
-  
+
   .process-title {
     font-size: 2rem;
   }
-  
+
   .process-step {
     padding-left: 60px;
   }
-  
+
   .process-step-content {
     padding: 24px;
   }
-  
+
   .process-benefits-list {
     grid-template-columns: 1fr;
   }
@@ -678,13 +678,13 @@ a {
   .process-step {
     padding-left: 50px;
   }
-  
+
   .process-step-icon {
     width: 40px;
     height: 40px;
     font-size: 1.2rem;
   }
-  
+
   .process-step-title {
     font-size: 1.3rem;
   }

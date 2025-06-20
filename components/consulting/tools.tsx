@@ -72,14 +72,14 @@ export const Tools: React.FC<ToolsProps> = ({ theme }) => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {toolCategories.map((category, index) => (
-            <div 
+            <div
               key={index}
               className={`${cardBg} ${cardBorder} border rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1`}
               style={{
                 boxShadow: theme === 'dark' ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' : '0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'
               }}
             >
-              <div 
+              <div
                 className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4"
                 style={{
                   background: 'linear-gradient(135deg, var(--color-orange-accent), var(--color-orange-accent-light))'
@@ -98,7 +98,7 @@ export const Tools: React.FC<ToolsProps> = ({ theme }) => {
               </ul>
             </div>
           ))}
-          
+
           <div className={`${cardBg} ${cardBorder} border rounded-2xl p-6 md:col-span-2 lg:col-span-1`}>
             <div className="h-full flex flex-col">
               <h3 className={`text-xl font-bold ${textColor} mb-4`}>Custom Solutions</h3>
@@ -112,7 +112,7 @@ export const Tools: React.FC<ToolsProps> = ({ theme }) => {
                 <div className="flex items-center">
                   <div className="flex -space-x-2 mr-3">
                     {[1, 2, 3].map((i) => (
-                      <div 
+                      <div
                         key={i}
                         className="w-8 h-8 rounded-full"
                         style={{

@@ -57,10 +57,10 @@ const HeroEnhanced: React.FC<HeroEnhancedProps> = ({ theme, onStartChat }) => {
   return (
     <div className="relative py-20 md:py-32 overflow-hidden">
       {/* Animated background elements */}
-      <motion.div 
+      <motion.div
         className="absolute inset-0 -z-10 overflow-hidden"
         style={{
-          background: theme === 'dark' 
+          background: theme === 'dark'
             ? 'radial-gradient(circle at 70% 30%, rgba(17, 24, 39, 0.9) 0%, rgba(17, 24, 39, 0.98) 100%)'
             : 'radial-gradient(circle at 70% 30%, rgba(249, 250, 251, 0.9) 0%, rgba(255, 255, 255, 0.98) 100%)',
         }}
@@ -76,7 +76,7 @@ const HeroEnhanced: React.FC<HeroEnhancedProps> = ({ theme, onStartChat }) => {
               top: `${orb.y}%`,
               filter: `blur(${orb.blur}px)`,
               opacity: orb.opacity,
-              background: theme === 'dark' 
+              background: theme === 'dark'
                 ? `radial-gradient(circle, rgba(255,255,255,${orb.opacity * 1.5}) 0%, transparent 70%)`
                 : `radial-gradient(circle, rgba(59, 130, 246,${orb.opacity * 1.5}) 0%, transparent 70%)`,
               willChange: 'transform, opacity',
@@ -108,7 +108,7 @@ const HeroEnhanced: React.FC<HeroEnhancedProps> = ({ theme, onStartChat }) => {
             className="space-y-6 relative z-20"
           >
             {/* Enhanced Badge with Glass Effect */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.5 }}
@@ -124,7 +124,7 @@ const HeroEnhanced: React.FC<HeroEnhancedProps> = ({ theme, onStartChat }) => {
             </motion.div>
 
             {/* Enhanced Main Headline */}
-            <motion.h1 
+            <motion.h1
               className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 ${textColor}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -132,7 +132,7 @@ const HeroEnhanced: React.FC<HeroEnhancedProps> = ({ theme, onStartChat }) => {
             >
               Transform Your Business with
               <span className="relative inline-block">
-                <motion.span 
+                <motion.span
                   className="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80"
                   initial={{ backgroundPosition: '0% 50%' }}
                   animate={{ backgroundPosition: '100% 50%' }}
@@ -145,7 +145,7 @@ const HeroEnhanced: React.FC<HeroEnhancedProps> = ({ theme, onStartChat }) => {
                 >
                   {' '}AI Innovation
                 </motion.span>
-                <motion.span 
+                <motion.span
                   className="absolute bottom-2 left-0 right-0 h-3 bg-gradient-to-r from-primary/20 to-primary/10 -rotate-1 -z-0 rounded-full"
                   initial={{ scaleX: 0.8, opacity: 0.8 }}
                   animate={{ scaleX: 1, opacity: 1 }}
@@ -161,12 +161,12 @@ const HeroEnhanced: React.FC<HeroEnhancedProps> = ({ theme, onStartChat }) => {
 
             {/* Subheadline */}
             <p className={`text-lg md:text-xl ${mutedTextColor} mb-8 max-w-lg`}>
-              Leverage cutting-edge AI technology to solve complex business challenges and drive growth. 
+              Leverage cutting-edge AI technology to solve complex business challenges and drive growth.
               Our solutions are tailored to your unique needs.
             </p>
 
             {/* Enhanced CTA Buttons */}
-            <motion.div 
+            <motion.div
               className="flex flex-col sm:flex-row gap-4 mb-12"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -177,7 +177,7 @@ const HeroEnhanced: React.FC<HeroEnhancedProps> = ({ theme, onStartChat }) => {
                 whileTap={{ scale: 0.98 }}
                 className="relative group"
               >
-                <Button 
+                <Button
                   onClick={onStartChat}
                   className={cn(
                     "relative overflow-hidden px-8 py-6 text-lg font-semibold",
@@ -192,13 +192,13 @@ const HeroEnhanced: React.FC<HeroEnhancedProps> = ({ theme, onStartChat }) => {
                   <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80" />
                 </Button>
               </motion.div>
-              
+
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className={cn(
                     "px-8 py-6 text-lg font-semibold relative overflow-hidden",
                     "bg-transparent border-2 border-primary/20 hover:border-primary/40",
@@ -234,7 +234,7 @@ const HeroEnhanced: React.FC<HeroEnhancedProps> = ({ theme, onStartChat }) => {
           </motion.div>
 
           {/* Right Column - Visual with Liquid Glass Effect */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
@@ -242,7 +242,7 @@ const HeroEnhanced: React.FC<HeroEnhancedProps> = ({ theme, onStartChat }) => {
             onMouseMove={handleMouseMove}
             onMouseLeave={resetMousePosition}
           >
-            <motion.div 
+            <motion.div
               className={cn(
                 "relative rounded-2xl overflow-hidden p-0.5",
                 "before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300",
@@ -250,25 +250,25 @@ const HeroEnhanced: React.FC<HeroEnhancedProps> = ({ theme, onStartChat }) => {
               )}
               style={{
                 transform: `perspective(1000px) rotateX(${mousePosition.y}deg) rotateY(${mousePosition.x}deg)`,
-                background: theme === 'dark' 
+                background: theme === 'dark'
                   ? 'linear-gradient(135deg, rgba(31, 41, 55, 0.4), rgba(17, 24, 39, 0.4))'
                   : 'linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(243, 244, 246, 0.4))',
               }}
-              transition={{ 
-                duration: 8, 
-                repeat: Infinity, 
+              transition={{
+                duration: 8,
+                repeat: Infinity,
                 ease: "easeInOut",
               }}
             >
-              <motion.div 
+              <motion.div
                 className="absolute -bottom-2 -left-2 w-4 h-4 rounded-full bg-secondary/50 backdrop-blur-sm"
-                animate={{ 
+                animate={{
                   y: [0, -15, 0],
                   x: [0, 5, 0],
                 }}
-                transition={{ 
-                  duration: 5, 
-                  repeat: Infinity, 
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
                   repeatType: "reverse",
                   ease: "easeInOut",
                 }}

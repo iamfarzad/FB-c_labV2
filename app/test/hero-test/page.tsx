@@ -25,18 +25,18 @@ export default function HeroTestPage() {
           >
             Toggle Theme ({theme === "light" ? "🌞" : "🌙"})
           </button>
-          
+
           <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
             HeroEnhanced Component Test
           </h1>
-          
+
           <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl overflow-hidden">
-            <HeroEnhanced 
-              theme={theme} 
-              onStartChat={handleStartChat} 
+            <HeroEnhanced
+              theme={theme}
+              onStartChat={handleStartChat}
             />
           </div>
-          
+
           <div className="mt-8 p-6 bg-gray-100 dark:bg-gray-800 rounded-lg">
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
               Test Instructions

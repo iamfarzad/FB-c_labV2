@@ -45,7 +45,7 @@ export function Logo3D({ className, size = "w-10 h-10" }: Logo3DProps) {
             <Suspense fallback={null}>
               <Model />
             </Suspense>
-            <OrbitControls 
+            <OrbitControls
               enableZoom={false}
               autoRotate
               autoRotateSpeed={4}

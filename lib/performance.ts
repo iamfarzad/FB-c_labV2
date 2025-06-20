@@ -43,7 +43,7 @@ export function initPerformanceMonitoring() {
       }
 
       console.log('Performance Metrics:', metrics)
-      
+
       // Here you could send these metrics to your analytics service
       // sendToAnalytics(metrics)
     }, 0)
@@ -53,14 +53,14 @@ export function initPerformanceMonitoring() {
   const observer = new PerformanceObserver((entryList) => {
     const entries = entryList.getEntries()
     const lastEntry = entries[entries.length - 1] as PerformanceEntry & { element?: Element }
-    
+
     console.log('LCP:', lastEntry.startTime)
     console.log('LCP Element:', lastEntry.element?.tagName, lastEntry.element?.className)
-    
+
     // Here you could send LCP to your analytics service
     // sendToAnalytics({ type: 'LCP', value: lastEntry.startTime })
   })
-  
+
   observer.observe({ type: 'largest-contentful-paint', buffered: true })
 }
 
@@ -70,24 +70,24 @@ export function initPerformanceMonitoring() {
  */
 export function optimizeImages(element: HTMLElement | Document = document) {
   if (typeof window === 'undefined') return
-  
+
   const images = element.querySelectorAll<HTMLImageElement>('img:not([loading])')
-  
+
   images.forEach(img => {
     // Skip if already handled
     if (img.hasAttribute('data-optimized')) return
-    
+
     // Add loading="lazy" for below-the-fold images
     if (!isInViewport(img)) {
       img.loading = 'lazy'
       img.decoding = 'async'
     }
-    
+
     // Add width and height to prevent layout shifts
     if (!img.width || !img.height) {
       const width = img.naturalWidth || img.offsetWidth
       const height = img.naturalHeight || img.offsetHeight
-      
+
       if (width && height) {
         img.width = width
         img.height = height
@@ -96,10 +96,10 @@ export function optimizeImages(element: HTMLElement | Document = document) {
         img.style.aspectRatio = '16/9'
       }
     }
-    
+
     // Mark as optimized
     img.setAttribute('data-optimized', 'true')
-    
+
     // Handle loading state
     if (!img.complete) {
       img.style.opacity = '0'
@@ -116,7 +116,7 @@ export function optimizeImages(element: HTMLElement | Document = document) {
  */
 function isInViewport(element: HTMLElement) {
   if (typeof window === 'undefined') return false
-  
+
   const rect = element.getBoundingClientRect()
   return (
     rect.top >= 0 &&
@@ -131,16 +131,16 @@ function isInViewport(element: HTMLElement) {
  */
 export function initPerformanceOptimizations() {
   if (typeof window === 'undefined') return
-  
+
   // Preload critical resources
   preloadCriticalResources()
-  
+
   // Initialize performance monitoring
   initPerformanceMonitoring()
-  
+
   // Optimize images on initial load
   optimizeImages()
-  
+
   // Optimize images that are lazy loaded later
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
@@ -151,12 +151,12 @@ export function initPerformanceOptimizations() {
       })
     })
   })
-  
+
   observer.observe(document.body, {
     childList: true,
     subtree: true,
   })
-  
+
   // Cleanup function
   return () => {
     observer.disconnect()

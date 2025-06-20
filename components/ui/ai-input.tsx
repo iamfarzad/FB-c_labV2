@@ -77,7 +77,7 @@ export function AIInput({
         >
           <Mic className="w-4 h-4 text-black/70 dark:text-white/70" />
         </div>
-        
+
         <button
           onClick={handleReset}
           type="button"
@@ -85,8 +85,8 @@ export function AIInput({
             "absolute top-1/2 -translate-y-1/2 right-3",
             "rounded-xl bg-black/5 dark:bg-white/5 py-1 px-1",
             "transition-all duration-200",
-            inputValue 
-              ? "opacity-100 scale-100" 
+            inputValue
+              ? "opacity-100 scale-100"
               : "opacity-0 scale-95 pointer-events-none"
           )}
         >
@@ -101,8 +101,8 @@ export function AIInputDemo() {
   return (
     <div className="space-y-8 min-w-[400px]">
       <div>
-        <AIInput 
-          onSubmit={(value) => console.log('Submitted:', value)} 
+        <AIInput
+          onSubmit={(value) => console.log('Submitted:', value)}
         />
       </div>
     </div>

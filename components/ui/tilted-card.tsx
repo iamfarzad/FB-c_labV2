@@ -126,7 +126,7 @@ export const TiltedCard: FC<TiltedCardProps> = ({
 
         {displayOverlayContent && overlayContent && (
           <motion.div
-            className="absolute inset-0 z-[2] will-change-transform [transform:translateZ(30px)] 
+            className="absolute inset-0 z-[2] will-change-transform [transform:translateZ(30px)]
                        flex items-center justify-center"
           >
             {overlayContent}
@@ -136,8 +136,8 @@ export const TiltedCard: FC<TiltedCardProps> = ({
 
       {showTooltip && captionText && (
         <motion.figcaption
-          className={`pointer-events-none absolute left-0 top-0 rounded-[4px] 
-                     px-[10px] py-[4px] text-[10px] 
+          className={`pointer-events-none absolute left-0 top-0 rounded-[4px]
+                     px-[10px] py-[4px] text-[10px]
                      opacity-0 z-[3] hidden sm:block shadow-md
                      ${tooltipClassName}`}
           style={{

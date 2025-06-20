@@ -14,21 +14,21 @@ export const parseJSON = (str: string) => {
       if (jsonMatch) {
         return JSON.parse(jsonMatch[1])
       }
-      
+
       // If no code blocks, try to find JSON object boundaries
       const start = str.indexOf("{")
       const end = str.lastIndexOf("}") + 1
-      
+
       if (start === -1 || end === 0) {
         throw new Error("No JSON object found in response")
       }
-      
+
       const jsonStr = str.substring(start, end)
       return JSON.parse(jsonStr)
     } catch (error) {
       console.error("Failed to parse JSON:", error)
       console.error("Original string:", str)
-      
+
       // Return a fallback object
       return {
         spec: str.includes("spec") ? str : "Failed to generate specification from video",

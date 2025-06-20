@@ -4,7 +4,7 @@
 
 ## Hero Section
 
-**Self-Taught. Results-Focused. AI That Actually Works.**  
+**Self-Taught. Results-Focused. AI That Actually Works.**
 I’m Farzad Bayat—AI consultant, builder, and systems thinker. I don’t just talk about AI. I build, test, and deliver it.
 
 *A self-taught AI consultant who spent 10,000+ hours figuring out what works—so your business doesn’t have to.*
@@ -45,15 +45,15 @@ When I’m not working with clients, you’ll find me exploring new AI technolog
 
 ## Continuous Learning
 
-AI moves fast. I dedicate time every week to stay ahead of the latest advancements, tools, and best practices.  
+AI moves fast. I dedicate time every week to stay ahead of the latest advancements, tools, and best practices.
 I believe in learning by doing—regularly building personal projects and contributing to open source to expand my skills.
 
-**My strengths:**  
-- AI Research: 90%  
-- System Design: 85%  
-- Problem Solving: 95%  
-- Team Collaboration: 90%  
-- Technical Writing: 80%  
+**My strengths:**
+- AI Research: 90%
+- System Design: 85%
+- Problem Solving: 95%
+- Team Collaboration: 90%
+- Technical Writing: 80%
 - Mentoring: 85%
 
 ---
@@ -73,9 +73,9 @@ I believe in learning by doing—regularly building personal projects and contri
 
 ## My Approach
 
-- Focus on practical, real-world solutions  
-- Communicate clearly, without jargon  
-- Build fast, test often, iterate quickly  
+- Focus on practical, real-world solutions
+- Communicate clearly, without jargon
+- Build fast, test often, iterate quickly
 - Prioritize outcomes over theory
 
 ---
@@ -94,21 +94,16 @@ I help organizations and leaders skip the pain of AI hype and get straight to wo
 
 ## Testimonials
 
-> “Farzad helped us automate what our internal devs couldn’t deliver in months.”  
-> “He’s one of the few people who actually knows how to ship AI systems.”  
+> “Farzad helped us automate what our internal devs couldn’t deliver in months.”
+> “He’s one of the few people who actually knows how to ship AI systems.”
 > “The workshop was hands-on, no hype, and full of real insight.”
 
 ---
 
 ## Let’s Connect
 
-Ready for a direct path to working AI in your business?  
-[→ Book a Free Call(/contact)  
+Ready for a direct path to working AI in your business?
+[→ Book a Free Call(/contact)
 [→ Try My AI Assistant](/ai-demo)
 
 ---
-
-
-
-
-

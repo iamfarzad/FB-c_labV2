@@ -104,9 +104,9 @@ export function TechMarquee({ className }: { className?: string }) {
                 <div className="flex flex-col items-center justify-center space-y-2 group">
                   <div className="relative flex items-center justify-center transition-all duration-300 group-hover:scale-110">
                     {logo.href ? (
-                      <a 
-                        href={logo.href} 
-                        target="_blank" 
+                      <a
+                        href={logo.href}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="block text-center"
                       >

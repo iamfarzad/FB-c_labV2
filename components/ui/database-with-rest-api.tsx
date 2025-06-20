@@ -72,7 +72,7 @@ const DatabaseWithRestApi = ({
             keyTimes="0; 1"
           />
         </g>
-        
+
         {/* Lights */}
         <g mask="url(#db-mask-1)">
           <circle
@@ -110,7 +110,7 @@ const DatabaseWithRestApi = ({
             fill={`url(#db-blue-grad-${lightColor.replace('#', '')})`}
           />
         </g>
-        
+
         {/* Buttons */}
         <g stroke="currentColor" fill="none" strokeWidth="0.4">
           {/* First Button */}
@@ -135,7 +135,7 @@ const DatabaseWithRestApi = ({
               {badgeTexts.first}
             </text>
           </g>
-          
+
           {/* Second Button */}
           <g>
             <rect
@@ -158,7 +158,7 @@ const DatabaseWithRestApi = ({
               {badgeTexts.second}
             </text>
           </g>
-          
+
           {/* Third Button */}
           <g>
             <rect
@@ -181,7 +181,7 @@ const DatabaseWithRestApi = ({
               {badgeTexts.third}
             </text>
           </g>
-          
+
           {/* Fourth Button */}
           <g>
             <rect
@@ -205,7 +205,7 @@ const DatabaseWithRestApi = ({
             </text>
           </g>
         </g>
-        
+
         <defs>
           {/* Masks */}
           <mask id="db-mask-1">
@@ -236,7 +236,7 @@ const DatabaseWithRestApi = ({
               stroke="white"
             />
           </mask>
-          
+
           {/* Gradient */}
           <radialGradient id={`db-blue-grad-${lightColor.replace('#', '')}`} fx="1">
             <stop offset="0%" stopColor={lightColor} />
@@ -244,12 +244,12 @@ const DatabaseWithRestApi = ({
           </radialGradient>
         </defs>
       </svg>
-      
+
       {/* Main Box */}
       <div className="absolute bottom-10 flex w-full flex-col items-center">
         {/* Bottom shadow */}
         <div className="absolute -bottom-4 h-[100px] w-[62%] rounded-lg bg-accent/30" />
-        
+
         {/* Box title */}
         <div className="absolute -top-3 z-20 flex items-center justify-center rounded-lg border bg-background px-2 py-1 sm:-top-4 sm:py-1.5">
           <SparklesIcon className="size-3 text-accent-foreground" />
@@ -257,12 +257,12 @@ const DatabaseWithRestApi = ({
             {title}
           </span>
         </div>
-        
+
         {/* Box outer circle */}
         <div className="absolute -bottom-8 z-30 grid h-[60px] w-[60px] place-items-center rounded-full border-t bg-background font-semibold text-xs text-foreground">
           {circleText}
         </div>
-        
+
         {/* Box content */}
         <div className="relative z-10 flex h-[150px] w-full items-center justify-center overflow-hidden rounded-lg border bg-background shadow-md">
           {/* Badges */}
@@ -274,7 +274,7 @@ const DatabaseWithRestApi = ({
             <Folder className="size-4 text-accent-foreground" />
             <span className="text-accent-foreground">{buttonTexts.second}</span>
           </div>
-          
+
           {/* Animated circles */}
           <motion.div
             className="absolute -bottom-14 h-[100px] w-[100px] rounded-full border-t bg-accent/5"

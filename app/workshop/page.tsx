@@ -24,7 +24,7 @@ export default function WorkshopPage() {
 
   return (
     <Layout theme={theme} onThemeToggle={toggleTheme}>
-      <div 
+      <div
         className="min-h-screen"
         style={{
           backgroundColor: "var(--bg-primary)",
@@ -34,19 +34,19 @@ export default function WorkshopPage() {
       >
         {/* Hero Section */}
         <HeroSection />
-        
+
         {/* What to Expect Section */}
         <WhatToExpect theme={theme} />
-        
+
         {/* Tools Section */}
         <ToolsSection theme={theme} />
-        
+
         {/* Delivery Options Section */}
         <DeliverySection theme={theme} />
-        
+
         {/* Why It Works Section */}
         <WhyItWorks theme={theme} />
-        
+
         {/* CTA Section */}
         <CtaSection theme={theme} />
       </div>

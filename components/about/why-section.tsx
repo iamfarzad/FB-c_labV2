@@ -16,13 +16,13 @@ export const WhySection: React.FC<WhySectionProps> = ({ theme }) => {
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { 
+      transition: {
         duration: 0.8,
-        ease: [0.16, 0.77, 0.47, 0.97] 
-      } 
+        ease: [0.16, 0.77, 0.47, 0.97]
+      }
     }
   }
 
@@ -66,18 +66,18 @@ export const WhySection: React.FC<WhySectionProps> = ({ theme }) => {
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-orange-accent)]/5 to-transparent" />
       </div>
-      
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <motion.div 
+        <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ 
-            opacity: 1, 
+          whileInView={{
+            opacity: 1,
             y: 0,
-            transition: { 
+            transition: {
               duration: 0.8,
-              ease: [0.16, 0.77, 0.47, 0.97] 
-            } 
+              ease: [0.16, 0.77, 0.47, 0.97]
+            }
           }}
           viewport={{ once: true, margin: "-20%" }}
         >
@@ -85,17 +85,17 @@ export const WhySection: React.FC<WhySectionProps> = ({ theme }) => {
             <Lightbulb className="h-5 w-5 text-[var(--color-orange-accent)] mr-2" />
             <span className="text-sm font-tech-mono text-[var(--color-orange-accent)] uppercase tracking-tech-wide">My Mission</span>
           </div>
-          
+
           <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${textColor} mb-6 max-w-4xl mx-auto leading-tight`}>
             Why I Do <span className="gradient-text">This Work</span>
           </h2>
-          
+
           <p className={`text-xl ${mutedTextColor} max-w-3xl mx-auto`}>
             I believe in the power of AI to create meaningful change when applied with purpose and responsibility.
           </p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16"
           variants={staggerContainer}
           initial="hidden"
@@ -118,17 +118,17 @@ export const WhySection: React.FC<WhySectionProps> = ({ theme }) => {
           ))}
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="mt-16 text-center"
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ 
-            opacity: 1, 
+          whileInView={{
+            opacity: 1,
             y: 0,
-            transition: { 
+            transition: {
               duration: 0.8,
               delay: 0.6,
-              ease: [0.16, 0.77, 0.47, 0.97] 
-            } 
+              ease: [0.16, 0.77, 0.47, 0.97]
+            }
           }}
           viewport={{ once: true, margin: "-20%" }}
         >

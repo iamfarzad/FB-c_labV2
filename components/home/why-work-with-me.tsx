@@ -25,10 +25,10 @@ interface WhyWorkWithMeProps {
 }
 
 const SECTIONS: SectionItem[] = [
-  { 
-    id: 'why-work-with-me', 
-    title: 'Why Work With Me', 
-    scrollOffset: 0 
+  {
+    id: 'why-work-with-me',
+    title: 'Why Work With Me',
+    scrollOffset: 0
   }
 ]
 
@@ -66,7 +66,7 @@ export const WhyWorkWithMe: React.FC<WhyWorkWithMeProps> = ({ theme }) => {
   }), [theme])
 
   // Add unique IDs to reasons for better accessibility
-  const reasons = useMemo(() => 
+  const reasons = useMemo(() =>
     REASONS.map((reason, index) => ({
       ...reason,
       id: `reason-${index}`
@@ -75,12 +75,12 @@ export const WhyWorkWithMe: React.FC<WhyWorkWithMeProps> = ({ theme }) => {
   )
 
   return (
-    <SectionLayout 
+    <SectionLayout
       sections={SECTIONS}
       sideTextPosition="left"
       className={`relative overflow-hidden ${
-        theme === 'dark' 
-          ? 'bg-[var(--color-gunmetal)]' 
+        theme === 'dark'
+          ? 'bg-[var(--color-gunmetal)]'
           : 'bg-gradient-to-b from-[var(--color-light-silver)] to-white'
       }`}
       aria-label="Why work with me section"
@@ -99,8 +99,8 @@ export const WhyWorkWithMe: React.FC<WhyWorkWithMeProps> = ({ theme }) => {
         )}
       </div>
 
-      <section 
-        id="why-work-with-me" 
+      <section
+        id="why-work-with-me"
         className={`relative py-20 md:py-32 px-4 sm:px-6 lg:px-8 ${theme === 'dark' ? 'text-white' : 'text-[var(--color-gunmetal)]'}`}
         aria-labelledby="why-work-with-me-heading"
       >
@@ -114,14 +114,14 @@ export const WhyWorkWithMe: React.FC<WhyWorkWithMeProps> = ({ theme }) => {
               transition={{ duration: 0.6 }}
               className="inline-block"
             >
-              <span className={`inline-block px-4 py-2 text-sm font-mono rounded-full mb-6 tracking-wider ${theme === 'dark' 
-                ? 'bg-gradient-to-r from-[var(--color-orange-accent)] to-[#ff8c42] text-white' 
+              <span className={`inline-block px-4 py-2 text-sm font-mono rounded-full mb-6 tracking-wider ${theme === 'dark'
+                ? 'bg-gradient-to-r from-[var(--color-orange-accent)] to-[#ff8c42] text-white'
                 : 'bg-[var(--color-orange-accent)]/10 text-[var(--color-orange-accent)]'}`}>
                 WHY CHOOSE ME
               </span>
             </motion.div>
-            
-            <motion.h2 
+
+            <motion.h2
               id="why-work-with-me-heading"
               className={`text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight`}
               initial={{ opacity: 0, y: 20 }}
@@ -129,8 +129,8 @@ export const WhyWorkWithMe: React.FC<WhyWorkWithMeProps> = ({ theme }) => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <span className={theme === 'dark' 
-                ? 'bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300' 
+              <span className={theme === 'dark'
+                ? 'bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300'
                 : 'text-[var(--color-gunmetal)]'}>
                 AI That
               </span>
@@ -139,8 +139,8 @@ export const WhyWorkWithMe: React.FC<WhyWorkWithMeProps> = ({ theme }) => {
                 Delivers Results
               </span>
             </motion.h2>
-            
-            <motion.p 
+
+            <motion.p
               className={`text-lg md:text-xl max-w-3xl mx-auto ${theme === 'dark' ? 'text-gray-300' : 'text-[var(--color-gunmetal)]/80'}`}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -159,25 +159,25 @@ export const WhyWorkWithMe: React.FC<WhyWorkWithMeProps> = ({ theme }) => {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ 
-                  duration: 0.5, 
+                transition={{
+                  duration: 0.5,
                   delay: index * 0.1,
                   ease: [0.16, 1, 0.3, 1]
                 }}
                 whileHover={{ y: -8 }}
-                className={`group relative p-6 rounded-2xl overflow-hidden transition-all duration-300 ${cardBg} ${borderColor} border ${hoverBg} 
+                className={`group relative p-6 rounded-2xl overflow-hidden transition-all duration-300 ${cardBg} ${borderColor} border ${hoverBg}
                   ${theme === 'dark' ? 'shadow-lg' : 'shadow-md'}`}
               >
                 <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                  theme === 'dark' 
-                    ? 'bg-gradient-to-br from-[var(--color-orange-accent)]/10 to-transparent' 
-                    : 'bg-gradient-to-br from-[var(--color-orange-accent)]/5 to-transparent'}`} 
+                  theme === 'dark'
+                    ? 'bg-gradient-to-br from-[var(--color-orange-accent)]/10 to-transparent'
+                    : 'bg-gradient-to-br from-[var(--color-orange-accent)]/5 to-transparent'}`}
                 />
-                
+
                 <div className="relative z-10">
                   <div className={`w-12 h-12 rounded-xl mb-4 flex items-center justify-center ${
-                    theme === 'dark' 
-                      ? 'bg-gradient-to-br from-[var(--color-orange-accent)] to-[#ff8c42] text-white' 
+                    theme === 'dark'
+                      ? 'bg-gradient-to-br from-[var(--color-orange-accent)] to-[#ff8c42] text-white'
                       : 'bg-[var(--color-orange-accent)]/10 text-[var(--color-orange-accent)]'}`}>
                     {React.cloneElement(reason.icon as React.ReactElement, {
                       className: 'h-5 w-5'
@@ -195,7 +195,7 @@ export const WhyWorkWithMe: React.FC<WhyWorkWithMeProps> = ({ theme }) => {
           </div>
 
           {/* CTA Section */}
-          <motion.div 
+          <motion.div
             className="mt-16 text-center"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}

@@ -25,13 +25,13 @@ const ProcessStep: React.FC<ProcessStepProps> = ({ step, index, length, theme = 
   return (
     <div className="relative flex group">
       <div className={`absolute left-6 top-0 bottom-0 w-0.5 ${isDark ? 'bg-[var(--glass-border)]' : 'bg-gray-200'}`}>
-        <div 
+        <div
           className={`absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${accentGradient} shadow-lg`}
         >
           <Icon className="w-4 h-4 text-white" />
         </div>
       </div>
-      
+
       <div className={cn("ml-12 pb-12 relative flex-1", index === length - 1 && 'pb-0')}>
         <div className={cn(
           "p-6 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
@@ -58,7 +58,7 @@ interface ProcessProps {
 
 export const Process: React.FC<ProcessProps> = ({ theme = "light", className }) => {
   const isDark = theme === "dark"
-  
+
   const processSteps = [
     {
       id: 1,

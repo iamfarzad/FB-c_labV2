@@ -142,7 +142,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ theme }) => {
                 <span className="flex-shrink mx-4 text-sm text-gray-400">or connect with me</span>
                 <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
               </div>
-              
+
               <div className="flex justify-center space-x-4">
                 {socialLinks.map((link, index) => (
                   <a

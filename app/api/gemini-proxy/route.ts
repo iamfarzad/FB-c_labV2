@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
+import {
   GoogleGenerativeAI,
   HarmCategory,
   HarmBlockThreshold,
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
     const action = searchParams.get('action');
-    
+
     if (!action) {
       return NextResponse.json(
         { error: 'Action parameter is required' },
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    
+
     switch (action) {
       case 'generateText': {
         const { prompt, videoUrl } = await req.json();
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        const model = genAI.getGenerativeModel({ 
+        const model = genAI.getGenerativeModel({
           model: MODEL_MAP['gemini-pro'],
           generationConfig: {
             temperature: 0.7,
@@ -72,18 +72,18 @@ export async function POST(req: NextRequest) {
             maxOutputTokens: 4096, // Increased for longer responses
           },
         });
-        
+
         // For now, we'll ignore the videoUrl since Gemini 2.0 Flash doesn't support video URLs directly
         // Instead, we'll modify the prompt to indicate this limitation
         let finalPrompt = prompt;
         if (videoUrl) {
           finalPrompt = `${prompt}\n\nNote: Please generate a general interactive learning app specification since video analysis is not available. Focus on creating an engaging educational web app.`;
         }
-        
+
         const result = await model.generateContent(finalPrompt);
         const response = await result.response;
         const text = response.text();
-        
+
         return NextResponse.json({ text });
       }
 
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        const model = genAI.getGenerativeModel({ 
+        const model = genAI.getGenerativeModel({
           model: MODEL_MAP['gemini-pro-vision'],
           generationConfig: {
             temperature: 0.4,
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
 
         try {
           // For Gemini 2.0 Flash, we use generateContentStream with a detailed, positive prompt
-          const enhancedPrompt = `Create a detailed, professional illustration of a modern, ethical AI research laboratory. 
+          const enhancedPrompt = `Create a detailed, professional illustration of a modern, ethical AI research laboratory.
             Show a bright, clean space with:
             - Researchers collaborating at high-tech workstations
             - Holographic displays showing data visualizations
@@ -129,15 +129,15 @@ export async function POST(req: NextRequest) {
             const chunkText = chunk.text();
             response += chunkText;
           }
-          
+
           return NextResponse.json({ text: response });
         } catch (error: any) {
           console.error('Error generating image:', error);
           return NextResponse.json(
-            { 
-              error: 'Failed to generate image', 
+            {
+              error: 'Failed to generate image',
               details: error.message,
-              stack: error.stack 
+              stack: error.stack
             },
             { status: 500 }
           );
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        const model = genAI.getGenerativeModel({ 
+        const model = genAI.getGenerativeModel({
           model: MODEL_MAP['gemini-chat'],
           generationConfig: {
             temperature: 0.3,  // Lower temperature for more focused responses
@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
         );
         const response = await result.response;
         const text = response.text();
-        
+
         return NextResponse.json({ summary: text });
       }
 
@@ -191,7 +191,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Gemini Proxy Error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to process request',
         details: process.env.NODE_ENV === 'development' ? error.message : undefined,
         stack: process.env.NODE_ENV === 'development' ? error.stack : undefined

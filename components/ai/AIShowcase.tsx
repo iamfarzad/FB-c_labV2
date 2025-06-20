@@ -206,7 +206,7 @@ export default function AIShowcase() {
                 disabled={isLoading}
                 className="flex-1"
               />
-              <Button 
+              <Button
                 onClick={handleSend}
                 disabled={!input.trim() || isLoading}
                 size="icon"

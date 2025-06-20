@@ -24,7 +24,7 @@ export default function HeroBackground5() {
     camera.lookAt(0, 0, 0);
 
     // Clean renderer
-    const renderer = new THREE.WebGLRenderer({ 
+    const renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true
     });
@@ -39,31 +39,31 @@ export default function HeroBackground5() {
     // Create data bars (representing metrics)
     const barCount = 12;
     const radius = 8;
-    
+
     for (let i = 0; i < barCount; i++) {
       const angle = (i / barCount) * Math.PI * 2;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
-      
+
       // Varying heights for data representation
       const height = 1 + Math.random() * 4;
-      
+
       const geometry = new THREE.BoxGeometry(0.8, height, 0.8);
       const material = new THREE.MeshBasicMaterial({
         color: height > 3 ? 0xff5b04 : height > 2 ? 0xff8f6a : 0xf5f5f5,
         transparent: true,
         opacity: 0.8
       });
-      
+
       const bar = new THREE.Mesh(geometry, material);
       bar.position.set(x, height / 2, z);
-      
+
       // Store data properties
       (bar as any).originalHeight = height;
       (bar as any).targetHeight = height;
       (bar as any).angle = angle;
       (bar as any).radius = radius;
-      
+
       scene.add(bar);
       dataElements.push(bar);
     }
@@ -72,19 +72,19 @@ export default function HeroBackground5() {
     for (let i = 0; i < barCount; i++) {
       const currentBar = dataElements[i];
       const nextBar = dataElements[(i + 1) % barCount];
-      
+
       const points = [
         new THREE.Vector3(currentBar.position.x, currentBar.position.y, currentBar.position.z),
         new THREE.Vector3(nextBar.position.x, nextBar.position.y, nextBar.position.z)
       ];
-      
+
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
       const material = new THREE.LineBasicMaterial({
         color: 0x2a2a2a,
         transparent: true,
         opacity: 0.4
       });
-      
+
       const line = new THREE.Line(geometry, material);
       scene.add(line);
       connections.push(line);
@@ -104,7 +104,7 @@ export default function HeroBackground5() {
 
     // Data flow indicators (small moving elements)
     const flowElements: THREE.Mesh[] = [];
-    
+
     for (let i = 0; i < 8; i++) {
       const geometry = new THREE.SphereGeometry(0.1, 8, 8);
       const material = new THREE.MeshBasicMaterial({
@@ -112,9 +112,9 @@ export default function HeroBackground5() {
         transparent: true,
         opacity: 0.7
       });
-      
+
       const sphere = new THREE.Mesh(geometry, material);
-      
+
       // Random starting position on circle
       const angle = Math.random() * Math.PI * 2;
       sphere.position.set(
@@ -122,10 +122,10 @@ export default function HeroBackground5() {
         0.5,
         Math.sin(angle) * radius
       );
-      
+
       (sphere as any).angle = angle;
       (sphere as any).speed = 0.02 + Math.random() * 0.02;
-      
+
       scene.add(sphere);
       flowElements.push(sphere);
     }
@@ -145,7 +145,7 @@ export default function HeroBackground5() {
     // Data-driven animation
     const animate = () => {
       animationRef.current = requestAnimationFrame(animate);
-      
+
       time += 0.01;
 
       // Smooth mouse interpolation
@@ -156,20 +156,20 @@ export default function HeroBackground5() {
       dataElements.forEach((element, index) => {
         if (index < barCount) { // Data bars
           const props = element as any;
-          
+
           // Simulate data updates
           if (Math.random() < 0.01) {
             props.targetHeight = 1 + Math.random() * 4;
           }
-          
+
           // Smooth height transitions
           const currentHeight = element.scale.y * props.originalHeight;
           const heightDiff = props.targetHeight - currentHeight;
           const newHeight = currentHeight + heightDiff * 0.05;
-          
+
           element.scale.y = newHeight / props.originalHeight;
           element.position.y = newHeight / 2;
-          
+
           // Update color based on height
           const material = element.material as THREE.MeshBasicMaterial;
           if (newHeight > 3) {
@@ -179,11 +179,11 @@ export default function HeroBackground5() {
           } else {
             material.color.setHex(0xf5f5f5);
           }
-          
+
           // Subtle pulse
           const pulse = Math.sin(time * 2 + index) * 0.1 + 0.9;
           material.opacity = 0.8 * pulse;
-          
+
         } else if (index === barCount) { // Central hub
           element.rotation.y = time * 0.5;
           const pulse = Math.sin(time * 3) * 0.2 + 0.8;
@@ -195,12 +195,12 @@ export default function HeroBackground5() {
       connections.forEach((line, index) => {
         const currentBar = dataElements[index];
         const nextBar = dataElements[(index + 1) % barCount];
-        
+
         const positions = line.geometry.attributes.position;
         positions.setXYZ(0, currentBar.position.x, currentBar.position.y, currentBar.position.z);
         positions.setXYZ(1, nextBar.position.x, nextBar.position.y, nextBar.position.z);
         positions.needsUpdate = true;
-        
+
         // Animate line opacity
         const material = line.material as THREE.LineBasicMaterial;
         const pulse = Math.sin(time * 1.5 + index * 0.3) * 0.2 + 0.6;
@@ -211,10 +211,10 @@ export default function HeroBackground5() {
       flowElements.forEach((element) => {
         const props = element as any;
         props.angle += props.speed;
-        
+
         element.position.x = Math.cos(props.angle) * radius;
         element.position.z = Math.sin(props.angle) * radius;
-        
+
         // Fade in/out as they move
         const fadePhase = (props.angle % (Math.PI * 2)) / (Math.PI * 2);
         (element.material as THREE.MeshBasicMaterial).opacity = Math.sin(fadePhase * Math.PI) * 0.7;
@@ -232,7 +232,7 @@ export default function HeroBackground5() {
     const handleResize = () => {
       const width = mount.clientWidth;
       const height = mount.clientHeight;
-      
+
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
@@ -251,27 +251,27 @@ export default function HeroBackground5() {
       if (mount && renderer.domElement) {
         mount.removeChild(renderer.domElement);
       }
-      
+
       // Cleanup
       [...dataElements, ...flowElements].forEach(element => {
         element.geometry.dispose();
         (element.material as THREE.Material).dispose();
       });
-      
+
       connections.forEach(line => {
         line.geometry.dispose();
         (line.material as THREE.Material).dispose();
       });
-      
+
       renderer.dispose();
     };
   }, []);
 
   return (
-    <div 
-      ref={mountRef} 
+    <div
+      ref={mountRef}
       className="w-full h-full relative overflow-hidden"
-      style={{ 
+      style={{
         minHeight: '400px',
         background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)'
       }}

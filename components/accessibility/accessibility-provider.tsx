@@ -12,7 +12,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       // Skip if user is typing in an input or textarea
       const target = e.target as HTMLElement
       if (
-        target.tagName === 'INPUT' || 
+        target.tagName === 'INPUT' ||
         target.tagName === 'TEXTAREA' ||
         target.isContentEditable
       ) {
@@ -72,14 +72,14 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     skipLink.style.backgroundColor = 'white'
     skipLink.style.color = 'black'
     skipLink.style.opacity = '0'
-    
+
     skipLink.addEventListener('focus', () => {
       skipLink.style.left = '0'
       skipLink.style.opacity = '1'
     })
-    
+
     document.body.prepend(skipLink)
-    
+
     return () => {
       if (skipLink && document.body.contains(skipLink)) {
         document.body.removeChild(skipLink)

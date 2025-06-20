@@ -28,9 +28,9 @@ export function TimelineStack({ items, className }: TimelineStackProps) {
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-3">
                       {item.icon && (
-                        <div 
+                        <div
                           className="p-2 rounded-lg"
-                          style={{ 
+                          style={{
                             backgroundColor: `${item.color}15`,
                             color: item.color
                           }}
@@ -65,14 +65,14 @@ export function TimelineStack({ items, className }: TimelineStackProps) {
                 key={`${item.year}-${index}`}
                 className="relative"
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ 
-                  opacity: 1, 
+                animate={{
+                  opacity: 1,
                   y: 0,
-                  transition: { 
+                  transition: {
                     duration: 0.5,
                     delay: index * 0.1,
                     ease: [0.16, 0.77, 0.47, 0.97]
-                  } 
+                  }
                 }}
                 viewport={{ once: true, margin: "-20% 0%" }}
               >
@@ -80,9 +80,9 @@ export function TimelineStack({ items, className }: TimelineStackProps) {
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-3">
                       {item.icon && (
-                        <div 
+                        <div
                           className="p-2 rounded-lg"
-                          style={{ 
+                          style={{
                             backgroundColor: `${item.color}15`,
                             color: item.color
                           }}

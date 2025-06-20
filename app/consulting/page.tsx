@@ -23,7 +23,7 @@ export default function ServicesPage() {
 
   return (
     <Layout theme={theme} onThemeToggle={toggleTheme}>
-      <div 
+      <div
         className="relative pt-20"
         style={{
           backgroundColor: "var(--bg-primary)",
@@ -32,16 +32,16 @@ export default function ServicesPage() {
       >
         {/* Hero Section with TextParticle */}
         <ServicesHero theme={theme} />
-        
+
         {/* AI Consulting Section */}
         <AIConsulting theme={theme} />
-        
+
         {/* Process Section */}
         <Process theme={theme} />
-        
+
         {/* Tools Section */}
         <Tools theme={theme} />
-        
+
         {/* Workshops Section */}
         <Workshops theme={theme} />
       </div>

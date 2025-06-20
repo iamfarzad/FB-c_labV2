@@ -2,6 +2,7 @@
 "use client"
 import React, { useState, useEffect, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { ChatSidePanel } from './chat-side-panel';
 
 interface Message {
   id: string
@@ -153,7 +154,7 @@ export default function AIShowcase() {
 
     try {
       // Send to AI API - ALIGNED WITH NEW BACKEND
-      const response = await fetch('/api/gemini-proxy?action=conversationalFlow', {
+      const response = await fetch('/api/ai-service?action=conversationalFlow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -254,7 +255,7 @@ export default function AIShowcase() {
 
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/gemini-proxy?action=${action}`, {
+        const response = await fetch(`/api/ai-service?action=${action}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...body, currentConversationState: conversationState })
@@ -283,7 +284,7 @@ export default function AIShowcase() {
     // Logic to send final conversation state for lead capture
     setIsLoading(true);
     try {
-        const response = await fetch('/api/gemini-proxy?action=leadCapture', {
+        const response = await fetch('/api/ai-service?action=leadCapture', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ currentConversationState: conversationState })
@@ -307,17 +308,20 @@ export default function AIShowcase() {
     <div className="flex h-screen font-sans">
       {/* Sidebar - AI Activity Monitor */}
       <div className="w-1/4 bg-gray-200 dark:bg-gray-800 p-4 overflow-y-auto">
-        <Sidebar
-          capabilities={['image_generation', 'video_analysis', 'document_analysis', 'code_execution', 'url_analysis', 'screen_analysis']}
-          onCapabilityClick={triggerCapabilityDemo}
-          activity={sidebarActivity}
+        <ChatSidePanel 
+          theme="light"
+          onClose={() => {}}
+          chatHistory={[]}
+          onDownloadTranscript={() => {}}
+          onSummarizeChat={() => {}}
+          onGenerateFollowUpBrief={() => {}}
         />
         <button
-            onClick={completeShowcase}
-            disabled={isLoading}
-            className="mt-4 w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 disabled:bg-gray-400"
+          onClick={completeShowcase}
+          disabled={isLoading}
+          className="mt-4 w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-            Complete Showcase & Send Summary
+          Complete Showcase & Send Summary
         </button>
       </div>
 

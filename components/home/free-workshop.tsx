@@ -50,15 +50,15 @@ export const FreeWorkshop: React.FC<FreeWorkshopProps> = ({ theme }) => {
                 <Zap className="h-5 w-5 text-[var(--color-orange-accent)] mr-2" />
                 <span className="text-sm font-tech-mono text-[var(--color-orange-accent)] uppercase tracking-tech-wide">Free Digital Workshop</span>
               </div>
-              
+
               <h2 className={`text-3xl sm:text-4xl font-bold ${textColor} mb-6`}>
                 Get a real taste of how AI can help your business
               </h2>
-              
+
               <p className={`text-lg ${mutedTextColor} mb-8`}>
                 In just 30 minutes, discover how AI can transform your workflow with practical, hands-on examples.
               </p>
-              
+
               <ul className="space-y-4 mb-8">
                 {benefits.map((benefit, index) => (
                   <li key={index} className="flex items-start">
@@ -67,16 +67,16 @@ export const FreeWorkshop: React.FC<FreeWorkshopProps> = ({ theme }) => {
                   </li>
                 ))}
               </ul>
-              
-              <Link 
-                href="/workshop" 
+
+              <Link
+                href="/workshop"
                 className="group inline-flex items-center px-6 py-3.5 rounded-none bg-[var(--color-orange-accent)] text-white font-semibold hover:bg-[var(--color-orange-accent-light)] transition-all duration-300"
               >
                 <span>Join Free Workshop</span>
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
-            
+
             {/* Right side - Visuals */}
             <div className={`${highlightBg} p-8 md:p-12 flex flex-col justify-center`}>
               <div className="grid grid-cols-2 gap-4 mb-8">
@@ -90,7 +90,7 @@ export const FreeWorkshop: React.FC<FreeWorkshopProps> = ({ theme }) => {
                   </div>
                 ))}
               </div>
-              
+
               <div className="relative h-48 rounded-xl overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-orange-accent)]/20 to-[var(--color-orange-accent-light)]/20 rounded-xl" />
                 <div className="absolute inset-0 flex items-center justify-center">

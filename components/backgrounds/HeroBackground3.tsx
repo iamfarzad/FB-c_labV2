@@ -24,7 +24,7 @@ export default function HeroBackground3() {
     camera.lookAt(0, 0, 0);
 
     // Clean renderer
-    const renderer = new THREE.WebGLRenderer({ 
+    const renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true
     });
@@ -34,44 +34,44 @@ export default function HeroBackground3() {
 
     // Architectural grid system with purpose
     const gridLines: THREE.Line[] = [];
-    
+
     // Main structural grid
     const mainGridSize = 20;
     const mainSpacing = 2;
-    
+
     // Horizontal lines
     for (let i = -mainGridSize; i <= mainGridSize; i++) {
       const points = [
         new THREE.Vector3(-mainGridSize * mainSpacing, 0, i * mainSpacing),
         new THREE.Vector3(mainGridSize * mainSpacing, 0, i * mainSpacing)
       ];
-      
+
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
       const material = new THREE.LineBasicMaterial({
         color: i === 0 ? 0xff5b04 : 0x2a2a2a, // Orange accent for center line
         transparent: true,
         opacity: i === 0 ? 0.8 : 0.3
       });
-      
+
       const line = new THREE.Line(geometry, material);
       scene.add(line);
       gridLines.push(line);
     }
-    
+
     // Vertical lines
     for (let i = -mainGridSize; i <= mainGridSize; i++) {
       const points = [
         new THREE.Vector3(i * mainSpacing, 0, -mainGridSize * mainSpacing),
         new THREE.Vector3(i * mainSpacing, 0, mainGridSize * mainSpacing)
       ];
-      
+
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
       const material = new THREE.LineBasicMaterial({
         color: i === 0 ? 0xff5b04 : 0x2a2a2a, // Orange accent for center line
         transparent: true,
         opacity: i === 0 ? 0.8 : 0.3
       });
-      
+
       const line = new THREE.Line(geometry, material);
       scene.add(line);
       gridLines.push(line);
@@ -80,40 +80,40 @@ export default function HeroBackground3() {
     // Secondary detail grid (finer)
     const detailSpacing = 0.5;
     const detailSize = 10;
-    
+
     for (let i = -detailSize; i <= detailSize; i++) {
       if (i % 4 === 0) continue; // Skip where main grid exists
-      
+
       // Horizontal detail lines
       const hPoints = [
         new THREE.Vector3(-detailSize * detailSpacing, 0, i * detailSpacing),
         new THREE.Vector3(detailSize * detailSpacing, 0, i * detailSpacing)
       ];
-      
+
       const hGeometry = new THREE.BufferGeometry().setFromPoints(hPoints);
       const hMaterial = new THREE.LineBasicMaterial({
         color: 0x1a1a1a,
         transparent: true,
         opacity: 0.15
       });
-      
+
       const hLine = new THREE.Line(hGeometry, hMaterial);
       scene.add(hLine);
       gridLines.push(hLine);
-      
+
       // Vertical detail lines
       const vPoints = [
         new THREE.Vector3(i * detailSpacing, 0, -detailSize * detailSpacing),
         new THREE.Vector3(i * detailSpacing, 0, detailSize * detailSpacing)
       ];
-      
+
       const vGeometry = new THREE.BufferGeometry().setFromPoints(vPoints);
       const vMaterial = new THREE.LineBasicMaterial({
         color: 0x1a1a1a,
         transparent: true,
         opacity: 0.15
       });
-      
+
       const vLine = new THREE.Line(vGeometry, vMaterial);
       scene.add(vLine);
       gridLines.push(vLine);
@@ -121,12 +121,12 @@ export default function HeroBackground3() {
 
     // Architectural accent elements
     const accentElements: THREE.Mesh[] = [];
-    
+
     // Corner markers
     const cornerPositions = [
       [-15, 0, -15], [15, 0, -15], [-15, 0, 15], [15, 0, 15]
     ];
-    
+
     cornerPositions.forEach(pos => {
       const geometry = new THREE.RingGeometry(0.3, 0.5, 8);
       const material = new THREE.MeshBasicMaterial({
@@ -135,7 +135,7 @@ export default function HeroBackground3() {
         opacity: 0.6,
         side: THREE.DoubleSide
       });
-      
+
       const ring = new THREE.Mesh(geometry, material);
       ring.position.set(pos[0], pos[1], pos[2]);
       ring.rotation.x = -Math.PI / 2;
@@ -151,7 +151,7 @@ export default function HeroBackground3() {
       opacity: 0.8,
       side: THREE.DoubleSide
     });
-    
+
     const centerRing = new THREE.Mesh(centerGeometry, centerMaterial);
     centerRing.rotation.x = -Math.PI / 2;
     scene.add(centerRing);
@@ -172,7 +172,7 @@ export default function HeroBackground3() {
     // Purposeful animation
     const animate = () => {
       animationRef.current = requestAnimationFrame(animate);
-      
+
       time += 0.008;
 
       // Smooth mouse interpolation
@@ -182,9 +182,9 @@ export default function HeroBackground3() {
       // Subtle grid animation
       gridLines.forEach((line, index) => {
         const material = line.material as THREE.LineBasicMaterial;
-        const baseOpacity = material.color.getHex() === 0xff5b04 ? 0.8 : 
+        const baseOpacity = material.color.getHex() === 0xff5b04 ? 0.8 :
                            material.color.getHex() === 0x2a2a2a ? 0.3 : 0.15;
-        
+
         // Subtle pulse
         const pulse = Math.sin(time * 2 + index * 0.1) * 0.1 + 0.9;
         material.opacity = baseOpacity * pulse;
@@ -215,7 +215,7 @@ export default function HeroBackground3() {
     const handleResize = () => {
       const width = mount.clientWidth;
       const height = mount.clientHeight;
-      
+
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
@@ -234,27 +234,27 @@ export default function HeroBackground3() {
       if (mount && renderer.domElement) {
         mount.removeChild(renderer.domElement);
       }
-      
+
       // Cleanup
       gridLines.forEach(line => {
         line.geometry.dispose();
         (line.material as THREE.Material).dispose();
       });
-      
+
       accentElements.forEach(element => {
         element.geometry.dispose();
         (element.material as THREE.Material).dispose();
       });
-      
+
       renderer.dispose();
     };
   }, []);
 
   return (
-    <div 
-      ref={mountRef} 
+    <div
+      ref={mountRef}
       className="w-full h-full relative overflow-hidden"
-      style={{ 
+      style={{
         minHeight: '400px',
         background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)'
       }}

@@ -31,7 +31,7 @@
    ```bash
    # For web app features
    git checkout -b feature/my-webapp-feature feature/webapp-clean
-   
+
    # For AI chat features
    git checkout -b feature/my-chat-feature feature/ai-chat-utils
    ```

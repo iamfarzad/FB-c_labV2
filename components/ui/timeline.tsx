@@ -35,10 +35,10 @@ interface TimelineProps {
 /**
  * A responsive timeline component that displays a vertical list of events
  */
-export const Timeline = ({ 
-  data, 
+export const Timeline = ({
+  data,
   theme = "light",
-  className = "" 
+  className = ""
 }: TimelineProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -63,7 +63,7 @@ export const Timeline = ({
 
     updateHeight();
     window.addEventListener('resize', updateHeight);
-    
+
     return () => window.removeEventListener('resize', updateHeight);
   }, [ref, data]);
 
@@ -90,14 +90,14 @@ export const Timeline = ({
             >
               {/* Timeline dot and year */}
               <div className="sticky flex flex-col md:flex-row z-40 items-center top-20 self-start max-w-xs lg:max-w-sm md:w-full">
-                <div 
+                <div
                   className={`h-10 absolute left-3 md:left-3 w-10 rounded-full ${themeClasses.bg} flex items-center justify-center border ${themeClasses.border}`}
                 >
                   {item.icon ? (
                     <item.icon className="h-4 w-4 text-[var(--color-orange-accent)]" />
                   ) : (
-                    <div 
-                      className={`h-3 w-3 rounded-full ${item.color || 'bg-[var(--color-orange-accent)]'}`} 
+                    <div
+                      className={`h-3 w-3 rounded-full ${item.color || 'bg-[var(--color-orange-accent)]'}`}
                     />
                   )}
                 </div>
@@ -108,7 +108,7 @@ export const Timeline = ({
 
               {/* Timeline content */}
               <div className="relative pl-16 pr-4 md:pl-4 w-full">
-                <div 
+                <div
                   className={`${themeClasses.bg} p-6 rounded-xl border ${themeClasses.border} shadow-sm hover:shadow-md transition-all duration-300`}
                 >
                   <h3 className="md:hidden block text-xl font-bold text-[var(--color-orange-accent)] mb-2">

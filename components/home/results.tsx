@@ -58,7 +58,7 @@ export const Results: React.FC<ResultsProps> = ({ theme }) => {
   return (
     <section className="py-20 relative overflow-hidden" ref={ref}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div 
+        <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -76,7 +76,7 @@ export const Results: React.FC<ResultsProps> = ({ theme }) => {
           </p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="w-full mb-16"
           variants={container}
           initial="hidden"
@@ -85,7 +85,7 @@ export const Results: React.FC<ResultsProps> = ({ theme }) => {
           <DisplayCards cards={displayCards} />
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -94,10 +94,10 @@ export const Results: React.FC<ResultsProps> = ({ theme }) => {
           <p className={`${mutedTextColor} mb-8 max-w-3xl mx-auto text-lg`}>
             These are just a few examples of how AI can transform your business. Every organization is different, and I work with you to identify the highest-impact opportunities.
           </p>
-          <motion.a 
-            href="/contact" 
+          <motion.a
+            href="/contact"
             className="relative inline-flex items-center px-8 py-4 rounded-lg bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] text-white font-semibold overflow-hidden group"
-            whileHover={{ 
+            whileHover={{
               scale: 1.05,
               boxShadow: '0 10px 25px -5px rgba(247, 144, 9, 0.2)'
             }}
@@ -105,13 +105,13 @@ export const Results: React.FC<ResultsProps> = ({ theme }) => {
           >
             <span className="relative z-10">Get Your Free Consultation</span>
             <ArrowUpRight className="ml-2 h-5 w-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300 z-10" />
-            
+
             {/* Animated background elements */}
-            <motion.div 
+            <motion.div
               className="absolute inset-0 bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] opacity-100 group-hover:opacity-0 transition-opacity duration-300"
               initial={{ opacity: 1 }}
             />
-            <motion.div 
+            <motion.div
               className="absolute inset-0 bg-gradient-to-r from-[var(--color-orange-accent-light)] to-[var(--color-orange-accent)] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               initial={{ opacity: 0 }}
             />

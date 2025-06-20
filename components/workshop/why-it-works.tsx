@@ -113,7 +113,7 @@ export const WhyItWorks: React.FC<WhyItWorksProps> = ({ theme }) => {
               ))}
             </div>
           </div>
-          
+
           <div className={`${cardBg} ${cardBorder} border rounded-2xl p-8`}>
             <h3 className={`text-2xl font-bold ${textColor} mb-6`}>Proven Results</h3>
             <div className="grid grid-cols-2 gap-6">
@@ -169,8 +169,8 @@ export const WhyItWorks: React.FC<WhyItWorksProps> = ({ theme }) => {
           <p className={`text-xl ${mutedTextColor} max-w-3xl mx-auto mb-8`}>
             Join our workshop and start implementing AI solutions that deliver real results.
           </p>
-          <a 
-            href="#register" 
+          <a
+            href="#register"
             className="inline-flex items-center px-8 py-4 rounded-none bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] text-white font-semibold text-lg shadow-2xl hover:shadow-[var(--color-orange-accent)]/25 transition-all duration-300 transform hover:scale-105"
           >
             <span>Reserve Your Spot Now</span>

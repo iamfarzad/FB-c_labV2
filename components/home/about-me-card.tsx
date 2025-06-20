@@ -36,7 +36,7 @@ export function AboutMeCard({ theme = 'light' }: AboutMeCardProps) {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Text content */}
-          <motion.div 
+          <motion.div
             className="space-y-6 lg:pr-12"
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -47,22 +47,22 @@ export function AboutMeCard({ theme = 'light' }: AboutMeCardProps) {
               <span className="inline-block text-xs md:text-sm font-semibold tracking-widest text-gray-500 dark:text-gray-400 uppercase mb-4">
                 I believe
               </span>
-              
+
               <h2 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight tracking-tight">
                 <span className="block">Creating <span className="text-orange-accent font-medium">practical</span>,</span>
                 <span className="font-extrabold">real-world solutions</span>
                 <span className="block">that <span className="text-orange-accent font-normal">deliver</span></span>
                 <span className="font-extrabold text-orange-accent">actual business value</span>
               </h2>
-              
+
               <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mt-8 max-w-2xl leading-relaxed">
                 With a focus on simplicity and effectiveness, I help businesses transform their ideas into impactful digital experiences.
               </p>
             </div>
-            
+
             <div className="pt-4">
-              <Link 
-                href="/about" 
+              <Link
+                href="/about"
                 className={cn(
                   "inline-flex items-center px-8 py-4 rounded-lg font-bold text-white tracking-wide transition-all duration-300",
                   "bg-orange-accent hover:bg-orange-500 hover:shadow-lg hover:-translate-y-0.5",
@@ -70,17 +70,17 @@ export function AboutMeCard({ theme = 'light' }: AboutMeCardProps) {
                 )}
               >
                 Discover My Journey
-                <svg 
-                  className="ml-3 w-5 h-5" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
+                <svg
+                  className="ml-3 w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2.5} 
-                    d="M14 5l7 7m0 0l-7 7m7-7H3" 
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
                   />
                 </svg>
               </Link>
@@ -88,7 +88,7 @@ export function AboutMeCard({ theme = 'light' }: AboutMeCardProps) {
           </motion.div>
 
           {/* Image with Tilt Effect */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
@@ -104,25 +104,25 @@ export function AboutMeCard({ theme = 'light' }: AboutMeCardProps) {
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 priority
               />
-              
+
               {/* Interactive overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6 z-10">
                 <div className="flex gap-3">
-                  <a 
-                    href="/farzad-bayat_profile_2AI.JPG" 
+                  <a
+                    href="/farzad-bayat_profile_2AI.JPG"
                     download="farzad-bayat-profile.jpg"
                     className="p-3 bg-white/90 rounded-full hover:bg-white transition-colors"
                     aria-label="Download profile image"
                   >
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="20" 
-                      height="20" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
                       strokeLinejoin="round"
                     >
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -132,7 +132,7 @@ export function AboutMeCard({ theme = 'light' }: AboutMeCardProps) {
                   </a>
                 </div>
               </div>
-              
+
               {/* Corner accents */}
               <div className="absolute inset-0 border-2 border-transparent group-hover:border-orange-accent/30 transition-all duration-500 rounded-2xl pointer-events-none" />
             </div>

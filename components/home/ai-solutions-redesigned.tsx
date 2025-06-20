@@ -122,7 +122,7 @@ export const AISolutionsSection: React.FC<AISolutionsSectionProps> = ({ theme })
     <section className={`py-20 relative overflow-hidden ${theme === 'dark' ? 'dark bg-[var(--color-gunmetal)]' : 'light bg-[var(--color-light-silver)]'}`}>
       {/* Background Pattern */}
       <div className="absolute inset-0 dot-pattern opacity-30" />
-      
+
       <div className="process-container relative z-10">
         {/* Header */}
         <motion.div
@@ -154,7 +154,7 @@ export const AISolutionsSection: React.FC<AISolutionsSectionProps> = ({ theme })
         >
           {services.map((service, index) => {
             const isSelected = selectedService === index;
-            
+
             return (
               <motion.div
                 key={index}
@@ -298,4 +298,4 @@ export const AISolutionsSection: React.FC<AISolutionsSectionProps> = ({ theme })
   );
 };
 
-export default AISolutionsSection; 
+export default AISolutionsSection;

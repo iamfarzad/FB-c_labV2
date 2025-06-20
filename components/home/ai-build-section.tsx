@@ -28,7 +28,7 @@ export const AIBuildSection: React.FC<AIBuildSectionProps> = ({ theme }) => {
       <div className="absolute inset-0 opacity-10">
         <TechCircuitAnimation theme={mounted ? (currentTheme as 'light' | 'dark') : 'dark'} />
       </div>
-      
+
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
@@ -36,7 +36,7 @@ export const AIBuildSection: React.FC<AIBuildSectionProps> = ({ theme }) => {
             <span className="text-orange-500"> — I Build It</span>
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            This entire website runs on AI systems I developed myself. 
+            This entire website runs on AI systems I developed myself.
             Try my assistant now and experience the same technology I can implement for your business.
           </p>
         </div>

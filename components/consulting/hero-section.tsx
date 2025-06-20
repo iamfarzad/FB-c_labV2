@@ -58,7 +58,7 @@ export const ServicesHero: React.FC<ServicesHeroProps> = ({ theme }) => {
 
   // Colors for the canvas effect based on theme
   const canvasColors = useMemo(() => {
-    return theme === 'dark' 
+    return theme === 'dark'
       ? [[255, 91, 4], [255, 159, 28]] // Orange accent colors for dark theme
       : [[255, 91, 4, 0.5], [255, 159, 28, 0.5]] // Lighter, more transparent for light theme
   }, [theme]);
@@ -77,7 +77,7 @@ export const ServicesHero: React.FC<ServicesHeroProps> = ({ theme }) => {
           containerClassName="opacity-30 dark:opacity-20"
         />
       </div>
-      
+
       {/* Background TextParticle */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full -z-10 opacity-20">
         <TextParticle
@@ -90,7 +90,7 @@ export const ServicesHero: React.FC<ServicesHeroProps> = ({ theme }) => {
           className="w-full h-full"
         />
       </div>
-      
+
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
         <div className="text-center">
           <div className={`inline-flex items-center px-4 py-2 rounded-lg ${cardBg} ${cardBorder} border mb-6`}>
@@ -99,18 +99,18 @@ export const ServicesHero: React.FC<ServicesHeroProps> = ({ theme }) => {
               Services
             </span>
           </div>
-          
+
           <h1 className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight ${textColor} mb-6`}>
             Practical AI Services That{' '}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)]">
               Deliver Results
             </span>
           </h1>
-          
+
           <p className={`text-lg md:text-xl ${mutedTextColor} max-w-3xl mx-auto mb-8`}>
             Whether you need automation, a custom chatbot, or internal AI copilots, I help you build what actually works—no fluff, no theory.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
               asChild
