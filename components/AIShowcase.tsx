@@ -153,7 +153,7 @@ export default function AIShowcase() {
 
     try {
       // Send to AI API - ALIGNED WITH NEW BACKEND
-      const response = await fetch('/api/gemini-proxy?action=conversationalFlow', {
+      const response = await fetch('/api/ai-service?action=conversationalFlow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -254,7 +254,7 @@ export default function AIShowcase() {
 
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/gemini-proxy?action=${action}`, {
+        const response = await fetch(`/api/ai-service?action=${action}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...body, currentConversationState: conversationState })
@@ -283,7 +283,7 @@ export default function AIShowcase() {
     // Logic to send final conversation state for lead capture
     setIsLoading(true);
     try {
-        const response = await fetch('/api/gemini-proxy?action=leadCapture', {
+        const response = await fetch('/api/ai-service?action=leadCapture', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ currentConversationState: conversationState })
