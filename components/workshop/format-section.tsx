@@ -1,7 +1,3 @@
-// FormatSection component has been temporarily removed as per user request
-// To restore, uncomment the component code below and ensure all imports are properly configured
-
-/*
 "use client"
 
 import React from "react"
@@ -12,13 +8,63 @@ interface FormatSectionProps {
 }
 
 export const FormatSection: React.FC<FormatSectionProps> = ({ theme }) => {
-  // Component implementation here
-  return null
-}
-*/
+  const textColor = theme === 'dark' ? 'text-white' : 'text-gray-900';
+  const mutedTextColor = theme === 'dark' ? 'text-gray-400' : 'text-gray-600';
 
-// Export an empty object to satisfy TypeScript
-export {}
+  const schedule = [
+    {
+      icon: <Clock size={20} className="text-[var(--color-orange-accent)]" />,
+      time: "09:00 - 09:30",
+      title: "Welcome & Introduction",
+      description: "Setting the stage for a day of AI exploration."
+    },
+    {
+      icon: <Zap size={20} className="text-[var(--color-orange-accent)]" />,
+      time: "09:30 - 11:00",
+      title: "Session 1: The AI Landscape",
+      description: "Understanding the fundamentals of AI and its impact on business."
+    },
+    {
+      icon: <Coffee size={20} className="text-[var(--color-orange-accent)]" />,
+      time: "11:00 - 11:15",
+      title: "Coffee Break",
+      description: "Recharge and network with fellow attendees."
+    },
+    {
+      icon: <Laptop size={20} className="text-[var(--color-orange-accent)]" />,
+      time: "11:15 - 13:00",
+      title: "Session 2: Hands-on with AI Tools",
+      description: "Practical session on using AI for content creation and data analysis."
+    },
+    {
+      icon: <Users size={20} className="text-[var(--color-orange-accent)]" />,
+      time: "13:00 - 14:00",
+      title: "Lunch & Networking",
+      description: "Enjoy a meal and discuss ideas with peers."
+    },
+    {
+      icon: <MessageSquare size={20} className="text-[var(--color-orange-accent)]" />,
+      time: "14:00 - 16:00",
+      title: "Session 3: Building Your AI Project",
+      description: "Group work on a real-world AI implementation project."
+    },
+    {
+      icon: <Award size={20} className="text-[var(--color-orange-accent)]" />,
+      time: "16:00 - 16:30",
+      title: "Wrap-up & Q&A",
+      description: "Presentations, feedback, and final questions."
+    }
+  ];
+
+  return (
+    <section className={`py-20 ${theme === 'dark' ? 'bg-black' : 'bg-white'}`}>
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className={`text-3xl font-bold ${textColor}`}>Workshop Format</h2>
+          <p className={mutedTextColor}>A full-day immersive experience designed for maximum learning and impact.</p>
+        </div>
+        <div className="max-w-4xl mx-auto bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-2xl backdrop-blur-lg shadow-lg overflow-hidden">
+          <div className="grid md:grid-cols-3">
             {/* Detailed Schedule */}
             <div className="md:col-span-2 p-8">
               <h3 className={`text-xl font-bold ${textColor} mb-6`}>Detailed Breakdown</h3>
@@ -96,6 +142,24 @@ export {}
                   </div>
                 ))}
               </div>
+            </div>
+            <div className="md:col-span-1 p-8 border-l border-[var(--glass-border)] bg-white/5">
+                <h3 className={`text-lg font-bold ${textColor} mb-4`}>Key Information</h3>
+                <ul className="space-y-3">
+                  {[
+                    { icon: <Clock size={16} />, text: "Full-day workshop" },
+                    { icon: <Users size={16} />, text: "Small group size (max 12)" },
+                    { icon: <Laptop size={16} />, text: "Hands-on and interactive" },
+                    { icon: <Award size={16} />, text: "Certificate of completion" },
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center">
+                      <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center mr-3 text-[var(--color-orange-accent)]">
+                        {item.icon}
+                      </div>
+                      <span className={mutedTextColor}>{item.text}</span>
+                    </li>
+                  ))}
+                </ul>
             </div>
           </div>
 
