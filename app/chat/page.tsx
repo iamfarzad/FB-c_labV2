@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTheme } from "next-themes";
 import { Button } from '@/components/ui/button';
+import { VideoLearningCard } from '@/components/video-learning-card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,7 +19,6 @@ import {
 import { VoiceInputModal } from "@/components/voice-input-modal";
 import { WebcamModal } from "@/components/webcam-modal";
 import { VideoLearningModal } from "@/components/video-learning-modal";
-import { VideoLearningCard } from "@/components/video-learning-card";
 import { DynamicDataRenderer } from "@/components/dynamic-data-renderer";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +80,8 @@ interface ActivityItem {
 export default function ChatPage() {
   const { theme: themeValue, setTheme } = useTheme();
   const theme = themeValue === 'dark' ? 'dark' as const : 'light' as const;
+  const { resolvedTheme } = useTheme();
+  // Chat state
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -91,23 +93,38 @@ export default function ChatPage() {
     capabilitiesShown: []
   }));
 
-  // Voice state managed in the Audio and Voice State section below
-
-  const [showWebcamModal, setShowWebcamModal] = useState(false);
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [currentCameraFrame, setCurrentCameraFrame] = useState<string | null>(null);
+  // Navigation state
+  const currentPath = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const captureIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const [uploadedImageBase64, setUploadedImageBase64] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Webcam state
+  const [showWebcamModal, setShowWebcamModal] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [currentCameraFrame, setCurrentCameraFrame] = useState<string | null>(null);
+
+  // File upload state
+  const [uploadedImageBase64, setUploadedImageBase64] = useState<string | null>(null);
+  const [showUploadOptions, setShowUploadOptions] = useState(false);
+
+  // Video learning state
+  const [showVideoLearningModal, setShowVideoLearningModal] = useState(false);
+  const [videoLearningUrl, setVideoLearningUrl] = useState<string>('');
+  const [videoTitle, setVideoTitle] = useState<string>('');
+  const [isProcessingVideo, setIsProcessingVideo] = useState(false);
+  const [videoProcessingProgress, setVideoProcessingProgress] = useState(0);
+  const [videoProcessingMessage, setVideoProcessingMessage] = useState('');
+  const [detectedVideoUrl, setDetectedVideoUrl] = useState<string | null>(null);
+  const [isGeneratingVideoApp, setIsGeneratingVideoApp] = useState(false);
 
   // UI State
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
-  const [showUploadOptions, setShowUploadOptions] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   
   // Mobile state with proper SSR check
   const [isMobile, setIsMobile] = useState(() => {
@@ -125,16 +142,6 @@ export default function ChatPage() {
   // Speech Recognition State
   const isSpeakingRef = useRef(false);
   const [isSpeaking, setIsSpeaking] = useState(false); // UI state only
-
-  // Video Learning State
-  const [videoLearningUrl, setVideoLearningUrl] = useState<string>('');
-  const [videoTitle, setVideoTitle] = useState<string>('');
-  const [showVideoLearningModal, setShowVideoLearningModal] = useState(false);
-  const [isProcessingVideo, setIsProcessingVideo] = useState(false);
-  const [videoProcessingProgress, setVideoProcessingProgress] = useState(0);
-  const [videoProcessingMessage, setVideoProcessingMessage] = useState('');
-  const [detectedVideoUrl, setDetectedVideoUrl] = useState<string | null>(null);
-  const [isGeneratingVideoApp, setIsGeneratingVideoApp] = useState(false);
   
   // Audio and Voice State
   const [aiVoiceState, setAiVoiceState] = useState<'idle' | 'listening' | 'processing' | 'error'>('idle');
@@ -146,19 +153,65 @@ export default function ChatPage() {
 
   // ActivityItem interface defined once
   const [activities, setActivities] = useState<ActivityItem[]>([
-    { id: 's1', type: 'system_message', timestamp: Date.now() - 3600000 * 3, user: 'AI Assistant', title: 'Chat Started', description: 'Initial conversation with AI Assistant began. Responded to "Project Setup Query".', status: 'completed' },
-    { id: 's2', type: 'event', timestamp: Date.now() - 3600000 * 2, user: 'System', title: 'User Logged In', description: 'User successfully authenticated to the platform.', status: 'completed' },
-    { id: 'prev_1', type: 'video_processing', title: 'Analyzing "Old Video Example"', description: 'Extracting key concepts.', timestamp: Date.now() - 1000000, progress: 30, status: 'in_progress', user: 'System' },
+    { 
+      id: 'test_video', 
+      type: 'video_processing', 
+      title: 'Introduction to React Hooks', 
+      description: 'Learn about React Hooks in this tutorial', 
+      timestamp: Date.now() - 3600 * 1000, 
+      progress: 100, 
+      status: 'completed', 
+      user: 'System',
+      link: 'https://www.youtube.com/watch?v=dpw9EHDh2bM',
+      details: 'Video processing complete. Ready to generate learning app.'
+    },
+    { 
+      id: 's1', 
+      type: 'system_message', 
+      timestamp: Date.now() - 3600000 * 3, 
+      user: 'AI Assistant', 
+      title: 'Chat Started', 
+      description: 'Initial conversation with AI Assistant began. Responded to "Project Setup Query".', 
+      status: 'completed' 
+    },
+    { 
+      id: 's2', 
+      type: 'event', 
+      timestamp: Date.now() - 3600000 * 2, 
+      user: 'System', 
+      title: 'User Logged In', 
+      description: 'User successfully authenticated to the platform.', 
+      status: 'completed' 
+    },
+    { 
+      id: 'prev_1', 
+      type: 'video_processing', 
+      title: 'Analyzing "Old Video Example"', 
+      description: 'Extracting key concepts.', 
+      timestamp: Date.now() - 1000000, 
+      progress: 30, 
+      status: 'in_progress', 
+      user: 'System' 
+    },
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Generate a more reliable unique ID
+  const generateId = useCallback(() => {
+    return `act_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }, []);
+
   const addActivity = useCallback((newActivity: Omit<ActivityItem, 'id' | 'timestamp'>) => {
     setActivities(prevActivities => [
-      { ...newActivity, id: Date.now().toString() + Math.random(), timestamp: Date.now() } as ActivityItem, // Cast to ensure all props match
+      { 
+        ...newActivity, 
+        id: generateId(), 
+        timestamp: Date.now() 
+      } as ActivityItem,
       ...prevActivities
     ]);
-  }, []);
+  }, [generateId]);
 
   const SpeechRecognition = typeof window !== "undefined" ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition : null;
   const isSpeechSupported = !!SpeechRecognition;
@@ -167,14 +220,21 @@ export default function ChatPage() {
   const handleSendMessage = async (textToSend?: string) => {
     const messageContent = textToSend || input.trim();
     if (messageContent === '' && !currentCameraFrame && !uploadedImageBase64) {
-      if (showVoiceModal && aiVoiceState !== "listening") { setShowVoiceModal(false); setAiVoiceState("idle"); }
+      if (showVoiceModal && aiVoiceState !== "listening") { 
+        setShowVoiceModal(false); 
+        setAiVoiceState("idle"); 
+      }
       return;
     }
 
     let userMessageContent = messageContent;
-    if (uploadedImageBase64 && !userMessageContent) userMessageContent = "[Uploaded Image]";
-    else if (currentCameraFrame && !userMessageContent) userMessageContent = "[Webcam Image]";
-    else if (uploadedImageBase64 && userMessageContent) userMessageContent = `${userMessageContent} [Image Attached]`;
+    if (uploadedImageBase64 && !userMessageContent) {
+      userMessageContent = "[Uploaded Image]";
+    } else if (currentCameraFrame && !userMessageContent) {
+      userMessageContent = "[Webcam Image]";
+    } else if (uploadedImageBase64 && userMessageContent) {
+      userMessageContent = `${userMessageContent} [Image Attached]`;
+    }
 
     const userMessage: Message = { id: `user-${Date.now()}`, role: 'user', content: userMessageContent, timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
@@ -183,13 +243,23 @@ export default function ChatPage() {
     const frameToSendForThisMessage = currentCameraFrame;
 
     const detectedUrlInMessage = detectYouTubeUrl(userMessage.content);
+    console.log('Detected YouTube URL:', detectedUrlInMessage);
     if (detectedUrlInMessage && !imageToSendForThisMessage && !frameToSendForThisMessage) {
+      console.log('Starting video processing for URL:', detectedUrlInMessage);
       (async () => {
         try {
           const title = await getVideoTitle(detectedUrlInMessage);
+          console.log('Retrieved video title:', title);
           await startVideoLearningAppProcessing(detectedUrlInMessage, title);
+          console.log('Video processing completed for:', detectedUrlInMessage);
         } catch (error) {
           console.error("Error processing YouTube URL in background:", error);
+          addActivity({
+            type: 'error',
+            title: 'Video Processing Error',
+            description: 'Failed to process the YouTube video. Please try again.',
+            status: 'failed'
+          });
         }
       })();
     }
@@ -251,29 +321,94 @@ export default function ChatPage() {
   const scrollToBottom = () => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); };
   useEffect(() => { scrollToBottom(); }, [messages]);
 
+  // Initialize speech recognition with proper error handling
   useEffect(() => {
-    if (!isSpeechSupported || typeof window === "undefined") return;
-    recognition.current = new SpeechRecognition();
-    recognition.current.continuous = false; recognition.current.interimResults = true; recognition.current.lang = "en-US";
-    recognition.current.onstart = () => { setAiVoiceState("listening"); setCurrentTranscription(""); };
-    recognition.current.onresult = (event: any) => {
-      let interim = "", final = "";
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) final += event.results[i][0].transcript; else interim += event.results[i][0].transcript;
-      }
-      setCurrentTranscription(interim || final); if (final) setInput(final);
-    };
-    recognition.current.onend = () => {
-      setAiVoiceState("processing");
-      if (currentTranscription.trim()) handleSendMessage(currentTranscription.trim());
-      else { setShowVoiceModal(false); setAiVoiceState("idle"); }
-    };
-    recognition.current.onerror = (event: any) => {
-      console.error("Speech error:", event.error); setAiVoiceState("error");
-      setTimeout(() => { setShowVoiceModal(false); setAiVoiceState("idle"); }, 2000);
-    };
-    return () => { if (recognition.current) recognition.current.stop(); };
-  }, [isSpeechSupported, SpeechRecognition, handleSendMessage]);
+    if (typeof window === "undefined" || !SpeechRecognition) {
+      console.warn("Speech recognition not supported in this browser");
+      return;
+    }
+
+    try {
+      recognition.current = new SpeechRecognition();
+      recognition.current.continuous = false;
+      recognition.current.interimResults = true;
+      recognition.current.lang = "en-US";
+
+      recognition.current.onstart = () => {
+        setAiVoiceState("listening");
+        setCurrentTranscription("");
+      };
+
+      recognition.current.onresult = (event: any) => {
+        let interim = "";
+        let final = "";
+        
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            final += event.results[i][0].transcript;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+        
+        setCurrentTranscription(interim || final);
+        if (final) setInput(final);
+      };
+
+      recognition.current.onend = () => {
+        setAiVoiceState("processing");
+        if (currentTranscription.trim()) {
+          handleSendMessage(currentTranscription.trim());
+        } else {
+          setShowVoiceModal(false);
+          setAiVoiceState("idle");
+        }
+      };
+
+      recognition.current.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        setAiVoiceState("error");
+        
+        // Provide user-friendly error messages
+        let errorMessage = "An error occurred with speech recognition";
+        if (event.error === 'not-allowed') {
+          errorMessage = "Microphone access was denied. Please check your browser permissions.";
+        } else if (event.error === 'audio-capture') {
+          errorMessage = "No microphone was found. Please ensure a microphone is connected.";
+        } else if (event.error === 'not-allowed') {
+          errorMessage = "Microphone access is required for voice input. Please allow microphone access in your browser settings.";
+        }
+        
+        // Add error to activities log
+        addActivity({
+          type: "error",
+          title: "Voice Input Error",
+          description: errorMessage,
+          status: 'failed'
+        });
+        
+        setTimeout(() => {
+          setShowVoiceModal(false);
+          setAiVoiceState("idle");
+        }, 3000);
+      };
+
+      return () => {
+        if (recognition.current) {
+          recognition.current.stop();
+        }
+      };
+    } catch (error) {
+      console.error("Error initializing speech recognition:", error);
+      setAiVoiceState("error");
+      addActivity({
+        type: "error",
+        title: "Voice Input Unavailable",
+        description: "Speech recognition could not be initialized in your browser.",
+        status: 'failed'
+      });
+    }
+  }, [isSpeechSupported, SpeechRecognition, handleSendMessage, addActivity]);
 
   const handleDownloadTranscript = () => {
     const transcript = messages.map((msg) => `${msg.role === 'user' ? 'User' : 'Assistant'} (${msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}): ${msg.content}`).join("\n\n");
@@ -349,68 +484,142 @@ export default function ChatPage() {
     if (event.target) event.target.value = "";
   };
 
-  const startVideoLearningAppProcessing = async (detectedUrl: string, videoTitle: string) => {
-    const activityId = `vid-${Date.now()}`;
+  const startVideoLearningAppProcessing = useCallback(async (detectedUrl: string, videoTitle: string) => {
+    if (!detectedUrl) {
+      console.error('No URL provided to startVideoLearningAppProcessing');
+      return;
+    }
 
-    const initialActivity: ActivityItem = {
-      id: activityId,
-      type: "analyzing_video",
-      title: `Processing Video: ${videoTitle || 'Untitled Video'}`,
-      description: "Initializing video analysis...",
-      progress: 0,
-      timestamp: Date.now(),
-      isPerMessageLog: false,
-      status: 'in_progress',
-    };
-    // Use the callback form of setActivities to ensure it gets the latest state if called rapidly
-    setActivities(prevActivities => [initialActivity, ...prevActivities]);
+    // Add initial processing activity
+    const activityId = `video_${Date.now()}`;
+    let currentActivityId: string | null = null;
+    
+    try {
+      console.log(`Starting video processing for: ${videoTitle} (${detectedUrl})`);
+      
+      // Add the initial activity using addActivity to ensure proper state management
+      const newActivity = {
+        type: 'video_processing' as const,
+        title: videoTitle || 'Processing Video',
+        description: 'Initializing video analysis...',
+        status: 'in_progress' as const,
+        progress: 0,
+        link: detectedUrl,
+        isLiveProcessing: true
+      };
+      
+      // Store the activity ID for updates
+      currentActivityId = await new Promise<string>((resolve) => {
+        const id = generateId();
+        setActivities(prevActivities => [
+          { ...newActivity, id, timestamp: Date.now() },
+          ...prevActivities
+        ]);
+        resolve(id);
+      });
 
-    // Simulate Progress
-    let currentProgress = 0;
-    const steps = [
-      { progress: 25, description: "Analyzing video content...", type: "analyzing_video" },
-      { progress: 50, description: "Extracting key concepts...", type: "video_processing" },
-      { progress: 75, description: "Generating learning modules...", type: "video_processing" },
-    ];
+      // Simulate processing steps
+      const steps = [
+        { progress: 25, description: "Analyzing video content..." },
+        { progress: 50, description: "Extracting key concepts..." },
+        { progress: 75, description: "Generating learning modules..." },
+        { progress: 100, description: "Video processing complete!" }
+      ];
 
-    const progressInterval = setInterval(() => {
-      if (currentProgress < 100 && steps.length > 0) {
-        const nextStep = steps.shift();
-        if (nextStep) {
-          currentProgress = nextStep.progress;
-          setActivities(prevActivities =>
-            prevActivities.map(act =>
-              act.id === activityId
-                ? {
-                    ...act,
-                    progress: currentProgress,
-                    type: nextStep.type as ActivityItem['type'],
-                    description: nextStep.description,
-                  }
-                : act
-            )
-          );
+      // Process each step with a delay
+      for (const step of steps) {
+        try {
+          // Skip if the component was unmounted
+          if (!currentActivityId) {
+            console.log('Activity was cleared, stopping processing');
+            return;
+          }
+          
+          console.log(`Processing step: ${step.description} (${step.progress}%)`);
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate processing time
+          
+          // Skip if the component was unmounted
+          if (!currentActivityId) {
+            console.log('Activity was cleared during processing, stopping');
+            return;
+          }
+          
+          // Update the activity with current progress
+          setActivities(prevActivities => {
+            return prevActivities.map(activity => {
+              if (activity.id === currentActivityId) {
+                const isComplete = step.progress >= 100;
+                return {
+                  ...activity,
+                  progress: step.progress,
+                  description: step.description,
+                  status: isComplete ? 'completed' : 'in_progress',
+                  isLiveProcessing: !isComplete,
+                  timestamp: Date.now()
+                };
+              }
+              return activity;
+            });
+          });
+          
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          console.error(`Error in processing step ${step.progress}%:`, error);
+          
+          // Update the activity with error state
+          if (currentActivityId) {
+            setActivities(prevActivities => 
+              prevActivities.map(activity => 
+                activity.id === currentActivityId 
+                  ? { 
+                      ...activity, 
+                      type: 'error',
+                      title: 'Processing Error',
+                      description: `Failed to process video: ${errorMessage}`,
+                      status: 'failed',
+                      isLiveProcessing: false,
+                      timestamp: Date.now()
+                    } 
+                  : activity
+              )
+            );
+          }
+          
+          // Re-throw to be caught by the outer try-catch
+          throw error;
         }
-      } else {
-        clearInterval(progressInterval);
-        currentProgress = 100;
+      }
+      
+      console.log('Video processing completed successfully');
+      
+      // Skip if the component was unmounted
+      if (!currentActivityId) {
+        console.log('Activity was cleared before completion');
+        return;
+      }
+      
+      // After all steps are complete, update the activity to show completion
+      setActivities(prevActivities => {
+        return prevActivities.map(activity => {
+          if (activity.id === currentActivityId) {
+            return {
+              ...activity,
+              type: 'video_processing' as const,
+              progress: 100,
+              title: `Learning App Ready: ${videoTitle || 'Untitled Video'}`,
+              description: "Your learning app is ready to view.",
+              link: `/video-learning-tool?videoUrl=${encodeURIComponent(detectedUrl)}`,
+              status: 'completed' as const,
+              isLiveProcessing: false,
+              timestamp: Date.now()
+            };
+          }
+          return activity;
+        });
+      });
 
-        setActivities(prevActivities =>
-          prevActivities.map(act =>
-            act.id === activityId
-              ? {
-                  ...act,
-                  type: "video_complete",
-                  progress: 100,
-                  title: `Learning App Ready: ${videoTitle || 'Untitled Video'}`,
-                  description: "Your learning app is ready to view.",
-                  link: `/video-learning-tool?videoUrl=${encodeURIComponent(detectedUrl)}`,
-                  status: 'completed',
-                }
-              : act
-          )
-        );
-
+      try {
+        // Add a message with a link to the video learning tool
         const linkCardMessage: Message = {
           id: `linkcard-${Date.now()}`,
           role: 'assistant',
@@ -418,39 +627,120 @@ export default function ChatPage() {
           timestamp: new Date(),
         };
         setMessages(prevMessages => [...prevMessages, linkCardMessage]);
+      } catch (messageError) {
+        console.error('Error adding completion message:', messageError);
+        // Don't fail the whole process if we can't add the message
       }
-    }, 1000);
-  };
-
-  const captureFrame = useCallback(() => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current; const canvas = canvasRef.current; const context = canvas.getContext("2d");
-      if (!context || video.videoWidth === 0 || video.videoHeight === 0) return;
-      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      setCurrentCameraFrame(canvas.toDataURL("image/jpeg", 0.8).split(",")[1]);
+      
+    } catch (error) {
+      console.error('Error in video processing:', error);
+      
+      // Only update error state if we still have a valid activity ID
+      if (currentActivityId) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        
+        setActivities(prevActivities => {
+          return prevActivities.map(activity => {
+            if (activity.id === currentActivityId) {
+              return {
+                ...activity,
+                type: 'error' as const,
+                title: 'Video Processing Failed',
+                description: `There was an error processing the video: ${errorMessage}`,
+                status: 'failed' as const,
+                isLiveProcessing: false,
+                timestamp: Date.now()
+              };
+            }
+            return activity;
+          });
+        });
+      }
+      
+      // Re-throw the error to be caught by the caller
+      throw error;
+    } finally {
+      // Clean up the activity ID reference
+      currentActivityId = null;
     }
-  }, []);
+  }, [addActivity, setActivities, setMessages]);
 
-  const startCamera = useCallback(async () => {
+  const startWebcam = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user' },
+        audio: false
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        setIsCameraActive(true);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error accessing webcam:', error);
+      addActivity({
+        type: 'error',
+        title: 'Webcam Error',
+        description: 'Could not access webcam. Please check permissions.',
+        status: 'failed'
+      });
+      return false;
+    }
+  }, [addActivity]);
+
+  const captureFrame = useCallback(async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    
+    if (!context || video.videoWidth === 0 || video.videoHeight === 0) {
+      console.warn("Cannot capture frame: Video not ready");
+      return;
+    }
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
     setShowWebcamModal(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      await startWebcam();
       if (videoRef.current) {
-        videoRef.current.srcObject = stream; await videoRef.current.play(); setIsCameraActive(true);
-        if (captureIntervalRef.current) clearInterval(captureIntervalRef.current);
-        captureIntervalRef.current = setInterval(captureFrame, 2000);
+        await videoRef.current.play();
+        setIsCameraActive(true);
       }
-    } catch (error) { console.error("Error accessing webcam:", error); setIsCameraActive(false); setShowWebcamModal(false); }
-  }, [captureFrame]);
+    } catch (error) { 
+      console.error("Error accessing webcam:", error); 
+      setIsCameraActive(false); 
+      setShowWebcamModal(false);
+      addActivity({
+        type: 'error',
+        title: 'Webcam Error',
+        description: 'Failed to access webcam. Please check permissions.',
+        status: 'failed'
+      });
+    }
+  }, [startWebcam, addActivity]);
+
+// ...
+
 
   const stopCamera = useCallback(() => {
     if (videoRef.current && videoRef.current.srcObject) {
       (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
       videoRef.current.srcObject = null;
     }
-    setIsCameraActive(false); setCurrentCameraFrame(null);
-    if (captureIntervalRef.current) { clearInterval(captureIntervalRef.current); captureIntervalRef.current = null; }
+    setIsCameraActive(false); 
+    setCurrentCameraFrame(null);
+    if (captureIntervalRef.current) { 
+      clearInterval(captureIntervalRef.current); 
+      captureIntervalRef.current = null; 
+    }
     setShowWebcamModal(false);
   }, []);
 
@@ -511,7 +801,36 @@ export default function ChatPage() {
         <nav className="flex-grow px-4 py-2 space-y-1">{navLinks.map((link) => (<Link key={link.label} href={link.href} className={cn("flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors", currentPath === link.href ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-muted hover:text-foreground")}><link.icon size={18} /><span>{link.label}</span></Link>))}</nav>
         {onSummarizeChat && open && (<div className="mt-2 mb-2 px-4"><Button variant="outline" size="sm" className="w-full" onClick={onSummarizeChat} disabled={summaryLoading}>{summaryLoading ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <MessageSquareText className="w-4 h-4 mr-2" />}Summarize Chat</Button></div>)}
         <div className="px-4 mt-auto mb-4"><Button variant="outline" className="w-full justify-start space-x-3"><LogOut size={18} /><span>Log Out</span></Button></div>
-        <div className="flex-shrink-0 border-t p-4"><h3 className="text-sm font-semibold mb-3 text-muted-foreground px-2">Threads</h3><ScrollArea className="h-[250px]">{activities.length === 0 && (<p className="text-xs text-muted-foreground p-2">No recent activity.</p>)}{activities.map((activity) => (<div key={activity.id} className="text-xs mb-1">{activity.isPerMessageLog ? (activity.isLiveProcessing ? (<div className="p-2 border border-border rounded-md bg-muted/30 hover:bg-muted/60 transition-colors"><div className="flex items-center justify-between mb-1"><span className="font-medium text-foreground truncate flex items-center"><Sparkles size={14} className={`mr-1.5 ${getActivityColor(activity.type)} animate-pulse`} /> {activity.title || activity.details || "Processing..."}</span></div>{activity.description && <p className="text-muted-foreground truncate">{activity.description}</p>}</div>) : (<div className="flex items-center p-1.5 rounded-md hover:bg-muted/60 transition-colors cursor-pointer"><Sparkles size={14} className={`mr-1.5 ${getActivityColor(activity.type)} flex-shrink-0`} /><span className="text-muted-foreground truncate">{activity.title || activity.details || "Processed"}</span></div>)) : (<div className="flex items-start mb-2 p-2 rounded-md hover:bg-muted transition-colors">{React.createElement(activity.icon || getActivityIcon(activity.type), { size: 18, className: `mr-2.5 mt-0.5 flex-shrink-0 ${getActivityColor(activity.type)}` })}<div className="flex-grow truncate"><div className="font-medium text-foreground truncate">{activity.title || activity.details}</div>{activity.description && <p className="text-muted-foreground truncate">{activity.description}</p>}{typeof activity.progress === 'number' && activity.progress < 100 && (<Progress value={activity.progress} className="h-1.5 mt-1" />)}{activity.link && activity.status === 'completed' && (<Link href={activity.link} target="_blank" className="text-primary hover:underline text-xs flex items-center mt-0.5">View Details <ExternalLink size={12} className="ml-1" /></Link>)}<p className="text-muted-foreground/80 text-xs mt-0.5">{activity.user || 'System'} - {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p></div></div>)}</div>))}</ScrollArea></div>
+        <div className="flex-shrink-0 border-t p-4"><h3 className="text-sm font-semibold mb-3 text-muted-foreground px-2">Threads</h3><ScrollArea className="h-[250px]">{activities.length === 0 && (<p className="text-xs text-muted-foreground p-2">No recent activity.</p>)}{activities.map((activity) => (<div key={activity.id} className="text-xs mb-1">{activity.type === 'video_processing' ? (
+    <div className="mb-3 p-3 border rounded-lg bg-background hover:bg-muted/50 transition-colors">
+      <VideoLearningCard 
+        videoUrl={activity.link || ''}
+        videoTitle={activity.title}
+        onGenerateApp={(url) => {
+          // Handle generate app action
+          window.open(`/video-learning-tool?videoUrl=${encodeURIComponent(url)}`, '_blank');
+        }}
+        theme={resolvedTheme === 'dark' ? 'dark' : 'light'}
+        isGenerating={activity.status === 'in_progress'}
+      />
+    </div>
+  ) : activity.isPerMessageLog ? (activity.isLiveProcessing ? (
+    <div className="p-2 border border-border rounded-md bg-muted/30 hover:bg-muted/60 transition-colors">
+      <div className="flex items-center justify-between mb-1">
+        <span className="font-medium text-foreground truncate flex items-center">
+          <Sparkles size={14} className={`mr-1.5 ${getActivityColor(activity.type)} animate-pulse`} /> 
+          {activity.title || activity.details || "Processing..."}
+        </span>
+      </div>
+      {activity.description && <p className="text-muted-foreground truncate">{activity.description}</p>}
+    </div>
+  ) : (
+    <div className="flex items-center p-1.5 rounded-md hover:bg-muted/60 transition-colors cursor-pointer">
+      <Sparkles size={14} className={`mr-1.5 ${getActivityColor(activity.type)} flex-shrink-0`} />
+      <span className="text-muted-foreground truncate">{activity.title || activity.details || "Processed"}</span>
+    </div>
+  )) : (
+    <div className="flex items-start mb-2 p-2 rounded-md hover:bg-muted transition-colors">{React.createElement(activity.icon || getActivityIcon(activity.type), { size: 18, className: `mr-2.5 mt-0.5 flex-shrink-0 ${getActivityColor(activity.type)}` })}<div className="flex-grow truncate"><div className="font-medium text-foreground truncate">{activity.title || activity.details}</div>{activity.description && <p className="text-muted-foreground truncate">{activity.description}</p>}{typeof activity.progress === 'number' && activity.progress < 100 && (<Progress value={activity.progress} className="h-1.5 mt-1" />)}{activity.link && activity.status === 'completed' && (<Link href={activity.link} target="_blank" className="text-primary hover:underline text-xs flex items-center mt-0.5">View Details <ExternalLink size={12} className="ml-1" /></Link>)}<p className="text-muted-foreground/80 text-xs mt-0.5">{activity.user || 'System'} - {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p></div></div>)}</div>))}</ScrollArea></div>
       </div>);
   };
 
@@ -579,10 +898,36 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-screen bg-background">
-      <div className="flex-1 flex flex-col h-full p-0 md:p-4 justify-center items-center overflow-hidden">
+      {/* Desktop Sidebar (hidden on mobile) */}
+      <DesktopSidebar 
+        activities={activities} 
+        currentPath={currentPath} 
+        onSummarizeChat={handleSummarizeChat} 
+        open={sidebarOpen} 
+        setOpen={setSidebarOpen} 
+      />
+      
+      {/* Mobile Sidebar Overlay */}
+      <MobileSidebarSheet 
+        open={sidebarOpen} 
+        onOpenChange={setSidebarOpen} 
+        activities={activities} 
+        currentPath={currentPath} 
+        onSummarizeChat={handleSummarizeChat} 
+      />
+      
+      <div className="flex-1 flex flex-col h-full p-0 md:p-4 justify-center items-center overflow-hidden relative">
         <Card className="w-full h-full flex flex-col shadow-lg rounded-none md:rounded-lg">
           <CardHeader className="border-b flex flex-row justify-between items-center">
-            <div className="flex items-center">
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="md:hidden"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <PanelRightOpen className="h-5 w-5" />
+              </Button>
               <h1 className="text-xl font-semibold text-foreground">AI Chat Assistant</h1>
             </div>
             <div className="flex items-center space-x-2">
@@ -596,7 +941,7 @@ export default function ChatPage() {
           <CardFooter className="p-4 border-t relative">
             <div className="flex w-full items-center space-x-2">
               <Button variant="outline" size="icon" onClick={handleMicButtonClick} disabled={!isSpeechSupported || isLoading || isCameraActive} aria-label={aiVoiceState === "listening" ? "Stop listening" : "Start listening"} className="shrink-0"><Mic className={`h-5 w-5 ${aiVoiceState === "listening" || aiVoiceState === "processing" ? "text-destructive animate-pulse" : ""}`} /></Button>
-              <Button variant="outline" size="icon" onClick={isCameraActive ? stopCamera : startCamera} disabled={isLoading || aiVoiceState === "listening"} aria-label={isCameraActive ? "Stop camera" : "Start camera"} className={`shrink-0 ${isCameraActive ? "text-destructive animate-pulse" : ""}`}><VideoIcon className="h-5 w-5" /></Button>
+              <Button variant="outline" size="icon" onClick={isCameraActive ? stopCamera : startWebcam} disabled={isLoading || aiVoiceState === "listening"} aria-label={isCameraActive ? "Stop camera" : "Start camera"} className={`shrink-0 ${isCameraActive ? "text-destructive animate-pulse" : ""}`}><VideoIcon className="h-5 w-5" /></Button>
               <Button variant="outline" size="icon" className="shrink-0" onClick={() => setShowToolsMenu(!showToolsMenu)} aria-label="Toggle tools menu" disabled={isLoading}><PlusIcon className={`h-5 w-5 transition-transform duration-200 ${showToolsMenu ? "rotate-45" : ""}`} /></Button>
               <Button variant="outline" size="icon" className="shrink-0"
                 onClick={() => setShowUploadOptions(prev => !prev)}
@@ -611,6 +956,13 @@ export default function ChatPage() {
         </Card>
         {showVoiceModal && (<VoiceInputModal isListening={aiVoiceState === "listening"} currentTranscription={currentTranscription} aiState={aiVoiceState} onClose={() => { if (recognition.current) { recognition.current.stop(); } setShowVoiceModal(false); setAiVoiceState("idle"); }} theme={theme === "dark" ? "dark" : "light"}/>)}
         {showWebcamModal && (<WebcamModal videoRef={videoRef} canvasRef={canvasRef} isCameraActive={isCameraActive} onStopCamera={stopCamera} theme={theme === "dark" ? "dark" : "light"}/>)}
+        {showVideoLearningModal && (
+          <VideoLearningModal
+            isOpen={showVideoLearningModal}
+            onClose={() => setShowVideoLearningModal(false)}
+            theme={theme === "dark" ? "dark" : "light"}
+          />
+        )}
         {showToolsMenu && (
           <div className="absolute bottom-20 left-4 mb-2 w-72 bg-background border rounded-lg shadow-xl p-4 z-20">
             <h3 className="text-sm font-semibold mb-2">Quick Tools</h3>
@@ -628,6 +980,17 @@ export default function ChatPage() {
             </Button>
             <Button variant="ghost" className="w-full justify-start" onClick={() => portHandleToolClick("brainstorm_ideas")}>
               Brainstorm Ideas
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start mt-2 text-blue-500" 
+              onClick={() => {
+                setShowVideoLearningModal(true);
+                setShowToolsMenu(false);
+              }}
+            >
+              <Youtube className="w-4 h-4 mr-2" />
+              Create Learning App from Video
             </Button>
             {generatingImage && (
               <div className="mt-2 flex items-center text-sm text-muted-foreground">
