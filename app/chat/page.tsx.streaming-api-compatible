@@ -1,0 +1,187 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+
+interface Message {
+  id: string;
+  text: string;
+  sender: 'user' | 'ai';
+}
+
+const ChatPage = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSendMessage = async () => {
+    if (input.trim() === '') return;
+
+    const newUserMessage: Message = {
+      id: Date.now().toString(),
+      text: input,
+      sender: 'user',
+    };
+    // Add user message to state first for responsiveness
+    setMessages((prevMessages) => [...prevMessages, newUserMessage]);
+
+    const currentInput = input; // Capture current input before clearing
+    setInput('');
+    setIsLoading(true);
+
+    // Prepare the message history for the API
+    // The backend expects a 'messages' array with specific role/parts structure
+    const apiMessages = messages.map(msg => ({
+      role: msg.sender === 'user' ? 'user' : 'model', // Gemini uses 'model' for AI
+      parts: [{ text: msg.text }]
+    }));
+    // Add the new user message to the history being sent
+    apiMessages.push({ role: 'user', parts: [{ text: currentInput }] });
+
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Send the message in the format expected by the backend
+        body: JSON.stringify({ messages: apiMessages }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Network response was not ok: ${response.statusText}`);
+      }
+
+      if (!response.body) {
+        throw new Error('Response body is null');
+      }
+
+      // Handle streaming response
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedAiText = '';
+      let aiMessageId = Date.now().toString() + '-ai';
+
+      // Add a placeholder for AI message
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { id: aiMessageId, text: '...', sender: 'ai' },
+      ]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        // Process server-sent events: data: {"content": "..."}\n\n
+        const lines = chunk.split('\n\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const jsonStr = line.substring('data: '.length);
+              if (jsonStr.trim()) { // Ensure jsonStr is not empty
+                const parsed = JSON.parse(jsonStr);
+                if (parsed.content) {
+                  accumulatedAiText += parsed.content;
+                  // Update the AI message in state
+                  setMessages((prevMessages) =>
+                    prevMessages.map((msg) =>
+                      msg.id === aiMessageId ? { ...msg, text: accumulatedAiText } : msg
+                    )
+                  );
+                }
+              }
+            } catch (e) {
+              console.error('Error parsing stream data:', e, "Raw line:", line);
+            }
+          }
+        }
+      }
+      if (accumulatedAiText === '') { // If no content was streamed, show an error
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) =>
+              msg.id === aiMessageId ? { ...msg, text: 'No response from AI.' } : msg
+            )
+          );
+      }
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorMessageText = error instanceof Error ? error.message : 'Sorry, something went wrong. Please try again.';
+      // Update the placeholder or add a new error message
+      setMessages((prevMessages) => {
+        const lastMessage = prevMessages[prevMessages.length -1];
+        if (lastMessage && lastMessage.id.endsWith('-ai') && lastMessage.text === '...') {
+          return prevMessages.map(msg => msg.id === lastMessage.id ? {...msg, text: errorMessageText} : msg);
+        }
+        return [
+          ...prevMessages,
+          { id: Date.now().toString() + '-error', text: errorMessageText, sender: 'ai' }
+        ];
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '20px', boxSizing: 'border-box', backgroundColor: '#f0f0f0' }}>
+      <div style={{ flexGrow: 1, overflowY: 'auto', marginBottom: '20px', border: '1px solid #ccc', padding: '10px', borderRadius: '5px', backgroundColor: 'white' }}>
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            style={{
+              marginBottom: '10px',
+              padding: '10px 15px',
+              borderRadius: '20px',
+              backgroundColor: msg.sender === 'user' ? '#007bff' : '#e9ecef',
+              color: msg.sender === 'user' ? 'white' : 'black',
+              alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+              maxWidth: '75%',
+              wordWrap: 'break-word',
+              marginLeft: msg.sender === 'user' ? 'auto' : 'inherit',
+              marginRight: msg.sender === 'ai' ? 'auto' : 'inherit',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              position: 'relative', // For potential future elements like timestamps
+            }}
+          >
+            {msg.text}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', borderTop: '1px solid #ccc', paddingTop: '10px' }}>
+        <input
+          type="text"
+          value={input}
+          onChange={handleInputChange}
+          onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleSendMessage()}
+          placeholder="Type your message..."
+          style={{ flexGrow: 1, padding: '12px', borderRadius: '20px', border: '1px solid #ccc', marginRight: '10px', fontSize: '16px' }}
+          disabled={isLoading}
+        />
+        <button
+          onClick={handleSendMessage}
+          disabled={isLoading}
+          style={{
+            padding: '12px 20px',
+            borderRadius: '20px',
+            border: 'none',
+            backgroundColor: isLoading? '#ccc' : '#007bff',
+            color: 'white',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            fontSize: '16px',
+            transition: 'background-color 0.3s ease'
+          }}
+        >
+          {isLoading ? 'Sending...' : 'Send'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default ChatPage;

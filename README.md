@@ -1,30 +1,92 @@
-# Fb/c AI Clone
-
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+# FB/c Lab Platform
 
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/iamfarzads-projects/v0-fb-c-ai-clone)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/EzGF41wZesn)
+[![Main Branch](https://img.shields.io/badge/Main%20Branch-Stable-brightgreen)](https://github.com/iamfarzad/FB-c_labV2/tree/main)
+[![WebApp Branch](https://img.shields.io/badge/WebApp-Development-yellow)](https://github.com/iamfarzad/FB-c_labV2/tree/feature/webapp-clean)
+[![AI Chat Branch](https://img.shields.io/badge/AI%20Chat-Development-blue)](https://github.com/iamfarzad/FB-c_labV2/tree/feature/ai-chat-utils)
 
-## Overview
+## Project Structure
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+### Main Branches
+
+1. **`main`** - Production-ready code
+   - Always stable and tested
+   - Only merged from feature branches after review
+   - Deployed to production
+
+2. **`feature/webapp-clean`** - Web Application
+   - Contains all web app features **except** AI chat
+   - Focus on UI/UX, pages, and web app functionality
+   - See [WebApp README](README-WEBAPP.md) for details
+
+3. **`feature/ai-chat-utils`** - AI Chat Functionality
+   - Complete AI chat implementation
+   - Voice and text chat features
+   - API integrations
+   - See [AI Chat README](README-AI-CHAT.md) for details
+
+## Development Workflow
+
+1. **Create a feature branch** from the appropriate base branch:
+   ```bash
+   # For web app features
+   git checkout -b feature/my-webapp-feature feature/webapp-clean
+
+   # For AI chat features
+   git checkout -b feature/my-chat-feature feature/ai-chat-utils
+   ```
+
+2. **Make your changes**
+
+3. **Test thoroughly**
+   - Run unit tests
+   - Test in development environment
+   - Verify no regressions
+
+4. **Create a Pull Request** to the appropriate branch
+   - Web app features → `feature/webapp-clean`
+   - AI chat features → `feature/ai-chat-utils`
+
+5. **After review and approval**, merge to the feature branch
+
+6. **When ready for production**, create a PR from the feature branch to `main`
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- pnpm
+- Git
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/iamfarzad/FB-c_labV2.git
+cd FB-c_labV2
+
+# Install dependencies
+pnpm install
+
+# Copy environment variables
+cp .env.example .env.local
+# Edit .env.local with your API keys
+```
+
+### Running the Application
+
+```bash
+# For web app development
+git checkout feature/webapp-clean
+pnpm dev
+
+# For AI chat development
+git checkout feature/ai-chat-utils
+pnpm dev
+```
 
 ## Deployment
 
-Your project is live at:
+Main branch is automatically deployed to Vercel:
 
-**[https://vercel.com/iamfarzads-projects/v0-fb-c-ai-clone](https://vercel.com/iamfarzads-projects/v0-fb-c-ai-clone)**
-
-## Build your app
-
-Continue building your app on:
-
-**[https://v0.dev/chat/projects/EzGF41wZesn](https://v0.dev/chat/projects/EzGF41wZesn)**
-
-## How It Works
-
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/iamfarzads-projects/v0-fb-c-ai-clone)
