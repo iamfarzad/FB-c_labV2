@@ -17,7 +17,7 @@ import ContentContainer from '@/components/ContentContainer';
 import ExampleGallery from '@/components/ExampleGallery';
 import { useDataContext } from '@/context/data-context';
 import type { Example } from '@/lib/types';
-import { getYoutubeEmbedUrl, getYouTubeVideoTitle, validateYoutubeUrl } from '@/lib/youtube';
+import { getYoutubeEmbedUrl, getVideoTitle, validateYoutubeUrl } from '@/lib/youtube';
 
 interface LearningModule {
   id: string;
