@@ -1,23 +1,36 @@
 "use client"
 
-import type React from "react"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { FloatingChatButton } from "@/components/floating-chat-button"
+import React from "react"
+import { Header } from "./header"
+import { Footer } from "./footer"
+import { FloatingChatButton } from "./floating-chat-button"
 
 interface LayoutProps {
   children: React.ReactNode
-  theme: "light" | "dark"
-  onThemeToggle: () => void
+  theme?: "light" | "dark"
+  onThemeToggle?: () => void
+  showFloatingChat?: boolean
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, theme, onThemeToggle }) => {
+export const Layout: React.FC<LayoutProps> = ({ 
+  children, 
+  theme, 
+  onThemeToggle,
+  showFloatingChat = true 
+}) => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header onThemeToggle={onThemeToggle} />
-      <main className="flex-1">{children}</main>
+    <div className="relative min-h-screen bg-background">
+      <Header theme={theme} onThemeToggle={onThemeToggle} />
+      
+      {/* Main Content with padding for fixed header */}
+      <main className="pt-16">
+        {children}
+      </main>
+      
       <Footer />
-      <FloatingChatButton theme={theme} />
+      
+      {/* Floating Chat Button */}
+      {showFloatingChat && <FloatingChatButton />}
     </div>
   )
 }

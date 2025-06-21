@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
+import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 
-// Initialize Gemini
-const apiKey = process.env.GEMINI_API_KEY || '';
-const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
+// Initialize Gemini with proper error handling
+const apiKey = process.env.GEMINI_API_KEY;
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+
+// Initialize ElevenLabs
+const elevenLabsClient = process.env.ELEVENLABS_API_KEY 
+  ? new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY })
+  : null;
 
 // Initialize Supabase
 function getSupabase() {
@@ -12,7 +18,8 @@ function getSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
   if (!url || !key) {
-    throw new Error('Supabase credentials not configured');
+    console.warn('Supabase credentials not configured - real-time features will be disabled');
+    return null;
   }
   
   return createClient(url, key);
@@ -28,6 +35,18 @@ const AI_USAGE_LIMITS = {
 };
 
 export async function POST(request: NextRequest) {
+  // CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  // Handle OPTIONS for CORS
+  if (request.method === 'OPTIONS') {
+    return new NextResponse(null, { status: 200, headers });
+  }
+
   try {
     const body = await request.json();
     const action = request.nextUrl.searchParams.get('action') || 'conversationalFlow';
@@ -52,11 +71,6 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('API error:', error);
-    const headers = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    };
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500, headers }
@@ -161,43 +175,57 @@ Use their name frequently if provided and show company insights when available.
 Current user message: "${prompt}"`;
 
     // Generate response
-    const result = await genAI.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: systemPrompt,
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash-latest',
+      generationConfig: {
+        temperature: 0.9,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 2048,
+      },
     });
-    const text = result.text;
+
+    const result = await model.generateContent(systemPrompt + "\n\n" + prompt);
+    const response = await result.response;
+    const text = response.text();
 
     // Determine next conversation stage
-    const nextState = determineNextStage(currentConversationState, prompt, messageCount);
+    const nextState = determineNextStage(currentConversationState, prompt, userInfo);
 
-    // Generate voice if requested (mock for now)
+    // Generate voice if requested
     let audioData = null;
     let sidebarActivity = '';
     
     if (currentConversationState.stage === 'email_collected' && userInfo.email) {
       sidebarActivity = 'company_analysis';
     } else if (includeAudio) {
-      sidebarActivity = 'voice_generation';
+      const voiceResult = await generateVoiceWithElevenLabs(text);
+      if (voiceResult) {
+        audioData = voiceResult.audioBase64;
+        sidebarActivity = 'voice_generation';
+      }
     }
 
     // Broadcast via Supabase
-    try {
-      const supabase = getSupabase();
-      await supabase.channel('ai-showcase')
-        .send({
-          type: 'broadcast',
-          event: 'ai-response',
-          payload: {
-            text,
-            audioData,
-            sources: [],
-            sidebarActivity,
-            conversationState: nextState,
-            timestamp: Date.now()
-          }
-        });
-    } catch (error) {
-      console.error('Supabase broadcast error:', error);
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        await supabase.channel('ai-showcase')
+          .send({
+            type: 'broadcast',
+            event: 'ai-response',
+            payload: {
+              text,
+              audioData,
+              sources: [],
+              sidebarActivity,
+              conversationState: nextState,
+              timestamp: Date.now()
+            }
+          });
+      } catch (error) {
+        console.error('Supabase broadcast error:', error);
+      }
     }
 
     return NextResponse.json({
@@ -243,7 +271,7 @@ async function handleImageGeneration(body: any) {
           note: 'Image generation description created for business presentation',
           sidebarActivity: 'image_generation'
         }
-      });
+      }, { headers });
     }
     
     const imagePrompt = `Create a detailed visual description for business concept: "${prompt}"
@@ -254,27 +282,28 @@ async function handleImageGeneration(body: any) {
     - Corporate color scheme
     - Specific elements that would resonate with business decision makers`;
 
-    const result = await genAI.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: imagePrompt,
-    });
-    const text = result.text;
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    const result = await model.generateContent(imagePrompt);
+    const response = await result.response;
+    const text = response.text();
 
     // Broadcast sidebar update
-    try {
-      const supabase = getSupabase();
-      await supabase.channel('ai-showcase')
-        .send({
-          type: 'broadcast',
-          event: 'sidebar-update',
-          payload: {
-            activity: 'image_generation',
-            message: '🎨 Generating business visualization...',
-            timestamp: Date.now()
-          }
-        });
-    } catch (error) {
-      console.error('Supabase broadcast error:', error);
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        await supabase.channel('ai-showcase')
+          .send({
+            type: 'broadcast',
+            event: 'sidebar-update',
+            payload: {
+              activity: 'image_generation',
+              message: '🎨 Generating business visualization...',
+              timestamp: Date.now()
+            }
+          });
+      } catch (error) {
+        console.error('Supabase broadcast error:', error);
+      }
     }
 
     return NextResponse.json({
@@ -285,11 +314,11 @@ async function handleImageGeneration(body: any) {
         note: 'Image generation description created for business presentation',
         sidebarActivity: 'image_generation'
       }
-    });
+    }, { headers });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to generate image' },
-      { status: 500 }
+      { status: 500, headers }
     );
   }
 }
@@ -352,11 +381,10 @@ async function handleCodeExecution(body: any) {
     2. Business value explanation
     3. Implementation suggestions`;
 
-    const result = await genAI.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: codePrompt,
-    });
-    const text = result.text;
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    const result = await model.generateContent(codePrompt);
+    const response = await result.response;
+    const text = response.text();
 
     return NextResponse.json({
       success: true,
@@ -451,29 +479,30 @@ Recommended Next Steps:
     3. Business Opportunities
     4. Recommended Next Steps`;
 
-    const result = await genAI.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: summaryPrompt,
-    });
-    const summary = result.text;
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    const result = await model.generateContent(summaryPrompt);
+    const response = await result.response;
+    const summary = response.text();
 
     // Calculate lead score
     const leadScore = calculateLeadScore(currentConversationState);
 
     // Store in Supabase (if configured)
-    try {
-      const supabase = getSupabase();
-      await supabase.from('lead_summaries').insert({
-        name: currentConversationState.name,
-        email: currentConversationState.email,
-        company_name: currentConversationState.companyInfo?.name,
-        conversation_summary: summary,
-        consultant_brief: summary,
-        lead_score: leadScore,
-        ai_capabilities_shown: extractCapabilitiesShown(currentConversationState)
-      });
-    } catch (error) {
-      console.error('Failed to store lead:', error);
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        await supabase.from('lead_summaries').insert({
+          name: currentConversationState.name,
+          email: currentConversationState.email,
+          company_name: currentConversationState.companyInfo?.name,
+          conversation_summary: summary,
+          consultant_brief: summary,
+          lead_score: leadScore,
+          ai_capabilities_shown: extractCapabilitiesShown(currentConversationState)
+        });
+      } catch (error) {
+        console.error('Failed to store lead:', error);
+      }
     }
 
     return NextResponse.json({
@@ -498,7 +527,7 @@ Recommended Next Steps:
 }
 
 // Helper functions
-function determineNextStage(currentState: any, userMessage: string, messageCount: number) {
+function determineNextStage(currentState: any, userMessage: string, userInfo: any) {
   const { stage } = currentState;
   
   switch (stage) {
@@ -509,7 +538,7 @@ function determineNextStage(currentState: any, userMessage: string, messageCount
       break;
     case 'email_request':
       if (userMessage.includes('@')) {
-        return { ...currentState, stage: 'email_collected', messagesInStage: 0 };
+        return { ...currentState, stage: 'email_collected', messagesInStage: 0, email: userMessage };
       }
       break;
     case 'email_collected':
@@ -520,7 +549,7 @@ function determineNextStage(currentState: any, userMessage: string, messageCount
       }
       break;
     case 'capability_showcase':
-      if (messageCount > 10) {
+      if (currentState.messages?.length > 10) {
         return { ...currentState, stage: 'solution_positioning', messagesInStage: 0 };
       }
       break;
@@ -629,4 +658,40 @@ function getMockResponse(stage: string, prompt: string, userInfo: any) {
       companyInfo: userInfo?.companyInfo
     }
   };
+}
+
+// Enhanced voice generation function
+async function generateVoiceWithElevenLabs(text: string): Promise<{ audioBase64: string } | null> {
+  if (!elevenLabsClient) {
+    console.warn('ElevenLabs not configured - voice generation disabled');
+    return null;
+  }
+
+  try {
+    const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || '21m00tcm4tlvdq8ikwam';
+    
+    const audioStream = await elevenLabsClient.textToSpeech.convert(VOICE_ID, {
+      text,
+      model_id: 'eleven_turbo_v2_5',
+      voice_settings: {
+        stability: 0.8,
+        similarity_boost: 0.9,
+        style: 0.4,
+        use_speaker_boost: true
+      }
+    });
+
+    // Convert stream to base64
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of audioStream) {
+      chunks.push(chunk);
+    }
+    const audioBuffer = Buffer.concat(chunks);
+    const audioBase64 = audioBuffer.toString('base64');
+    
+    return { audioBase64 };
+  } catch (error) {
+    console.error('Voice generation error:', error);
+    return null;
+  }
 } 

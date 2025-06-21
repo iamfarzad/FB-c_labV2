@@ -2,7 +2,28 @@
 "use client"
 import React, { useState, useEffect, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { ChatSidePanel } from './chat-side-panel';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import {
+  Sparkles,
+  Send,
+  Image as ImageIcon,
+  Video,
+  FileText,
+  Code,
+  Globe,
+  Mic,
+  CheckCircle,
+  Clock,
+  Activity,
+  Loader2
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface Message {
   id: string
@@ -41,9 +62,17 @@ interface SidebarActivity {
   progress?: number
 }
 
+const capabilities = [
+  { id: 'image_generation', label: 'Image Generation', icon: ImageIcon, color: 'text-purple-600' },
+  { id: 'video_analysis', label: 'Video Analysis', icon: Video, color: 'text-red-600' },
+  { id: 'document_analysis', label: 'Document Processing', icon: FileText, color: 'text-green-600' },
+  { id: 'code_execution', label: 'Code Execution', icon: Code, color: 'text-yellow-600' },
+  { id: 'url_analysis', label: 'Website Analysis', icon: Globe, color: 'text-blue-600' },
+];
+
 export default function AIShowcase() {
   const [conversationState, setConversationState] = useState<ConversationState>(() => {
-    const saved = typeof window !== 'undefined' ? sessionStorage.getItem('aiShowcase') : null; // Check for window
+    const saved = typeof window !== 'undefined' ? sessionStorage.getItem('aiShowcase') : null;
     return saved ? JSON.parse(saved) : {
       sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       stage: 'greeting',
@@ -55,6 +84,8 @@ export default function AIShowcase() {
 
   const [sidebarActivity, setSidebarActivity] = useState<SidebarActivity | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [input, setInput] = useState('')
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const [supabase] = useState(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
@@ -63,10 +94,15 @@ export default function AIShowcase() {
 
   // Auto-save session state
   useEffect(() => {
-    if (typeof window !== 'undefined') { // Check for window
+    if (typeof window !== 'undefined') {
       sessionStorage.setItem('aiShowcase', JSON.stringify(conversationState))
     }
   }, [conversationState])
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [conversationState.messages])
 
   // Supabase realtime subscription
   useEffect(() => {
@@ -93,8 +129,12 @@ export default function AIShowcase() {
 
       // Play audio if available
       if (audioData) {
-        const audio = new Audio(`data:audio/mpeg;base64,${audioData}`)
-        audio.play()
+        try {
+          const audio = new Audio(`data:audio/mpeg;base64,${audioData}`)
+          audio.play()
+        } catch (error) {
+          console.error('Audio playback failed:', error)
+        }
       }
 
       setIsLoading(false)
@@ -109,7 +149,7 @@ export default function AIShowcase() {
     return () => {
       channel.unsubscribe()
     }
-  }, [supabase]) // Added supabase to dependency array
+  }, [supabase])
 
   // Initial AI greeting
   useEffect(() => {
@@ -125,10 +165,15 @@ export default function AIShowcase() {
         messages: [greeting]
       }))
     }
-  }, []) // Removed conversationState from dependency array to avoid re-triggering
+  }, [])
 
-  const handleSendMessage = async (message: string) => {
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    e?.preventDefault()
+    const message = input.trim()
+    if (!message || isLoading) return
+
     setIsLoading(true)
+    setInput('')
 
     // Add user message
     const userMessage: Message = {
@@ -169,7 +214,7 @@ export default function AIShowcase() {
       const result = await response.json()
 
       if (!result.success) {
-        throw new Error(result.error || 'API request failed') // Added default error message
+        throw new Error(result.error || 'API request failed')
       }
 
       // Response handled via Supabase realtime
@@ -192,240 +237,279 @@ export default function AIShowcase() {
   }
 
   const triggerCapabilityDemo = async (capability: string) => {
-    const demos: { [key: string]: string } = { // Added index signature
+    const demos: { [key: string]: string } = {
       'image_generation': 'Generate a business visualization for my industry',
       'video_analysis': 'Analyze this YouTube video for business insights: https://youtube.com/watch?v=example',
       'document_analysis': 'Analyze a business document for optimization opportunities',
       'code_execution': 'Calculate the potential ROI for implementing an AI solution in my business.',
       'url_analysis': 'Analyze my company website for AI opportunities',
-      'screen_analysis': 'Screen analysis'
     }
 
     if (demos[capability]) {
-      // Call the appropriate API endpoint for the capability
-      let action = '';
-      let body: any = { prompt: demos[capability], sessionId: conversationState.sessionId };
-
-      switch (capability) {
-        case 'image_generation':
-          action = 'generateImage';
-          body.prompt = 'Generate a compelling business visualization for my industry.';
-          break;
-        case 'video_analysis': {
-          // Extract URL for video analysis
-          const videoUrlMatch = demos[capability].match(/https:\/\/[^\s]+/);
-          if (videoUrlMatch) {
-            const videoUrl = videoUrlMatch[0];
-            body.videoUrl = videoUrl;
-            body.prompt = `Analyze this YouTube video for business insights: ${videoUrl}`;
-          }
-          break;
-        }
-        case 'document_analysis':
-          // For document analysis, you'd typically have a file upload mechanism.
-          // This is a placeholder for how you might trigger it.
-          // You'll need to handle documentData and mimeType.
-          body.documentData = "base64_encoded_document_data_placeholder"; // Placeholder
-          body.mimeType = "application/pdf"; // Placeholder
-          break;
-        case 'code_execution':
-          action = 'executeCode';
-          body.prompt = 'Calculate the potential ROI for implementing an AI solution in my business.';
-          body.businessContext = "General business calculation";
-          break;
-        case 'url_analysis':
-          action = 'analyzeURL';
-          const urlToAnalyze = prompt("Please enter your company's website URL to analyze:", "https://www.google.com");
-          if (!urlToAnalyze) {
-              setIsLoading(false);
-              return;
-          }
-          body.urlContext = urlToAnalyze;
-          body.prompt = `Analyze ${urlToAnalyze} for AI opportunities.`;
-          break;
-        case 'screen_analysis':
-            // Placeholder for screen analysis logic
-            console.log("Screen analysis triggered");
-            // You would add screen capture logic here
-            return;
-        default:
-          // Fallback to conversational flow if action is not specific
-          await handleSendMessage(demos[capability]);
-          return;
-      }
-
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/gemini?action=${action}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...body, currentConversationState: conversationState })
-        });
-        const result = await response.json();
-        if (!result.success) {
-          throw new Error(result.error || `Failed to trigger ${capability}`);
-        }
-        // AI response (including sidebar updates) will be handled by Supabase broadcast
-      } catch (error) {
-        console.error(`Error triggering ${capability}:`, error);
-        const errMessage: Message = {
-          id: Date.now().toString(),
-          text: `Sorry, I couldn't demonstrate ${capability} right now.`,
-          sender: 'ai',
-          timestamp: new Date(),
-        };
-        setConversationState(prev => ({ ...prev, messages: [...prev.messages, errMessage] }));
-        setIsLoading(false);
-      }
+      setInput(demos[capability]);
+      await handleSendMessage();
     }
   };
 
-
   const completeShowcase = async () => {
-    // Logic to send final conversation state for lead capture
+    if (!conversationState.name || !conversationState.email) return;
+    
     setIsLoading(true);
     try {
-        const response = await fetch('/api/gemini?action=leadCapture', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ currentConversationState: conversationState })
-        });
-        const result = await response.json();
-        if (result.success) {
-            // The backend now sends a final message via Supabase, so we just wait for it.
-            console.log("Lead capture initiated successfully.");
-        } else {
-            throw new Error(result.error || "Failed to complete showcase.");
-        }
+      const response = await fetch('/api/gemini?action=leadCapture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          currentConversationState: conversationState 
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        // Add completion message
+        const completionMessage: Message = {
+          id: Date.now().toString(),
+          text: `Perfect! I've created your personalized AI consultation summary and sent it to ${conversationState.email}.\n\nYour AI readiness score: ${result.data.leadScore}/100\n\nReady to implement these AI solutions? Let's schedule your free strategy session!`,
+          sender: 'ai',
+          timestamp: new Date()
+        };
+        
+        setConversationState(prev => ({
+          ...prev,
+          messages: [...prev.messages, completionMessage],
+          stage: 'completed'
+        }));
+      }
     } catch (error) {
-        console.error("Error completing showcase:", error);
-        alert("There was an error completing the showcase. Please try again.");
+      console.error("Error completing showcase:", error);
     } finally {
       setIsLoading(false);
     }
   }
 
+  const readyToComplete = conversationState.name && 
+                         conversationState.email && 
+                         conversationState.messages.length > 5;
+
   return (
-    <div className="flex h-screen font-sans">
+    <div className="flex h-screen bg-background">
       {/* Sidebar - AI Activity Monitor */}
-      <div className="w-1/4 bg-gray-200 dark:bg-gray-800 p-4 overflow-y-auto">
-        <ChatSidePanel 
-          theme="light"
-          onClose={() => {}}
-          chatHistory={[]}
-          onDownloadTranscript={() => {}}
-          onSummarizeChat={() => {}}
-          onGenerateFollowUpBrief={() => {}}
-        />
-        <button
-          onClick={completeShowcase}
-          disabled={isLoading}
-          className="mt-4 w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          Complete Showcase & Send Summary
-        </button>
+      <div className="hidden md:flex w-80 border-r border-border bg-card/50 backdrop-blur-sm flex-col">
+        <div className="p-6 border-b border-border">
+          <h3 className="font-bold text-lg flex items-center gap-2">
+            <Activity className="w-5 h-5 text-primary" />
+            AI Activity Monitor
+          </h3>
+        </div>
+        
+        <ScrollArea className="flex-1 p-6">
+          {/* Capabilities Demonstrated */}
+          <div className="mb-6">
+            <h4 className="font-semibold mb-3 text-sm text-muted-foreground">Capabilities Showcased</h4>
+            <div className="space-y-2">
+              {conversationState.capabilitiesShown.map((capability, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-center gap-2 text-sm"
+                >
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>{capability}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* Current Activity */}
+          <AnimatePresence>
+            {sidebarActivity && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="mb-6 p-4 bg-primary/10 rounded-lg border border-primary/20"
+              >
+                <h4 className="font-semibold mb-2 text-sm">Current Activity</h4>
+                <div className="text-sm text-muted-foreground">
+                  {sidebarActivity.message}
+                </div>
+                {sidebarActivity.progress && (
+                  <Progress value={sidebarActivity.progress} className="mt-2" />
+                )}
+                <div className="mt-2 text-xs text-muted-foreground">
+                  {new Date(sidebarActivity.timestamp).toLocaleTimeString()}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Quick Capability Demos */}
+          <div className="mb-6">
+            <h4 className="font-semibold mb-3 text-sm text-muted-foreground">Try AI Capabilities</h4>
+            <div className="space-y-2">
+              {capabilities.map((cap) => {
+                const Icon = cap.icon;
+                return (
+                  <Button
+                    key={cap.id}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => triggerCapabilityDemo(cap.id)}
+                    disabled={isLoading}
+                  >
+                    <Icon className={cn("w-4 h-4 mr-2", cap.color)} />
+                    {cap.label}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+        </ScrollArea>
+
+        {/* Complete Showcase Button */}
+        <div className="p-6 border-t border-border">
+          {readyToComplete && (
+            <Button
+              onClick={completeShowcase}
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Complete AI Showcase & Get Summary
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
-        <div className="bg-white border-b border-gray-200 p-4">
-          <h1 className="text-xl font-bold">F.B/c AI Showcase</h1>
-          <p className="text-sm text-gray-600">Experience the future of business AI in real-time</p>
+        {/* Header */}
+        <div className="bg-card border-b border-border p-4 md:p-6">
+          <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            F.B/c AI Showcase
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Experience the future of business AI in real-time
+          </p>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {conversationState.messages.map((message) => (
-            <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-md ${ // Added shadow
-                message.sender === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white border border-gray-200 text-gray-800' // Adjusted AI message style
-              }`}>
-                <div className="text-sm whitespace-pre-wrap">{message.text}</div>
+        <ScrollArea className="flex-1 p-4 md:p-6">
+          <div className="max-w-3xl mx-auto space-y-4">
+            <AnimatePresence initial={false}>
+              {conversationState.messages.map((message, index) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className={cn(
+                    "flex",
+                    message.sender === 'user' ? 'justify-end' : 'justify-start'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "max-w-[80%] rounded-lg px-4 py-3 shadow-sm",
+                      message.sender === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-card border border-border'
+                    )}
+                  >
+                    <div className="text-sm whitespace-pre-wrap">{message.text}</div>
 
-                {/* Audio playback */}
-                {message.audioData && (
-                  <audio controls className="mt-2 w-full h-10"> {/* Adjusted audio player size */}
-                    <source src={`data:audio/mpeg;base64,${message.audioData}`} type="audio/mpeg"/> {/* Added type */}
-                  </audio>
-                )}
+                    {/* Audio playback */}
+                    {message.audioData && (
+                      <audio controls className="mt-3 w-full h-8">
+                        <source src={`data:audio/mpeg;base64,${message.audioData}`} type="audio/mpeg" />
+                      </audio>
+                    )}
 
-                {/* Sources */}
-                {message.sources && message.sources.length > 0 && (
-                  <div className="mt-2 text-xs">
-                    <div className="font-semibold mb-1">Sources:</div> {/* Added mb-1 */}
-                    {message.sources.map((source, index) => (
-                      <a key={index} href={source.url} target="_blank" rel="noopener noreferrer"
-                         className="text-blue-700 hover:underline block truncate"> {/* Adjusted link color and added truncate */}
-                        {source.title || source.url} {/* Show URL if title is missing */}
-                      </a>
-                    ))}
+                    {/* Sources */}
+                    {message.sources && message.sources.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-border/50">
+                        <div className="text-xs font-medium mb-1">Sources:</div>
+                        {message.sources.map((source, idx) => (
+                          <a
+                            key={idx}
+                            href={source.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline block truncate"
+                          >
+                            {source.title || source.url}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className={cn(
+                      "text-xs mt-2",
+                      message.sender === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                    )}>
+                      {message.timestamp.toLocaleTimeString()}
+                    </div>
                   </div>
-                )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
 
-                <div className={`text-xs mt-1 ${message.sender === 'user' ? 'text-blue-200' : 'text-gray-500'}`}> {/* Adjusted timestamp color */}
-                  {message.timestamp.toLocaleTimeString()}
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex justify-start"
+              >
+                <div className="bg-card border border-border rounded-lg px-4 py-3 shadow-sm">
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">AI is thinking...</span>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-white border border-gray-200 rounded-lg px-4 py-2 shadow-md">
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  <span className="text-sm text-gray-600">AI is thinking...</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+              </motion.div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
 
         {/* Input Area */}
-        <ChatInput onSend={handleSendMessage} disabled={isLoading || conversationState.stage === 'completed'} />
+        <div className="border-t border-border bg-card p-4 md:p-6">
+          <form onSubmit={handleSendMessage} className="max-w-3xl mx-auto flex gap-2">
+            <Input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={conversationState.stage === 'completed' ? "Showcase completed" : "Type your message..."}
+              disabled={isLoading || conversationState.stage === 'completed'}
+              className="flex-1"
+            />
+            <Button
+              type="submit"
+              disabled={isLoading || !input.trim() || conversationState.stage === 'completed'}
+              className="bg-primary hover:bg-primary/90"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </form>
+        </div>
       </div>
-    </div>
-  )
-}
 
-// Chat Input Component
-interface ChatInputProps {
-  onSend: (message: string) => void
-  disabled?: boolean
-}
-
-function ChatInput({ onSend, disabled }: ChatInputProps) {
-  const [message, setMessage] = useState('')
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (message.trim() && !disabled) {
-      onSend(message.trim())
-      setMessage('')
-    }
-  }
-
-  return (
-    <div className="border-t border-gray-200 bg-white p-4">
-      <form onSubmit={handleSubmit} className="flex space-x-2">
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder={disabled ? "Showcase completed. Thank you!" : "Type your message..."} // Updated placeholder
-          className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow duration-150" // Added transition
-          disabled={disabled}
-        />
-        <button
-          type="submit"
-          disabled={disabled || !message.trim()}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed" // Added focus styles and transition
+      {/* Mobile Activity Button */}
+      <div className="md:hidden fixed bottom-20 right-4">
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-full shadow-lg bg-background"
+          onClick={() => {/* Add mobile sidebar toggle */}}
         >
-          Send
-        </button>
-      </form>
+          <Activity className="w-4 h-4" />
+        </Button>
+      </div>
     </div>
   )
 }
