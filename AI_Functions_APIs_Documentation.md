@@ -23,7 +23,7 @@ This document provides a comprehensive overview of the AI functions and APIs use
     *   **Related Implementation:** `app/api/gemini/route.ts`. This file provides a similar set of functionalities but is structured as a Next.js API route handler and uses slightly different import paths for some libraries (e.g., `@google/generative-ai` instead of `@google/genai`, and `@elevenlabs/elevenlabs-js` instead of `elevenlabs`).
     *   **Technology:** TypeScript.
     *   **Core Libraries (primarily from `api/gemini-proxy.ts`):**
-        *   `@google/genai`: For interacting with Google Gemini models. (Note: `app/api/gemini/route.ts` uses `GoogleGenerativeAI` from `"@google/generative-ai"`)
+        *   `@google/genai`: For interacting with Google Gemini models. (Note: `app/api/gemini/route.ts` 
         *   `@supabase/supabase-js`: For database operations and real-time communication via Supabase.
         *   `elevenlabs`: For text-to-speech voice generation. (Note: `app/api/gemini/route.ts` uses `ElevenLabsClient` from `"@elevenlabs/elevenlabs-js"`)
     *   **Structure (based on `api/gemini-proxy.ts`):** The API is structured around a main `handler` function that receives HTTP requests (Vercel serverless function signature). This handler inspects an `action` query parameter to delegate tasks to specialized asynchronous functions, such as:

@@ -1,6 +1,6 @@
 <img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" class="logo" width="120"/>
 
-# **Complete AI Showcase Implementation Guide with Code Examples**
+# **Complete AI chat backend function Implementation Guide with Code Examples**
 
 Based on your Google AI for Developers capabilities and our entire conversation, here's the comprehensive implementation checklist with all code examples:
 

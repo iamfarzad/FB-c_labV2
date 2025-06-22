@@ -1,203 +1,217 @@
 "use client"
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Sun, Moon, Globe, ChevronDown, Menu, X, Video } from "lucide-react"
-import { HeroAsciiSphere } from "./magicui/hero-ascii-sphere"
-// Logo text
-const LogoText = () => (
-  <div className="flex flex-col">
-    <span className="text-xl font-bold leading-tight">F.B/c</span>
-    <span className="text-sm font-medium opacity-80">Consulting</span>
-  </div>
-)
+import { motion, AnimatePresence } from "framer-motion"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { useTheme } from "next-themes"
+import {
+  Menu,
+  X,
+  Moon,
+  Sun,
+  Home,
+  MessageSquare,
+  Sparkles,
+  Video,
+  Briefcase,
+  User,
+  Calendar,
+  Mail,
+  ChevronDown
+} from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface HeaderProps {
-  // theme prop is no longer needed as we'll use Tailwind's dark mode
-  onThemeToggle: () => void
+  theme?: "light" | "dark"
+  onThemeToggle?: () => void
 }
 
-const languages = [
-  { code: "en", name: "English", flag: "🇺🇸" },
-  { code: "es", name: "Español", flag: "🇪🇸" },
-  { code: "fr", name: "Français", flag: "🇫🇷" },
-  { code: "de", name: "Deutsch", flag: "🇩🇪" },
-  { code: "it", name: "Italiano", flag: "🇮🇹" },
-  { code: "pt", name: "Português", flag: "🇵🇹" },
-  { code: "zh", name: "中文", flag: "🇨🇳" },
-  { code: "ja", name: "日本語", flag: "🇯🇵" },
-  { code: "ko", name: "한국어", flag: "🇰🇷" },
-  { code: "ar", name: "العربية", flag: "🇸🇦" },
-]
-
-const navigationItems = [
-  { name: "Home", href: "/" },
-  { name: "About", href: "/about" },
-  { name: "Consulting", href: "/consulting" },
-  { name: "Workshop", href: "/workshop" },
-  { name: "Contact", href: "/contact" },
-]
-
-export const Header: React.FC<HeaderProps> = ({ onThemeToggle }) => {
-  const [selectedLanguage, setSelectedLanguage] = useState(languages[0])
-  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+export const Header: React.FC<HeaderProps> = ({ theme: propTheme, onThemeToggle }) => {
   const pathname = usePathname()
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const { theme: systemTheme, setTheme: setSystemTheme } = useTheme()
+  const currentTheme = propTheme || systemTheme
 
-  // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsLanguageDropdownOpen(false)
-      }
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
     }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const handleLanguageSelect = (language: (typeof languages)[0]) => {
-    setSelectedLanguage(language)
-    setIsLanguageDropdownOpen(false)
-    // Here you would implement actual language switching logic
-    console.log("Language changed to:", language.code)
+  const handleThemeToggle = () => {
+    if (onThemeToggle) {
+      onThemeToggle()
+    } else {
+      setSystemTheme(currentTheme === "light" ? "dark" : "light")
+    }
   }
 
-  // headerBg, textColor, mutedTextColor are removed. Styling will be done via Tailwind dark mode.
-  // Assumed:
-  // Light mode header: bg-white, border-light-silver-darker
-  // Dark mode header: bg-gunmetal, border-gunmetal-lighter
-  // Text: text-gunmetal (light), text-light-silver (dark) -> maps to text-foreground
-  // Muted Text: text-gunmetal/90 (light), text-light-silver/90 (dark) -> maps to text-muted-foreground or text-foreground/90
+  const navItems = [
+    { href: "/", label: "Home", icon: Home },
+    { href: "/chat", label: "AI Chat", icon: MessageSquare, highlight: true },
+    { href: "/video-learning-tool", label: "Video Learning", icon: Video },
+    { href: "/consulting", label: "Consulting", icon: Briefcase },
+    { href: "/about", label: "About", icon: User },
+    { href: "/workshop", label: "Workshop", icon: Calendar },
+    { href: "/contact", label: "Contact", icon: Mail },
+  ]
 
   return (
-    <header className="sticky top-0 z-50 glassmorphism bg-white dark:bg-gunmetal border-b border-light-silver-darker dark:border-gunmetal-lighter backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        scrolled
+          ? "bg-background/80 backdrop-blur-lg border-b border-border shadow-sm"
+          : "bg-transparent"
+      )}
+    >
+      <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 relative">
-              <HeroAsciiSphere />
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg blur-md opacity-75" />
+              <div className="relative bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold text-xl px-3 py-1 rounded-lg">
+                F.B/c
+              </div>
             </div>
-            <Link href="/">
-              <LogoText />
-            </Link>
-          </div>
+            <span className="font-semibold text-lg hidden sm:inline">AI Consulting</span>
+          </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`relative px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 ${
-                  pathname === item.href
-                    ? "text-orange-accent" // Use direct Tailwind class
-                    : "text-foreground hover:text-orange-accent" // Use text-foreground
-                }`}
-              >
-                {item.name}
-                {pathname === item.href && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-accent to-orange-accent-light rounded-full" />
-                )}
-              </Link>
-            ))}
-          </nav>
+          <div className="hidden lg:flex items-center space-x-1">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href
+              const Icon = item.icon
+              
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-orange-500/10 text-orange-600 dark:text-orange-400"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100",
+                    item.highlight && "relative"
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                  {item.highlight && !isActive && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                  )}
+                </Link>
+              )
+            })}
+          </div>
 
-          {/* Right Side Controls */}
-          <div className="flex items-center space-x-3">
-            {/* Language Selector */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
-                className="flex items-center space-x-2 p-2 rounded-xl glassmorphism hover:surface-glow transition-all duration-300 text-foreground group" // Use text-foreground
-                aria-label="Select language"
-              >
-                <Globe size={18} className="group-hover:rotate-12 transition-transform" />
-                <span className="hidden sm:inline text-sm font-medium">{selectedLanguage.flag}</span>
-                <ChevronDown
-                  size={14}
-                  className={`transition-transform duration-200 ${isLanguageDropdownOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-
-              {/* Language Dropdown */}
-              {isLanguageDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 glassmorphism rounded-xl shadow-2xl border border-border/50 slide-in"> {/* Use border-border/50 */}
-                  <div className="py-2">
-                    {languages.map((language) => (
-                      <button
-                        key={language.code}
-                        onClick={() => handleLanguageSelect(language)}
-                        className={`w-full flex items-center space-x-3 px-4 py-2 text-sm transition-all duration-200 ${
-                          selectedLanguage.code === language.code
-                            ? "bg-orange-accent/10 text-orange-accent" // Use direct Tailwind class
-                            : "text-foreground hover:bg-orange-accent/5 hover:text-orange-accent" // Use text-foreground
-                        }`}
-                      >
-                        <span className="text-lg">{language.flag}</span>
-                        <span className="font-medium">{language.name}</span>
-                        {selectedLanguage.code === language.code && (
-                          <div className="ml-auto w-2 h-2 rounded-full bg-orange-accent" /> // Use direct Tailwind class
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+          {/* Actions */}
+          <div className="flex items-center space-x-2">
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleThemeToggle}
+              className="rounded-full"
+            >
+              {currentTheme === "light" ? (
+                <Moon className="h-5 w-5" />
+              ) : (
+                <Sun className="h-5 w-5" />
               )}
+            </Button>
+
+            {/* CTA Button - Desktop */}
+            <div className="hidden lg:block">
+              <Button
+                asChild
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Link href="/chat">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Try AI Chat
+                </Link>
+              </Button>
             </div>
 
-            {/* Theme Toggle */}
-            <button
-              onClick={onThemeToggle}
-              className="p-2 rounded-xl glassmorphism hover:surface-glow transition-all duration-300 text-foreground group" // Use text-foreground
-              aria-label="Toggle theme"
+            {/* Mobile Menu Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="lg:hidden"
             >
-              {/* Icon display will be handled by the global theme state, not a prop here */}
-              <Moon size={18} className="hidden dark:inline-block group-hover:rotate-12 transition-transform" />
-              <Sun size={18} className="dark:hidden inline-block group-hover:rotate-12 transition-transform" />
-            </button>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl glassmorphism hover:surface-glow transition-all duration-300 text-foreground group" // Use text-foreground
-              aria-label="Toggle mobile menu"
-            >
-              {isMobileMenuOpen ? (
-                <X size={18} className="group-hover:rotate-90 transition-transform" />
-              ) : (
-                <Menu size={18} className="group-hover:scale-110 transition-transform" />
-              )}
-            </button>
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
           </div>
         </div>
+      </nav>
 
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-[var(--glass-border)] slide-in">
-            <nav className="py-4 space-y-2">
-              {navigationItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`block px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
-                    pathname === item.href
-                      ? "bg-orange-accent/10 text-orange-accent" // Use direct Tailwind class
-                      : "text-foreground hover:bg-orange-accent/5 hover:text-orange-accent" // Use text-foreground
-                  }`}
+      {/* Mobile Navigation */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="lg:hidden border-t border-border bg-background/95 backdrop-blur-lg"
+          >
+            <div className="container mx-auto px-4 py-4 space-y-2">
+              {navItems.map((item) => {
+                const isActive = pathname === item.href
+                const Icon = item.icon
+                
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={cn(
+                      "flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200",
+                      isActive
+                        ? "bg-orange-500/10 text-orange-600 dark:text-orange-400"
+                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    )}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                    {item.highlight && !isActive && (
+                      <span className="ml-auto w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                    )}
+                  </Link>
+                )
+              })}
+              
+              {/* Mobile CTA */}
+              <div className="pt-2">
+                <Button
+                  asChild
+                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg"
+                  onClick={() => setIsMenuOpen(false)}
                 >
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-          </div>
+                  <Link href="/chat">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Try AI Chat
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </header>
   )
 }

@@ -155,6 +155,16 @@ export default function ChatPage() {
   const [detectedVideoUrl, setDetectedVideoUrl] = useState<string | null>(null);
   const [isGeneratingVideoApp, setIsGeneratingVideoApp] = useState(false);
   
+  // Integrated Video Learning Panel State
+  const [videoLearningData, setVideoLearningData] = useState<{
+    videoUrl: string;
+    title: string;
+    learningModules: any[];
+    currentModule: any;
+    progress: number;
+    isActive: boolean;
+  } | null>(null);
+  
   // Camera analysis timing
   const lastCameraAnalysisRef = useRef<number>(0);
 
@@ -185,7 +195,212 @@ export default function ChatPage() {
   const [isPending, startTransition] = useTransition();
   const [attachments, setAttachments] = useState<string[]>([]);
 
+  // Add AI Showcase state and functionality (this IS the AI model, not a toggle)
+  const [leadCaptureState, setLeadCaptureState] = useState({
+    name: '',
+    email: '',
+    stage: 'greeting',
+    capabilitiesShown: [] as string[],
+    isPersonalized: false
+  });
+
+  // AI Showcase capabilities (core AI functions)
+  const showcaseCapabilities = [
+    { id: 'image_generation', label: 'Image Generation', icon: ImageIcon, color: 'text-purple-600' },
+    { id: 'video_analysis', label: 'Video Analysis', icon: Video, color: 'text-red-600' },
+    { id: 'video_learning', label: 'Video to Learning App', icon: Youtube, color: 'text-blue-600' },
+    { id: 'document_analysis', label: 'Document Processing', icon: FileText, color: 'text-green-600' },
+    { id: 'code_execution', label: 'Code Execution', icon: Code, color: 'text-yellow-600' },
+    { id: 'url_analysis', label: 'Website Analysis', icon: Globe, color: 'text-blue-600' },
+  ];
+
+  // Enhanced AI with contact research and personalization
+  const enhancedHandleSendMessage = async (messageContent?: string) => {
+    const contentToSend = messageContent ?? input;
+    if (!contentToSend.trim() && attachments.length === 0) return;
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      content: contentToSend,
+      role: 'user',
+      timestamp: new Date(),
+    };
+
+    const updatedMessages = [...messages, newMessage];
+    setMessages(updatedMessages);
+    setInput('');
+    setAttachments([]);
+    setIsLoading(true);
+
+    try {
+      // Check if we need to collect contact info for personalization
+      if (!leadCaptureState.isPersonalized && leadCaptureState.name && leadCaptureState.email) {
+        // Trigger contact research and personalization
+        addActivity({
+          type: 'analyzing',
+          title: '🔍 Researching Contact Information',
+          description: `Gathering background information about ${leadCaptureState.name}...`,
+          status: 'in_progress'
+        });
+
+        // Use the enhanced AI model with contact research
+        const response = await fetch('/api/gemini?action=enhancedPersonalization', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: leadCaptureState.name,
+            email: leadCaptureState.email,
+            userMessage: contentToSend,
+            conversationHistory: updatedMessages
+          }),
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          const personalizedGreeting: Message = {
+            id: (Date.now() + 1).toString(),
+            content: `Hi ${leadCaptureState.name}! ${data.data.personalizedResponse}`,
+            role: 'assistant',
+            timestamp: new Date(),
+            audioData: data.data.audioData,
+          };
+          
+          setMessages(prev => [...prev, personalizedGreeting]);
+          setLeadCaptureState(prev => ({ ...prev, isPersonalized: true }));
+          
+          addActivity({
+            type: 'complete',
+            title: '✅ Contact Research Complete',
+            description: `Personalized conversation ready for ${leadCaptureState.name}`,
+            status: 'completed'
+          });
+        }
+      } else {
+        // Regular AI conversation with showcase capabilities
+        const apiMessages = updatedMessages.map((msg) => ({
+          role: msg.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: msg.content }],
+        }));
+
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            messages: apiMessages,
+            includeAudio: true,
+            leadCaptureState: leadCaptureState
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('API request failed');
+        }
+
+        const data = await response.json();
+
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          content: data.reply,
+          role: 'assistant',
+          timestamp: new Date(),
+          audioData: data.audioData,
+        };
+        setMessages((prev) => [...prev, aiResponse]);
+
+        if (data.audioData) {
+          try {
+            const audio = new Audio(`data:audio/mpeg;base64,${data.audioData}`);
+            audio.play();
+            
+            addActivity({
+              type: 'ai_thinking',
+              title: '🔊 Voice Response Generated',
+              description: 'AI response includes synthesized voice',
+              status: 'completed'
+            });
+          } catch (error) {
+            console.error('Audio playback failed:', error);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "Sorry, I couldn't get a response. Please try again.",
+        role: 'assistant',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorResponse]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const triggerShowcaseCapability = async (capability: string) => {
+    const demos: { [key: string]: string } = {
+      'image_generation': 'Generate a business visualization for my industry',
+      'video_analysis': 'Analyze this YouTube video for business insights: https://youtube.com/watch?v=example',
+      'video_learning': 'Create an interactive learning app from this YouTube video: https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      'document_analysis': 'Analyze a business document for optimization opportunities',
+      'code_execution': 'Calculate the potential ROI for implementing an AI solution in my business.',
+      'url_analysis': 'Analyze my company website for AI opportunities',
+    };
+
+    if (demos[capability]) {
+      setInput(demos[capability]);
+      await enhancedHandleSendMessage(demos[capability]);
+      
+      // Track capability shown
+      setLeadCaptureState(prev => ({
+        ...prev,
+        capabilitiesShown: [...new Set([...prev.capabilitiesShown, capability])]
+      }));
+    }
+  };
+
+  const completeShowcase = async () => {
+    if (!leadCaptureState.name || !leadCaptureState.email) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/gemini?action=leadCapture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          currentConversationState: {
+            ...leadCaptureState,
+            messages: messages.map(m => ({ text: m.content, sender: m.role })),
+            sessionId: `showcase_${Date.now()}`
+          }
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        const completionMessage = {
+          id: Date.now().toString(),
+          content: `Perfect! I've created your personalized AI consultation summary and sent it to ${leadCaptureState.email}.\n\nYour AI readiness score: ${result.data.leadScore}/100\n\nReady to implement these AI solutions? Let's schedule your free strategy session!`,
+          role: 'assistant' as const,
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, completionMessage]);
+      }
+    } catch (error) {
+      console.error("Error completing showcase:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSendMessage = async (messageContent?: string) => {
+    // Use the enhanced AI showcase functionality
+    return enhancedHandleSendMessage(messageContent);
+  };
+
+  const originalHandleSendMessage = async (messageContent?: string) => {
     const contentToSend = messageContent ?? input;
     if (!contentToSend.trim() && attachments.length === 0) return;
 
@@ -663,6 +878,7 @@ export default function ChatPage() {
 
   const startVideoLearningAppProcessing = async (detectedUrl: string, videoTitle: string) => {
     const activityId = `vid-${Date.now()}`;
+    setIsGeneratingVideoApp(true);
 
     const initialActivity: ActivityItem = {
       id: activityId,
@@ -674,18 +890,18 @@ export default function ChatPage() {
       isPerMessageLog: false,
       status: 'in_progress',
     };
-    // Use the callback form of setActivities to ensure it gets the latest state if called rapidly
     setActivities(prevActivities => [initialActivity, ...prevActivities]);
 
-    // Simulate Progress
+    // Simulate Progress and generate learning content
     let currentProgress = 0;
     const steps = [
       { progress: 25, description: "Analyzing video content...", type: "analyzing_video" },
       { progress: 50, description: "Extracting key concepts...", type: "video_processing" },
       { progress: 75, description: "Generating learning modules...", type: "video_processing" },
+      { progress: 100, description: "Creating interactive learning experience...", type: "video_processing" },
     ];
 
-    const progressInterval = setInterval(() => {
+    const progressInterval = setInterval(async () => {
       if (currentProgress < 100 && steps.length > 0) {
         const nextStep = steps.shift();
         if (nextStep) {
@@ -705,7 +921,57 @@ export default function ChatPage() {
         }
       } else {
         clearInterval(progressInterval);
-        currentProgress = 100;
+        
+        // Generate learning modules (mock data for now - in real app, call API)
+        const learningModules = [
+          {
+            id: 'intro',
+            title: 'Introduction',
+            type: 'video_segment',
+            completed: false,
+            content: 'Overview of the main concepts covered in this video.',
+            startTime: 0,
+            endTime: 120
+          },
+          {
+            id: 'key-concepts',
+            title: 'Key Concepts',
+            type: 'reading',
+            completed: false,
+            content: 'Deep dive into the main topics and learning objectives.',
+          },
+          {
+            id: 'quiz-1',
+            title: 'Knowledge Check',
+            type: 'quiz',
+            completed: false,
+            questions: [
+              {
+                question: 'What was the main topic discussed?',
+                options: ['Option A', 'Option B', 'Option C', 'Option D'],
+                correctAnswer: 0
+              }
+            ]
+          },
+          {
+            id: 'advanced',
+            title: 'Advanced Topics',
+            type: 'video_segment',
+            completed: false,
+            startTime: 120,
+            endTime: 300
+          }
+        ];
+
+        // Set up the integrated learning panel
+        setVideoLearningData({
+          videoUrl: detectedUrl,
+          title: videoTitle || 'Untitled Video',
+          learningModules,
+          currentModule: learningModules[0],
+          progress: 0,
+          isActive: true
+        });
 
         setActivities(prevActivities =>
           prevActivities.map(act =>
@@ -715,32 +981,31 @@ export default function ChatPage() {
                   type: "video_complete",
                   progress: 100,
                   title: `Learning App Ready: ${videoTitle || 'Untitled Video'}`,
-                  description: "Your learning app is ready to view.",
-                  link: `/video-learning-tool?videoUrl=${encodeURIComponent(detectedUrl)}`,
+                  description: "Interactive learning modules are now available in the sidebar.",
                   status: 'completed',
                 }
               : act
           )
         );
 
-        const linkCardMessage: Message = {
-          id: `linkcard-${Date.now()}`,
+        const completionMessage: Message = {
+          id: `learning-${Date.now()}`,
           role: 'assistant',
-          content: `🎉 **Learning App Complete!**\n\nYour interactive learning app for "${videoTitle || 'Untitled Video'}" has been successfully generated!\n\n✅ **Features Created:**\n- Interactive video segments\n- Automated quizzes\n- Progress tracking\n- Key concept extraction\n- Learning objectives\n\n**[🚀 Open Learning App](/video-learning-tool?videoUrl=${encodeURIComponent(detectedUrl)})**`,
+          content: `🎉 **Learning App Created!**\n\nI've generated an interactive learning experience for "${videoTitle || 'Untitled Video'}" with the following features:\n\n✅ **Learning Modules:**\n- Video segments with key timestamps\n- Interactive quizzes\n- Reading materials\n- Progress tracking\n\n📚 **Your learning modules are now available in the sidebar!** Click on any module to start learning.\n\nYou can track your progress and complete modules at your own pace.`,
           timestamp: new Date(),
         };
-        setMessages(prevMessages => [...prevMessages, linkCardMessage]);
+        setMessages(prevMessages => [...prevMessages, completionMessage]);
 
-        // Add completion notification to activity feed
         addActivity({
           type: 'complete',
-          title: '🎉 Video Learning App Ready!',
-          description: `Interactive learning app for "${videoTitle || 'Untitled Video'}" is now available`,
-          link: `/video-learning-tool?videoUrl=${encodeURIComponent(detectedUrl)}`,
+          title: '🎉 Interactive Learning Ready!',
+          description: `Learning modules for "${videoTitle || 'Untitled Video'}" are available in sidebar`,
           status: 'completed'
         });
+
+        setIsGeneratingVideoApp(false);
       }
-    }, 1000);
+    }, 1500);
   };
 
   const captureFrame = useCallback(() => {
@@ -804,10 +1069,21 @@ export default function ChatPage() {
       addActivity({
         type: 'error',
         title: '❌ Voice Not Supported',
-        description: 'Speech recognition is not supported in this browser',
+        description: 'Speech recognition is not supported in this browser. Try Chrome or Edge.',
         status: 'failed'
       });
       return; 
+    }
+    
+    // Check for HTTPS requirement
+    if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+      addActivity({
+        type: 'error',
+        title: '❌ HTTPS Required',
+        description: 'Voice input requires HTTPS connection for security',
+        status: 'failed'
+      });
+      return;
     }
     
     if (aiVoiceState === "listening" || aiVoiceState === "processing") {
@@ -827,6 +1103,14 @@ export default function ChatPage() {
       setShowVoiceModal(true);
       setIsRecording(true);
       
+      // Add helpful activity message
+      addActivity({
+        type: 'analyzing',
+        title: '🎤 Voice Recording Starting',
+        description: 'Grant microphone permission when prompted by browser',
+        status: 'in_progress'
+      });
+      
       try { 
         recognition.current?.start(); 
       } catch (e) { 
@@ -836,7 +1120,7 @@ export default function ChatPage() {
         addActivity({
           type: 'error',
           title: '❌ Voice Recording Failed',
-          description: 'Could not start voice recognition',
+          description: 'Could not start voice recognition. Check browser permissions.',
           status: 'failed'
         });
       }
@@ -882,180 +1166,278 @@ export default function ChatPage() {
   };
 
   const SidebarContent: React.FC<{ activities: ActivityItem[], currentPath: string, className?: string, open?: boolean; }> = ({ activities, currentPath, className, open }) => {
-    const navLinks = [ { href: "/threads", label: "Threads", icon: ListChecks } ];
     return (
-      <div className={cn("flex flex-col h-full bg-card/95 backdrop-blur-sm text-card-foreground border-r border-border/50", className)}>
+      <div className={cn("flex flex-col h-full", className)}>
         {/* Header */}
-        <div className="p-4 border-b border-border/50">
-          <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-              <Bot size={18} className="text-white" />
-            </div>
-            {open && (
-              <div className="flex flex-col">
-                <h2 className="text-sm font-semibold text-foreground">F.B/c Consulting</h2>
-                <p className="text-xs text-muted-foreground">AI Assistant</p>
+        <div className="p-4 border-b border-border">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Activity className="w-5 h-5 text-primary" />
+            AI Activity Monitor
+          </h2>
+        </div>
+
+        <ScrollArea className="flex-1 p-4">
+          {/* Contact Collection for AI Personalization */}
+          <div className="mb-6">
+            <h3 className="font-semibold text-sm text-muted-foreground mb-3">AI Personalization</h3>
+            {!leadCaptureState.isPersonalized ? (
+              <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                <p className="text-xs text-muted-foreground mb-3">
+                  Provide your contact info for personalized AI assistance
+                </p>
+                <div className="space-y-3">
+                  <Input
+                    placeholder="Your name"
+                    value={leadCaptureState.name}
+                    onChange={(e) => setLeadCaptureState(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                  <Input
+                    type="email"
+                    placeholder="Your email"
+                    value={leadCaptureState.email}
+                    onChange={(e) => setLeadCaptureState(prev => ({ ...prev, email: e.target.value }))}
+                  />
+                  {leadCaptureState.name && leadCaptureState.email && (
+                    <p className="text-xs text-green-600">
+                      ✓ Ready for personalized AI assistance
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  ✓ Personalized for {leadCaptureState.name}
+                </p>
               </div>
             )}
-          </Link>
-        </div>
-        
-        {open && (
-          <>
-            {/* Navigation */}
-            <nav className="px-3 py-2">
-              {navLinks.map((link) => (
-                <Link 
-                  key={link.label} 
-                  href={link.href} 
-                  className={cn(
-                    "flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group",
-                    currentPath === link.href 
-                      ? "bg-orange-500/10 text-orange-600 shadow-sm border border-orange-200/50" 
-                      : "hover:bg-muted/80 hover:text-foreground text-muted-foreground"
-                  )}
-                >
-                  <link.icon size={16} className="flex-shrink-0" />
-                  <span>{link.label}</span>
-                </Link>
-              ))}
-            </nav>
-            
-            {/* Activity Section */}
-            <div className="flex-grow border-t border-border/50 p-3">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-foreground">Activity Feed</h3>
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          </div>
+
+          {/* Capabilities Showcased */}
+          {leadCaptureState.capabilitiesShown.length > 0 && (
+            <div className="mb-6">
+              <h3 className="font-semibold text-sm text-muted-foreground mb-3">Capabilities Showcased</h3>
+              <div className="space-y-2">
+                {leadCaptureState.capabilitiesShown.map((capability, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center gap-2 text-sm"
+                  >
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span className="capitalize">{capability.replace('_', ' ')}</span>
+                  </motion.div>
+                ))}
               </div>
-              
-              <ScrollArea className="h-[400px] pr-2">
-                {activities.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
-                      <Activity size={20} className="text-muted-foreground" />
-                    </div>
-                    <p className="text-sm text-muted-foreground">No recent activity</p>
-                    <p className="text-xs text-muted-foreground/70 mt-1">Start a conversation to see activity</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {activities.map((activity) => (
-                      <div key={activity.id} className="group">
-                        {activity.isPerMessageLog ? (
-                          activity.isLiveProcessing ? (
-                            <div className="p-3 border border-border/50 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Sparkles size={14} className={`${getActivityColor(activity.type)} animate-pulse flex-shrink-0`} />
-                                <span className="font-medium text-foreground text-sm truncate">
-                                  {activity.title || activity.details || "Processing..."}
-                                </span>
-                              </div>
-                              {activity.description && (
-                                <p className="text-muted-foreground text-xs leading-relaxed">{activity.description}</p>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="flex items-center p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                              <Sparkles size={12} className={`mr-2 ${getActivityColor(activity.type)} flex-shrink-0`} />
-                              <span className="text-muted-foreground text-xs truncate">{activity.title || activity.details || "Processed"}</span>
-                            </div>
-                          )
-                        ) : (
-                          <div className="p-3 rounded-lg border border-border/30 hover:border-border/60 hover:bg-muted/30 transition-all duration-200">
-                            <div className="flex items-start gap-3">
-                              {React.createElement(activity.icon || getActivityIcon(activity.type), { 
-                                size: 16, 
-                                className: `mt-0.5 flex-shrink-0 ${getActivityColor(activity.type)}` 
-                              })}
-                              <div className="flex-grow min-w-0">
-                                <div className="flex items-center justify-between mb-1">
-                                  <h4 className="font-medium text-foreground text-sm truncate">{activity.title || activity.details}</h4>
-                                  {activity.status === 'completed' && (
-                                    <CheckCircle size={12} className="text-green-500 flex-shrink-0" />
-                                  )}
-                                </div>
-                                {activity.description && (
-                                  <p className="text-muted-foreground text-xs leading-relaxed mb-2">{activity.description}</p>
-                                )}
-                                {typeof activity.progress === 'number' && activity.progress < 100 && (
-                                  <Progress value={activity.progress} className="h-1.5 mb-2" />
-                                )}
-                                {activity.link && activity.status === 'completed' && (
-                                  <Link 
-                                    href={activity.link} 
-                                    target="_blank" 
-                                    className="inline-flex items-center text-orange-600 hover:text-orange-700 text-xs font-medium gap-1 mt-1"
-                                  >
-                                    View Details <ExternalLink size={10} />
-                                  </Link>
-                                )}
-                                {activity.details && activity.status === 'completed' && activity.title.includes('Transcript') && (
-                                  <button
-                                    onClick={() => {
-                                      const modal = document.createElement('div');
-                                      modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm';
-                                      modal.innerHTML = `
-                                        <div class="bg-card border border-border rounded-lg p-6 max-w-2xl max-h-[80vh] overflow-auto m-4">
-                                          <div class="flex items-center justify-between mb-4">
-                                            <h3 class="text-lg font-semibold text-foreground">Voice Transcript</h3>
-                                            <button class="p-2 rounded-lg hover:bg-muted" onclick="this.closest('.fixed').remove()">
-                                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                              </svg>
-                                            </button>
-                                          </div>
-                                          <div class="p-4 bg-muted/50 rounded-lg">
-                                            <p class="text-foreground whitespace-pre-wrap">${activity.details}</p>
-                                          </div>
-                                        </div>
-                                      `;
-                                      document.body.appendChild(modal);
-                                    }}
-                                    className="inline-flex items-center text-orange-600 hover:text-orange-700 text-xs font-medium gap-1 mt-1"
-                                  >
-                                    View Full Transcript <Eye size={10} />
-                                  </button>
-                                )}
-                                <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground/70">
-                                  <span>{activity.user || 'System'}</span>
-                                  <span>{new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
+            </div>
+          )}
+
+          {/* AI Capability Demos */}
+          <div className="mb-6">
+            <h3 className="font-semibold text-sm text-muted-foreground mb-3">AI Capabilities</h3>
+            <div className="space-y-2">
+              {showcaseCapabilities.map((cap) => {
+                const Icon = cap.icon;
+                const isShown = leadCaptureState.capabilitiesShown.includes(cap.id);
+                
+                return (
+                  <Button
+                    key={cap.id}
+                    variant={isShown ? "secondary" : "outline"}
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => triggerShowcaseCapability(cap.id)}
+                    disabled={isLoading}
+                  >
+                    <Icon className={cn("w-4 h-4 mr-2", cap.color)} />
+                    {cap.label}
+                    {isShown && <CheckCircle className="w-3 h-3 ml-auto text-green-500" />}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Complete Showcase Button */}
+          {leadCaptureState.name && leadCaptureState.email && leadCaptureState.capabilitiesShown.length > 0 && (
+            <div className="mb-6">
+              <Button
+                onClick={completeShowcase}
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Complete AI Showcase & Get Summary
+              </Button>
+            </div>
+          )}
+
+          {/* Video Learning Panel */}
+          {videoLearningData?.isActive && (
+            <div className="mb-6">
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Video className="w-5 h-5 text-blue-600" />
+                  <h3 className="font-semibold text-sm">Learning Modules</h3>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="ml-auto h-6 w-6"
+                    onClick={() => setVideoLearningData(prev => prev ? { ...prev, isActive: false } : null)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                <div className="mb-3">
+                  <p className="text-xs text-muted-foreground mb-2">{videoLearningData.title}</p>
+                  <Progress value={videoLearningData.progress} className="h-2" />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {Math.round(videoLearningData.progress)}% Complete
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  {videoLearningData.learningModules.map((module, index) => (
+                    <div
+                      key={module.id}
+                      className={cn(
+                        "p-3 rounded-lg border cursor-pointer transition-all",
+                        module.completed 
+                          ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800" 
+                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700",
+                        videoLearningData.currentModule?.id === module.id && "ring-2 ring-blue-500"
+                      )}
+                      onClick={() => {
+                        setVideoLearningData(prev => prev ? { ...prev, currentModule: module } : null);
+                        
+                        // Add module interaction to chat
+                        const moduleMessage: Message = {
+                          id: `module-${Date.now()}`,
+                          role: 'assistant',
+                          content: `📚 **${module.title}**\n\n${module.content || `Starting ${module.type.replace('_', ' ')} module...`}\n\n${module.type === 'video_segment' && module.startTime !== undefined ? `⏰ Video timestamp: ${Math.floor(module.startTime / 60)}:${String(module.startTime % 60).padStart(2, '0')}` : ''}`,
+                          timestamp: new Date(),
+                        };
+                        setMessages(prev => [...prev, moduleMessage]);
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {module.type === 'video_segment' && <Video className="w-4 h-4 text-blue-500" />}
+                          {module.type === 'quiz' && <ListChecks className="w-4 h-4 text-purple-500" />}
+                          {module.type === 'reading' && <FileText className="w-4 h-4 text-green-500" />}
+                          <span className="text-sm font-medium">{module.title}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {module.completed && <CheckCircle className="w-4 h-4 text-green-500" />}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const updatedModules = videoLearningData.learningModules.map(m =>
+                                m.id === module.id ? { ...m, completed: !m.completed } : m
+                              );
+                              const completedCount = updatedModules.filter(m => m.completed).length;
+                              const newProgress = (completedCount / updatedModules.length) * 100;
+                              
+                              setVideoLearningData(prev => prev ? {
+                                ...prev,
+                                learningModules: updatedModules,
+                                progress: newProgress
+                              } : null);
+                            }}
+                          >
+                            {module.completed ? 
+                              <CheckCircle className="w-3 h-3 text-green-500" /> : 
+                              <CheckCircle className="w-3 h-3 text-gray-400" />
+                            }
+                          </Button>
+                        </div>
                       </div>
-                    ))}
+                      <p className="text-xs text-muted-foreground mt-1 capitalize">
+                        {module.type.replace('_', ' ')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {videoLearningData.progress === 100 && (
+                  <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <span className="text-sm font-semibold text-green-700 dark:text-green-300">
+                        Learning Complete! 🎉
+                      </span>
+                    </div>
                   </div>
                 )}
-              </ScrollArea>
+              </div>
             </div>
-          </>
-        )}
+          )}
+
+          {/* Activity Log */}
+          <div className="space-y-3">
+            <h3 className="font-semibold text-sm text-muted-foreground">Recent Activity</h3>
+            <AnimatePresence>
+              {activities.slice(0, 10).map((activity, index) => {
+                const Icon = getActivityIcon(activity.type);
+                const color = getActivityColor(activity.type);
+                
+                return (
+                  <motion.div
+                    key={activity.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.2, delay: index * 0.05 }}
+                    className="p-3 bg-card border border-border rounded-lg"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Icon className={cn("w-4 h-4 mt-0.5", color)} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{activity.title}</p>
+                        {activity.description && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {activity.description}
+                          </p>
+                        )}
+                        {activity.progress !== undefined && (
+                          <Progress value={activity.progress} className="mt-2 h-1" />
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(activity.timestamp).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        </ScrollArea>
       </div>
     );
   };
 
-  const DesktopSidebar: React.FC<{ activities: ActivityItem[], currentPath: string, className?: string, open: boolean; setOpen: (open: boolean) => void; }> = ({ activities, currentPath, className, open, setOpen }) => {
-    const [isHovered, setIsHovered] = useState(false); 
-    const effectiveOpen = open || isHovered;
-    
+  const DesktopSidebar: React.FC<{ activities: ActivityItem[], currentPath: string, className?: string, open?: boolean; setOpen: (open: boolean) => void; }> = ({ activities, currentPath, className, open, setOpen }) => {
     return (
       <motion.div 
-        animate={{ width: effectiveOpen ? "288px" : "68px" }} 
+        animate={{ width: open ? "288px" : "68px" }} 
         className={cn("h-full relative z-30 hidden md:flex flex-col", className)} 
-        onMouseEnter={() => { if (!open) setIsHovered(true); }} 
-        onMouseLeave={() => { if (!open) setIsHovered(false); }} 
-        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        <SidebarContent activities={activities} currentPath={currentPath} open={effectiveOpen} />
+        <SidebarContent activities={activities} currentPath={currentPath} open={open} />
         <Button 
           variant="ghost" 
           size="icon" 
           className={cn(
             "absolute top-1/2 -right-4 transform -translate-y-1/2 bg-card border rounded-full h-8 w-8 z-40 shadow-md hover:bg-muted",
             "transition-opacity duration-300",
-            effectiveOpen ? "opacity-100" : "opacity-0"
+            open ? "opacity-100" : "opacity-0"
           )} 
           onClick={() => setOpen(!open)}
         >
@@ -1181,13 +1563,6 @@ export default function ChatPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Link
-                href="/video-learning-tool"
-                className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-lg glass-button text-[var(--color-text-on-orange)] hover:scale-105 transition-all duration-300 text-sm"
-              >
-                <Video className="w-4 h-4" />
-                <span>Video to App</span>
-              </Link>
               <Button variant="outline" size="sm" onClick={handleDownloadTranscript}>
                 <Download className="w-4 h-4 mr-2" />
                 Export Summary
@@ -1217,7 +1592,7 @@ export default function ChatPage() {
                         videoUrl={detectedVideoUrl}
                         videoTitle={videoTitle}
                         onGenerateApp={async (url) => {
-                          setShowVideoLearningModal(true);
+                          await startVideoLearningAppProcessing(url, videoTitle);
                         }}
                         theme={theme === "dark" ? "dark" : "light"}
                         isGenerating={isGeneratingVideoApp}
@@ -1465,14 +1840,7 @@ export default function ChatPage() {
           />
         )}
 
-        {/* Video Learning Modal */}
-        {showVideoLearningModal && (
-          <VideoLearningModal
-            isOpen={showVideoLearningModal}
-            onClose={() => setShowVideoLearningModal(false)}
-            theme={theme === "dark" ? "dark" : "light"}
-          />
-        )}
+
 
         {/* Hidden File Inputs */}
         <input
