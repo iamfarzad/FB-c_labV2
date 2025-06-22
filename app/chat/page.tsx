@@ -876,6 +876,125 @@ export default function ChatPage() {
     if (event.target) event.target.value = "";
   };
 
+  // Helper function to parse AI response into learning modules
+  const parseAIResponseToModules = (aiContent: string, videoTitle: string): any[] => {
+    const modules: any[] = [];
+    
+    // Try to extract structured content from AI response
+    const sections = aiContent.split(/(?:Module|Section|Chapter)\s*\d+/i);
+    
+    sections.forEach((section, index) => {
+      if (section.trim() && index > 0) { // Skip first empty section
+        const lines = section.trim().split('\n');
+        const title = lines[0]?.replace(/[:#-]/g, '').trim() || `Module ${index}`;
+        const content = lines.slice(1).join('\n').trim();
+        
+        // Determine module type based on content
+        let type = 'reading';
+        if (content.toLowerCase().includes('quiz') || content.toLowerCase().includes('question')) {
+          type = 'quiz';
+        } else if (content.toLowerCase().includes('video') || content.toLowerCase().includes('timestamp')) {
+          type = 'video_segment';
+        }
+        
+        // Extract quiz questions if it's a quiz module
+        const questions: any[] = [];
+        if (type === 'quiz') {
+          const questionMatches = content.match(/\d+\.\s*(.+?)(?=\d+\.|$)/g);
+          if (questionMatches) {
+            questions.push(...questionMatches.map((q, qIndex) => ({
+              id: `q${qIndex + 1}`,
+              question: q.trim(),
+              options: ['Option A', 'Option B', 'Option C', 'Option D'],
+              correctAnswer: 0,
+              explanation: 'AI-generated explanation for this question.'
+            })));
+          }
+        }
+        
+        modules.push({
+          id: `module-${index}`,
+          title,
+          type,
+          completed: false,
+          content: content || `Detailed content for ${title}`,
+          questions: questions.length > 0 ? questions : undefined,
+          startTime: index * 120,
+          endTime: (index + 1) * 120,
+          keyPoints: content.split('\n').filter(line => 
+            line.trim().startsWith('-') || line.trim().startsWith('*') || line.trim().startsWith('•')
+          ).map(point => point.replace(/^[-*•]\s*/, '').trim()).slice(0, 3)
+        });
+      }
+    });
+    
+    // If no modules were parsed, create some based on content analysis
+    if (modules.length === 0) {
+      const contentParts = aiContent.split('\n\n').filter(part => part.trim().length > 50);
+      contentParts.forEach((part, index) => {
+        modules.push({
+          id: `ai-module-${index}`,
+          title: `Learning Module ${index + 1}`,
+          type: index === contentParts.length - 1 ? 'quiz' : 'reading',
+          completed: false,
+          content: part.trim(),
+          startTime: index * 90,
+          endTime: (index + 1) * 90
+        });
+      });
+    }
+    
+    return modules.length > 0 ? modules : getDefaultLearningModules(videoTitle);
+  };
+
+  // Helper function for default learning modules
+  const getDefaultLearningModules = (videoTitle: string) => {
+    return [
+      {
+        id: 'intro',
+        title: 'Video Introduction',
+        type: 'video_segment',
+        completed: false,
+        content: `Welcome to the learning experience for "${videoTitle}". This module provides an overview of what you'll learn.`,
+        startTime: 0,
+        endTime: 120,
+        keyPoints: ['Overview of main topics', 'Learning objectives', 'What to expect']
+      },
+      {
+        id: 'concepts',
+        title: 'Key Concepts & Ideas',
+        type: 'reading',
+        completed: false,
+        content: `This module covers the fundamental concepts presented in "${videoTitle}". Take your time to understand these core ideas as they form the foundation for more advanced topics.`,
+        keyPoints: ['Core principles', 'Important definitions', 'Foundational knowledge']
+      },
+      {
+        id: 'quiz',
+        title: 'Knowledge Assessment',
+        type: 'quiz',
+        completed: false,
+        content: 'Test your understanding with this interactive quiz.',
+        questions: [
+          {
+            id: 'q1',
+            question: 'What is the main topic of this video?',
+            options: ['Concept A', 'Concept B', 'Concept C', 'All of the above'],
+            correctAnswer: 3,
+            explanation: 'The video covers multiple interconnected concepts.'
+          }
+        ]
+      },
+      {
+        id: 'practice',
+        title: 'Practical Application',
+        type: 'interactive_exercise',
+        completed: false,
+        content: 'Apply what you\'ve learned with practical exercises and real-world examples.',
+        keyPoints: ['Hands-on practice', 'Real-world applications', 'Skill reinforcement']
+      }
+    ];
+  };
+
   const startVideoLearningAppProcessing = async (detectedUrl: string, videoTitle: string) => {
     const activityId = `vid-${Date.now()}`;
     setIsGeneratingVideoApp(true);
@@ -922,46 +1041,48 @@ export default function ChatPage() {
       } else {
         clearInterval(progressInterval);
         
-        // Generate learning modules (mock data for now - in real app, call API)
-        const learningModules = [
-          {
-            id: 'intro',
-            title: 'Introduction',
-            type: 'video_segment',
-            completed: false,
-            content: 'Overview of the main concepts covered in this video.',
-            startTime: 0,
-            endTime: 120
-          },
-          {
-            id: 'key-concepts',
-            title: 'Key Concepts',
-            type: 'reading',
-            completed: false,
-            content: 'Deep dive into the main topics and learning objectives.',
-          },
-          {
-            id: 'quiz-1',
-            title: 'Knowledge Check',
-            type: 'quiz',
-            completed: false,
-            questions: [
-              {
-                question: 'What was the main topic discussed?',
-                options: ['Option A', 'Option B', 'Option C', 'Option D'],
-                correctAnswer: 0
-              }
-            ]
-          },
-          {
-            id: 'advanced',
-            title: 'Advanced Topics',
-            type: 'video_segment',
-            completed: false,
-            startTime: 120,
-            endTime: 300
+        // Generate real AI-powered learning modules
+        let learningModules: any[] = [];
+        
+        try {
+          const analysisResponse = await fetch('/api/gemini?action=analyzeVideo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              videoUrl: detectedUrl,
+              analysisType: 'learning_modules',
+              prompt: `Create a comprehensive learning app from this YouTube video. Generate:
+              
+              1. **Learning Modules**: Break the video into logical segments with clear learning objectives
+              2. **Interactive Content**: Create detailed explanations, key concepts, and practical examples
+              3. **Quiz Questions**: Generate multiple-choice questions to test understanding
+              4. **Reading Materials**: Provide supplementary content that expands on the video topics
+              5. **Timestamps**: Identify key moments in the video for each module
+              
+              Make this a complete interactive learning experience with rich, detailed content.`,
+              generateQuizzes: true,
+              generateReadingMaterials: true,
+              targetAudience: 'intermediate'
+            })
+          });
+
+          const analysisResult = await analysisResponse.json();
+          
+          if (analysisResult.success && analysisResult.data?.text) {
+            // Parse AI response to extract learning modules
+            const aiContent = analysisResult.data.text;
+            
+            // Try to extract structured content from AI response
+            learningModules = parseAIResponseToModules(aiContent, videoTitle);
+          } else {
+            // Fallback to default modules if AI fails
+            learningModules = getDefaultLearningModules(videoTitle);
           }
-        ];
+          
+        } catch (error) {
+          console.error('Failed to generate AI learning modules:', error);
+          learningModules = getDefaultLearningModules(videoTitle);
+        }
 
         // Set up the integrated learning panel
         setVideoLearningData({
@@ -1167,19 +1288,27 @@ export default function ChatPage() {
 
   const SidebarContent: React.FC<{ activities: ActivityItem[], currentPath: string, className?: string, open?: boolean; }> = ({ activities, currentPath, className, open }) => {
     return (
-      <div className={cn("flex flex-col h-full", className)}>
+      <div className={cn("flex flex-col h-full bg-card overflow-hidden", className)}>
         {/* Header */}
-        <div className="p-4 border-b border-border">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
+        <div className="p-4 border-b border-border flex-shrink-0">
+          <h2 className={cn(
+            "text-lg font-semibold flex items-center gap-2 transition-opacity duration-200",
+            open ? "opacity-100" : "opacity-0"
+          )}>
             <Activity className="w-5 h-5 text-primary" />
-            AI Activity Monitor
+            {open && "AI Activity Monitor"}
           </h2>
         </div>
 
-        <ScrollArea className="flex-1 p-4">
+        <ScrollArea className="flex-1 p-4" onMouseDown={(e) => e.stopPropagation()}>
           {/* Contact Collection for AI Personalization */}
           <div className="mb-6">
-            <h3 className="font-semibold text-sm text-muted-foreground mb-3">AI Personalization</h3>
+            <h3 className={cn(
+              "font-semibold text-sm text-muted-foreground mb-3 transition-opacity duration-200",
+              open ? "opacity-100" : "opacity-0"
+            )}>
+              {open ? "AI Personalization" : ""}
+            </h3>
             {!leadCaptureState.isPersonalized ? (
               <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
                 <p className="text-xs text-muted-foreground mb-3">
@@ -1313,14 +1442,56 @@ export default function ChatPage() {
                       onClick={() => {
                         setVideoLearningData(prev => prev ? { ...prev, currentModule: module } : null);
                         
+                        // Create rich module content based on type
+                        let moduleContent = `📚 **${module.title}**\n\n`;
+                        
+                        if (module.type === 'quiz' && module.questions?.length > 0) {
+                          moduleContent += `🧠 **Interactive Quiz**\n\n`;
+                          module.questions.slice(0, 2).forEach((q: any, idx: number) => {
+                            moduleContent += `**Question ${idx + 1}:** ${q.question}\n`;
+                            q.options?.forEach((option: string, optIdx: number) => {
+                              moduleContent += `${String.fromCharCode(65 + optIdx)}. ${option}\n`;
+                            });
+                            moduleContent += `\n`;
+                          });
+                          moduleContent += `💡 *Click "Mark Complete" when you've answered the questions!*`;
+                        } else if (module.type === 'video_segment') {
+                          moduleContent += module.content || `🎥 **Video Segment Analysis**\n\nThis module focuses on a specific part of the video with key insights and explanations.`;
+                          if (module.startTime !== undefined) {
+                            moduleContent += `\n\n⏰ **Video timestamp:** ${Math.floor(module.startTime / 60)}:${String(module.startTime % 60).padStart(2, '0')}`;
+                          }
+                          if (module.keyPoints?.length > 0) {
+                            moduleContent += `\n\n🔑 **Key Points:**\n`;
+                            module.keyPoints.forEach((point: string) => {
+                              moduleContent += `• ${point}\n`;
+                            });
+                          }
+                        } else {
+                          moduleContent += module.content || `📖 **Reading Material**\n\nDetailed explanations and concepts for this learning module.`;
+                          if (module.keyPoints?.length > 0) {
+                            moduleContent += `\n\n🔑 **Key Takeaways:**\n`;
+                            module.keyPoints.forEach((point: string) => {
+                              moduleContent += `• ${point}\n`;
+                            });
+                          }
+                        }
+                        
                         // Add module interaction to chat
                         const moduleMessage: Message = {
                           id: `module-${Date.now()}`,
                           role: 'assistant',
-                          content: `📚 **${module.title}**\n\n${module.content || `Starting ${module.type.replace('_', ' ')} module...`}\n\n${module.type === 'video_segment' && module.startTime !== undefined ? `⏰ Video timestamp: ${Math.floor(module.startTime / 60)}:${String(module.startTime % 60).padStart(2, '0')}` : ''}`,
+                          content: moduleContent,
                           timestamp: new Date(),
                         };
                         setMessages(prev => [...prev, moduleMessage]);
+                        
+                        // Add activity log
+                        addActivity({
+                          type: 'processing',
+                          title: `📚 Module: ${module.title}`,
+                          description: `Opened ${module.type.replace('_', ' ')} module`,
+                          status: 'completed'
+                        });
                       }}
                     >
                       <div className="flex items-center justify-between">
@@ -1427,22 +1598,33 @@ export default function ChatPage() {
     return (
       <motion.div 
         animate={{ width: open ? "288px" : "68px" }} 
-        className={cn("h-full relative z-30 hidden md:flex flex-col", className)} 
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className={cn("h-full relative z-30 hidden md:flex flex-col border-r border-border", className)} 
+        transition={{ type: "spring", stiffness: 400, damping: 35 }}
       >
         <SidebarContent activities={activities} currentPath={currentPath} open={open} />
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className={cn(
-            "absolute top-1/2 -right-4 transform -translate-y-1/2 bg-card border rounded-full h-8 w-8 z-40 shadow-md hover:bg-muted",
-            "transition-opacity duration-300",
-            open ? "opacity-100" : "opacity-0"
-          )} 
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </Button>
+        
+        {/* Fixed Toggle Button - Always Visible */}
+        <div className="absolute top-4 -right-3 z-50">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={cn(
+              "bg-background border border-border rounded-full h-6 w-6 shadow-sm hover:bg-muted",
+              "transition-all duration-200 hover:scale-110"
+            )} 
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setOpen(!open);
+            }}
+          >
+            {open ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          </Button>
+        </div>
       </motion.div>
     );
   };
@@ -1536,7 +1718,7 @@ export default function ChatPage() {
         />
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col" onMouseDown={(e) => e.stopPropagation()}>
           {/* Header */}
           <div className="border-b border-border/50 p-4 flex items-center justify-between bg-card/95 backdrop-blur-sm">
             <div className="flex items-center gap-4">
