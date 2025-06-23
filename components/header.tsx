@@ -13,14 +13,11 @@ import {
   Moon,
   Sun,
   Home,
-  MessageSquare,
   Sparkles,
-  Video,
   Briefcase,
   User,
   Calendar,
-  Mail,
-  ChevronDown
+  Mail
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -59,8 +56,6 @@ export const Header: React.FC<HeaderProps> = ({ theme: propTheme, onThemeToggle 
 
   const navItems = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/chat", label: "AI Chat", icon: MessageSquare, highlight: true },
-    { href: "/video-learning-tool", label: "Video Learning", icon: Video },
     { href: "/consulting", label: "Consulting", icon: Briefcase },
     { href: "/about", label: "About", icon: User },
     { href: "/workshop", label: "Workshop", icon: Calendar },
@@ -103,15 +98,11 @@ export const Header: React.FC<HeaderProps> = ({ theme: propTheme, onThemeToggle 
                     "flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200",
                     isActive
                       ? "bg-orange-500/10 text-orange-600 dark:text-orange-400"
-                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100",
-                    item.highlight && "relative"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
                   )}
                 >
                   <Icon className="w-4 h-4" />
                   <span>{item.label}</span>
-                  {item.highlight && !isActive && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-                  )}
                 </Link>
               )
             })}
@@ -133,18 +124,7 @@ export const Header: React.FC<HeaderProps> = ({ theme: propTheme, onThemeToggle 
               )}
             </Button>
 
-            {/* CTA Button - Desktop */}
-            <div className="hidden lg:block">
-              <Button
-                asChild
-                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                <Link href="/chat">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Try AI Chat
-                </Link>
-              </Button>
-            </div>
+
 
             {/* Mobile Menu Toggle */}
             <Button
@@ -188,26 +168,11 @@ export const Header: React.FC<HeaderProps> = ({ theme: propTheme, onThemeToggle 
                   >
                     <Icon className="w-5 h-5" />
                     <span className="font-medium">{item.label}</span>
-                    {item.highlight && !isActive && (
-                      <span className="ml-auto w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-                    )}
                   </Link>
                 )
               })}
               
-              {/* Mobile CTA */}
-              <div className="pt-2">
-                <Button
-                  asChild
-                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <Link href="/chat">
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Try AI Chat
-                  </Link>
-                </Button>
-              </div>
+
             </div>
           </motion.div>
         )}

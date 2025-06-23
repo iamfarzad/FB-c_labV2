@@ -124,7 +124,7 @@ async function handleConversationalFlow(body: ProxyRequestBody): Promise<ProxyRe
 
     const genAI = getGenAI()
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-latest",
+      model: "gemini-2.5-flash",
       tools: [{ codeExecution: {} }]
     })
 
@@ -559,7 +559,7 @@ CONVERSATIONAL GOAL: Generate a compelling visual description for an image based
     const generationConfig = { temperature: 0.7, topP: 0.9, topK: 35 }; // Adjusted slightly
 
     const geminiResult = await genAI.models.generateContent({
-        model: "gemini-1.5-flash-latest",
+        model: "gemini-2.5-flash",
         contents: [{role: 'user', parts: [{text: enhancedPrompt}]}],
         systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]}, // Using the more specific dynamic instruction
         safetySettings: safetySettings,
@@ -660,7 +660,7 @@ CONVERSATIONAL GOAL: Analyze the provided video URI and respond to the user's qu
     const textPart = { text: analysisPromptText };
 
     const geminiResult = await genAI.models.generateContent({
-        model: "gemini-1.5-flash-latest",
+        model: "gemini-2.5-flash",
         contents: [{ role: 'user', parts: [videoPart, textPart] }],
         systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]},
         safetySettings: safetySettings,
@@ -766,7 +766,7 @@ CONVERSATIONAL GOAL: Analyze the provided document and respond to the user's que
     const textPart = { text: businessAnalysisPromptText };
 
     const geminiResult = await genAI.models.generateContent({
-        model: "gemini-1.5-flash-latest",
+        model: "gemini-2.5-flash",
         contents: [{ role: 'user', parts: [documentPart, textPart] }],
         systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]},
         safetySettings: safetySettings,
@@ -849,7 +849,7 @@ CONVERSATIONAL GOAL: Generate and execute Python code based on the user's reques
     const generationConfig = { temperature: 0.5, topP: 0.9, topK: 30 };
 
     const geminiResult = await genAI.models.generateContent({
-        model: "gemini-1.5-flash-latest",
+        model: "gemini-2.5-flash",
         contents: [{role: 'user', parts: [{text: codePromptText}]}],
         systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]},
         tools: [{ codeExecution: {} }],
@@ -936,7 +936,7 @@ CONVERSATIONAL GOAL: Analyze the provided website URL using Google Search and pr
     const generationConfig = { temperature: 0.75, topP: 0.95, topK: 45 };
 
     const geminiResult = await genAI.models.generateContent({
-        model: "gemini-1.5-flash-latest",
+        model: "gemini-2.5-flash",
         contents: [{role: 'user', parts: [{text: urlAnalysisPromptText}]}],
         systemInstruction: {role: 'system', parts: [{text: dynamicSystemInstruction}]},
         tools: [{ googleSearch: {} }],
@@ -1029,7 +1029,7 @@ CREATE STRUCTURED SUMMARY: 1. Executive Summary (key insights). 2. AI Capabiliti
 Make it professional, actionable, and compelling for ${userInfo.name}.`;
 
     const summaryGeminiResult = await genAI.models.generateContent({
-        model: "gemini-1.5-flash-latest",
+        model: "gemini-2.5-flash",
         contents: [{role: 'user', parts: [{text: summaryPromptText}]}],
         systemInstruction: {role: 'system', parts: [{text: leadCaptureSystemInstruction}]},
         safetySettings: safetySettings,
@@ -1046,7 +1046,7 @@ CONVERSATION INSIGHTS (key interactions): ${JSON.stringify(historyForSummaryProm
 Provide actionable intelligence for converting this lead.`;
 
     const briefGeminiResult = await genAI.models.generateContent({
-        model: "gemini-1.5-flash-latest",
+        model: "gemini-2.5-flash",
         contents: [{role: 'user', parts: [{text: briefPromptText}]}],
         systemInstruction: {role: 'system', parts: [{text: leadCaptureSystemInstruction}]},
         safetySettings: safetySettings,
@@ -1210,7 +1210,7 @@ CONVERSATIONAL GOAL: ${newConversationState.aiGuidance || 'Respond to the user a
                 ];
 
                 const result = await genAI.models.generateContent({
-                    model: "gemini-1.5-flash-latest",
+                    model: "gemini-2.5-flash",
                     contents: [...geminiHistory, { role: 'user', parts: [{ text: prompt }] }],
                     systemInstruction: { role: "system", parts: [{ text: dynamicSystemInstruction }] },
                     tools: [{ googleSearch: {} }],

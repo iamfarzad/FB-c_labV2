@@ -64,7 +64,7 @@ export default forwardRef(function ContentContainer(
   // Helper function to generate content spec from video
   const generateSpecFromVideo = async (videoUrl: string): Promise<string> => {
     const specResponse = await generateText({
-      modelName: 'gemini-2.0-flash',
+      modelName: 'gemini-2.5-flash',
       prompt: SPEC_FROM_VIDEO_PROMPT,
       videoUrl: videoUrl,
     });
@@ -79,7 +79,7 @@ export default forwardRef(function ContentContainer(
   // Helper function to generate code from content spec
   const generateCodeFromSpec = async (spec: string): Promise<string> => {
     const codeResponse = await generateText({
-      modelName: 'gemini-2.5-pro-preview-03-25',
+      modelName: 'gemini-2.5-flash',
       prompt: spec,
     });
 

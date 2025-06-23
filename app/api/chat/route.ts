@@ -5,54 +5,58 @@ const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, includeAudio = false } = await req.json();
+    const { messages, includeAudio = false, leadCaptureState } = await req.json();
 
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json(
-        { reply: "I'm currently in demo mode. Please configure the Gemini API key to enable full functionality." },
-        { status: 200 }
-      );
-    }
+    // Get the last message
+    const lastMessage = messages[messages.length - 1];
+    const prompt = lastMessage?.content || lastMessage?.parts?.[0]?.text || 'Hello';
 
-    // Use enhanced gemini proxy for full functionality
+    // Call your advanced AI showcase API directly
     try {
-      const proxyResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/api/gemini?action=conversationalFlow`, {
+      const response = await fetch(`${req.nextUrl.origin}/api/gemini?action=conversationalFlow`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: messages[messages.length - 1]?.parts?.[0]?.text || 'Hello',
-          conversationHistory: messages,
-          includeAudio: includeAudio,
+          prompt: prompt,
           currentConversationState: {
             sessionId: `chat_${Date.now()}`,
             stage: 'conversation',
-            messages: messages
-          }
+            messages: messages,
+            ...leadCaptureState
+          },
+          includeAudio: includeAudio
         })
       });
 
-      if (proxyResponse.ok) {
-        const proxyResult = await proxyResponse.json();
-        if (proxyResult.success) {
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
           return NextResponse.json({
-            reply: proxyResult.data.text,
-            audioData: proxyResult.data.audioData,
-            sources: proxyResult.data.sources
+            reply: result.data.text,
+            audioData: result.data.audioData,
+            sources: result.data.sources
           });
         }
       }
-    } catch (proxyError) {
-      console.log('Proxy failed, falling back to direct API');
+    } catch (error) {
+      console.log('Advanced API failed:', error);
     }
 
-    // Fallback to direct API
+    // Fallback only if no API key
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({
+        reply: "I'm currently in demo mode. Please configure the Gemini API key to enable full functionality."
+      });
+    }
+
+    // Basic fallback
     const contents = messages.map((msg: any) => ({
       role: msg.role === 'model' ? 'model' : 'user',
-      parts: [{ text: msg.parts[0].text }]
+      parts: [{ text: msg.content || msg.parts?.[0]?.text || '' }]
     }));
 
     const result = await genAI.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       contents: contents,
     });
 

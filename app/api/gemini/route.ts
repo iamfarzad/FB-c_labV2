@@ -68,6 +68,16 @@ export async function POST(request: NextRequest) {
         return handleLeadCapture(body);
       case 'enhancedPersonalization':
         return handleEnhancedPersonalization(body);
+      case 'generateVideoSpec':
+        return handleVideoAnalysis(body);
+      case 'generateCodeFromSpec':
+        return handleCodeExecution(body);
+      case 'analyzeWebcamFrame':
+        return handleWebcamAnalysis(body);
+      case 'realTimeConversation':
+        return handleRealTimeConversation(body);
+      case 'analyzeScreenShare':
+        return handleScreenShareAnalysis(body);
       default:
         return handleConversationalFlow(body);
     }
@@ -127,19 +137,21 @@ async function handleConversationalFlow(body: any) {
       // Broadcast via Supabase
       try {
         const supabase = getSupabase();
-        await supabase.channel('ai-showcase')
-          .send({
-            type: 'broadcast',
-            event: 'ai-response',
-            payload: {
-              text: mockResponse.text,
-              audioData: null,
-              sources: [],
-              sidebarActivity: mockResponse.sidebarActivity,
-              conversationState: mockResponse.nextState,
-              timestamp: Date.now()
-            }
-          });
+        if (supabase) {
+          await supabase.channel('ai-showcase')
+            .send({
+              type: 'broadcast',
+              event: 'ai-response',
+              payload: {
+                text: mockResponse.text,
+                audioData: null,
+                sources: [],
+                sidebarActivity: mockResponse.sidebarActivity,
+                conversationState: mockResponse.nextState,
+                timestamp: Date.now()
+              }
+            });
+        }
       } catch (error) {
         console.error('Supabase broadcast error:', error);
       }
@@ -178,7 +190,7 @@ Current user message: "${prompt}"`;
 
     // Generate response
     const result = await genAI.models.generateContent({
-      model: 'gemini-1.5-flash-latest',
+      model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts: [{ text: systemPrompt + "\n\n" + prompt }] }]
     });
     const text = result.text;
@@ -277,7 +289,7 @@ async function handleImageGeneration(body: any) {
     - Specific elements that would resonate with business decision makers`;
 
     const result = await genAI.models.generateContent({
-      model: 'gemini-1.5-flash-latest',
+      model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts: [{ text: imagePrompt }] }]
     });
     const text = result.text;
@@ -319,22 +331,121 @@ async function handleImageGeneration(body: any) {
 }
 
 async function handleVideoAnalysis(body: any) {
-  const { videoUrl, prompt = 'Analyze this video for business insights' } = body;
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  const { videoUrl, prompt = 'Analyze this video for business insights', modelName = 'gemini-2.5-flash' } = body;
   
-  if (!videoUrl) {
-    return NextResponse.json({ success: false, error: 'No video URL provided' }, { status: 400 });
+  if (!videoUrl && !prompt) {
+    return NextResponse.json({ success: false, error: 'No video URL or prompt provided' }, { status: 400, headers });
   }
 
-  // Mock implementation for now
-  return NextResponse.json({
-    success: true,
-    data: {
-      text: `Video analysis for ${videoUrl}: This would analyze the video content and provide business insights, key topics discussed, and actionable recommendations.`,
-      videoUrl,
-      analysisType: 'business_insights',
-      sidebarActivity: 'video_analysis'
+  try {
+    // Handle video spec generation
+    if (prompt && prompt.includes('pedagogist and product designer')) {
+      if (!genAI) {
+        const mockSpec = `Build an interactive learning app to help users understand the key concepts from this video.
+
+SPECIFICATIONS:
+1. The app must feature an interactive interface that engages users with the video content.
+2. Include visual elements that reinforce the main concepts discussed.
+3. Provide interactive exercises or quizzes to test understanding.
+4. Create a progress tracking system to show learning advancement.
+5. Include clear explanations and examples related to the video topic.
+
+The app should be educational, engaging, and help users master the video's key ideas through hands-on interaction.`;
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            text: JSON.stringify({ spec: mockSpec })
+          }
+        }, { headers });
+      }
+
+                    const result = await genAI.models.generateContent({
+         model: modelName,
+         contents: [{ role: 'user', parts: [{ text: prompt + (videoUrl ? `\n\nVideo URL: ${videoUrl}` : '') }] }]
+       });
+
+      return NextResponse.json({
+        success: true,
+        data: { text: result.text }
+      }, { headers });
     }
-  });
+
+    // Handle code generation from spec
+    if (prompt && !videoUrl) {
+      if (!genAI) {
+        const mockCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Learning App</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .header { text-align: center; color: #333; margin-bottom: 30px; }
+        .interactive-section { background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .button { background: #2196f3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        .button:hover { background: #1976d2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Interactive Learning App</h1>
+            <p>Learn through interactive experiences</p>
+        </div>
+        <div class="interactive-section">
+            <h2>Interactive Demo</h2>
+            <p>This is a demonstration of an interactive learning application.</p>
+            <button class="button" onclick="alert('Interactive feature activated!')">Try Interactive Feature</button>
+        </div>
+    </div>
+</body>
+</html>`;
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            text: `\`\`\`html\n${mockCode}\n\`\`\``
+          }
+        }, { headers });
+      }
+
+      const result = await genAI.models.generateContent({
+        model: modelName,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: { text: result.text }
+      }, { headers });
+    }
+
+    // Regular video analysis
+    return NextResponse.json({
+      success: true,
+      data: {
+        text: `Video analysis for ${videoUrl}: This would analyze the video content and provide business insights, key topics discussed, and actionable recommendations.`,
+        videoUrl,
+        analysisType: 'business_insights',
+        sidebarActivity: 'video_analysis'
+      }
+    }, { headers });
+  } catch (error: any) {
+    console.error('Video analysis error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to process video' },
+      { status: 500, headers }
+    );
+  }
 }
 
 async function handleDocumentAnalysis(body: any) {
@@ -377,7 +488,7 @@ async function handleCodeExecution(body: any) {
     3. Implementation suggestions`;
 
     const result = await genAI.models.generateContent({
-      model: 'gemini-1.5-flash-latest',
+      model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts: [{ text: codePrompt }] }]
     });
     const text = result.text;
@@ -476,7 +587,7 @@ Recommended Next Steps:
     4. Recommended Next Steps`;
 
     const result = await genAI.models.generateContent({
-      model: 'gemini-1.5-flash-latest',
+      model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts: [{ text: summaryPrompt }] }]
     });
     const summary = result.text;
@@ -567,7 +678,7 @@ User's first message: "${userMessage}"
 Format the response as a natural, personalized greeting that shows I've done my homework.`;
 
     const result = await genAI.models.generateContent({
-      model: 'gemini-2.5-flash-preview-04-17', // Use the latest model for enhanced research
+      model: 'gemini-2.5-flash', // Use the latest model for enhanced research
       contents: [{ 
         role: 'user', 
         parts: [{ text: researchPrompt }] 
@@ -768,6 +879,418 @@ function getMockResponse(stage: string, prompt: string, userInfo: any) {
 }
 
 // Enhanced voice generation function
+async function handleGenerateVideoSpec(body: any) {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  const { videoUrl, prompt, modelName = 'gemini-2.5-flash' } = body;
+  
+  if (!videoUrl) {
+    return NextResponse.json({ success: false, error: 'No video URL provided' }, { status: 400, headers });
+  }
+
+  try {
+    if (!genAI) {
+      // Mock response for development
+      const mockSpec = `Build an interactive learning app to help users understand the key concepts from this video.
+
+SPECIFICATIONS:
+1. The app must feature an interactive interface that engages users with the video content.
+2. Include visual elements that reinforce the main concepts discussed.
+3. Provide interactive exercises or quizzes to test understanding.
+4. Create a progress tracking system to show learning advancement.
+5. Include clear explanations and examples related to the video topic.
+
+The app should be educational, engaging, and help users master the video's key ideas through hands-on interaction.`;
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          text: JSON.stringify({ spec: mockSpec })
+        }
+      }, { headers });
+    }
+
+    // Use the video URL to generate a spec
+    const result = await genAI.models.generateContent({
+      model: modelName,
+      contents: [{
+        role: 'user',
+        parts: [
+          { text: prompt },
+          {
+            fileData: {
+              mimeType: 'video/mp4',
+              fileUri: videoUrl
+            }
+          }
+        ]
+      }]
+    });
+
+    const text = result.text;
+
+    return NextResponse.json({
+      success: true,
+      data: { text }
+    }, { headers });
+  } catch (error: any) {
+    console.error('Video spec generation error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to generate video spec' },
+      { status: 500, headers }
+    );
+  }
+}
+
+async function handleGenerateCodeFromSpec(body: any) {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  const { prompt, modelName = 'gemini-2.5-flash' } = body;
+  
+  if (!prompt) {
+    return NextResponse.json({ success: false, error: 'No spec provided' }, { status: 400, headers });
+  }
+
+  try {
+    if (!genAI) {
+      // Mock response for development
+      const mockCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Learning App</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .header { text-align: center; color: #333; margin-bottom: 30px; }
+        .interactive-section { background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .button { background: #2196f3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        .button:hover { background: #1976d2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Interactive Learning App</h1>
+            <p>Learn through interactive experiences</p>
+        </div>
+        <div class="interactive-section">
+            <h2>Interactive Demo</h2>
+            <p>This is a demonstration of an interactive learning application.</p>
+            <button class="button" onclick="alert('Interactive feature activated!')">Try Interactive Feature</button>
+        </div>
+    </div>
+</body>
+</html>`;
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          text: `\`\`\`html\n${mockCode}\n\`\`\``
+        }
+      }, { headers });
+    }
+
+    const result = await genAI.models.generateContent({
+      model: modelName,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }]
+    });
+
+    const text = result.text;
+
+    return NextResponse.json({
+      success: true,
+      data: { text }
+    }, { headers });
+  } catch (error: any) {
+    console.error('Code generation error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to generate code from spec' },
+      { status: 500, headers }
+    );
+  }
+}
+
+async function handleRealTimeConversation(body: any) {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  const { message, conversationHistory = [], includeAudio = true } = body;
+  
+  if (!message) {
+    return NextResponse.json({ success: false, error: 'No message provided' }, { status: 400, headers });
+  }
+
+  try {
+    if (!genAI) {
+      // Mock response for testing without API key
+      const mockResponses = [
+        "That's really interesting! Tell me more about that.",
+        "I understand what you're saying. How does that make you feel?",
+        "Great point! I'd love to hear your thoughts on how we could implement that.",
+        "That's a fascinating perspective. What led you to that conclusion?",
+        "I can see why that would be important to you. Let's explore that further."
+      ];
+      
+      const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          text: randomResponse,
+          audioData: null, // Would include base64 audio in real implementation
+          conversationTurn: 'ai'
+        }
+      }, { headers });
+    }
+
+    // Build conversation context from history
+    const conversationContext = conversationHistory
+      .slice(-10) // Keep last 10 turns for context
+      .map((turn: any) => `${turn.type === 'user' ? 'User' : 'AI'}: ${turn.text}`)
+      .join('\n');
+
+    const systemPrompt = `You are an AI assistant engaged in a real-time voice conversation. 
+
+Context from recent conversation:
+${conversationContext}
+
+Current user message: "${message}"
+
+Respond naturally and conversationally. Keep responses concise but engaging, as this is a real-time voice chat.`;
+
+    const result = await genAI.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: systemPrompt }] }]
+    });
+    
+    const text = result.text;
+
+    // Generate voice if requested
+    let audioData = null;
+    if (includeAudio && text) {
+      const voiceResult = await generateVoiceWithElevenLabs(text);
+      if (voiceResult) {
+        audioData = voiceResult.audioBase64;
+      }
+    }
+
+    // Broadcast via Supabase
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        await supabase.channel('ai-showcase')
+          .send({
+            type: 'broadcast',
+            event: 'realtime-conversation',
+            payload: {
+              message: text,
+              audioData,
+              timestamp: Date.now()
+            }
+          });
+      } catch (error) {
+        console.error('Supabase broadcast error:', error);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        text,
+        audioData,
+        conversationTurn: 'ai'
+      }
+    }, { headers });
+  } catch (error: any) {
+    console.error('Real-time conversation error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to process real-time conversation' },
+      { status: 500, headers }
+    );
+  }
+}
+
+async function handleScreenShareAnalysis(body: any) {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  const { imageData, prompt = 'Analyze this screen share' } = body;
+  
+  if (!imageData) {
+    return NextResponse.json({ success: false, error: 'No image data provided' }, { status: 400, headers });
+  }
+
+  try {
+    if (!genAI) {
+      // Mock response for testing without API key
+      const mockAnalysis = `I can see a professional desktop environment with multiple applications open. There appears to be a development environment with code editor, browser windows, and possibly design tools. This looks like someone working on a web development project with a focus on user interface design. The workflow suggests active development and testing of web applications.`;
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          text: mockAnalysis,
+          confidence: 'high',
+          sidebarActivity: 'screen_analysis'
+        }
+      }, { headers });
+    }
+
+    // Create image part for Gemini
+    const imagePart = {
+      inlineData: {
+        data: imageData,
+        mimeType: 'image/jpeg'
+      }
+    };
+
+    const result = await genAI.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ 
+        role: 'user', 
+        parts: [
+          { text: prompt },
+          imagePart
+        ] 
+      }]
+    });
+    
+    const text = result.text;
+
+    // Broadcast via Supabase
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        await supabase.channel('ai-showcase')
+          .send({
+            type: 'broadcast',
+            event: 'screen-analysis',
+            payload: {
+              analysis: text,
+              timestamp: Date.now()
+            }
+          });
+      } catch (error) {
+        console.error('Supabase broadcast error:', error);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        text,
+        confidence: 'high',
+        sidebarActivity: 'screen_analysis'
+      }
+    }, { headers });
+  } catch (error: any) {
+    console.error('Screen share analysis error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to analyze screen share' },
+      { status: 500, headers }
+    );
+  }
+}
+
+async function handleWebcamAnalysis(body: any) {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  const { imageData, prompt = 'Analyze what you see in this webcam frame' } = body;
+  
+  if (!imageData) {
+    return NextResponse.json({ success: false, error: 'No image data provided' }, { status: 400, headers });
+  }
+
+  try {
+    if (!genAI) {
+      // Mock response for testing without API key
+      const mockAnalysis = `I can see a professional workspace with a person at their desk. The lighting appears natural, suggesting a daytime work environment. This appears to be a typical business consultation setting where someone is actively engaged with their computer, likely reviewing business materials or participating in a video call.`;
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          text: mockAnalysis,
+          confidence: 'high',
+          sidebarActivity: 'webcam_analysis'
+        }
+      }, { headers });
+    }
+
+    // Create image part for Gemini
+    const imagePart = {
+      inlineData: {
+        data: imageData,
+        mimeType: 'image/jpeg'
+      }
+    };
+
+    const result = await genAI.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ 
+        role: 'user', 
+        parts: [
+          { text: prompt },
+          imagePart
+        ] 
+      }]
+    });
+    
+    const text = result.text;
+
+    // Broadcast via Supabase
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        await supabase.channel('ai-showcase')
+          .send({
+            type: 'broadcast',
+            event: 'webcam-analysis',
+            payload: {
+              analysis: text,
+              timestamp: Date.now()
+            }
+          });
+      } catch (error) {
+        console.error('Supabase broadcast error:', error);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        text,
+        confidence: 'high',
+        sidebarActivity: 'webcam_analysis'
+      }
+    }, { headers });
+  } catch (error: any) {
+    console.error('Webcam analysis error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to analyze webcam frame' },
+      { status: 500, headers }
+    );
+  }
+}
+
 async function generateVoiceWithElevenLabs(text: string): Promise<{ audioBase64: string } | null> {
   if (!elevenLabsClient) {
     console.warn('ElevenLabs not configured - voice generation disabled');

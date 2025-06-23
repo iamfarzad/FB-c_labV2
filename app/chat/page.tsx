@@ -19,8 +19,10 @@ import {
 } from 'lucide-react';
 import { VoiceInputModal } from "@/components/voice-input-modal";
 import { WebcamModal } from "@/components/webcam-modal";
+import { ScreenShareModal } from "@/components/screen-share-modal";
 import { VideoLearningModal } from "@/components/video-learning-modal";
 import { VideoLearningCard } from "@/components/video-learning-card";
+import { VideoLearningIntegrated } from "@/components/video-learning-integrated";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import Link from 'next/link';
@@ -112,6 +114,8 @@ export default function ChatPage() {
   const [showWebcamModal, setShowWebcamModal] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [currentCameraFrame, setCurrentCameraFrame] = useState<string | null>(null);
+  const [showScreenShareModal, setShowScreenShareModal] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const captureIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -164,6 +168,10 @@ export default function ChatPage() {
     progress: number;
     isActive: boolean;
   } | null>(null);
+  
+  // Full Video Learning Experience State
+  const [showFullVideoLearning, setShowFullVideoLearning] = useState(false);
+  const [isVideoLearningExpanded, setIsVideoLearningExpanded] = useState(false);
   
   // Camera analysis timing
   const lastCameraAnalysisRef = useRef<number>(0);
@@ -952,45 +960,114 @@ export default function ChatPage() {
     return [
       {
         id: 'intro',
-        title: 'Video Introduction',
+        title: 'Introduction & Overview',
         type: 'video_segment',
         completed: false,
-        content: `Welcome to the learning experience for "${videoTitle}". This module provides an overview of what you'll learn.`,
+        content: `Welcome to the interactive learning experience for "${videoTitle}". This introductory module provides a comprehensive overview of what you'll learn, the key objectives, and how this content will benefit your understanding. We'll set clear expectations and provide a roadmap for your learning journey.`,
         startTime: 0,
         endTime: 120,
-        keyPoints: ['Overview of main topics', 'Learning objectives', 'What to expect']
+        keyPoints: [
+          'Overview of main topics and learning objectives',
+          'Understanding the video structure and flow',
+          'What you can expect to achieve by the end',
+          'Prerequisites and background knowledge needed'
+        ]
       },
       {
         id: 'concepts',
-        title: 'Key Concepts & Ideas',
+        title: 'Core Concepts & Fundamentals',
         type: 'reading',
         completed: false,
-        content: `This module covers the fundamental concepts presented in "${videoTitle}". Take your time to understand these core ideas as they form the foundation for more advanced topics.`,
-        keyPoints: ['Core principles', 'Important definitions', 'Foundational knowledge']
+        content: `This module covers the fundamental concepts and theoretical foundations presented in "${videoTitle}". Take your time to understand these core ideas as they form the foundation for more advanced topics. We'll explore key principles, important terminology, and how these concepts apply to real-world scenarios.`,
+        keyPoints: [
+          'Core principles and theoretical foundations',
+          'Essential terminology and definitions',
+          'Foundational knowledge and context',
+          'Real-world applications and relevance',
+          'Common misconceptions and clarifications'
+        ]
+      },
+      {
+        id: 'deep-dive',
+        title: 'Advanced Analysis & Insights',
+        type: 'video_segment',
+        completed: false,
+        content: `Dive deeper into the advanced topics and sophisticated insights from "${videoTitle}". This module explores complex concepts, expert-level techniques, and nuanced understanding that separates beginners from advanced practitioners.`,
+        startTime: 120,
+        endTime: 300,
+        keyPoints: [
+          'Advanced techniques and methodologies',
+          'Expert-level insights and perspectives',
+          'Complex problem-solving approaches',
+          'Industry best practices and standards',
+          'Common pitfalls and how to avoid them'
+        ]
       },
       {
         id: 'quiz',
-        title: 'Knowledge Assessment',
+        title: 'Interactive Knowledge Assessment',
         type: 'quiz',
         completed: false,
-        content: 'Test your understanding with this interactive quiz.',
+        content: 'Test your understanding with this comprehensive interactive quiz designed to reinforce key concepts and assess your mastery of the material.',
         questions: [
           {
             id: 'q1',
-            question: 'What is the main topic of this video?',
-            options: ['Concept A', 'Concept B', 'Concept C', 'All of the above'],
+            question: 'What is the primary focus and main learning objective of this video?',
+            options: ['Theoretical concepts only', 'Practical applications', 'Both theory and practice', 'Historical context'],
+            correctAnswer: 2,
+            explanation: 'The video effectively combines theoretical foundations with practical applications for comprehensive learning.'
+          },
+          {
+            id: 'q2',
+            question: 'Which approach is most effective for implementing the concepts discussed?',
+            options: ['Step-by-step methodology', 'Trial and error approach', 'Expert consultation only', 'Combination of structured learning and practice'],
             correctAnswer: 3,
-            explanation: 'The video covers multiple interconnected concepts.'
+            explanation: 'The most effective approach combines structured learning with hands-on practice and expert guidance when needed.'
+          },
+          {
+            id: 'q3',
+            question: 'What is the key to successfully applying these principles in real-world scenarios?',
+            options: ['Perfect theoretical understanding', 'Continuous practice and iteration', 'Advanced tools and technology', 'Natural talent and intuition'],
+            correctAnswer: 1,
+            explanation: 'Continuous practice and iteration, combined with solid theoretical understanding, leads to successful real-world application.'
           }
+        ],
+        keyPoints: [
+          'Self-assessment and knowledge validation',
+          'Reinforcement of critical concepts',
+          'Identification of learning gaps',
+          'Progress tracking and analytics'
         ]
       },
       {
         id: 'practice',
-        title: 'Practical Application',
+        title: 'Practical Implementation Workshop',
         type: 'interactive_exercise',
         completed: false,
-        content: 'Apply what you\'ve learned with practical exercises and real-world examples.',
-        keyPoints: ['Hands-on practice', 'Real-world applications', 'Skill reinforcement']
+        content: `Apply what you've learned through hands-on practical exercises and real-world examples from "${videoTitle}". This workshop-style module includes step-by-step implementation guides, case studies, and interactive exercises to ensure you can confidently apply these concepts in your own projects.`,
+        keyPoints: [
+          'Hands-on practice exercises',
+          'Real-world case studies and examples',
+          'Step-by-step implementation guides',
+          'Skill reinforcement and application',
+          'Troubleshooting common challenges',
+          'Best practice demonstrations'
+        ]
+      },
+      {
+        id: 'mastery',
+        title: 'Mastery Check & Next Steps',
+        type: 'reading',
+        completed: false,
+        content: `Consolidate your learning and assess your mastery of all concepts covered in "${videoTitle}". This final module provides a comprehensive review, actionable next steps, and resources for continued learning and skill development.`,
+        keyPoints: [
+          'Comprehensive knowledge consolidation',
+          'Mastery-level self-assessment',
+          'Actionable next steps and implementation plan',
+          'Curated resources for continued learning',
+          'Community connections and expert networks',
+          'Long-term skill development roadmap'
+        ]
       }
     ];
   };
@@ -1093,6 +1170,9 @@ export default function ChatPage() {
           progress: 0,
           isActive: true
         });
+        
+        // Show the full video learning experience
+        setShowFullVideoLearning(true);
 
         setActivities(prevActivities =>
           prevActivities.map(act =>
@@ -1288,32 +1368,27 @@ export default function ChatPage() {
 
   const SidebarContent: React.FC<{ activities: ActivityItem[], currentPath: string, className?: string, open?: boolean; }> = ({ activities, currentPath, className, open }) => {
     return (
-      <div className={cn("flex flex-col h-full bg-card overflow-hidden", className)}>
+      <div className={cn("flex flex-col h-full w-80 overflow-hidden", className)}>
         {/* Header */}
         <div className="p-4 border-b border-border flex-shrink-0">
-          <h2 className={cn(
-            "text-lg font-semibold flex items-center gap-2 transition-opacity duration-200",
-            open ? "opacity-100" : "opacity-0"
-          )}>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
             <Activity className="w-5 h-5 text-primary" />
-            {open && "AI Activity Monitor"}
+            AI Activity Monitor
           </h2>
         </div>
 
         <ScrollArea className="flex-1 p-4" onMouseDown={(e) => e.stopPropagation()}>
-          {/* Contact Collection for AI Personalization */}
-          <div className="mb-6">
-            <h3 className={cn(
-              "font-semibold text-sm text-muted-foreground mb-3 transition-opacity duration-200",
-              open ? "opacity-100" : "opacity-0"
-            )}>
-              {open ? "AI Personalization" : ""}
-            </h3>
-            {!leadCaptureState.isPersonalized ? (
-              <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                <p className="text-xs text-muted-foreground mb-3">
-                  Provide your contact info for personalized AI assistance
-                </p>
+          <div className="space-y-6 pr-2">
+            {/* Contact Collection for AI Personalization */}
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-3">
+                AI Personalization
+              </h3>
+              {!leadCaptureState.isPersonalized ? (
+                <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+                  <p className="text-xs text-muted-foreground mb-3 break-words">
+                    Provide your contact info for personalized AI assistance
+                  </p>
                 <div className="space-y-3">
                   <Input
                     placeholder="Your name"
@@ -1344,7 +1419,7 @@ export default function ChatPage() {
 
           {/* Capabilities Showcased */}
           {leadCaptureState.capabilitiesShown.length > 0 && (
-            <div className="mb-6">
+            <div>
               <h3 className="font-semibold text-sm text-muted-foreground mb-3">Capabilities Showcased</h3>
               <div className="space-y-2">
                 {leadCaptureState.capabilitiesShown.map((capability, index) => (
@@ -1353,9 +1428,9 @@ export default function ChatPage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="flex items-center gap-2 text-sm"
+                    className="flex items-center gap-2 text-sm break-words"
                   >
-                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                     <span className="capitalize">{capability.replace('_', ' ')}</span>
                   </motion.div>
                 ))}
@@ -1364,7 +1439,7 @@ export default function ChatPage() {
           )}
 
           {/* AI Capability Demos */}
-          <div className="mb-6">
+          <div>
             <h3 className="font-semibold text-sm text-muted-foreground mb-3">AI Capabilities</h3>
             <div className="space-y-2">
               {showcaseCapabilities.map((cap) => {
@@ -1376,13 +1451,13 @@ export default function ChatPage() {
                     key={cap.id}
                     variant={isShown ? "secondary" : "outline"}
                     size="sm"
-                    className="w-full justify-start"
+                    className="w-full justify-start text-left break-words"
                     onClick={() => triggerShowcaseCapability(cap.id)}
                     disabled={isLoading}
                   >
-                    <Icon className={cn("w-4 h-4 mr-2", cap.color)} />
-                    {cap.label}
-                    {isShown && <CheckCircle className="w-3 h-3 ml-auto text-green-500" />}
+                    <Icon className={cn("w-4 h-4 mr-2 flex-shrink-0", cap.color)} />
+                    <span className="truncate">{cap.label}</span>
+                    {isShown && <CheckCircle className="w-3 h-3 ml-auto text-green-500 flex-shrink-0" />}
                   </Button>
                 );
               })}
@@ -1391,14 +1466,14 @@ export default function ChatPage() {
 
           {/* Complete Showcase Button */}
           {leadCaptureState.name && leadCaptureState.email && leadCaptureState.capabilitiesShown.length > 0 && (
-            <div className="mb-6">
+            <div>
               <Button
                 onClick={completeShowcase}
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm"
               >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Complete AI Showcase & Get Summary
+                <Sparkles className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">Complete AI Showcase</span>
               </Button>
             </div>
           )}
@@ -1551,43 +1626,46 @@ export default function ChatPage() {
           )}
 
           {/* Activity Log */}
-          <div className="space-y-3">
-            <h3 className="font-semibold text-sm text-muted-foreground">Recent Activity</h3>
+          <div>
+            <h3 className="font-semibold text-sm text-muted-foreground mb-3">Recent Activity</h3>
             <AnimatePresence>
-              {activities.slice(0, 10).map((activity, index) => {
-                const Icon = getActivityIcon(activity.type);
-                const color = getActivityColor(activity.type);
-                
-                return (
-                  <motion.div
-                    key={activity.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.2, delay: index * 0.05 }}
-                    className="p-3 bg-card border border-border rounded-lg"
-                  >
-                    <div className="flex items-start gap-3">
-                      <Icon className={cn("w-4 h-4 mt-0.5", color)} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{activity.title}</p>
-                        {activity.description && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                            {activity.description}
+              <div className="space-y-3">
+                {activities.slice(0, 10).map((activity, index) => {
+                  const Icon = getActivityIcon(activity.type);
+                  const color = getActivityColor(activity.type);
+                  
+                  return (
+                    <motion.div
+                      key={activity.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.2, delay: index * 0.05 }}
+                      className="p-3 bg-card border border-border rounded-lg"
+                    >
+                      <div className="flex items-start gap-3">
+                        <Icon className={cn("w-4 h-4 mt-0.5 flex-shrink-0", color)} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium break-words">{activity.title}</p>
+                          {activity.description && (
+                            <p className="text-xs text-muted-foreground mt-1 break-words line-clamp-2">
+                              {activity.description}
+                            </p>
+                          )}
+                          {activity.progress !== undefined && (
+                            <Progress value={activity.progress} className="mt-2 h-1" />
+                          )}
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(activity.timestamp).toLocaleTimeString()}
                           </p>
-                        )}
-                        {activity.progress !== undefined && (
-                          <Progress value={activity.progress} className="mt-2 h-1" />
-                        )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(activity.timestamp).toLocaleTimeString()}
-                        </p>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
+                    </motion.div>
+                  );
+                })}
+              </div>
             </AnimatePresence>
+          </div>
           </div>
         </ScrollArea>
       </div>
@@ -1596,36 +1674,37 @@ export default function ChatPage() {
 
   const DesktopSidebar: React.FC<{ activities: ActivityItem[], currentPath: string, className?: string, open?: boolean; setOpen: (open: boolean) => void; }> = ({ activities, currentPath, className, open, setOpen }) => {
     return (
-      <motion.div 
-        animate={{ width: open ? "288px" : "68px" }} 
-        className={cn("h-full relative z-30 hidden md:flex flex-col border-r border-border", className)} 
-        transition={{ type: "spring", stiffness: 400, damping: 35 }}
-      >
-        <SidebarContent activities={activities} currentPath={currentPath} open={open} />
-        
-        {/* Fixed Toggle Button - Always Visible */}
-        <div className="absolute top-4 -right-3 z-50">
+      <>
+        {/* Sidebar Panel */}
+        <AnimatePresence mode="wait">
+          {open && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 320, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className={cn("h-full relative z-30 hidden md:flex flex-col border-r border-border bg-card overflow-hidden", className)}
+            >
+              <SidebarContent activities={activities} currentPath={currentPath} open={open} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Toggle Button */}
+        <div className={cn(
+          "fixed top-20 z-50 hidden md:block transition-all duration-300",
+          open ? "left-[288px]" : "left-4"
+        )}>
           <Button 
             variant="ghost" 
             size="icon" 
-            className={cn(
-              "bg-background border border-border rounded-full h-6 w-6 shadow-sm hover:bg-muted",
-              "transition-all duration-200 hover:scale-110"
-            )} 
-            onMouseDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setOpen(!open);
-            }}
+            className="bg-background/80 backdrop-blur-sm border border-border rounded-full h-8 w-8 shadow-lg hover:bg-muted hover:scale-110 transition-all duration-200"
+            onClick={() => setOpen(!open)}
           >
-            {open ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            {open ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
         </div>
-      </motion.div>
+      </>
     );
   };
 
@@ -1766,9 +1845,9 @@ export default function ChatPage() {
           <div className="flex-1 overflow-hidden">
             <div className="relative w-full h-full">
               <ScrollArea className="h-full">
-                <div className="flex flex-col gap-6 p-4">
+                <div className="flex flex-col gap-6 p-4 max-w-3xl mx-auto">
                   {/* Video Learning Card */}
-                  {detectedVideoUrl && (
+                  {detectedVideoUrl && !showFullVideoLearning && (
                     <div className="mb-4">
                       <VideoLearningCard
                         videoUrl={detectedVideoUrl}
@@ -1782,24 +1861,105 @@ export default function ChatPage() {
                     </div>
                   )}
 
+                  {/* Full Video Learning Experience */}
+                  {showFullVideoLearning && videoLearningData && (
+                    <div className="mb-6">
+                      <VideoLearningIntegrated
+                        videoUrl={videoLearningData.videoUrl}
+                        videoTitle={videoLearningData.title}
+                        learningModules={videoLearningData.learningModules}
+                        isExpanded={isVideoLearningExpanded}
+                        onModuleUpdate={(updatedModules) => {
+                          setVideoLearningData(prev => prev ? {
+                            ...prev,
+                            learningModules: updatedModules,
+                            progress: (updatedModules.filter(m => m.completed).length / updatedModules.length) * 100
+                          } : null);
+                        }}
+                        onModuleSelect={(module) => {
+                          // Create rich module content based on type
+                          let moduleContent = `📚 **${module.title}**\n\n`;
+                          
+                          if (module.type === 'quiz' && module.questions && module.questions.length > 0) {
+                            moduleContent += `🧠 **Interactive Quiz**\n\n`;
+                            module.questions.slice(0, 2).forEach((q: any, idx: number) => {
+                              moduleContent += `**Question ${idx + 1}:** ${q.question}\n`;
+                              q.options?.forEach((option: string, optIdx: number) => {
+                                moduleContent += `${String.fromCharCode(65 + optIdx)}. ${option}\n`;
+                              });
+                              moduleContent += `\n`;
+                            });
+                            moduleContent += `💡 *Click "Mark Complete" when you've answered the questions!*`;
+                          } else if (module.type === 'video_segment') {
+                            moduleContent += module.content || `🎥 **Video Segment Analysis**\n\nThis module focuses on a specific part of the video with key insights and explanations.`;
+                            if (module.startTime !== undefined) {
+                              moduleContent += `\n\n⏰ **Video timestamp:** ${Math.floor(module.startTime / 60)}:${String(module.startTime % 60).padStart(2, '0')}`;
+                            }
+                            if (module.keyPoints && module.keyPoints.length > 0) {
+                              moduleContent += `\n\n🔑 **Key Points:**\n`;
+                              module.keyPoints.forEach((point: string) => {
+                                moduleContent += `• ${point}\n`;
+                              });
+                            }
+                          } else {
+                            moduleContent += module.content || `📖 **Reading Material**\n\nDetailed explanations and concepts for this learning module.`;
+                            if (module.keyPoints && module.keyPoints.length > 0) {
+                              moduleContent += `\n\n🔑 **Key Takeaways:**\n`;
+                              module.keyPoints.forEach((point: string) => {
+                                moduleContent += `• ${point}\n`;
+                              });
+                            }
+                          }
+                          
+                          // Add module interaction to chat
+                          const moduleMessage: Message = {
+                            id: `module-${Date.now()}`,
+                            role: 'assistant',
+                            content: moduleContent,
+                            timestamp: new Date(),
+                          };
+                          setMessages(prev => [...prev, moduleMessage]);
+                          
+                          // Add activity log
+                          addActivity({
+                            type: 'processing',
+                            title: `📚 Module: ${module.title}`,
+                            description: `Opened ${module.type.replace('_', ' ')} module`,
+                            status: 'completed'
+                          });
+                        }}
+                        onClose={() => {
+                          setShowFullVideoLearning(false);
+                          setVideoLearningData(null);
+                          setDetectedVideoUrl(null);
+                          setVideoTitle("");
+                        }}
+                        onToggleExpand={() => setIsVideoLearningExpanded(!isVideoLearningExpanded)}
+                      />
+                    </div>
+                  )}
+
                   {messages.map((message) => (
                     <div
                       key={message.id}
                       className={cn(
-                        "flex gap-3 max-w-[80%]",
-                        message.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
+                        "flex gap-3 w-full",
+                        message.role === "user" ? "justify-end" : "justify-start"
                       )}
                     >
                       <Avatar className="w-8 h-8">
                         <AvatarImage src={message.role === "user" ? undefined : "/ai-avatar.png"} />
                         <AvatarFallback>{message.role === "user" ? "U" : "AI"}</AvatarFallback>
                       </Avatar>
-                      <div className="flex flex-col gap-2">
+                      <div className={cn(
+                        "flex flex-col gap-2 max-w-2xl",
+                        message.role === "user" ? "items-end" : "items-start"
+                      )}>
                         <div className={cn(
-                          "rounded-2xl px-4 py-3 max-w-md",
+                          "rounded-2xl px-4 py-3 break-words",
                           message.role === "user" 
-                            ? "bg-primary text-primary-foreground" 
-                            : "bg-muted text-muted-foreground"
+                            ? "bg-primary text-primary-foreground max-w-lg" 
+                            : "bg-muted text-muted-foreground w-full"
                         )}>
                           {message.content}
                         </div>
@@ -1852,8 +2012,9 @@ export default function ChatPage() {
 
           {/* Input Area */}
           <div className="border-t border-border p-4">
-            {/* Input Form */}
-            <div className="flex items-end gap-2">
+            <div className="max-w-3xl mx-auto">
+              {/* Input Form */}
+              <div className="flex items-end gap-2">
               <div className="flex-1 relative">
                 <Textarea
                   value={input}
@@ -1986,10 +2147,11 @@ export default function ChatPage() {
               </div>
             )}
 
-            {/* Footer Info */}
-            <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-              <span>Press Enter to send, Shift+Enter for new line</span>
-              <span>AI can make mistakes. Verify important information.</span>
+              {/* Footer Info */}
+              <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                <span>Press Enter to send, Shift+Enter for new line</span>
+                <span>AI can make mistakes. Verify important information.</span>
+              </div>
             </div>
           </div>
         </div>

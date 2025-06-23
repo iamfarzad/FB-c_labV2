@@ -46,7 +46,7 @@ This document provides a comprehensive overview of the AI functions and APIs use
         *   `generateEmailContent(...)`: Creates email content for lead follow-up.
     *   **Error Handling:** Each handler function and the main proxy handler include try-catch blocks to manage errors and return appropriate JSON responses.
     *   **Usage Limits:** Implements basic usage limits for demonstration purposes (e.g., `AI_USAGE_LIMITS.maxMessagesPerSession`).
-    *   **Model Name:** The implementation guide mentions `gemini-2.0-flash-exp`, whereas the actual code in both `api/gemini-proxy.ts` and `app/api/gemini/route.ts` primarily uses `gemini-1.5-flash-latest`.
+    *   **Model Name:** All API endpoints now use `gemini-2.5-flash` for optimal real-time performance and enhanced capabilities.
 
 *   **Comparison with Implementation Guide:** The documentation for this API is derived directly from the `__Complete AI Showcase Implementation Guide with C.md`. The `api/gemini-proxy.ts` file is the closest match to the guide's description. Key deviations include the exact file path (guide mentions `/api/gemini.ts`), minor differences in AI model versions, and slight variations in library import paths in the `app/api/gemini/route.ts` alternative.
 
@@ -200,3 +200,21 @@ This compiled information should serve as a useful reference for understanding t
 ## Appendix
 
 [Any additional information, diagrams, or code snippets that might be relevant]
+
+https://ai.google.dev/gemini-api/docs/quickstart
+https://ai.google.dev/gemini-api/docs/google-search
+https://ai.google.dev/gemini-api/docs/url-context
+https://ai.google.dev/gemini-api/docs/code-execution
+https://ai.google.dev/gemini-api/docs/audio
+https://ai.google.dev/gemini-api/docs/video-understanding
+https://ai.google.dev/gemini-api/docs/image-understanding
+https://ai.google.dev/gemini-api/docs/document-processing?lang=python
+https://ai.google.dev/gemini-api/docs/function-calling?example=meeting
+https://ai.google.dev/gemini-api/docs/thinking
+https://ai.google.dev/gemini-api/docs/structured-output
+https://ai.google.dev/gemini-api/docs/long-context
+https://ai.google.dev/gemini-api/docs/speech-generation
+https://ai.google.dev/gemini-api/docs/video
+https://ai.google.dev/gemini-api/docs/image-generation
+https://ai.google.dev/gemini-api/docs/text-generation
+
