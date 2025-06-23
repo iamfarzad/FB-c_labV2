@@ -4,6 +4,15 @@ All notable changes to the F.B/c AI Consulting project will be documented in thi
 
 ## [Unreleased]
 
+### Added
+- Refactored chat page into smaller, reusable components
+- Added new components: `ChatMessage`, `ChatMessages`, `ChatInput`, `ActivityLog`
+- Implemented responsive sidebar with `DesktopSidebar` and `MobileSidebarSheet`
+- Added `ChatContext` for global state management
+- Created custom hooks: `useFileUpload`, `useMediaQuery`
+- Added TypeScript types and interfaces for better type safety
+- Added comprehensive documentation in `REFACTORING.md`
+
 ### Fixed
 - Resolved hydration error in `ClientLayout.tsx` by removing duplicate HTML structure
 - Fixed TypeScript errors in `ThemeProvider` component by properly typing the `children` prop

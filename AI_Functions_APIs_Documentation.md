@@ -91,21 +91,26 @@ This document provides a comprehensive overview of the AI functions and APIs use
 
 *   **Comparison with Implementation Guide:** The documented schema is an exact representation of the SQL DDL provided in the `__Complete AI Showcase Implementation Guide with C.md` (Section 3). There are no deviations.
 
-### Function/API 3: Main Chat Interface (`AIShowcase.tsx`)
+### Function/API 3: Main Chat Interface (`chat/page.tsx`)
 
-*   **Purpose:** This component renders the primary user interface for the AI showcase. It facilitates the interactive chat between the user and the AI, manages the display of conversation history, handles user inputs, allows users to trigger various AI capability demonstrations, and provides real-time feedback on AI activities through a dedicated sidebar. A key function is to guide the user through the showcase and ultimately capture their information as a lead.
+*   **Purpose:** This page component renders the primary user interface for the AI chat experience. It facilitates interactive conversations between the user and the AI, manages conversation history, handles user inputs, and provides real-time feedback through an activity sidebar. The interface includes thread-based conversation context and lead capture functionality.
 
 *   **Implementation:**
-    *   **Location:** `components/AIShowcase.tsx`. This is consistent with the implementation guide and confirmed by `ls` output.
-    *   **Technology:** React (specifically as a Next.js client-side component, indicated by `"use client"`), TypeScript (TSX).
+    *   **Location:** `app/chat/page.tsx`
+    *   **Technology:** Next.js 13+ (App Router), React, TypeScript (TSX)
     *   **State Management:**
-        *   Employs React hooks (`useState`, `useEffect`) for managing local component state.
-        *   `conversationState`: An object of type `ConversationState` stores the session ID, current interaction stage (e.g., 'greeting', 'email_request'), user messages (`Message` interface), collected user information (name, email, company details), and a list of AI capabilities shown.
-        *   `sidebarActivity`: An object of type `SidebarActivity` to reflect the AI's current background tasks in the UI.
-        *   `isLoading`: A boolean state to indicate when the application is awaiting a response from the AI.
-        *   Session Persistence: The `conversationState` is saved to and retrieved from `sessionStorage` to allow users to resume their session.
-    *   **Real-time Communication:**
-        *   Utilizes the `@supabase/supabase-js` client to subscribe to a Supabase real-time channel named `ai-showcase`.
+        *   Uses React hooks (`useState`, `useEffect`, `useCallback`) for local state
+        *   `messages`: Array of `Message` objects storing the conversation history
+        *   `activities`: Array of `ActivityItem` objects for tracking system and user actions
+        *   `leadCaptureState`: Manages the state of the lead capture form and flow
+        *   `sidebarOpen`: Controls the visibility of the thread sidebar
+    *   **Key Features:**
+        *   Thread-based conversation context in sidebar
+        *   Integrated lead capture form
+        *   Real-time activity monitoring
+        *   Support for various message types (text, images, videos, documents)
+        *   Voice input and output capabilities
+        *   Video learning integration
         *   Listens for `broadcast` events:
             *   `ai-response`: Updates the chat with the AI's message, plays audio if available, and updates the conversation state.
             *   `sidebar-update`: Updates the sidebar with the current AI activity.
@@ -193,7 +198,7 @@ This document provides a comprehensive overview of the AI functions and APIs use
 
 This document provides a detailed overview of the key AI-related functions, APIs, and components as outlined in the `__Complete AI Showcase Implementation Guide with C.md`. It covers the backend API handler (Gemini API), the database schema (Supabase), the main frontend chat interface (`AIShowcase.tsx`), and the PDF generation utility (`pdfGenerator.ts`). For each component, its purpose, implementation details (including technology, core libraries, and structure), and a comparison with the source guide have been provided.
 
-The primary implementation files identified are `api/gemini-proxy.ts` for the backend API, `components/AIShowcase.tsx` for the frontend, and `utils/pdfGenerator.ts` for PDF reports, with Supabase for the database. Minor discrepancies, such as file path naming conventions for the API handler and specific AI model versions or library import paths, have been noted where applicable. Overall, the implemented components align well with the detailed descriptions in the guide. The guide's implementation checklist has also been summarized to provide context on the project's development lifecycle.
+The primary implementation files identified are `app/api/gemini/route.ts` for the backend API, `app/chat/page.tsx` for the frontend chat interface, and `utils/pdfGenerator.ts` for PDF reports, with Supabase for the database. The implementation aligns with modern Next.js 13+ architecture using the App Router pattern. The system has been streamlined to focus on a unified chat experience with thread-based conversation context.
 
 This compiled information should serve as a useful reference for understanding the architecture and functionality of the AI showcase application.
 

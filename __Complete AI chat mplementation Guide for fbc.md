@@ -1,9 +1,15 @@
-## F.B/c 
+## F.B/c AI Chat Implementation Guide
 
+## Overview
 
-The AIShowcase is the actual chat interface where users interact with F.B/c AI. It is not a separate chat or demo but the live, interactive conversation platform demonstrating all AI capabilities. 
+The F.B/c AI Chat is the primary interface where users interact with our AI capabilities. It's a unified platform that combines conversation, AI demonstrations, and lead capture in a single, streamlined experience.
 
-Capabilities demonstrated include:
+### Key Capabilities:
+- Thread-based conversation context
+- Real-time AI interactions
+- Lead capture and qualification
+- Multi-format support (text, images, documents)
+- Voice input and output
 
 Text generation
 
@@ -1050,243 +1056,132 @@ CREATE INDEX idx_lead_summaries_created_at ON lead_summaries(created_at DESC);
 ### **Main Chat Interface with Sidebar**
 
 ```tsx
-// components/AIShowcase.tsx
-"use client"
-import React, { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
+// app/chat/page.tsx
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import { supabase } from '@/lib/supabase/client'
 
-interface Message {
+type Message = {
   id: string
-  text: string
-  sender: 'user' | 'ai'
+  role: 'user' | 'assistant'
+  content: string
   timestamp: Date
-  audioData?: string
-  sources?: any[]
+  type?: 'text' | 'image' | 'document' | 'analysis'
+  data?: any
 }
 
-interface ConversationState {
-  sessionId: string
-  name?: string
-  email?: string
-  companyInfo?: any
-  stage: string
-  messages: Message[]
-  capabilitiesShown: string[]
-}
-
-interface SidebarActivity {
-  activity: string
-  message: string
+type ActivityItem = {
+  id: string
+  type: string
+  title: string
+  description?: string
   timestamp: number
+  status?: 'pending' | 'in_progress' | 'completed' | 'failed'
   progress?: number
 }
 
-export default function AIShowcase() {
-  const [conversationState, setConversationState] = useState<ConversationState>(() => {
-    const saved = sessionStorage.getItem('aiShowcase')
-    return saved ? JSON.parse(saved) : {
-      sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      stage: 'greeting',
-      messages: [],
-      capabilitiesShown: []
-    }
-  })
-
-  const [sidebarActivity, setSidebarActivity] = useState<SidebarActivity | null>(null)
+export default function ChatPage() {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [supabase] = useState(() => createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  ))
+  const [activities, setActivities] = useState<ActivityItem[]>([])
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
-  // Auto-save session state
-  useEffect(() => {
-    sessionStorage.setItem('aiShowcase', JSON.stringify(conversationState))
-  }, [conversationState])
-
-  // Supabase realtime subscription
-  useEffect(() => {
-    const channel = supabase.channel('ai-showcase')
-    
-    channel.on('broadcast', { event: 'ai-response' }, (payload) => {
-      const { text, audioData, sources, sidebarActivity, conversationState: newState } = payload.payload
-      
-      // Add AI message
-      const aiMessage: Message = {
-        id: Date.now().toString(),
-        text,
-        sender: 'ai',
-        timestamp: new Date(),
-        audioData,
-        sources
-      }
-      
-      setConversationState(prev => ({
-        ...prev,
-        ...newState,
-        messages: [...prev.messages, aiMessage]
-      }))
-
-      // Play audio if available
-      if (audioData) {
-        const audio = new Audio(`data:audio/mpeg;base64,${audioData}`)
-        audio.play()
-      }
-
-      setIsLoading(false)
-    })
-
-    channel.on('broadcast', { event: 'sidebar-update' }, (payload) => {
-      setSidebarActivity(payload.payload)
-    })
-    
-    channel.subscribe()
-    
-    return () => channel.unsubscribe()
-  }, [])
-
-  // Initial AI greeting
-  useEffect(() => {
-    if (conversationState.messages.length === 0) {
-      const greeting: Message = {
-        id: '1',
-        text: "Hi! I'm here to showcase how AI can transform your business. What's your name?",
-        sender: 'ai',
-        timestamp: new Date()
-      }
-      setConversationState(prev => ({
-        ...prev,
-        messages: [greeting]
-      }))
+  // Add a new activity to the sidebar
+  const addActivity = (activity: Omit<ActivityItem, 'id' | 'timestamp'>) => {
+    const newActivity = {
+      ...activity,
+      id: `activity-${Date.now()}`,
+      timestamp: Date.now(),
+      status: activity.status || 'completed'
     }
-  }, [])
+    setActivities(prev => [newActivity, ...prev].slice(0, 50)) // Keep last 50 activities
+  }
 
-  const handleSendMessage = async (message: string) => {
-    setIsLoading(true)
-    
-    // Add user message
+  // Handle sending a message
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    e?.preventDefault()
+    if (!input.trim() || isLoading) return
+
     const userMessage: Message = {
-      id: Date.now().toString(),
-      text: message,
-      sender: 'user',
+      id: `msg-${Date.now()}`,
+      role: 'user',
+      content: input,
       timestamp: new Date()
     }
 
-    // Update conversation state based on message
-    let newState = { ...conversationState }
-    newState.messages = [...newState.messages, userMessage]
-    
-    if (newState.stage === 'greeting' && !newState.name) {
-      newState.name = message
-      newState.stage = 'email_request'
-    } else if (newState.stage === 'email_request' && message.includes('@')) {
-      newState.email = message
-      newState.stage = 'email_collected'
-    }
+    // Add user message to chat
+    setMessages(prev => [...prev, userMessage])
+    setInput('')
+    setIsLoading(true)
 
-    setConversationState(newState)
+    // Add activity
+    addActivity({
+      type: 'user_message',
+      title: 'Message sent',
+      description: input.length > 30 ? `${input.substring(0, 30)}...` : input
+    })
 
     try {
-      // Send to AI API
-      const response = await fetch('/api/gemini?action=conversationalFlow', {
+      // Call the API to get AI response
+      const response = await fetch('/api/gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: message,
-          conversationState: newState,
-          userInfo: {
-            name: newState.name,
-            email: newState.email,
-            companyInfo: newState.companyInfo
-          },
-          messageCount: newState.messages.length,
-          sessionId: newState.sessionId,
-          includeAudio: true
+          messages: [...messages, userMessage],
+          // Include any additional context needed
         })
       })
 
-      const result = await response.json()
+      if (!response.ok) throw new Error('Failed to get response')
+
+      const data = await response.json()
       
-      if (!result.success) {
-        throw new Error(result.error)
+      // Add AI response to chat
+      const aiMessage: Message = {
+        id: `msg-${Date.now()}`,
+        role: 'assistant',
+        content: data.response,
+        timestamp: new Date(),
+        type: data.type,
+        data: data.data
       }
 
-      // Response handled via Supabase realtime
+      setMessages(prev => [...prev, aiMessage])
       
+      // Add activity for AI response
+      addActivity({
+        type: 'ai_response',
+        title: 'AI responded',
+        status: 'completed'
+      })
+
     } catch (error) {
-      console.error('Error sending message:', error)
-      // Add error message
+      console.error('Error:', error)
+      
+      // Add error message to chat
       const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: "I apologize, but I'm having trouble processing your message. Please try again.",
-        sender: 'ai',
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.',
         timestamp: new Date()
       }
-      setConversationState(prev => ({
-        ...prev,
-        messages: [...prev.messages, errorMessage]
-      }))
-      setIsLoading(false)
-    }
-  }
-
-  const triggerCapabilityDemo = async (capability: string) => {
-    const demos = {
-      'image_generation': 'Generate a business visualization for my industry',
-      'video_analysis': 'Analyze this YouTube video for business insights: https://youtube.com/watch?v=example',
-      'document_analysis': 'Analyze a business document for optimization opportunities',
-      'code_execution': 'Calculate ROI for implementing AI in my business',
-      'url_analysis': 'Analyze my company website for AI opportunities'
-    }
-
-    if (demos[capability]) {
-      await handleSendMessage(demos[capability])
-    }
-  }
-
-  const completeShowcase = async () => {
-    if (!conversationState.name || !conversationState.email) return
-
-    try {
-      const response = await fetch('/api/gemini?action=leadCapture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationHistory: conversationState.messages,
-          userInfo: {
-            name: conversationState.name,
-            email: conversationState.email,
-            companyInfo: conversationState.companyInfo
-          },
-          action: 'generate_summary'
-        })
-      })
-
-      const result = await response.json()
       
-      if (result.success) {
-        // Show completion message with booking CTA
-        const completionMessage: Message = {
-          id: Date.now().toString(),
-          text: `Perfect! I've created your personalized AI consultation summary and sent it to ${conversationState.email}. 
-
-Your AI readiness score: ${result.data.leadScore}/100
-
-Ready to implement these AI solutions in your business? Let's schedule your free strategy session to create a custom roadmap for your success!
-
-[Book Your Free Consultation] 📅`,
-          sender: 'ai',
-          timestamp: new Date()
-        }
-
-        setConversationState(prev => ({
-          ...prev,
-          messages: [...prev.messages, completionMessage],
-          stage: 'completed'
-        }))
-      }
-    } catch (error) {
-      console.error('Error completing showcase:', error)
+      setMessages(prev => [...prev, errorMessage])
+      
+      // Add error activity
+      addActivity({
+        type: 'error',
+        title: 'Error processing request',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        status: 'failed'
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
