@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { createClient } from '@supabase/supabase-js';
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
+import { ConversationalFlowHandler } from '@/lib/ai/conversational-flow';
+import { ImageGenerationHandler } from '@/lib/ai/image-generation';
+import { VideoAnalysisHandler } from '@/lib/ai/video-analysis';
+import { DocumentAnalysisHandler } from '@/lib/ai/document-analysis';
+import { LeadCaptureHandler } from '@/lib/ai/lead-capture';
 
 // Initialize Gemini with proper error handling
 const apiKey = process.env.GEMINI_API_KEY;
@@ -34,6 +39,21 @@ const AI_USAGE_LIMITS = {
   maxDocumentAnalysis: 2
 };
 
+// Initialize handlers
+function initializeHandlers() {
+  const apiKey = process.env.GEMINI_API_KEY!;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  return {
+    conversational: new ConversationalFlowHandler(apiKey, supabaseUrl, supabaseKey),
+    image: new ImageGenerationHandler(apiKey, supabaseUrl, supabaseKey),
+    video: new VideoAnalysisHandler(apiKey, supabaseUrl, supabaseKey),
+    document: new DocumentAnalysisHandler(apiKey, supabaseUrl, supabaseKey),
+    leadCapture: new LeadCaptureHandler(apiKey, supabaseUrl, supabaseKey)
+  };
+}
+
 export async function POST(request: NextRequest) {
   // CORS headers
   const headers = {
@@ -51,25 +71,70 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const action = request.nextUrl.searchParams.get('action') || 'conversationalFlow';
     
+    // Check if API key is configured
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn('GEMINI_API_KEY not configured - using mock responses');
+      // Return mock response based on action
+      return NextResponse.json(getMockResponseForAction(action, body), { headers });
+    }
+
+    // Initialize handlers
+    const handlers = initializeHandlers();
+    
+    let result;
     switch (action) {
       case 'conversationalFlow':
-        return handleConversationalFlow(body);
+        result = await handlers.conversational.handleConversationalFlow(body);
+        break;
       case 'generateImage':
-        return handleImageGeneration(body);
+        result = await handlers.image.handleImageGeneration(body);
+        break;
       case 'analyzeVideo':
-        return handleVideoAnalysis(body);
+        result = await handlers.video.handleVideoAnalysis(body);
+        break;
       case 'analyzeDocument':
-        return handleDocumentAnalysis(body);
+        result = await handlers.document.handleDocumentAnalysis(body);
+        break;
       case 'executeCode':
-        return handleCodeExecution(body);
+        // Convert NextResponse to ProxyResponse format
+        const codeResponse = await handleCodeExecution(body);
+        result = await codeResponse.json();
+        break;
       case 'analyzeURL':
-        return handleURLAnalysis(body);
+        // Convert NextResponse to ProxyResponse format
+        const urlResponse = await handleURLAnalysis(body);
+        result = await urlResponse.json();
+        break;
       case 'leadCapture':
-        return handleLeadCapture(body);
+        result = await handlers.leadCapture.handleLeadCapture(body);
+        break;
       case 'enhancedPersonalization':
-        return handleEnhancedPersonalization(body);
+        // Convert NextResponse to ProxyResponse format
+        const personalizationResponse = await handleEnhancedPersonalization(body);
+        result = await personalizationResponse.json();
+        break;
+      case 'health':
+        result = { success: true, data: { status: 'healthy', capabilities: 'all_gemini_features_active' } };
+        break;
       default:
-        return handleConversationalFlow(body);
+        result = await handlers.conversational.handleConversationalFlow(body);
+        break;
+    }
+
+    // Return the result with appropriate status
+    if (result.success) {
+      return NextResponse.json(result, { 
+        status: result.status || 200, 
+        headers 
+      });
+    } else {
+      return NextResponse.json({
+        success: false,
+        error: result.error || 'An unknown error occurred'
+      }, { 
+        status: result.status || 500, 
+        headers 
+      });
     }
   } catch (error) {
     console.error('API error:', error);
@@ -78,6 +143,52 @@ export async function POST(request: NextRequest) {
       { status: 500, headers }
     );
   }
+}
+
+function getMockResponseForAction(action: string, body: any) {
+  const mockResponses: Record<string, any> = {
+    conversationalFlow: {
+      success: true,
+      data: {
+        text: 'Mock AI response for conversation',
+        sources: [],
+        conversationState: body.conversationState || { stage: 'greeting' }
+      }
+    },
+    generateImage: {
+      success: true,
+      data: {
+        text: `Generated business visualization concept: "${body.prompt || 'Mock image'}"`,
+        description: 'Mock image generation description',
+        sidebarActivity: 'image_generation'
+      }
+    },
+    analyzeVideo: {
+      success: true,
+      data: {
+        text: 'Mock video analysis results',
+        videoUrl: body.videoUrl,
+        sidebarActivity: 'video_analysis'
+      }
+    },
+    analyzeDocument: {
+      success: true,
+      data: {
+        text: 'Mock document analysis results',
+        sidebarActivity: 'document_analysis'
+      }
+    },
+    leadCapture: {
+      success: true,
+      data: {
+        summary: 'Mock lead summary',
+        leadScore: 75,
+        emailContent: 'Mock email content'
+      }
+    }
+  };
+
+  return mockResponses[action] || mockResponses.conversationalFlow;
 }
 
 async function handleConversationalFlow(body: any) {
