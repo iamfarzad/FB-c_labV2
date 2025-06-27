@@ -78,6 +78,10 @@ export async function POST(request: NextRequest) {
         return handleRealTimeConversation(body);
       case 'analyzeScreenShare':
         return handleScreenShareAnalysis(body);
+      case 'generateSpec':
+        return handleGenerateSpec(body);
+      case 'generateCode':
+        return handleGenerateCode(body);
       default:
         return handleConversationalFlow(body);
     }
@@ -1328,5 +1332,127 @@ async function generateVoiceWithElevenLabs(text: string): Promise<{ audioBase64:
   } catch (error) {
     console.error('Voice generation error:', error);
     return null;
+  }
+}
+
+async function handleGenerateSpec(body: any) {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  const { videoUrl } = body;
+  
+  if (!videoUrl) {
+    return NextResponse.json({ error: 'Video URL is required' }, { status: 400 });
+  }
+
+  const prompt = `You are a pedagogist and product designer with deep expertise in crafting engaging learning experiences via interactive web apps.
+
+Examine the contents of the attached video. Then, write a detailed and carefully considered spec for an interactive web app designed to complement the video and reinforce its key idea or ideas. The recipient of the spec does not have access to the video, so the spec must be thorough and self-contained (the spec must not mention that it is based on a video).
+
+The goal of the app is to enhance understanding through simple and playful design. The provided spec should not be overly complex, i.e., a junior web developer should be able to implement it in a single html file (with all styles and scripts inline). Most importantly, the spec must clearly outline the core mechanics of the app, and those mechanics must be highly effective in reinforcing the given video's key idea(s).
+
+Provide the result as a JSON object containing a single field called "spec", whose value is the spec for the web app.`;
+
+     if (!genAI) {
+     return NextResponse.json({ error: 'Gemini API not configured' }, { status: 500 });
+   }
+
+  // For now, simulate spec generation since we don't have video processing
+  // In production, you would use Gemini's video input capabilities
+  const mockVideoAnalysis = `
+Based on the video content, create an interactive learning app with the following specifications:
+
+SPECIFICATIONS:
+1. The app must feature an interactive quiz interface that tests understanding of the key concepts.
+2. Include visual demonstrations with interactive elements that users can manipulate.
+3. Provide immediate feedback on user interactions to reinforce learning.
+4. Use animations to illustrate complex concepts in a simple way.
+5. Include a progress tracker to show learning advancement.
+6. The interface must be clean, modern, and engaging.
+7. Support both desktop and mobile devices with responsive design.
+8. Include sound effects for positive reinforcement (optional, with mute toggle).
+
+The app must be fully responsive and function properly on both desktop and mobile. Provide the code as a single, self-contained HTML document. All styles and scripts must be inline.`;
+
+     try {
+     const result = await genAI.models.generateContent({
+       model: 'gemini-2.5-flash',
+       contents: [{ role: 'user', parts: [{ text: prompt + '\n\nVideo URL: ' + videoUrl + '\n\n' + mockVideoAnalysis }] }]
+     });
+          const responseText = result.text || '';
+     
+     // Parse the JSON response
+     let spec;
+     try {
+       const jsonMatch = responseText.match(/\{[\s\S]*"spec"[\s\S]*\}/);
+       if (jsonMatch) {
+         const parsed = JSON.parse(jsonMatch[0]);
+         spec = parsed.spec;
+       } else {
+         spec = responseText;
+       }
+     } catch (e) {
+       spec = responseText;
+     }
+
+    return NextResponse.json({ spec });
+  } catch (error: any) {
+    console.error('Spec generation error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to generate spec' },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleGenerateCode(body: any) {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  const { spec } = body;
+  
+  if (!spec) {
+    return NextResponse.json({ error: 'Spec is required' }, { status: 400 });
+  }
+
+     const fullPrompt = spec + `\n\nThe app must be fully responsive and function properly on both desktop and mobile. Provide the code as a single, self-contained HTML document. All styles and scripts must be inline. Encase the code between \`\`\`html and \`\`\` for easy parsing.`;
+
+   if (!genAI) {
+     return NextResponse.json({ error: 'Gemini API not configured' }, { status: 500 });
+   }
+
+     try {
+     const result = await genAI.models.generateContent({
+       model: 'gemini-2.5-pro',
+       contents: [{ role: 'user', parts: [{ text: fullPrompt }] }]
+     });
+     const responseText = result.text || '';
+    
+    // Extract HTML code from the response
+    let code = responseText;
+    const htmlMatch = responseText.match(/```html\s*([\s\S]*?)\s*```/);
+    if (htmlMatch) {
+      code = htmlMatch[1];
+    } else {
+      // Try to extract between any code blocks
+      const codeMatch = responseText.match(/```\s*([\s\S]*?)\s*```/);
+      if (codeMatch) {
+        code = codeMatch[1];
+      }
+    }
+
+    return NextResponse.json({ code });
+  } catch (error: any) {
+    console.error('Code generation error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to generate code' },
+      { status: 500 }
+    );
   }
 } 

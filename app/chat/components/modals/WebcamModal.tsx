@@ -1,29 +1,64 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { X, Loader, Eye, Brain } from "lucide-react"
 
 interface WebcamModalProps {
-  videoRef: React.RefObject<HTMLVideoElement>
-  canvasRef: React.RefObject<HTMLCanvasElement>
-  isCameraActive: boolean
-  onStopCamera: () => void
-  onAIAnalysis?: (analysis: string) => void
-  theme: "light" | "dark"
+  isOpen: boolean;
+  onClose: () => void;
+  onCapture?: (imageData: string) => void;
+  onAIAnalysis?: (analysis: string) => void;
+  theme?: "light" | "dark";
 }
 
 export const WebcamModal: React.FC<WebcamModalProps> = ({
-  videoRef,
-  canvasRef,
-  isCameraActive,
-  onStopCamera,
+  isOpen,
+  onClose,
+  onCapture,
   onAIAnalysis,
-  theme,
+  theme = "dark",
 }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [lastAnalysis, setLastAnalysis] = useState<string>("")
   const [analysisHistory, setAnalysisHistory] = useState<string[]>([])
+  const [isCameraActive, setIsCameraActive] = useState(false)
+  const [stream, setStream] = useState<MediaStream | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  // Start camera
+  const startCamera = useCallback(async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      })
+
+      setStream(mediaStream)
+      setIsCameraActive(true)
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream
+      }
+
+    } catch (error) {
+      console.error('Camera access failed:', error)
+    }
+  }, [])
+
+  // Stop camera
+  const stopCamera = useCallback(() => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop())
+      setStream(null)
+    }
+    setIsCameraActive(false)
+    onClose()
+  }, [stream, onClose])
 
   // Real-time AI analysis function
   const analyzeCurrentFrame = useCallback(async () => {
@@ -72,7 +107,7 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
     } finally {
       setIsAnalyzing(false)
     }
-  }, [videoRef, canvasRef, isCameraActive, onAIAnalysis])
+  }, [isCameraActive, onAIAnalysis])
 
   // Auto-analyze every 3 seconds when camera is active
   useEffect(() => {
@@ -82,18 +117,31 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
     return () => clearInterval(interval)
   }, [isCameraActive, analyzeCurrentFrame])
 
+  // Start camera when modal opens
+  useEffect(() => {
+    if (isOpen && !isCameraActive) {
+      startCamera()
+    }
+  }, [isOpen, isCameraActive, startCamera])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop())
+      }
+    }
+  }, [stream])
+
+  if (!isOpen) return null;
+
   return (
     <div
-      className="absolute inset-0 flex items-center justify-center z-40 transition-all duration-500 glassmorphism fade-in"
-      style={
-        {
-          "--glass-bg": theme === "dark" ? "var(--color-gunmetal-light-alpha)" : "var(--color-light-silver-dark-alpha)",
-        } as React.CSSProperties
-      }
+      className="fixed inset-0 flex items-center justify-center z-50 transition-all duration-500 bg-black/50 backdrop-blur-sm"
     >
-      <div className="relative p-8 rounded-2xl flex flex-col items-center justify-center w-full h-full">
+      <div className="relative p-8 rounded-2xl flex flex-col items-center justify-center w-full h-full max-w-6xl">
         <button
-          onClick={onStopCamera}
+          onClick={stopCamera}
           className="absolute top-8 right-8 p-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 z-30 transition-all duration-300 shadow-lg group"
           aria-label="Stop webcam stream"
         >
@@ -114,37 +162,37 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
           )}
         </button>
 
-        <h2 className="text-3xl font-bold mb-6 text-[var(--text-primary)] gradient-text">
+        <h2 className="text-3xl font-bold mb-6 text-white gradient-text">
           {isCameraActive ? "AI-Powered Webcam Analysis" : "Activating Camera..."}
         </h2>
 
         <div className="flex gap-6 w-full max-w-6xl">
           {/* Video Stream */}
-          <div className="relative flex-1 aspect-video glassmorphism rounded-2xl overflow-hidden shadow-2xl border border-[var(--glass-border)]">
+          <div className="relative flex-1 aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/20">
             <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
             <canvas ref={canvasRef} style={{ display: "none" }} />
 
             {!isCameraActive && (
-              <div className="absolute inset-0 flex items-center justify-center glassmorphism">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                 <div className="text-center">
-                  <div className="p-6 rounded-full glassmorphism mb-4 floating-element">
-                    <Loader size={48} className="animate-spin text-[var(--color-orange-accent)]" />
+                  <div className="p-6 rounded-full bg-white/10 mb-4">
+                    <Loader size={48} className="animate-spin text-orange-500" />
                   </div>
-                  <p className="text-lg text-[var(--text-primary)]">Initializing camera...</p>
+                  <p className="text-lg text-white">Initializing camera...</p>
                 </div>
               </div>
             )}
 
             {isCameraActive && (
-              <div className="absolute bottom-4 left-4 right-4 glassmorphism rounded-xl p-3">
+              <div className="absolute bottom-4 left-4 right-4 bg-black/50 backdrop-blur-sm rounded-xl p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
-                    <span className="text-sm font-medium text-[var(--text-primary)]">LIVE</span>
+                    <span className="text-sm font-medium text-white">LIVE</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Eye size={16} className="text-[var(--text-primary)]" />
-                    <span className="text-sm text-[var(--text-primary)]">AI Watching</span>
+                    <Eye size={16} className="text-white" />
+                    <span className="text-sm text-white">AI Watching</span>
                   </div>
                 </div>
               </div>
@@ -152,27 +200,27 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
           </div>
 
           {/* AI Analysis Panel */}
-          <div className="w-80 glassmorphism rounded-2xl p-4 border border-[var(--glass-border)]">
-            <h3 className="text-xl font-bold mb-4 text-[var(--text-primary)] flex items-center gap-2">
+          <div className="w-80 bg-black/20 backdrop-blur-xl rounded-2xl p-4 border border-white/20">
+            <h3 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
               <Brain size={20} />
               AI Analysis
             </h3>
 
             {/* Current Analysis */}
             {lastAnalysis && (
-              <div className="mb-4 p-3 glassmorphism rounded-lg">
-                <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Current View:</h4>
-                <p className="text-sm text-[var(--text-primary)] opacity-90">{lastAnalysis}</p>
+              <div className="mb-4 p-3 bg-white/10 rounded-lg">
+                <h4 className="text-sm font-semibold text-white mb-2">Current View:</h4>
+                <p className="text-sm text-white opacity-90">{lastAnalysis}</p>
               </div>
             )}
 
             {/* Analysis History */}
             {analysisHistory.length > 1 && (
               <div>
-                <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Recent Analysis:</h4>
+                <h4 className="text-sm font-semibold text-white mb-2">Recent Analysis:</h4>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {analysisHistory.slice(1).map((analysis, index) => (
-                    <div key={index} className="p-2 glassmorphism rounded text-xs text-[var(--text-primary)] opacity-70">
+                    <div key={index} className="p-2 bg-white/5 rounded text-xs text-white opacity-70">
                       {analysis.substring(0, 100)}...
                     </div>
                   ))}
@@ -181,8 +229,8 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
             )}
 
             {/* Status */}
-            <div className="mt-4 pt-4 border-t border-[var(--glass-border)]">
-              <div className="flex items-center gap-2 text-sm text-[var(--text-primary)]">
+            <div className="mt-4 pt-4 border-t border-white/20">
+              <div className="flex items-center gap-2 text-sm text-white">
                 {isAnalyzing ? (
                   <>
                     <Loader size={16} className="animate-spin" />
@@ -199,10 +247,12 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
           </div>
         </div>
 
-        <p className="mt-6 text-lg text-[var(--text-primary)] opacity-80 fade-in">
+        <p className="mt-6 text-lg text-white opacity-80">
           AI is analyzing your webcam feed in real-time
         </p>
       </div>
     </div>
   )
 }
+
+export default WebcamModal;

@@ -11,10 +11,10 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        'sans': ['var(--font-rajdhani)', 'Rajdhani', 'system-ui', 'sans-serif'],
-        'mono': ['var(--font-space-mono)', 'Space Mono', 'monospace'],
-        'tech': ['var(--font-rajdhani)', 'Rajdhani', 'sans-serif'],
-        'tech-mono': ['var(--font-space-mono)', 'Space Mono', 'monospace'],
+        'sans': ['ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        'mono': ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
+        'tech': ['ui-sans-serif', 'system-ui', 'sans-serif'],
+        'tech-mono': ['ui-monospace', 'Consolas', 'monospace'],
       },
       letterSpacing: {
         'tight': '-0.025em',

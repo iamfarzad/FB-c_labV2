@@ -8,7 +8,7 @@ import {
   AI_USAGE_LIMITS,
   UserInfo,
   AI_CAPABILITIES
-} from '@/api/ai-service/types';
+} from '../../api/ai-service/types';
 
 export class ConversationalFlowHandler {
   private genAI: GoogleGenerativeAI;

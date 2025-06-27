@@ -24,10 +24,24 @@ export const ChatMessage = ({ message, onCopy }: ChatMessageProps) => {
       )}
     >
       {!isUser && (
-        <Avatar className="h-8 w-8">
-          <AvatarImage src="/bot-avatar.png" alt="AI Assistant" />
-          <AvatarFallback>{avatarFallback}</AvatarFallback>
-        </Avatar>
+        <div className="relative h-8 w-8">
+          <Avatar className="h-full w-full">
+            <AvatarImage 
+              src="/placeholder-user.jpg" 
+              alt="AI Assistant" 
+              onError={(e) => {
+                // If image fails to load, show fallback
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const fallback = target.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = 'flex';
+              }}
+            />
+            <AvatarFallback className="bg-orange-500 text-white flex items-center justify-center">
+              <Bot className="h-4 w-4" />
+            </AvatarFallback>
+          </Avatar>
+        </div>
       )}
       
       <div className={cn(

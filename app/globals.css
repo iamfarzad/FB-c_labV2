@@ -19,6 +19,10 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -91,8 +95,9 @@ a {
   --sidebar-ring: 217.2 91.2% 59.8%;
 
   /* Typography Variables */
-  --font-tech: var(--font-rajdhani), sans-serif;
-  --font-tech-mono: var(--font-space-mono), monospace;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --letter-spacing-tech: 0.05em;
   --letter-spacing-tech-wide: 0.1em;
 }
@@ -383,13 +388,13 @@ a {
   
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-tech);
+    font-family: var(--font-sans);
     font-feature-settings: "rlig" 1, "calt" 1;
     letter-spacing: var(--letter-spacing-tech);
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-tech);
+    font-family: var(--font-sans);
     font-weight: 600;
     letter-spacing: var(--letter-spacing-tech-wide);
   }
@@ -427,11 +432,11 @@ a {
   }
 
   .font-tech {
-    font-family: var(--font-tech);
+    font-family: var(--font-sans);
   }
 
   .font-tech-mono {
-    font-family: var(--font-tech-mono);
+    font-family: var(--font-mono);
   }
 
   .tracking-tech {
@@ -504,4 +509,31 @@ a {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-orange-accent-hover);
+}
+
+/* Add missing keyframe animations */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

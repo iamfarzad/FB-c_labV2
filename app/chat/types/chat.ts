@@ -13,7 +13,24 @@ export interface Message {
 
 export interface ActivityItem {
   id: string;
-  type: 'video_processing' | 'image_generation' | 'chat_summary' | 'ai_thinking' | 'error' | 'user_action' | 'system_message' | 'event' | 'image' | 'analyzing_video' | 'analyzing' | 'generating' | 'processing' | 'complete' | 'video_complete';
+  type: 'video_processing' | 'image_generation' | 'chat_summary' | 'ai_thinking' | 'error' | 'user_action' | 'system_message' | 'event'  | 'image'
+  | 'analyzing_video'
+  | 'analyzing'
+  | 'generating'
+  | 'processing'
+  | 'complete'
+  | 'video_complete'
+  | 'search'
+  | 'link'
+  | 'analyze'
+  | 'generate'
+  | 'document_analysis'
+  | 'code_execution'
+  | 'url_analysis'
+  | 'file_upload'
+  | 'image_capture'
+  | 'screen_share'
+  | 'voice_input';
   title: string;
   description?: string;
   timestamp: number;
@@ -25,7 +42,7 @@ export interface ActivityItem {
   link?: string;
   icon?: ReactNode;
   status?: 'pending' | 'in_progress' | 'completed' | 'failed';
-  details?: string;
+  details?: string[];
 }
 
 export interface UploadOption {

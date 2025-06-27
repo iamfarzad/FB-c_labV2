@@ -6,14 +6,16 @@ import { Mic, X, Loader, Sparkles, Volume2, Brain, Pause, Play } from "lucide-re
 import { motion, AnimatePresence } from "framer-motion"
 
 interface VoiceInputModalProps {
-  isListening: boolean
-  currentTranscription: string
-  aiState: "listening" | "processing" | "idle" | "error" | "speaking"
-  onClose: () => void
-  onAIResponse?: (response: string) => void
-  onConversationUpdate?: (conversation: ConversationTurn[]) => void
-  theme: "light" | "dark"
-  isRealTimeMode?: boolean
+  isOpen: boolean;
+  onClose: () => void;
+  onTranscript?: (transcript: string) => void;
+  onAIResponse?: (response: string) => void;
+  onConversationUpdate?: (conversation: ConversationTurn[]) => void;
+  theme?: "light" | "dark";
+  isRealTimeMode?: boolean;
+  isListening?: boolean;
+  currentTranscription?: string;
+  aiState?: "listening" | "processing" | "idle" | "error" | "speaking";
 }
 
 interface ConversationTurn {
@@ -25,14 +27,16 @@ interface ConversationTurn {
 }
 
 export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
-  isListening,
-  currentTranscription,
-  aiState,
+  isOpen,
   onClose,
+  onTranscript,
   onAIResponse,
   onConversationUpdate,
-  theme,
+  theme = "dark",
   isRealTimeMode = false,
+  isListening = false,
+  currentTranscription = "",
+  aiState = "idle"
 }) => {
   const [conversation, setConversation] = useState<ConversationTurn[]>([])
   const [isRealTimeActive, setIsRealTimeActive] = useState(false)
@@ -267,6 +271,8 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   const config = getStateConfig()
   const IconComponent = config.icon
 
+  if (!isOpen) return null;
+
   return (
     <AnimatePresence>
       <motion.div
@@ -280,11 +286,11 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="relative w-full max-w-2xl mx-4 h-[80vh]"
+          className="relative w-full max-w-4xl mx-4 h-[80vh]"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Main Modal Card - Liquid Glass Design */}
-          <div className={`glassmorphism border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl bg-white/10 dark:bg-black/20 overflow-hidden relative h-full ${config.animate ? 'shadow-orange-500/20 shadow-2xl' : ''}`}>
+          {/* Main Modal Card - Advanced Design */}
+          <div className={`border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl bg-white/10 dark:bg-black/20 overflow-hidden relative h-full ${config.animate ? 'shadow-orange-500/20 shadow-2xl' : ''}`}>
             {/* Glass Reflection Effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none rounded-2xl" />
             <div className="relative z-10 h-full flex flex-col">
@@ -325,7 +331,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
               <div className="flex-1 flex">
                 {/* Voice Visualization */}
                 <div className="w-1/2 p-6 flex flex-col items-center justify-center border-r border-white/20 dark:border-white/10">
-                  {/* Voice Trebles/Waveform */}
+                  {/* Voice Waveform */}
                   <div className="flex items-center justify-center gap-1 h-24 mb-6">
                     {Array.from({ length: 12 }).map((_, i) => (
                       <motion.div
@@ -446,3 +452,5 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     </AnimatePresence>
   )
 }
+
+export default VoiceInputModal;

@@ -3,7 +3,7 @@
 import { ActivityItem } from '../../types/chat';
 import { SidebarContent } from './SidebarContent';
 import { cn } from '@/lib/utils';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 
@@ -23,8 +23,8 @@ export const MobileSidebarSheet = ({
   children,
 }: MobileSidebarSheetProps) => {
   return (
-    <Sheet>
-      <SheetTrigger asChild>
+    <Dialog>
+      <DialogTrigger asChild>
         {children || (
           <Button
             variant="ghost"
@@ -35,19 +35,20 @@ export const MobileSidebarSheet = ({
             <span className="sr-only">Toggle sidebar</span>
           </Button>
         )}
-      </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] p-0">
-        <SheetHeader className="p-4">
-          <SheetTitle>Chat History</SheetTitle>
-        </SheetHeader>
-        <SidebarContent
-          activities={activities}
-          onNewChat={onNewChat}
-          onActivityClick={onActivityClick}
-          className="h-[calc(100%-57px)]"
-        />
-      </SheetContent>
-    </Sheet>
+      </DialogTrigger>
+      <DialogContent className="fixed left-0 top-0 h-full w-[300px] translate-x-0 rounded-none border-0 p-0 sm:max-w-[300px]">
+        <DialogHeader className="p-4 text-left">
+          <DialogTitle>Chat History</DialogTitle>
+        </DialogHeader>
+        <div className="h-[calc(100%-57px)] overflow-auto">
+          <SidebarContent
+            activities={activities}
+            onNewChat={onNewChat}
+            onActivityClick={onActivityClick}
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

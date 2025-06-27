@@ -5,23 +5,24 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { X, Loader, Monitor, Brain, Square, Play, Pause } from "lucide-react"
 
 interface ScreenShareModalProps {
-  isScreenSharing: boolean
-  onStopScreenShare: () => void
-  onAIAnalysis?: (analysis: string) => void
-  theme: "light" | "dark"
+  isOpen: boolean;
+  onClose: () => void;
+  onAIAnalysis?: (analysis: string) => void;
+  theme?: "light" | "dark";
 }
 
 export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
-  isScreenSharing,
-  onStopScreenShare,
+  isOpen,
+  onClose,
   onAIAnalysis,
-  theme,
+  theme = "dark",
 }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [lastAnalysis, setLastAnalysis] = useState<string>("")
   const [analysisHistory, setAnalysisHistory] = useState<string[]>([])
   const [isAutoAnalyzing, setIsAutoAnalyzing] = useState(false)
   const [stream, setStream] = useState<MediaStream | null>(null)
+  const [isScreenSharing, setIsScreenSharing] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -37,6 +38,7 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
       })
 
       setStream(mediaStream)
+      setIsScreenSharing(true)
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream
@@ -44,13 +46,13 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
 
       // Listen for screen share end
       mediaStream.getVideoTracks()[0].addEventListener('ended', () => {
-        onStopScreenShare()
+        stopScreenShare()
       })
 
     } catch (error) {
       console.error('Screen share failed:', error)
     }
-  }, [onStopScreenShare])
+  }, [])
 
   // Stop screen sharing
   const stopScreenShare = useCallback(() => {
@@ -59,8 +61,9 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
       setStream(null)
     }
     setIsAutoAnalyzing(false)
-    onStopScreenShare()
-  }, [stream, onStopScreenShare])
+    setIsScreenSharing(false)
+    onClose()
+  }, [stream, onClose])
 
   // Analyze current screen frame
   const analyzeCurrentFrame = useCallback(async () => {
@@ -121,20 +124,15 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
 
   // Start screen share on mount if not already sharing
   useEffect(() => {
-    if (!isScreenSharing && !stream) {
+    if (isOpen && !isScreenSharing && !stream) {
       startScreenShare()
     }
-  }, [isScreenSharing, stream, startScreenShare])
+  }, [isOpen, isScreenSharing, stream, startScreenShare])
+
+  if (!isOpen) return null;
 
   return (
-    <div
-      className="absolute inset-0 flex items-center justify-center z-40 transition-all duration-500 glassmorphism fade-in"
-      style={
-        {
-          "--glass-bg": theme === "dark" ? "var(--color-gunmetal-light-alpha)" : "var(--color-light-silver-dark-alpha)",
-        } as React.CSSProperties
-      }
-    >
+    <div className="fixed inset-0 flex items-center justify-center z-50 transition-all duration-500 bg-black/50 backdrop-blur-sm">
       <div className="relative p-8 rounded-2xl flex flex-col items-center justify-center w-full h-full">
         {/* Header Controls */}
         <div className="absolute top-8 right-8 flex items-center gap-4 z-30">
@@ -179,13 +177,13 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
           </button>
         </div>
 
-        <h2 className="text-3xl font-bold mb-6 text-[var(--text-primary)] gradient-text">
+        <h2 className="text-3xl font-bold mb-6 text-white gradient-text">
           {stream ? "AI-Powered Screen Analysis" : "Starting Screen Share..."}
         </h2>
 
         <div className="flex gap-6 w-full max-w-6xl h-[70vh]">
           {/* Screen Share Display */}
-          <div className="relative flex-1 glassmorphism rounded-2xl overflow-hidden shadow-2xl border border-[var(--glass-border)]">
+          <div className="relative flex-1 bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/20">
             <video 
               ref={videoRef} 
               autoPlay 
@@ -196,13 +194,13 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
             <canvas ref={canvasRef} style={{ display: "none" }} />
 
             {!stream && (
-              <div className="absolute inset-0 flex items-center justify-center glassmorphism">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                 <div className="text-center">
-                  <div className="p-6 rounded-full glassmorphism mb-4 floating-element">
-                    <Loader size={48} className="animate-spin text-[var(--color-orange-accent)]" />
+                  <div className="p-6 rounded-full bg-white/10 mb-4">
+                    <Loader size={48} className="animate-spin text-orange-500" />
                   </div>
-                  <p className="text-lg text-[var(--text-primary)]">Requesting screen access...</p>
-                  <p className="text-sm text-[var(--text-primary)] opacity-70 mt-2">
+                  <p className="text-lg text-white">Requesting screen access...</p>
+                  <p className="text-sm text-white opacity-70 mt-2">
                     Please select a screen or window to share
                   </p>
                 </div>
@@ -210,15 +208,15 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
             )}
 
             {stream && (
-              <div className="absolute bottom-4 left-4 right-4 glassmorphism rounded-xl p-3">
+              <div className="absolute bottom-4 left-4 right-4 bg-black/50 backdrop-blur-sm rounded-xl p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
-                    <span className="text-sm font-medium text-[var(--text-primary)]">SHARING</span>
+                    <span className="text-sm font-medium text-white">SHARING</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Monitor size={16} className="text-[var(--text-primary)]" />
-                    <span className="text-sm text-[var(--text-primary)]">
+                    <Monitor size={16} className="text-white" />
+                    <span className="text-sm text-white">
                       {isAutoAnalyzing ? "Auto-analyzing" : "Manual mode"}
                     </span>
                   </div>
@@ -228,27 +226,27 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
           </div>
 
           {/* AI Analysis Panel */}
-          <div className="w-80 glassmorphism rounded-2xl p-4 border border-[var(--glass-border)]">
-            <h3 className="text-xl font-bold mb-4 text-[var(--text-primary)] flex items-center gap-2">
+          <div className="w-80 bg-black/20 backdrop-blur-xl rounded-2xl p-4 border border-white/20">
+            <h3 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
               <Brain size={20} />
               Screen Analysis
             </h3>
 
             {/* Current Analysis */}
             {lastAnalysis && (
-              <div className="mb-4 p-3 glassmorphism rounded-lg">
-                <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Current Analysis:</h4>
-                <p className="text-sm text-[var(--text-primary)] opacity-90">{lastAnalysis}</p>
+              <div className="mb-4 p-3 bg-white/10 rounded-lg">
+                <h4 className="text-sm font-semibold text-white mb-2">Current Analysis:</h4>
+                <p className="text-sm text-white opacity-90">{lastAnalysis}</p>
               </div>
             )}
 
             {/* Analysis History */}
             {analysisHistory.length > 1 && (
               <div>
-                <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Previous Analysis:</h4>
+                <h4 className="text-sm font-semibold text-white mb-2">Previous Analysis:</h4>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {analysisHistory.slice(1).map((analysis, index) => (
-                    <div key={index} className="p-2 glassmorphism rounded text-xs text-[var(--text-primary)] opacity-70">
+                    <div key={index} className="p-2 bg-white/5 rounded text-xs text-white opacity-70">
                       {analysis.substring(0, 100)}...
                     </div>
                   ))}
@@ -257,7 +255,7 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
             )}
 
             {/* Controls */}
-            <div className="mt-4 pt-4 border-t border-[var(--glass-border)]">
+            <div className="mt-4 pt-4 border-t border-white/20">
               <div className="space-y-2">
                 <button
                   onClick={() => setIsAutoAnalyzing(!isAutoAnalyzing)}
@@ -270,7 +268,7 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
                   {isAutoAnalyzing ? 'Stop Auto-Analysis' : 'Start Auto-Analysis'}
                 </button>
                 
-                <div className="flex items-center gap-2 text-sm text-[var(--text-primary)]">
+                <div className="flex items-center gap-2 text-sm text-white">
                   {isAnalyzing ? (
                     <>
                       <Loader size={16} className="animate-spin" />
@@ -288,10 +286,12 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
           </div>
         </div>
 
-        <p className="mt-6 text-lg text-[var(--text-primary)] opacity-80 fade-in">
+        <p className="mt-6 text-lg text-white opacity-80">
           AI is analyzing your screen share in real-time
         </p>
       </div>
     </div>
   )
-} 
+}
+
+export default ScreenShareModal;

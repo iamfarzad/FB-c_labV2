@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest"
+    "test": "vitest",
+    "cleanup:storage": "ts-node supabase/storage-cleanup.ts",
+    "cleanup:scheduler": "ts-node supabase/cleanup-scheduler.ts"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.2.0",
@@ -89,10 +91,12 @@
   },
   "devDependencies": {
     "@types/node": "^22",
+    "@types/node-cron": "^3.0.11",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@uidotdev/usehooks": "^2.4.1",
     "dotenv": "^16.5.0",
+    "node-cron": "^4.1.1",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",

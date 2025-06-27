@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
-import { addActivity } from '../context/ChatContext';
+import { useChatContext } from '../context/ChatProvider';
 
 export const useFileUpload = () => {
+  const { addActivity } = useChatContext();
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -70,7 +71,7 @@ export const useFileUpload = () => {
       // Reset progress after a delay
       setTimeout(() => setProgress(0), 1000);
     }
-  }, []);
+  }, [addActivity]);
 
   return { uploadFile, isUploading, progress };
 };

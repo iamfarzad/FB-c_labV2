@@ -5,7 +5,7 @@ import {
   AI_USAGE_LIMITS,
   ConversationState,
   ProxyRequestBody 
-} from '@/api/ai-service/types';
+} from '../../api/ai-service/types';
 
 // Mock the Google Generative AI
 vi.mock('@google/generative-ai', () => ({

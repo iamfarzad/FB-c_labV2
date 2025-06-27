@@ -107,7 +107,16 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   }
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${rajdhani.variable} ${spaceMono.variable} ${montserrat.variable}`}
+      style={{
+        '--font-rajdhani': rajdhani.style.fontFamily,
+        '--font-space-mono': spaceMono.style.fontFamily,
+        '--font-montserrat': montserrat.style.fontFamily,
+      } as React.CSSProperties}
+    >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

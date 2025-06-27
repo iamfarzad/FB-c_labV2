@@ -1,5 +1,5 @@
 // /api/gemini.ts - Complete enhanced version
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai"
 import { createClient } from '@supabase/supabase-js'
 import type { VercelRequest, VercelResponse } from "@vercel/node"
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';

@@ -43,47 +43,34 @@ Remember: Every interaction should demonstrate AI value while building toward a 
 export function constructPrompt(messages?: Message[]): string {
   try {
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      throw new Error('No messages provided');
+      console.error('Error in constructPrompt:', new Error('No messages provided'));
+      return ''; // Return empty string instead of throwing
     }
 
-    // Start with the system prompt
-    let fullPrompt = `${SYSTEM_PROMPT}\n\n`;
-
-    // Process all messages
-    for (const message of messages) {
-      if (!message) continue;
-
-      let content = '';
-
-      // Handle different message formats
-      if (message.parts && Array.isArray(message.parts)) {
-        // New format with parts array
-        const textParts = message.parts
-          .filter(part => part && typeof part.text === 'string')
-          .map(part => part.text.trim())
-          .filter(Boolean);
-
-        if (textParts.length > 0) {
-          content = textParts.join('\n');
-        }
-      } else if (message.content && typeof message.content === 'string') {
-        // Fallback to content field if parts is not available
-        content = message.content.trim();
-      }
-
-      if (content) {
-        const role = message.role === 'assistant' ? 'Assistant' : 'User';
-        fullPrompt += `${role}: ${content}\n\n`;
-      }
+    // Get the last message from the user
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || lastMessage.role !== 'user') {
+      return '';
     }
 
-    // Add a final instruction to respond
-    fullPrompt += 'Assistant: ';
+    // Handle different message formats
+    if (lastMessage.parts && Array.isArray(lastMessage.parts)) {
+      // New format with parts array
+      const textParts = lastMessage.parts
+        .filter(part => part && typeof part.text === 'string')
+        .map(part => part.text.trim())
+        .filter(Boolean);
 
-    return fullPrompt;
+      return textParts.join('\n ');
+    } else if (lastMessage.content && typeof lastMessage.content === 'string') {
+      // Fallback to content field if parts is not available
+      return lastMessage.content.trim();
+    }
+
+    return '';
   } catch (error) {
     console.error('Error in constructPrompt:', error);
-    return SYSTEM_PROMPT; // Fallback to just the system prompt
+    return ''; // Return empty string on error
   }
 }
 

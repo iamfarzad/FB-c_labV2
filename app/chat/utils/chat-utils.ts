@@ -1,8 +1,37 @@
 import { Message, ActivityItem } from '../types/chat';
-import { Loader, MessageSquare, ImageIcon, Video, FileText, Code, Globe, CheckCircle, AlertTriangle } from 'lucide-react';
+import { 
+  Loader, 
+  MessageSquare, 
+  ImageIcon, 
+  Video, 
+  FileText, 
+  Code, 
+  Globe, 
+  CheckCircle, 
+  AlertTriangle, 
+  SearchIcon, 
+  Link2Icon, 
+  Brain, 
+  Edit3, 
+  BarChart3, 
+  FileOutput 
+} from 'lucide-react';
 
 export const getActivityIcon = (type: ActivityItem['type']) => {
   switch (type) {
+    // Timeline specific types
+    case 'search':
+      return SearchIcon;
+    case 'link':
+      return Link2Icon;
+    case 'analyze':
+      return Brain;
+    case 'generate':
+      return Edit3;
+    case 'complete':
+      return FileText;
+      
+    // Existing types
     case 'video_processing':
     case 'video_complete':
       return Video;
@@ -18,8 +47,6 @@ export const getActivityIcon = (type: ActivityItem['type']) => {
       return Code;
     case 'url_analysis':
       return Globe;
-    case 'complete':
-      return CheckCircle;
     case 'error':
       return AlertTriangle;
     default:
@@ -28,17 +55,43 @@ export const getActivityIcon = (type: ActivityItem['type']) => {
 };
 
 export const getActivityColor = (type: ActivityItem['type']) => {
+  // Success/Completion states
+  if (['complete', 'video_complete'].includes(type)) {
+    return 'text-green-500';
+  }
+  
+  // Error states
+  if (type === 'error') {
+    return 'text-red-500';
+  }
+  
+  // Processing/loading states
+  if (['ai_thinking', 'processing', 'analyzing', 'generating', 'video_processing', 'analyzing_video'].includes(type)) {
+    return 'text-blue-500 animate-pulse';
+  }
+  
+  // Timeline specific types
   switch (type) {
+    case 'search':
+      return 'text-blue-500';
+    case 'link':
+    case 'url_analysis':
+      return 'text-purple-500';
+    case 'analyze':
+      return 'text-amber-500';
+    case 'generate':
+      return 'text-emerald-500';
+    case 'document_analysis':
+      return 'text-indigo-500';
+    case 'code_execution':
+      return 'text-pink-500';
+    case 'image_generation':
+    case 'image':
+      return 'text-rose-500';
+    case 'event':
+      return 'text-cyan-500';
     case 'complete':
-    case 'video_complete':
       return 'text-green-500';
-    case 'error':
-      return 'text-red-500';
-    case 'ai_thinking':
-    case 'processing':
-    case 'analyzing':
-    case 'generating':
-      return 'text-blue-500 animate-pulse';
     default:
       return 'text-gray-500';
   }
