@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Mic, X, Loader, Sparkles, Volume2, Brain, Pause, Play } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { GeminiLiveClient } from "@/lib/ai/gemini-live-client"
 
 interface VoiceInputModalProps {
   isListening: boolean
@@ -38,10 +39,14 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   const [isRealTimeActive, setIsRealTimeActive] = useState(false)
   const [audioLevel, setAudioLevel] = useState(0)
   const [isAudioPlaying, setIsAudioPlaying] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected')
+  
   const audioContextRef = useRef<AudioContext | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const conversationRef = useRef<HTMLDivElement>(null)
+  const liveClientRef = useRef<GeminiLiveClient | null>(null)
+  const audioProcessorRef = useRef<ScriptProcessorNode | null>(null)
 
   // Real-time audio analysis for voice level visualization
   const startAudioAnalysis = useCallback(async () => {
@@ -49,17 +54,36 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
       
-      const audioContext = new AudioContext()
+      const audioContext = new AudioContext({ sampleRate: 16000 })
       const analyser = audioContext.createAnalyser()
       const microphone = audioContext.createMediaStreamSource(stream)
       
       analyser.smoothingTimeConstant = 0.8
       analyser.fftSize = 1024
       
+      // Create script processor for audio chunks
+      const processor = audioContext.createScriptProcessor(4096, 1, 1)
+      
+              processor.onaudioprocess = (e) => {
+          if (liveClientRef.current?.connected && isRealTimeActive) {
+            const inputData = e.inputBuffer.getChannelData(0)
+            // Convert Float32Array to Blob for sending
+            const pcmData = new Int16Array(inputData.length)
+            for (let i = 0; i < inputData.length; i++) {
+              pcmData[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768))
+            }
+            const audioBlob = new Blob([pcmData.buffer], { type: 'audio/pcm;rate=16000' })
+            liveClientRef.current.sendRealtimeInput([audioBlob])
+          }
+        }
+      
       microphone.connect(analyser)
+      microphone.connect(processor)
+      processor.connect(audioContext.destination)
       
       audioContextRef.current = audioContext
       analyserRef.current = analyser
+      audioProcessorRef.current = processor
       
       // Start audio level monitoring
       const updateAudioLevel = () => {
@@ -80,12 +104,91 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
       updateAudioLevel()
     } catch (error) {
       console.error('Audio analysis setup failed:', error)
+      setConnectionStatus('error')
     }
   }, [isRealTimeActive])
+
+  // Initialize Gemini Live client
+  const initializeLiveClient = useCallback(async () => {
+    try {
+      setConnectionStatus('connecting')
+      
+      // Get WebSocket info from API
+      const response = await fetch('/api/gemini-live')
+      const data = await response.json()
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to get WebSocket info')
+      }
+      
+      // Create and configure client
+      const client = new GeminiLiveClient(data.apiKey || '', {
+        model: data.model || 'gemini-2.0-flash-exp',
+        systemInstruction: `You are an AI assistant in a real-time voice conversation. 
+        Be natural, conversational, and helpful. Keep responses concise and engaging.
+        Listen carefully and respond appropriately to the user's speech.`,
+        voiceName: 'Puck'
+      })
+      
+      // Set up event handlers
+      client.onConnectionChange = (connected: boolean) => {
+        setConnectionStatus(connected ? 'connected' : 'disconnected')
+        console.log('Connection status:', connected)
+      }
+      
+      client.onError = (error: Error) => {
+        console.error('Gemini Live error:', error)
+        setConnectionStatus('error')
+      }
+      
+      client.onTranscription = (text: string, type: 'input' | 'output') => {
+        // Handle user speech transcript
+        if (type === 'input' && text) {
+          const userTurn: ConversationTurn = {
+            id: Date.now().toString(),
+            type: 'user',
+            text: text,
+            timestamp: Date.now()
+          }
+          setConversation(prev => [...prev, userTurn])
+        }
+      }
+      
+      client.onTextResponse = (text: string) => {
+        // Handle AI text response
+        if (text) {
+          const aiTurn: ConversationTurn = {
+            id: Date.now().toString(),
+            type: 'ai',
+            text: text,
+            timestamp: Date.now()
+          }
+          setConversation(prev => [...prev, aiTurn])
+          onAIResponse?.(text)
+        }
+      }
+      
+      client.onAudioResponse = (audioBlob: Blob) => {
+        // Convert Blob to ArrayBuffer and play
+        audioBlob.arrayBuffer().then(buffer => {
+          playAudioResponse(buffer)
+        })
+      }
+      
+      // Connect to WebSocket
+      await client.connect()
+      liveClientRef.current = client
+      
+    } catch (error) {
+      console.error('Failed to initialize Gemini Live:', error)
+      setConnectionStatus('error')
+    }
+  }, [onAIResponse])
 
   // Start real-time conversation mode
   const startRealTimeMode = useCallback(async () => {
     setIsRealTimeActive(true)
+    await initializeLiveClient()
     await startAudioAnalysis()
     
     // Add welcome message
@@ -98,11 +201,16 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     
     setConversation([welcomeTurn])
     onConversationUpdate?.([welcomeTurn])
-  }, [startAudioAnalysis, onConversationUpdate])
+  }, [initializeLiveClient, startAudioAnalysis, onConversationUpdate])
 
   // Stop real-time mode
   const stopRealTimeMode = useCallback(() => {
     setIsRealTimeActive(false)
+    
+    // Stop audio processing
+    if (audioProcessorRef.current) {
+      audioProcessorRef.current.disconnect()
+    }
     
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
@@ -111,71 +219,37 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     if (audioContextRef.current) {
       audioContextRef.current.close()
     }
+    
+    // Disconnect WebSocket
+    if (liveClientRef.current) {
+      liveClientRef.current.disconnect()
+      liveClientRef.current = null
+    }
+    
+    setConnectionStatus('disconnected')
   }, [])
 
-  // Process voice input and get AI response
-  const processVoiceInput = useCallback(async (transcription: string) => {
-    if (!transcription.trim()) return
-
-    // Add user turn
-    const userTurn: ConversationTurn = {
-      id: Date.now().toString(),
-      type: 'user',
-      text: transcription,
-      timestamp: Date.now()
-    }
-
-    const updatedConversation = [...conversation, userTurn]
-    setConversation(updatedConversation)
-
-    try {
-      // Send to AI for real-time response
-      const response = await fetch('/api/gemini?action=realTimeConversation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: transcription,
-          conversationHistory: updatedConversation,
-          includeAudio: true
-        })
-      })
-
-      const result = await response.json()
-      
-      if (result.success) {
-        const aiTurn: ConversationTurn = {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          text: result.data.text,
-          timestamp: Date.now(),
-          audioData: result.data.audioData
-        }
-
-        const finalConversation = [...updatedConversation, aiTurn]
-        setConversation(finalConversation)
-        onConversationUpdate?.(finalConversation)
-        onAIResponse?.(result.data.text)
-
-        // Play AI audio response if available
-        if (result.data.audioData) {
-          playAudioResponse(result.data.audioData)
-        }
-      }
-    } catch (error) {
-      console.error('Real-time conversation error:', error)
-    }
-  }, [conversation, onAIResponse, onConversationUpdate])
-
   // Play AI audio response
-  const playAudioResponse = useCallback((audioData: string) => {
+  const playAudioResponse = useCallback((audioData: ArrayBuffer) => {
     try {
       setIsAudioPlaying(true)
-      const audio = new Audio(`data:audio/mpeg;base64,${audioData}`)
       
-      audio.onended = () => setIsAudioPlaying(false)
-      audio.onerror = () => setIsAudioPlaying(false)
+      // Convert PCM audio to playable format
+      const audioContext = new AudioContext()
+      const audioBuffer = audioContext.createBuffer(1, audioData.byteLength / 2, 24000)
+      const channelData = audioBuffer.getChannelData(0)
+      const dataView = new DataView(audioData)
       
-      audio.play()
+      for (let i = 0; i < channelData.length; i++) {
+        channelData[i] = dataView.getInt16(i * 2, true) / 32768
+      }
+      
+      const source = audioContext.createBufferSource()
+      source.buffer = audioBuffer
+      source.connect(audioContext.destination)
+      source.onended = () => setIsAudioPlaying(false)
+      source.start()
+      
     } catch (error) {
       console.error('Audio playback error:', error)
       setIsAudioPlaying(false)
@@ -189,12 +263,12 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     }
   }, [conversation])
 
-  // Process transcription when it changes
+  // Update conversation when prop changes
   useEffect(() => {
-    if (isRealTimeActive && currentTranscription && aiState === 'processing') {
-      processVoiceInput(currentTranscription)
+    if (onConversationUpdate && conversation.length > 0) {
+      onConversationUpdate(conversation)
     }
-  }, [currentTranscription, aiState, isRealTimeActive, processVoiceInput])
+  }, [conversation, onConversationUpdate])
 
   // Cleanup on unmount
   useEffect(() => {
