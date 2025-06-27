@@ -9,6 +9,7 @@ import { useChatContext } from '../../context/ChatProvider';
 import { ScreenShareModal } from '../modals/ScreenShareModal';
 import { VoiceInputModal } from '../modals/VoiceInputModal';
 import { WebcamModal } from '../modals/WebcamModal';
+import { Video2AppModal } from '../modals/Video2AppModal';
 
 interface ChatFooterProps {
   input: string
@@ -26,6 +27,7 @@ export function ChatFooter({ input, setInput, onSendMessage, isLoading, onKeyPre
   const [showScreenShareModal, setShowScreenShareModal] = useState(false)
   const [showVoiceModal, setShowVoiceModal] = useState(false)
   const [showWebcamModal, setShowWebcamModal] = useState(false)
+  const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const anyFileInputRef = useRef<HTMLInputElement>(null)
 
@@ -210,6 +212,15 @@ export function ChatFooter({ input, setInput, onSendMessage, isLoading, onKeyPre
               >
                 {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowVideo2AppModal(true)}
+                className="w-8 h-8"
+                title="Video to Learning App"
+              >
+                <Youtube className="w-4 h-4" />
+              </Button>
             </div>
           </div>
           <Button
@@ -279,6 +290,11 @@ export function ChatFooter({ input, setInput, onSendMessage, isLoading, onKeyPre
         isOpen={showWebcamModal}
         onClose={() => setShowWebcamModal(false)}
         onCapture={handleWebcamCapture}
+      />
+
+      <Video2AppModal
+        isOpen={showVideo2AppModal}
+        onClose={() => setShowVideo2AppModal(false)}
       />
     </div>
   )
