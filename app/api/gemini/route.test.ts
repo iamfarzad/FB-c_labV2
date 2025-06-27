@@ -465,9 +465,12 @@ describe('Gemini API Route', () => {
 
   describe('Mock mode without API key', () => {
     it('should provide mock responses when API key is missing', async () => {
-      // Since we're mocking GoogleGenerativeAI in tests, it will still work
-      // even without an API key. The test should verify that it handles
-      // the mock response correctly.
+      // Save the original API key
+      const originalApiKey = process.env.GOOGLE_GEMINI_API_KEY;
+      
+      // Remove API key to test mock mode
+      delete process.env.GOOGLE_GEMINI_API_KEY;
+      
       const request = new NextRequest('http://localhost:3000/api/gemini?action=conversationalFlow', {
         method: 'POST',
         body: JSON.stringify({
@@ -481,8 +484,12 @@ describe('Gemini API Route', () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      // With our mocked GoogleGenerativeAI, it returns 'Mock AI response'
-      expect(data.data.text).toBe('Mock AI response');
+      // When no API key, should return mock response
+      expect(data.data.text).toContain('Welcome to F.B/c AI Showcase');
+      expect(data.data.sidebarActivity).toBe('greeting');
+      
+      // Restore API key
+      process.env.GOOGLE_GEMINI_API_KEY = originalApiKey;
     });
   });
 });
