@@ -1,7 +1,14 @@
-import { GoogleGenAI } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
+import { UnifiedAIService } from '@/lib/ai/unified-ai-service';
 
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+// Initialize UnifiedAIService
+const aiService = new UnifiedAIService({
+  geminiApiKey: process.env.GEMINI_API_KEY,
+  elevenLabsApiKey: process.env.ELEVENLABS_API_KEY,
+  elevenLabsVoiceId: process.env.ELEVENLABS_VOICE_ID,
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
+  supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
     if (!prompt) prompt = 'Hello';
 
-    // For demo purposes, provide immediate responses
+    // Demo responses for fallback
     const demoResponses = [
       `Hello! I'm F.B/c AI Assistant. I can help you with AI consulting, business automation, and custom solutions. How can I assist you today?`,
       `That's a great question! As an AI consultant, I specialize in helping businesses implement AI solutions effectively. Would you like to know more about my services?`,
@@ -24,7 +31,34 @@ export async function POST(req: NextRequest) {
       `Perfect! I'd love to help you explore AI opportunities for your business. I work with companies to identify the best AI strategies and implement practical solutions. Tell me about your goals.`
     ];
 
-    // Simple response based on prompt keywords
+    // Try UnifiedAIService first
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        const result = await aiService.handleConversationalFlow(
+          prompt,
+          {
+            sessionId: `chat_${Date.now()}`,
+            stage: 'conversation',
+            messages: messages || [],
+            ...leadCaptureState
+          },
+          (messages?.length || 0),
+          includeAudio
+        );
+
+        if (result.success && result.data?.text) {
+          return NextResponse.json({
+            reply: result.data.text,
+            audioData: result.data.audioData,
+            sources: result.data.sources
+          });
+        }
+      } catch (error: any) {
+        console.log('UnifiedAIService failed, using fallback:', error?.message || 'Unknown error');
+      }
+    }
+
+    // Fallback to demo responses
     let response = demoResponses[0];
     
     if (prompt.toLowerCase().includes('hello') || prompt.toLowerCase().includes('hi')) {
@@ -37,45 +71,6 @@ export async function POST(req: NextRequest) {
       response = demoResponses[3];
     } else {
       response = demoResponses[Math.floor(Math.random() * demoResponses.length)];
-    }
-
-    // Call advanced API only if available and working
-    if (process.env.GEMINI_API_KEY) {
-      try {
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 3000)
-        );
-        
-        const apiCall = fetch(`${req.nextUrl.origin}/api/gemini?action=conversationalFlow`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt: prompt,
-            currentConversationState: {
-              sessionId: `chat_${Date.now()}`,
-              stage: 'conversation',
-              messages: messages || [],
-              ...leadCaptureState
-            },
-            includeAudio: includeAudio
-          })
-        });
-
-        const apiResponse = await Promise.race([apiCall, timeoutPromise]) as Response;
-        
-        if (apiResponse.ok) {
-          const result = await apiResponse.json();
-          if (result.success && result.data?.text) {
-            return NextResponse.json({
-              reply: result.data.text,
-              audioData: result.data.audioData,
-              sources: result.data.sources
-            });
-          }
-        }
-      } catch (error: any) {
-        console.log('Advanced API failed, using fallback:', error?.message || 'Unknown error');
-      }
     }
 
     return NextResponse.json({ 
