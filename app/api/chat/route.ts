@@ -20,9 +20,9 @@ export async function POST(req: NextRequest) {
           prompt: prompt,
           currentConversationState: {
             sessionId: `chat_${Date.now()}`,
-            stage: 'conversation',
             messages: messages,
-            ...leadCaptureState
+            ...leadCaptureState,
+            stage: 'conversation'
           },
           includeAudio: includeAudio
         })
