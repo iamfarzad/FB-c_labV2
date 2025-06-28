@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, Variants } from "framer-motion"
 import { Download, Maximize2, X, RotateCw } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -60,14 +60,14 @@ export function FramedImage({
   }
 
   // Animation variants
-  const hoverVariants = {
+  const hoverVariants: Variants = {
     hover: {
-      scale: 1.02,
-      transition: { type: "spring", stiffness: 300 }
+      scale: 1.05,
+      transition: { type: "spring", stiffness: 300 },
     },
     tap: {
-      scale: 0.98,
-    }
+      scale: 0.95,
+    },
   }
 
   const frameVariants = {

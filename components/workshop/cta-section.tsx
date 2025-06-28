@@ -3,6 +3,8 @@
 import React from "react"
 import { Zap, CheckCircle, Clock, Calendar, MapPin, Users, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { CTAButton } from "@/components/ui/CTAButton"
+import { SectionBadge } from "@/components/ui/SectionBadge"
 
 interface CTASectionProps {
   theme: "light" | "dark"
@@ -42,10 +44,9 @@ export const CTASection: React.FC<CTASectionProps> = ({ theme }) => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
-            <div className="inline-flex items-center px-4 py-2 rounded-none bg-[var(--color-orange-accent)]/10 border border-[var(--color-orange-accent)]/30 mb-6">
-              <Zap className="h-5 w-5 text-[var(--color-orange-accent)] mr-2" />
-              <span className="text-sm font-tech-mono text-[var(--color-orange-accent)] uppercase tracking-tech-wide">Reserve Your Spot</span>
-            </div>
+            <SectionBadge icon={<Zap className="h-5 w-5 text-[var(--color-orange-accent)]" />}>
+              Reserve Your Spot
+            </SectionBadge>
             <h2 className={`text-3xl sm:text-4xl font-bold ${textColor} mb-6`}>
               Ready to Master <span className="gradient-text">AI for Business</span>?
             </h2>
@@ -68,14 +69,9 @@ export const CTASection: React.FC<CTASectionProps> = ({ theme }) => {
             </div>
 
             <div className="space-y-4">
-              <Link
-                href="#pricing"
-                className="group relative overflow-hidden w-full flex items-center justify-center px-8 py-4 rounded-none bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] text-white font-semibold text-lg shadow-2xl hover:shadow-[var(--color-orange-accent)]/25 transition-all duration-300 transform hover:scale-[1.02]"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-orange-accent-light)] to-[var(--color-orange-accent)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <span className="relative">Reserve My Spot Now</span>
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
-              </Link>
+              <CTAButton href="#pricing" withArrow className="w-full flex justify-center">
+                Reserve My Spot Now
+              </CTAButton>
               <p className={`text-center text-sm ${mutedTextColor}`}>
                 Secure your spot now. Only a few seats remaining!
               </p>
@@ -155,18 +151,12 @@ export const CTASection: React.FC<CTASectionProps> = ({ theme }) => {
               Book a free 15-minute discovery call to discuss your goals and see if this workshop is the right fit.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link
-                href="#book-call"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-none border border-[var(--color-orange-accent)] text-[var(--color-orange-accent)] hover:bg-[var(--color-orange-accent)]/10 transition-colors"
-              >
+              <CTAButton href="#book-call" variant="tertiary" size="sm">
                 Book a Free Call
-              </Link>
-              <Link
-                href="/faq"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-none border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors"
-              >
+              </CTAButton>
+              <CTAButton href="/faq" variant="secondary" size="sm">
                 View FAQ
-              </Link>
+              </CTAButton>
             </div>
           </div>
         </div>

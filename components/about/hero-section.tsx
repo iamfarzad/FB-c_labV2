@@ -11,10 +11,6 @@ interface AboutHeroProps {
 }
 
 export const AboutHero: React.FC<AboutHeroProps> = ({ theme }) => {
-  const textColor = theme === "dark" ? "text-[var(--color-light-silver)]" : "text-[var(--color-gunmetal)]"
-  const mutedTextColor = theme === "dark" ? "text-[var(--color-light-silver)]/90" : "text-[var(--color-gunmetal)]/90"
-  const cardBg = theme === "dark" ? "bg-[var(--glass-bg)]" : "bg-white"
-  const cardBorder = theme === "dark" ? "border-[var(--glass-border)]" : "border-gray-200"
 
   return (
     <section className="relative min-h-[calc(100vh-80px)] flex items-center overflow-hidden pt-0 pb-16 md:pb-24">
@@ -108,16 +104,16 @@ export const AboutHero: React.FC<AboutHeroProps> = ({ theme }) => {
               <span className="text-sm font-tech-mono text-[var(--color-orange-accent)] uppercase tracking-tech-wide">About Me</span>
             </div>
 
-            <h1 className={`text-4xl sm:text-5xl xl:text-6xl font-bold ${textColor} mb-6 leading-tight sm:leading-tight`}>
+            <h1 className={`text-4xl sm:text-5xl xl:text-6xl font-bold text-[var(--color-gunmetal)] dark:text-[var(--color-light-silver)] mb-6 leading-tight sm:leading-tight`}>
               Self-Taught. Results-Focused. <span className="gradient-text">AI That Actually Works.</span>
             </h1>
 
             <div className="space-y-4 mb-8">
-              <p className={`text-xl sm:text-2xl ${mutedTextColor} leading-relaxed`}>
+              <p className={`text-xl sm:text-2xl text-[var(--color-gunmetal)]/90 dark:text-[var(--color-light-silver)]/90 leading-relaxed`}>
                 I'm Farzad Bayat—AI consultant, builder, and systems thinker. I don't just talk about AI. I build, test, and deliver it.
               </p>
 
-              <p className={`text-lg ${mutedTextColor} italic`}>
+              <p className={`text-lg text-[var(--color-gunmetal)]/90 dark:text-[var(--color-light-silver)]/90 italic`}>
                 A self-taught AI consultant who spent 10,000+ hours figuring out what works—so your business doesn't have to.
               </p>
             </div>
@@ -163,7 +159,7 @@ export const AboutHero: React.FC<AboutHeroProps> = ({ theme }) => {
               >
                 <Link
                   href="/consulting"
-                  className={`group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-none border ${cardBorder} text-base sm:text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-[var(--color-gunmetal)]'} hover:bg-[var(--glass-bg)] transition-colors duration-300`}
+                  className={`group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-none border border-gray-200 dark:border-[var(--glass-border)] text-base sm:text-lg font-medium text-[var(--color-gunmetal)] dark:text-white hover:bg-[var(--glass-bg)] transition-colors duration-300`}
                 >
                   <span>View Consulting</span>
                   <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
@@ -188,17 +184,17 @@ export const AboutHero: React.FC<AboutHeroProps> = ({ theme }) => {
             >
               <motion.div
                 whileHover={{ y: -5, transition: { duration: 0.3 } }}
-                className={`${cardBg} ${cardBorder} border rounded-xl p-4 text-center cursor-default`}
+                className={`bg-white dark:bg-[var(--glass-bg)] border-gray-200 dark:border-[var(--glass-border)] border rounded-xl p-4 text-center cursor-default`}
               >
                 <div className="text-2xl sm:text-3xl font-bold text-[var(--color-orange-accent)] mb-1">5+</div>
-                <div className={`text-xs sm:text-sm ${mutedTextColor}`}>Years Experience</div>
+                <div className={`text-xs sm:text-sm text-[var(--color-gunmetal)]/90 dark:text-[var(--color-light-silver)]/90`}>Years Experience</div>
               </motion.div>
               <motion.div
                 whileHover={{ y: -5, transition: { duration: 0.3 } }}
-                className={`${cardBg} ${cardBorder} border rounded-xl p-4 text-center cursor-default`}
+                className={`bg-white dark:bg-[var(--glass-bg)] border-gray-200 dark:border-[var(--glass-border)] border rounded-xl p-4 text-center cursor-default`}
               >
                 <div className="text-2xl sm:text-3xl font-bold text-[var(--color-orange-accent)] mb-1">50+</div>
-                <div className={`text-xs sm:text-sm ${mutedTextColor}`}>Projects Completed</div>
+                <div className={`text-xs sm:text-sm text-[var(--color-gunmetal)]/90 dark:text-[var(--color-light-silver)]/90`}>Projects Completed</div>
               </motion.div>
             </motion.div>
           </motion.div>

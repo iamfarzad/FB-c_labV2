@@ -140,14 +140,22 @@ export function ChatProvider({ children }: ChatProviderProps) {
         });
       }, 500);
 
-      const response = await fetch('/api/chat', {
+      const allMessages = [...state.messages, userMessage];
+      const lastMessageContent = userMessage.content;
+
+      const response = await fetch('/api/ai-service?action=conversationalFlow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          messages: [...state.messages, userMessage].map(msg => ({
-            role: msg.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: msg.content }]
-          }))
+        body: JSON.stringify({
+          message: lastMessageContent,
+          conversationState: {
+            messages: allMessages.map(msg => ({
+              role: msg.role === 'assistant' ? 'model' : 'user',
+              parts: [{ text: msg.content }]
+            }))
+          },
+          messageCount: allMessages.length,
+          includeAudio: false
         }),
       });
 
@@ -159,9 +167,13 @@ export function ChatProvider({ children }: ChatProviderProps) {
 
       const data = await response.json();
 
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to get response from AI service');
+      }
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: data.reply,
+        content: data.data.text,
         role: 'assistant',
         timestamp: new Date(),
       };

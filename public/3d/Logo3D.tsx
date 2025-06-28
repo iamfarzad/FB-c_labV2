@@ -2,7 +2,7 @@ import React, { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { useGLTF, OrbitControls } from '@react-three/drei'
 import { Loader2 } from 'lucide-react'
-import ErrorBoundary3D from './ErrorBoundary3D'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import { Logo3DLoader } from '@/components/loaders/Logo3DLoader'
 
 function Model() {
@@ -33,7 +33,7 @@ function LoadingSpinner({ size, className }: Logo3DProps) {
 
 export function Logo3D({ className, size = "w-10 h-10" }: Logo3DProps) {
   return (
-    <ErrorBoundary3D>
+    <ErrorBoundary fallback={<Fallback size={size} className={className} />}>
       <div className={`${size} ${className}`}>
         <Suspense fallback={<Logo3DLoader size={size} />}>
           <Canvas
@@ -53,7 +53,7 @@ export function Logo3D({ className, size = "w-10 h-10" }: Logo3DProps) {
           </Canvas>
         </Suspense>
       </div>
-    </ErrorBoundary3D>
+    </ErrorBoundary>
   )
 }
 

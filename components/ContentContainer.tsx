@@ -12,16 +12,15 @@ import React, {
   useState,
 } from 'react';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
+import 'react-tabs/style/react-tabs.css'
 
-// import 'react-tabs/style/react-tabs.css'
-
-import {parseHTML, parseJSON} from '@/lib/parse';
 import {
   CODE_REGION_CLOSER,
   CODE_REGION_OPENER,
   SPEC_ADDENDUM,
-  SPEC_FROM_VIDEO_PROMPT,
-} from '@/lib/prompts';
+} from '@/lib/constants';
+import {parseHTML, parseJSON} from '@/lib/parse';
+import {SPEC_FROM_VIDEO_PROMPT} from '@/lib/prompts';
 import {generateText} from '@/lib/text-generation';
 
 interface ContentContainerProps {

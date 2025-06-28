@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { UnifiedAIService } from '@/lib/ai/unified-ai-service';
+import { UnifiedAIService } from '../../../lib/ai/unified-ai-service';
+import { extractVideoId } from '@/lib/youtube-utils';
+import { getVideoTranscript } from '@/lib/video-analysis';
 
 // Initialize UnifiedAIService with configuration
 const aiService = new UnifiedAIService({
@@ -109,7 +111,13 @@ export async function POST(request: NextRequest) {
     
     // Convert UnifiedAIService response format to API response format
     if (response.success) {
-      return NextResponse.json(response.data || {}, { headers: corsHeaders });
+      // For UnifiedAIService responses, return the response directly since it already has the right structure
+      if ('data' in response && response.data) {
+        return NextResponse.json(response, { headers: corsHeaders });
+      } else {
+        // For other handlers that return HandlerResponse format
+        return NextResponse.json(response.data || {}, { headers: corsHeaders });
+      }
     } else {
       return NextResponse.json(
         { success: false, error: response.error || 'Unknown error' },
@@ -191,9 +199,7 @@ Provide a comprehensive, actionable specification that a developer could use to 
     // Regular video analysis with YouTube API integration
     if (videoUrl && videoUrl.includes('youtube.com')) {
       try {
-        const { getYouTubeVideoId } = await import('@/lib/youtube');
-        const { getVideoTranscript } = await import('@/lib/video-analysis');
-        const videoId = getYouTubeVideoId(videoUrl);
+        const videoId = extractVideoId(videoUrl);
         
         if (videoId) {
           const transcript = await getVideoTranscript(videoUrl);

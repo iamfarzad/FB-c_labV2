@@ -22,7 +22,6 @@ const task = cron.schedule(CRON_SCHEDULE, async () => {
     console.error(`❌ [${new Date().toISOString()}] Cleanup failed:`, error);
   }
 }, {
-  scheduled: true,
   timezone: 'UTC'
 });
 

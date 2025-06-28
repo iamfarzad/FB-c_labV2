@@ -23,7 +23,7 @@ import {
   Lightbulb
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getYoutubeEmbedUrl, validateYoutubeUrl } from '@/lib/youtube';
+import { getYoutubeEmbedUrl, validateYoutubeUrl } from '@/lib/youtube-utils';
 import { 
   generateSpecFromVideo, 
   generateCodeFromSpec
@@ -186,9 +186,9 @@ export const VideoToAppGenerator = forwardRef<
     setError(null);
 
     try {
-      const validation = await validateYoutubeUrl(inputValue);
-      if (!validation.isValid) {
-        throw new Error(validation.error || 'Invalid YouTube URL');
+      const isValid = await validateYoutubeUrl(inputValue);
+      if (!isValid) {
+        throw new Error('Invalid YouTube URL');
       }
 
       setVideoUrl(inputValue);

@@ -16,13 +16,7 @@ import {
   BarChart3,
   FileDown,
 } from "lucide-react"
-
-interface ChatMessage {
-  id: string
-  role: "user" | "assistant"
-  content: string
-  timestamp?: string
-}
+import { ChatMessage } from "@/lib/types"
 
 interface ChatSidePanelProps {
   theme: "light" | "dark"

@@ -1,61 +1,103 @@
-"use client"
+import { Metadata } from 'next'
+import HomePage from './HomePage'
 
-import { useState, useEffect } from "react"
-import { Layout } from "@/components/layout"
-import { HeroSection } from "@/components/home/hero-section"
-import { AboutMeCard } from "@/components/home/about-me-card"
-import { WhyWorkWithMe } from "@/components/home/why-work-with-me"
-import { ProofSection } from "@/components/home/proof-section"
-import { AISolutionsSection } from "@/components/home/ai-solutions-redesigned"
-import { Results } from "@/components/home/results"
-import { TechMarquee } from "@/components/home/tech-marquee"
-import { FinalCTA } from "@/components/home/final-cta"
+export const metadata: Metadata = {
+  title: 'AI Consultant & Builder | Farzad Bayat - Transform Your Business with AI',
+  description: '10,000+ hours building AI solutions. Transform your business with proven AI consulting, custom implementations, and practical training. See 300% ROI increase with our strategic AI solutions.',
+  keywords: [
+    'AI consultant',
+    'AI implementation',
+    'business automation',
+    'AI training',
+    'custom AI solutions',
+    'machine learning consultant',
+    'AI strategy',
+    'Farzad Bayat'
+  ],
+  authors: [{ name: 'Farzad Bayat' }],
+  creator: 'Farzad Bayat',
+  publisher: 'F.B/c AI Consulting',
+  openGraph: {
+    title: 'AI Consultant & Builder | Farzad Bayat',
+    description: 'Transform your business with proven AI solutions. 10,000+ hours of experience delivering 300% ROI increases through strategic AI implementation.',
+    url: 'https://farzadbayat.com',
+    siteName: 'F.B/c AI Consulting',
+    images: [
+      {
+        url: '/farzad-bayat_profile_2AI.JPG',
+        width: 1200,
+        height: 630,
+        alt: 'Farzad Bayat - AI Consultant and Builder',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AI Consultant & Builder | Farzad Bayat',
+    description: 'Transform your business with proven AI solutions. 10,000+ hours of experience.',
+    images: ['/farzad-bayat_profile_2AI.JPG'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: 'your-google-verification-code', // Add your actual verification code
+  },
+  alternates: {
+    canonical: 'https://farzadbayat.com',
+  },
+  category: 'technology',
+}
 
-export default function HomePage() {
-  const [theme, setTheme] = useState<"light" | "dark">("light")
-
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"))
+// Structured Data for SEO
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Farzad Bayat',
+  jobTitle: 'AI Consultant & Builder',
+  description: 'Expert AI consultant with 10,000+ hours building AI solutions for businesses',
+  url: 'https://farzadbayat.com',
+  image: 'https://farzadbayat.com/farzad-bayat_profile_2AI.JPG',
+  sameAs: [
+    'https://linkedin.com/in/farzadbayat',
+    'https://github.com/farzadbayat',
+  ],
+  knowsAbout: [
+    'Artificial Intelligence',
+    'Machine Learning',
+    'Business Automation',
+    'AI Strategy',
+    'Custom AI Solutions'
+  ],
+  offers: {
+    '@type': 'Service',
+    name: 'AI Consulting Services',
+    description: 'Transform your business with proven AI solutions',
+    provider: {
+      '@type': 'Person',
+      name: 'Farzad Bayat'
+    }
   }
+}
 
-  useEffect(() => {
-    document.documentElement.classList.remove("light", "dark")
-    document.documentElement.classList.add(theme)
-  }, [theme])
-
+export default function Page() {
   return (
-    <Layout theme={theme} onThemeToggle={toggleTheme}>
-      <div
-        className="relative"
-        style={{
-          backgroundColor: "var(--bg-primary)",
-          color: "var(--text-primary)",
-        }}
-      >
-        {/* Hero Section */}
-        <HeroSection theme={theme} />
-
-        {/* About Me Card */}
-        <AboutMeCard theme={theme} />
-
-        {/* Why Work With Me */}
-        <WhyWorkWithMe theme={theme} />
-
-        {/* AI Solutions Section - Merged WhatIOffer and AIBuildSection */}
-        <AISolutionsSection theme={theme} />
-
-        {/* Proof Section */}
-        <ProofSection theme={theme} />
-
-        {/* Results */}
-        <Results theme={theme} />
-
-        {/* AI Logos Marquee */}
-        <TechMarquee />
-
-        {/* Final CTA */}
-        <FinalCTA theme={theme} />
-      </div>
-    </Layout>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <HomePage />
+    </>
   )
 }

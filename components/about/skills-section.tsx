@@ -116,7 +116,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ theme }) => {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: [0.16, 0.77, 0.47, 0.97]
+        ease: [0.16, 0.77, 0.47, 0.97] as any
       }
     }
   }

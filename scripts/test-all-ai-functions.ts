@@ -96,13 +96,7 @@ class AIFunctionTester {
               ok: res.statusCode >= 200 && res.statusCode < 300,
               status: res.statusCode,
               headers: res.headers,
-              json: async () => {
-                try {
-                  return JSON.parse(data);
-                } catch (e) {
-                  throw new Error(`Failed to parse JSON: ${data}`);
-                }
-              },
+              json: async () => JSON.parse(data),
               text: async () => data,
             };
             resolve(responseObj);

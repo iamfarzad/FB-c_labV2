@@ -1,48 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
-import handler from '@/api/gemini-proxy';
+import { UnifiedAIService } from '@/lib/ai/unified-ai-service';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const action = request.nextUrl.searchParams.get('action') || 'conversationalFlow';
     
-    // Create a mock VercelRequest and VercelResponse
-    const mockReq = {
-      body,
-      query: { action },
-      method: 'POST',
-      headers: Object.fromEntries(request.headers.entries())
-    } as any;
+    const aiService = new UnifiedAIService({
+      geminiApiKey: process.env.GEMINI_API_KEY,
+      elevenLabsApiKey: process.env.ELEVENLABS_API_KEY,
+      elevenLabsVoiceId: process.env.ELEVENLABS_VOICE_ID,
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    });
     
-    let responseData: any = null;
-    let responseStatus = 200;
+    let result;
     
-    const mockRes = {
-      status: (code: number) => {
-        responseStatus = code;
-        return mockRes;
-      },
-      json: (data: any) => {
-        responseData = data;
-        return mockRes;
-      },
-      setHeader: () => mockRes,
-      end: () => mockRes
-    } as any;
-    
-    // Call the handler
-    await handler(mockReq, mockRes);
-    
-    // Return the response
-    if (responseData) {
-      return NextResponse.json(responseData, { status: responseStatus });
-    } else {
-      return NextResponse.json({ success: false, error: 'No response data' }, { status: 500 });
+    switch (action) {
+      case 'conversationalFlow':
+        result = await aiService.handleConversationalFlow(
+          body.message || '', 
+          body.conversationState || {},
+          body.messageCount || 0,
+          body.includeAudio || false
+        );
+        break;
+      case 'generateImage':
+        result = await aiService.handleImageGeneration(body.prompt || '');
+        break;
+      case 'leadCapture':
+        result = await aiService.handleLeadCapture(body.conversationState || {});
+        break;
+      default:
+        result = await aiService.handleConversationalFlow(
+          body.message || '', 
+          body.conversationState || {},
+          body.messageCount || 0,
+          body.includeAudio || false
+        );
     }
+    
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error in AI service route:', error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     );
   }

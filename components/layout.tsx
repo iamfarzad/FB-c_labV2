@@ -7,20 +7,16 @@ import { FloatingChatButton } from "./floating-chat-button"
 
 interface LayoutProps {
   children: React.ReactNode
-  theme?: "light" | "dark"
-  onThemeToggle?: () => void
   showFloatingChat?: boolean
 }
 
 export const Layout: React.FC<LayoutProps> = ({ 
   children, 
-  theme, 
-  onThemeToggle,
   showFloatingChat = true 
 }) => {
   return (
     <div className="relative min-h-screen bg-background">
-      <Header theme={theme} onThemeToggle={onThemeToggle} />
+      <Header />
       
       {/* Main Content with padding for fixed header */}
       <main className="pt-16">

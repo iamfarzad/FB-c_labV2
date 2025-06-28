@@ -1,26 +1,16 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import HeroBackground1 from '@/components/backgrounds/HeroBackground1';
-import HeroBackground2 from '@/components/backgrounds/HeroBackground2';
-import HeroBackground3 from '@/components/backgrounds/HeroBackground3';
-import HeroBackground4 from '@/components/backgrounds/HeroBackground4';
-import HeroBackground5 from '@/components/backgrounds/HeroBackground5';
-import HeroBackground6 from '@/components/backgrounds/HeroBackground6';
+import { HeroBackground, HeroBackgroundVariant } from '@/components/backgrounds/HeroBackground';
 
 export default function BackgroundPreview() {
-  const [selectedBackground, setSelectedBackground] = useState(0);
+  const [selectedVariant, setSelectedVariant] = useState<HeroBackgroundVariant>('dotGrid');
 
-  const backgrounds = [
-    { id: 0, Component: HeroBackground1, name: 'Floating Particles' },
-    { id: 1, Component: HeroBackground2, name: 'Wave Animation' },
-    { id: 2, Component: HeroBackground3, name: 'Geometric Grid' },
-    { id: 3, Component: HeroBackground4, name: 'Neural Network' },
-    { id: 4, Component: HeroBackground5, name: 'Spiral Galaxy' },
-    { id: 5, Component: HeroBackground6, name: 'Matrix Rain' },
+  const backgrounds: { id: HeroBackgroundVariant; name: string }[] = [
+    { id: 'dotGrid', name: 'Dot Grid' },
+    { id: 'topographic', name: 'Topographic' },
+    // Add other variants here as they are created
   ];
-
-  const CurrentBackground = backgrounds[selectedBackground].Component;
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
@@ -32,9 +22,9 @@ export default function BackgroundPreview() {
         {backgrounds.map((bg) => (
           <button
             key={bg.id}
-            onClick={() => setSelectedBackground(bg.id)}
+            onClick={() => setSelectedVariant(bg.id)}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              selectedBackground === bg.id
+              selectedVariant === bg.id
                 ? 'bg-orange-500 text-white shadow-lg'
                 : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
@@ -48,7 +38,7 @@ export default function BackgroundPreview() {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="p-4 bg-gray-800 text-white">
             <h2 className="text-lg font-semibold">
-              {backgrounds[selectedBackground].name}
+              {backgrounds.find(b => b.id === selectedVariant)?.name}
             </h2>
             <p className="text-gray-300 text-sm">
               Interactive Three.js background component
@@ -65,7 +55,7 @@ export default function BackgroundPreview() {
                 </div>
               }
             >
-              <CurrentBackground />
+              <HeroBackground variant={selectedVariant} />
             </Suspense>
           </div>
         </div>

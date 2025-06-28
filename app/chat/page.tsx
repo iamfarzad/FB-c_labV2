@@ -2,13 +2,17 @@
 
 import { useState, useRef } from "react"
 import { ChatProvider, useChatContext } from "./context/ChatProvider"
-import { ChatHeader } from "./components/layout/ChatHeader"
-import { ChatMain } from "./components/layout/ChatMain"
-import { ChatFooter } from "./components/layout/ChatFooter"
-import { TimelineActivityLog } from "./components/Sidebar/TimelineActivityLog"
+import { ChatHeader } from "@/components/chat/layout/ChatHeader"
+import { ChatMain } from "@/components/chat/layout/ChatMain"
+import { ChatFooter } from "@/components/chat/layout/ChatFooter"
+import { TimelineActivityLog } from "@/components/chat/activity/TimelineActivityLog"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { ChatInput } from "@/components/chat/chat/ChatInput"
+import { ChatMessages } from "@/components/chat/chat/ChatMessages"
+import { sampleTimelineActivities } from "@/components/chat/Sidebar/sampleTimelineData"
+import { useChat } from "@/app/chat/hooks/useChat"
 
 function ChatPageContent() {
   const {

@@ -1,6 +1,44 @@
 /**
- * Performance optimization utilities for the application
+ * Advanced performance optimization utilities for the application
  */
+
+import { onCLS, onFID, onFCP, onLCP, onTTFB, type Metric } from 'web-vitals'
+
+// Define MemoryInfo interface
+interface MemoryInfo {
+  usedJSHeapSize: number
+  totalJSHeapSize: number
+  jsHeapSizeLimit: number
+}
+
+// Performance metrics interface
+interface PerformanceMetrics {
+  lcp: number | null // Largest Contentful Paint
+  fid: number | null // First Input Delay
+  cls: number | null // Cumulative Layout Shift
+  fcp: number | null // First Contentful Paint
+  ttfb: number | null // Time to First Byte
+  navigationStart: number
+  domContentLoaded: number
+  loadComplete: number
+  memoryUsage?: MemoryInfo
+  connectionType?: string
+}
+
+// Global performance state
+const performanceMetrics: PerformanceMetrics = {
+  lcp: null,
+  fid: null,
+  cls: null,
+  fcp: null,
+  ttfb: null,
+  navigationStart: 0,
+  domContentLoaded: 0,
+  loadComplete: 0,
+}
+
+// Performance observer for monitoring
+let performanceObserver: PerformanceObserver | null = null
 
 /**
  * Preloads critical resources to improve loading performance
@@ -8,65 +46,275 @@
 export function preloadCriticalResources() {
   if (typeof window === 'undefined') return
 
-  const criticalResources: string[] = [
-    // Add paths to critical resources (fonts, above-the-fold images, etc.)
-    // Add your critical resources here when needed
+  const criticalResources: Array<{url: string, as: string, type?: string}> = [
+    // Critical fonts
+    { url: '/fonts/rajdhani-variable.woff2', as: 'font', type: 'font/woff2' },
+    { url: '/fonts/space-mono-regular.woff2', as: 'font', type: 'font/woff2' },
+    { url: '/fonts/montserrat-variable.woff2', as: 'font', type: 'font/woff2' },
+    
+    // Critical images
+    { url: '/farzad-bayat_profile_2AI.JPG', as: 'image' },
+    
+    // Critical scripts (if any)
+    // { url: '/scripts/critical.js', as: 'script' },
   ]
 
   criticalResources.forEach(resource => {
     const link = document.createElement('link')
     link.rel = 'preload'
-    link.href = resource
-    link.as = resource.endsWith('.woff2') ? 'font' : 'image'
+    link.href = resource.url
+    link.as = resource.as
+    if (resource.type) link.type = resource.type
     link.crossOrigin = 'anonymous'
     document.head.appendChild(link)
   })
 }
 
 /**
- * Initializes performance monitoring
+ * Initialize Core Web Vitals monitoring
  */
-export function initPerformanceMonitoring() {
+export function initCoreWebVitals() {
   if (typeof window === 'undefined') return
 
-  // Log performance metrics
-  window.addEventListener('load', () => {
-    // Use the Performance API to gather metrics
-    setTimeout(() => {
-      const timing = performance.timing
-      const metrics = {
-        dns: timing.domainLookupEnd - timing.domainLookupStart,
-        tcp: timing.connectEnd - timing.connectStart,
-        ttfb: timing.responseStart - timing.requestStart,
-        pageLoad: timing.loadEventStart - timing.navigationStart,
-        domContentLoaded: timing.domContentLoadedEventStart - timing.navigationStart,
+  // Core Web Vitals monitoring
+  onCLS((metric: Metric) => {
+    performanceMetrics.cls = metric.value
+    reportMetric('CLS', metric)
+  })
+
+  onFID((metric: Metric) => {
+    performanceMetrics.fid = metric.value
+    reportMetric('FID', metric)
+  })
+
+  onFCP((metric: Metric) => {
+    performanceMetrics.fcp = metric.value
+    reportMetric('FCP', metric)
+  })
+
+  onLCP((metric: Metric) => {
+    performanceMetrics.lcp = metric.value
+    reportMetric('LCP', metric)
+  })
+
+  onTTFB((metric: Metric) => {
+    performanceMetrics.ttfb = metric.value
+    reportMetric('TTFB', metric)
+  })
+}
+
+/**
+ * Report performance metrics
+ */
+function reportMetric(name: string, metric: Metric) {
+  // In development, log to console
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`📊 ${name}:`, {
+      value: metric.value,
+      rating: getMetricRating(name, metric.value),
+      entries: metric.entries,
+    })
+  }
+
+  // In production, send to analytics
+  if (process.env.NODE_ENV === 'production') {
+    // Example: Google Analytics 4
+    // gtag('event', 'web_vitals', {
+    //   event_category: 'Web Vitals',
+    //   event_label: name,
+    //   value: Math.round(name === 'CLS' ? metric.value * 1000 : metric.value),
+    //   custom_map: { metric_id: name }
+    // })
+
+    // Example: Custom analytics endpoint
+    // fetch('/api/analytics/web-vitals', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({
+    //     name,
+    //     value: metric.value,
+    //     rating: getMetricRating(name, metric.value),
+    //     url: window.location.pathname,
+    //     timestamp: Date.now(),
+    //   })
+    // }).catch(console.error)
+  }
+}
+
+/**
+ * Get metric rating based on thresholds
+ */
+function getMetricRating(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
+  const thresholds = {
+    LCP: { good: 2500, poor: 4000 },
+    FID: { good: 100, poor: 300 },
+    CLS: { good: 0.1, poor: 0.25 },
+    FCP: { good: 1800, poor: 3000 },
+    TTFB: { good: 800, poor: 1800 },
+  }
+
+  const threshold = thresholds[name as keyof typeof thresholds]
+  if (!threshold) return 'good'
+
+  if (value <= threshold.good) return 'good'
+  if (value <= threshold.poor) return 'needs-improvement'
+  return 'poor'
+}
+
+/**
+ * Monitor resource loading performance
+ */
+export function initResourceMonitoring() {
+  if (typeof window === 'undefined') return
+
+  performanceObserver = new PerformanceObserver((list) => {
+    list.getEntries().forEach((entry) => {
+      // Monitor navigation timing
+      if (entry.entryType === 'navigation') {
+        const navEntry = entry as PerformanceNavigationTiming
+        performanceMetrics.navigationStart = navEntry.fetchStart
+        performanceMetrics.domContentLoaded = navEntry.domContentLoadedEventEnd - navEntry.fetchStart
+        performanceMetrics.loadComplete = navEntry.loadEventEnd - navEntry.fetchStart
       }
 
-      console.log('Performance Metrics:', metrics)
+      // Monitor resource loading
+      if (entry.entryType === 'resource') {
+        const resourceEntry = entry as PerformanceResourceTiming
+        const duration = resourceEntry.responseEnd - resourceEntry.requestStart
 
-      // Here you could send these metrics to your analytics service
-      // sendToAnalytics(metrics)
-    }, 0)
+        // Log slow resources in development
+        if (process.env.NODE_ENV === 'development' && duration > 1000) {
+          console.warn('⚠️ Slow resource detected:', {
+            name: resourceEntry.name,
+            duration: `${duration.toFixed(2)}ms`,
+            size: resourceEntry.transferSize,
+            type: resourceEntry.initiatorType,
+          })
+        }
+      }
+
+      // Monitor layout shifts
+      if (entry.entryType === 'layout-shift' && !(entry as any).hadRecentInput) {
+        const layoutShiftEntry = entry as any
+        if (process.env.NODE_ENV === 'development' && layoutShiftEntry.value > 0.1) {
+          console.warn('⚠️ Layout shift detected:', {
+            value: layoutShiftEntry.value,
+            sources: layoutShiftEntry.sources,
+          })
+        }
+      }
+    })
   })
 
-  // Track largest contentful paint (LCP)
-  const observer = new PerformanceObserver((entryList) => {
-    const entries = entryList.getEntries()
-    const lastEntry = entries[entries.length - 1] as PerformanceEntry & { element?: Element }
+  // Observe all entry types
+  try {
+    performanceObserver.observe({ 
+      entryTypes: ['navigation', 'resource', 'layout-shift', 'largest-contentful-paint'] 
+    })
+  } catch (e) {
+    // Fallback for older browsers
+    console.warn('Performance Observer not fully supported')
+  }
+}
 
-    console.log('LCP:', lastEntry.startTime)
-    console.log('LCP Element:', lastEntry.element?.tagName, lastEntry.element?.className)
+/**
+ * Get memory usage information
+ */
+export function getMemoryUsage(): MemoryInfo | null {
+  if (typeof window === 'undefined') return null
+  
+  const memory = (performance as any).memory
+  if (memory) {
+    performanceMetrics.memoryUsage = {
+      usedJSHeapSize: memory.usedJSHeapSize,
+      totalJSHeapSize: memory.totalJSHeapSize,
+      jsHeapSizeLimit: memory.jsHeapSizeLimit,
+    }
+    return performanceMetrics.memoryUsage
+  }
+  return null
+}
 
-    // Here you could send LCP to your analytics service
-    // sendToAnalytics({ type: 'LCP', value: lastEntry.startTime })
+/**
+ * Get network connection information
+ */
+export function getConnectionInfo(): string | null {
+  if (typeof window === 'undefined') return null
+  
+  const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection
+  if (connection) {
+    const connectionType = connection.effectiveType || connection.type || 'unknown'
+    performanceMetrics.connectionType = connectionType
+    return connectionType
+  }
+  return null
+}
+
+/**
+ * Check if device is low-end based on hardware indicators
+ */
+export function isLowEndDevice(): boolean {
+  if (typeof window === 'undefined') return false
+
+  // Check memory
+  const memory = getMemoryUsage()
+  if (memory && memory.jsHeapSizeLimit < 1073741824) { // Less than 1GB
+    return true
+  }
+
+  // Check CPU cores
+  if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) {
+    return true
+  }
+
+  // Check connection speed
+  const connection = getConnectionInfo()
+  if (connection && ['slow-2g', '2g'].includes(connection)) {
+    return true
+  }
+
+  return false
+}
+
+/**
+ * Progressive image loading with intersection observer
+ */
+export function initProgressiveImageLoading() {
+  if (typeof window === 'undefined') return
+
+  const imageObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const img = entry.target as HTMLImageElement
+        
+        // Load high-res image
+        if (img.dataset.src) {
+          const tempImg = new Image()
+          tempImg.onload = () => {
+            img.src = tempImg.src
+            img.classList.remove('blur-sm')
+            img.classList.add('animate-fade-in-up')
+          }
+          tempImg.src = img.dataset.src
+          imageObserver.unobserve(img)
+        }
+      }
+    })
+  }, {
+    rootMargin: '50px',
+    threshold: 0.1,
   })
 
-  observer.observe({ type: 'largest-contentful-paint', buffered: true })
+  // Observe all images with data-src attribute
+  document.querySelectorAll('img[data-src]').forEach((img) => {
+    imageObserver.observe(img)
+  })
+
+  return () => imageObserver.disconnect()
 }
 
 /**
  * Optimizes images by adding loading="lazy" and other attributes
- * @param element - The parent element containing images
  */
 export function optimizeImages(element: HTMLElement | Document = document) {
   if (typeof window === 'undefined') return
@@ -112,18 +360,89 @@ export function optimizeImages(element: HTMLElement | Document = document) {
 }
 
 /**
- * Checks if an element is in the viewport
+ * Check if element is in viewport
  */
-function isInViewport(element: HTMLElement) {
-  if (typeof window === 'undefined') return false
-
+function isInViewport(element: HTMLElement): boolean {
   const rect = element.getBoundingClientRect()
   return (
     rect.top >= 0 &&
     rect.left >= 0 &&
-    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) * 1.5 &&
+    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
     rect.right <= (window.innerWidth || document.documentElement.clientWidth)
   )
+}
+
+/**
+ * Initialize performance monitoring
+ */
+export function initPerformanceMonitoring() {
+  if (typeof window === 'undefined') return
+
+  // Track basic navigation timing
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const navTiming = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
+      if (navTiming) {
+        console.log('📈 Navigation Timing:', {
+          domContentLoaded: `${(navTiming.domContentLoadedEventEnd - navTiming.fetchStart).toFixed(2)}ms`,
+          loadComplete: `${(navTiming.loadEventEnd - navTiming.fetchStart).toFixed(2)}ms`,
+          firstByte: `${(navTiming.responseStart - navTiming.fetchStart).toFixed(2)}ms`,
+        })
+      }
+    }, 0)
+  })
+
+  // Initialize Core Web Vitals
+  initCoreWebVitals()
+
+  // Initialize resource monitoring
+  initResourceMonitoring()
+
+  // Track memory usage periodically
+  if ((performance as any).memory) {
+    setInterval(() => {
+      getMemoryUsage()
+    }, 30000) // Every 30 seconds
+  }
+}
+
+/**
+ * Get current performance metrics
+ */
+export function getPerformanceMetrics(): PerformanceMetrics {
+  return { ...performanceMetrics }
+}
+
+/**
+ * Generate performance report
+ */
+export function generatePerformanceReport(): string {
+  const metrics = getPerformanceMetrics()
+  const memory = getMemoryUsage()
+  const connection = getConnectionInfo()
+
+  return `
+🚀 Performance Report
+━━━━━━━━━━━━━━━━━━━━
+
+Core Web Vitals:
+• LCP: ${metrics.lcp ? `${metrics.lcp.toFixed(2)}ms` : 'Not measured'} ${metrics.lcp ? `(${getMetricRating('LCP', metrics.lcp)})` : ''}
+• FID: ${metrics.fid ? `${metrics.fid.toFixed(2)}ms` : 'Not measured'} ${metrics.fid ? `(${getMetricRating('FID', metrics.fid)})` : ''}
+• CLS: ${metrics.cls ? metrics.cls.toFixed(3) : 'Not measured'} ${metrics.cls ? `(${getMetricRating('CLS', metrics.cls)})` : ''}
+
+Load Times:
+• First Contentful Paint: ${metrics.fcp ? `${metrics.fcp.toFixed(2)}ms` : 'Not measured'}
+• Time to First Byte: ${metrics.ttfb ? `${metrics.ttfb.toFixed(2)}ms` : 'Not measured'}
+• DOM Content Loaded: ${metrics.domContentLoaded.toFixed(2)}ms
+• Load Complete: ${metrics.loadComplete.toFixed(2)}ms
+
+System Info:
+• Memory Used: ${memory ? `${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB` : 'Unknown'}
+• Memory Limit: ${memory ? `${(memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2)}MB` : 'Unknown'}
+• Connection: ${connection || 'Unknown'}
+• CPU Cores: ${navigator.hardwareConcurrency || 'Unknown'}
+• Low-end Device: ${isLowEndDevice() ? 'Yes' : 'No'}
+  `
 }
 
 /**
@@ -137,6 +456,9 @@ export function initPerformanceOptimizations() {
 
   // Initialize performance monitoring
   initPerformanceMonitoring()
+
+  // Initialize progressive image loading
+  const imageCleanup = initProgressiveImageLoading()
 
   // Optimize images on initial load
   optimizeImages()
@@ -157,9 +479,18 @@ export function initPerformanceOptimizations() {
     subtree: true,
   })
 
+  // Log performance report in development
+  if (process.env.NODE_ENV === 'development') {
+    setTimeout(() => {
+      console.log(generatePerformanceReport())
+    }, 5000) // After 5 seconds
+  }
+
   // Cleanup function
   return () => {
     observer.disconnect()
+    imageCleanup?.()
+    performanceObserver?.disconnect()
   }
 }
 

@@ -2,6 +2,7 @@
 
 import { CornerRightUp, Mic } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { useAutoResizeTextarea } from "@/components/hooks/use-auto-resize-textarea";
@@ -28,10 +29,19 @@ export function AIInput({
     maxHeight,
   });
   const [inputValue, setInputValue] = useState("");
+  const router = useRouter();
 
   const handleReset = () => {
     if (!inputValue.trim()) return;
-    onSubmit?.(inputValue);
+    
+    if (onSubmit) {
+      onSubmit(inputValue);
+    } else {
+      // Default behavior: navigate to chat with query
+      const query = inputValue.trim();
+      router.push(`/chat?q=${encodeURIComponent(query)}`);
+    }
+    
     setInputValue("");
     adjustHeight(true);
   };

@@ -5,11 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { MessageSquare } from "lucide-react"
 
-interface FloatingChatButtonProps {
-  theme: "light" | "dark"
-}
-
-export const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ theme }) => {
+export const FloatingChatButton: React.FC = () => {
   const pathname = usePathname()
 
   // Don't show on chat page

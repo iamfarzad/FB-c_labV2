@@ -6,22 +6,7 @@ import { ArrowRight, Zap } from "lucide-react"
 import Link from "next/link"
 import { TextParticle } from "@/components/ui/text-particle"
 import { Button } from "@/components/ui/button"
-
-// Error boundary for CanvasRevealEffect
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }> {
-  state = { hasError: false };
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return null;
-    }
-    return this.props.children;
-  }
-}
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Dynamically import CanvasRevealEffect with no SSR
 const CanvasRevealEffectBase = dynamic(() => import('@/components/ui/canvas-reveal-effect'), {
@@ -41,7 +26,7 @@ const CanvasRevealEffect = (props: {
   opacities?: number[];
   containerClassName?: string;
 }) => (
-  <ErrorBoundary>
+  <ErrorBoundary fallback={null}>
     <CanvasRevealEffectBase {...props} />
   </ErrorBoundary>
 );
@@ -51,10 +36,6 @@ interface ServicesHeroProps {
 }
 
 export const ServicesHero: React.FC<ServicesHeroProps> = ({ theme }) => {
-  const textColor = theme === "dark" ? "text-[var(--color-light-silver)]" : "text-[var(--color-gunmetal)]"
-  const mutedTextColor = theme === "dark" ? "text-[var(--color-light-silver)]/90" : "text-[var(--color-gunmetal)]/90"
-  const cardBg = theme === "dark" ? "bg-[var(--glass-bg)]" : "bg-white"
-  const cardBorder = theme === "dark" ? "border-[var(--glass-border)]" : "border-gray-200"
 
   // Colors for the canvas effect based on theme
   const canvasColors = useMemo(() => {
@@ -93,21 +74,21 @@ export const ServicesHero: React.FC<ServicesHeroProps> = ({ theme }) => {
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
         <div className="text-center">
-          <div className={`inline-flex items-center px-4 py-2 rounded-lg ${cardBg} ${cardBorder} border mb-6`}>
+          <div className={`inline-flex items-center px-4 py-2 rounded-lg bg-white dark:bg-[var(--glass-bg)] border-gray-200 dark:border-[var(--glass-border)] border mb-6`}>
             <Zap className="h-5 w-5 text-[var(--color-orange-accent)] mr-2" />
             <span className="text-sm font-medium text-[var(--color-orange-accent)] uppercase tracking-wider">
               Services
             </span>
           </div>
 
-          <h1 className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight ${textColor} mb-6`}>
+          <h1 className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-[var(--color-gunmetal)] dark:text-[var(--color-light-silver)] mb-6`}>
             Practical AI Services That{' '}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)]">
               Deliver Results
             </span>
           </h1>
 
-          <p className={`text-lg md:text-xl ${mutedTextColor} max-w-3xl mx-auto mb-8`}>
+          <p className={`text-lg md:text-xl text-[var(--color-gunmetal)]/90 dark:text-[var(--color-light-silver)]/90 max-w-3xl mx-auto mb-8`}>
             Whether you need automation, a custom chatbot, or internal AI copilots, I help you build what actually works—no fluff, no theory.
           </p>
 

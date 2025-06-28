@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+export type { Message as ChatMessage } from '@/api/ai-service/types';
+
 export interface Example {
   title: string
   url: string
@@ -13,19 +15,6 @@ export interface Example {
   tags?: string[]
   difficulty?: "beginner" | "intermediate" | "advanced"
   estimatedTime?: string
-}
-
-export interface ChatMessage {
-  id: string
-  role: "user" | "assistant" | "system"
-  content: string
-  timestamp: string
-  imageUrl?: string
-  metadata?: {
-    model?: string
-    tokens?: number
-    processingTime?: number
-  }
 }
 
 export interface AIConfig {

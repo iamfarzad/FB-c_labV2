@@ -1,49 +1,41 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Layout } from "@/components/layout"
-// import HeroEnhanced from "@/components/magicui/hero-enhanced"
-import { ServicesHero } from "@/components/consulting/hero-section"
-import { AIConsulting } from "@/components/consulting/ai-consulting"
-import { Workshops } from "@/components/consulting/workshops"
-import { Tools } from "@/components/consulting/tools"
-import { Process } from "@/components/consulting/process"
+import { Layout } from '@/components/layout'
+// import HeroEnhanced from '@/components/magicui/hero-enhanced'
+import { ServicesHero } from '@/components/consulting/hero-section'
+import { AIConsulting } from '@/components/consulting/ai-consulting'
+import { Workshops } from '@/components/consulting/workshops'
+import { Tools } from '@/components/consulting/tools'
+import { Process } from '@/components/consulting/process'
+import { useTheme } from 'next-themes'
 
-export default function ServicesPage() {
-  const [theme, setTheme] = useState<"light" | "dark">("light")
-
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"))
-  }
-
-  useEffect(() => {
-    document.documentElement.classList.remove("light", "dark")
-    document.documentElement.classList.add(theme)
-  }, [theme])
+export default function ConsultingPage() {
+  const { resolvedTheme } = useTheme()
 
   return (
-    <Layout theme={theme} onThemeToggle={toggleTheme}>
+    <Layout>
       <div
-        className="relative pt-20"
+        className='min-h-screen'
         style={{
-          backgroundColor: "var(--bg-primary)",
-          color: "var(--text-primary)",
+          backgroundColor: 'var(--bg-primary)',
+          color: 'var(--text-primary)',
+          paddingTop: '80px' // Adjust based on header height
         }}
       >
         {/* Hero Section with TextParticle */}
-        <ServicesHero theme={theme} />
+        <ServicesHero theme={resolvedTheme === 'dark' ? 'dark' : 'light'} />
 
         {/* AI Consulting Section */}
-        <AIConsulting theme={theme} />
+        <AIConsulting theme={resolvedTheme === 'dark' ? 'dark' : 'light'} />
 
         {/* Process Section */}
-        <Process theme={theme} />
+        <Process theme={resolvedTheme === 'dark' ? 'dark' : 'light'} />
 
         {/* Tools Section */}
-        <Tools theme={theme} />
+        <Tools theme={resolvedTheme === 'dark' ? 'dark' : 'light'} />
 
         {/* Workshops Section */}
-        <Workshops theme={theme} />
+        <Workshops theme={resolvedTheme === 'dark' ? 'dark' : 'light'} />
       </div>
     </Layout>
   )

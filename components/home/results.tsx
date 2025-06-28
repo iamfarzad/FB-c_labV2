@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useRef } from "react"
-import { motion, useInView } from "framer-motion"
+import { motion, useInView, Variants } from "framer-motion"
 import { ArrowUpRight, Zap, BarChart, TrendingUp, Clock } from "lucide-react"
 import DisplayCards from "@/components/ui/display-cards"
 
@@ -43,8 +43,7 @@ export const Results: React.FC<ResultsProps> = ({ theme }) => {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, amount: 0.2 })
 
-  // Animation variants for the container
-  const container = {
+  const container: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -53,6 +52,11 @@ export const Results: React.FC<ResultsProps> = ({ theme }) => {
         ease: [0.16, 1, 0.3, 1]
       },
     },
+  }
+
+  const item: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
   }
 
   return (

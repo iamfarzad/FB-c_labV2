@@ -2,12 +2,21 @@
 
 export interface Message {
   id: string;
-  text: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
+  role: 'user' | 'assistant' | 'system' | 'ai' | 'model';
+  content: string;
+  text?: string;
+  sender?: 'user' | 'ai';
+  timestamp: string | Date;
   audioData?: string;
   sources?: Source[];
   capabilities?: string[];
+  imageUrl?: string;
+  metadata?: {
+    model?: string;
+    tokens?: number;
+    processingTime?: number;
+  };
+  parts?: { text: string }[];
 }
 
 export interface Source {
@@ -120,6 +129,10 @@ export const CONVERSATION_STAGES = {
   SUMMARY_OFFER: 'summary_offer',
   FINALIZING: 'finalizing',
   LIMIT_REACHED: 'limit_reached',
+  DISCOVERY: 'discovery',
+  CAPABILITY_SHOWCASE: 'capability_showcase',
+  SOLUTION_POSITIONING: 'solution_positioning',
+  SUMMARY_GENERATION: 'summary_generation',
 } as const;
 
 export type ConversationStage = typeof CONVERSATION_STAGES[keyof typeof CONVERSATION_STAGES];
