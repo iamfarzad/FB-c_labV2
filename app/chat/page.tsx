@@ -23,6 +23,7 @@ function ChatPageContent() {
     setInput,
     sendMessage,
     addActivity,
+    uploadFile,
   } = useChatContext()
   
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -60,6 +61,11 @@ function ChatPageContent() {
     }, 2000)
   }
 
+  const handleFileUpload = async (file: File) => {
+    if (!uploadFile) return;
+    await uploadFile(file);
+  }
+
   return (
     <div className="flex h-screen bg-background">
       {/* Header - Full width */}
@@ -84,6 +90,7 @@ function ChatPageContent() {
               onSendMessage={handleSendMessage}
               isLoading={isLoading}
               onKeyPress={handleKeyPress}
+              onFileUpload={handleFileUpload}
             />
           </div>
 

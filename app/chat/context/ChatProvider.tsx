@@ -61,6 +61,7 @@ interface ChatContextType {
   sendMessage: (content: string) => Promise<void>;
   addActivity: (activity: Omit<ActivityItem, 'id' | 'timestamp'>) => void;
   updateActivity: (id: string, updates: Partial<ActivityItem>) => void;
+  uploadFile: (file: File) => Promise<void>;
   uploadMedia: (file: File) => Promise<string | undefined>;
 }
 
@@ -143,20 +144,57 @@ export function ChatProvider({ children }: ChatProviderProps) {
       const allMessages = [...state.messages, userMessage];
       const lastMessageContent = userMessage.content;
 
-      const response = await fetch('/api/ai-service?action=conversationalFlow', {
+      // Check if the message is a URL
+      const urlRegex = /^(https?:\/\/[^\s]+)/;
+      const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/;
+      const codeRegex = /(\b(calculate|what is|show me the code)\b|^\s*\?)/i;
+      
+      const isUrl = urlRegex.test(lastMessageContent);
+      const isYoutubeUrl = youtubeRegex.test(lastMessageContent);
+      const isCodeQuery = codeRegex.test(lastMessageContent);
+      
+      let action = 'conversationalFlow';
+      if (isCodeQuery) {
+        action = 'executeCode';
+      } else if (isYoutubeUrl) {
+        action = 'analyzeVideo';
+      } else if (isUrl) {
+        action = 'analyzeURL';
+      }
+      
+      const body: Record<string, any> = {
+          messageCount: allMessages.length,
+          includeAudio: false,
+      };
+
+      let endpoint = '/api/ai-service?action=conversationalFlow';
+      
+      if (action === 'executeCode') {
+          endpoint = '/api/gemini?action=executeCode';
+          body.prompt = lastMessageContent;
+      } else if (action === 'analyzeVideo') {
+          endpoint = '/api/gemini?action=analyzeVideo';
+          body.videoUrl = lastMessageContent;
+          body.prompt = `Analyze this YouTube video: ${lastMessageContent}`;
+      } else if (action === 'analyzeURL') {
+          endpoint = '/api/gemini?action=analyzeURL';
+          body.url = lastMessageContent;
+          body.prompt = `Analyze this URL: ${lastMessageContent}`;
+      } else {
+          // Regular chat - use ai-service endpoint
+          body.message = lastMessageContent;
+          body.conversationState = {
+              messages: allMessages.map(msg => ({
+                  role: msg.role === 'assistant' ? 'model' : 'user',
+                  parts: [{ text: msg.content }]
+              }))
+          };
+      }
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: lastMessageContent,
-          conversationState: {
-            messages: allMessages.map(msg => ({
-              role: msg.role === 'assistant' ? 'model' : 'user',
-              parts: [{ text: msg.content }]
-            }))
-          },
-          messageCount: allMessages.length,
-          includeAudio: false
-        }),
+        body: JSON.stringify(body),
       });
 
       clearInterval(progressInterval);
@@ -211,6 +249,86 @@ export function ChatProvider({ children }: ChatProviderProps) {
     }
   }, [state.messages, addActivity, updateActivity]);
 
+  const uploadFile = useCallback(async (file: File) => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    addActivity({
+      type: 'document_analysis',
+      title: `Uploading ${file.name}`,
+      description: 'Preparing file for analysis...',
+      status: 'in_progress',
+    });
+
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        const base64Data = (reader.result as string).split(',')[1];
+
+        addActivity({
+          type: 'ai_thinking',
+          title: `Analyzing ${file.name}`,
+          description: 'AI is processing the document...',
+          status: 'in_progress',
+        });
+        
+        const response = await fetch('/api/gemini?action=analyzeDocument', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            documentData: base64Data,
+            mimeType: file.type,
+            prompt: `Analyze this document named ${file.name}`,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to analyze document');
+        }
+
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Document analysis failed');
+        }
+
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: result.data.text,
+          role: 'assistant',
+          timestamp: new Date(),
+        };
+
+        dispatch({ type: 'ADD_MESSAGE', payload: aiMessage });
+        addActivity({
+          type: 'complete',
+          title: 'Analysis Complete',
+          description: `${file.name} has been analyzed.`,
+          status: 'completed',
+        });
+      };
+      reader.onerror = (error) => {
+        throw error;
+      };
+    } catch (error) {
+      console.error('Error analyzing document:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: `Sorry, I couldn't analyze the document: ${file.name}. Please try again.`,
+        role: 'assistant',
+        timestamp: new Date(),
+      };
+      dispatch({ type: 'ADD_MESSAGE', payload: errorMessage });
+      addActivity({
+        type: 'error',
+        title: 'Analysis Failed',
+        description: `Could not process ${file.name}`,
+        status: 'failed',
+      });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }, [addActivity, dispatch]);
+
   const uploadMedia = useCallback(async (file: File): Promise<string | undefined> => {
     try {
       addActivity({
@@ -258,6 +376,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
     sendMessage,
     addActivity,
     updateActivity,
+    uploadFile,
     uploadMedia,
   };
 

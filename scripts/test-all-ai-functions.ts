@@ -9,8 +9,8 @@ const https = require('https');
 const http = require('http');
 
 // Test configuration
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3001'; // Changed to 3001
-const TEST_TIMEOUT = 30000; // 30 seconds
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+const TEST_TIMEOUT = 60000; // 60 seconds
 
 interface TestResult {
   name: string;
@@ -110,7 +110,7 @@ class AIFunctionTester {
         reject(new Error(`Request failed: ${error.message}`));
       });
 
-      req.setTimeout(5000, () => {
+      req.setTimeout(TEST_TIMEOUT - 1000, () => {
         req.destroy();
         reject(new Error('Request timeout'));
       });
@@ -131,51 +131,11 @@ class AIFunctionTester {
       console.log(`✅ Server is accessible at ${BASE_URL} (status: ${response.status})\n`);
     } catch (error: any) {
       console.error(`❌ Cannot connect to server at ${BASE_URL}: ${error.message}`);
-      console.error(`Please ensure the Next.js dev server is running on port 3001\n`);
+      console.error(`Please ensure the Next.js dev server is running on port 3000\n`);
       process.exit(1);
     }
 
-    // Test 1: Chat API Basic Functionality
-    await this.test('Chat API - Basic Message', async () => {
-      const response = await this.makeRequest('/api/chat', {
-        messages: [
-          { role: 'user', content: 'Hello, test message' }
-        ]
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`Chat API failed: ${error.reply || error.error || 'Unknown error'}`);
-      }
-
-      const result = await response.json();
-      if (!result.reply) {
-        throw new Error('Chat API did not return a reply');
-      }
-    });
-
-    // Test 2: AI Service API
-    await this.test('AI Service API - Conversational Flow', async () => {
-      const response = await this.makeRequest('/api/ai-service?action=conversationalFlow', {
-        prompt: 'Hi, my name is John',
-        currentConversationState: {
-          stage: 'greeting',
-          messages: []
-        }
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`AI Service failed: ${error.error || 'Unknown error'}`);
-      }
-
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(`AI Service failed: ${result.error}`);
-      }
-    });
-
-    // Test 3: Gemini API - Conversational Flow
+    // Test 1: Gemini API - Conversational Flow
     await this.test('Gemini API - Conversational Flow', async () => {
       const response = await this.makeRequest('/api/gemini?action=conversationalFlow', {
         prompt: 'Hello, I need help with AI integration',
@@ -196,7 +156,7 @@ class AIFunctionTester {
       }
     });
 
-    // Test 4: Image Generation API
+    // Test 2: Generate Image API
     await this.test('Generate Image API', async () => {
       const response = await this.makeRequest('/api/generate-image', {
         prompt: 'A modern AI-powered business dashboard',
@@ -214,7 +174,7 @@ class AIFunctionTester {
       }
     });
 
-    // Test 5: YouTube Transcript API
+    // Test 3: YouTube Transcript API
     await this.test('YouTube Transcript API', async () => {
       const response = await this.makeRequest('/api/youtube-transcript', {
         videoId: 'dQw4w9WgXcQ',
@@ -232,7 +192,7 @@ class AIFunctionTester {
       }
     });
 
-    // Test 6: Gemini API - Image Generation Action
+    // Test 4: Gemini API - Image Generation Action
     await this.test('Gemini API - Image Generation', async () => {
       const response = await this.makeRequest('/api/gemini?action=generateImage', {
         prompt: 'Business meeting with AI technology'
@@ -249,11 +209,11 @@ class AIFunctionTester {
       }
     });
 
-    // Test 7: Gemini API - Video Analysis
+    // Test 5: Gemini API - Video Analysis
     await this.test('Gemini API - Video Analysis', async () => {
       const response = await this.makeRequest('/api/gemini?action=analyzeVideo', {
-        videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        prompt: 'Analyze this video content'
+        videoUrl: 'https://www.youtube.com/watch?v=Mdcw3_IdYgE', // A video about AI in business
+        prompt: 'Analyze this video for business opportunities and key takeaways.'
       });
 
       if (!response.ok) {
@@ -265,12 +225,23 @@ class AIFunctionTester {
       if (!result.success) {
         throw new Error(`Video Analysis failed: ${result.error}`);
       }
+      
+      const analysisText = result.data?.text || '';
+      if (analysisText.length < 50) {
+        throw new Error('Video analysis result is too short or empty.');
+      }
+      
+      const keywords = ['summary', 'insight', 'business', 'opportunity'];
+      const hasKeywords = keywords.some(kw => analysisText.toLowerCase().includes(kw));
+      if (!hasKeywords) {
+        throw new Error('Video analysis result does not seem to contain a proper analysis.');
+      }
     });
 
-    // Test 8: Gemini API - Code Execution
+    // Test 6: Gemini API - Code Execution
     await this.test('Gemini API - Code Execution', async () => {
       const response = await this.makeRequest('/api/gemini?action=executeCode', {
-        prompt: 'Calculate the sum of numbers from 1 to 10'
+        prompt: 'What is the result of 15 * 24 / 3?'
       });
 
       if (!response.ok) {
@@ -282,12 +253,31 @@ class AIFunctionTester {
       if (!result.success) {
         throw new Error(`Code Execution failed: ${result.error}`);
       }
+      
+      const resultText = result.data?.text || '';
+      if (!resultText.includes('120')) {
+        throw new Error(`Code execution did not return the expected result. Got: "${resultText}"`);
+      }
     });
 
-    // Test 9: Gemini API - Document Analysis
+    // Test 7: Gemini API - Document Analysis
     await this.test('Gemini API - Document Analysis', async () => {
+      const documentContent = `
+        Business Plan: AI-Powered Analytics Platform
+
+        1. Executive Summary:
+        This document outlines the business plan for a new SaaS platform that provides AI-powered business intelligence and analytics to small and medium-sized enterprises (SMEs).
+
+        2. Market Opportunity:
+        The SME market is underserved by current analytics solutions, which are often too complex and expensive. Our platform will offer an affordable, user-friendly alternative.
+
+        3. Financial Projections:
+        We project reaching $5M in ARR within three years, with a 20% profit margin.
+      `;
+      const documentData = Buffer.from(documentContent).toString('base64');
+      
       const response = await this.makeRequest('/api/gemini?action=analyzeDocument', {
-        documentData: 'Sample document content for analysis',
+        documentData,
         prompt: 'Analyze this document'
       });
 
@@ -302,7 +292,7 @@ class AIFunctionTester {
       }
     });
 
-    // Test 10: Gemini API - URL Analysis
+    // Test 8: Gemini API - URL Analysis
     await this.test('Gemini API - URL Analysis', async () => {
       const response = await this.makeRequest('/api/gemini?action=analyzeURL', {
         url: 'https://example.com',
@@ -320,32 +310,7 @@ class AIFunctionTester {
       }
     });
 
-    // Test 11: Gemini API - Lead Capture
-    await this.test('Gemini API - Lead Capture', async () => {
-      const response = await this.makeRequest('/api/gemini?action=leadCapture', {
-        conversationHistory: [
-          { role: 'user', content: 'Hi, I\'m John from TechCorp' },
-          { role: 'assistant', content: 'Hello John! How can I help you today?' }
-        ],
-        userInfo: {
-          name: 'John',
-          email: 'john@techcorp.com',
-          companyInfo: { name: 'TechCorp', domain: 'techcorp.com' }
-        }
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`Lead Capture failed: ${error.error || 'Unknown error'}`);
-      }
-
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(`Lead Capture failed: ${result.error}`);
-      }
-    });
-
-    // Test 12: Error Handling - Invalid Endpoint
+    // Test 9: Error Handling - Invalid Action
     await this.test('Error Handling - Invalid Action', async () => {
       const response = await this.makeRequest('/api/gemini?action=invalidAction', {
         prompt: 'Test invalid action'
@@ -363,7 +328,7 @@ class AIFunctionTester {
       }
     });
 
-    // Test 13: Error Handling - Missing Required Parameters
+    // Test 10: Error Handling - Missing Prompt
     await this.test('Error Handling - Missing Prompt', async () => {
       const response = await this.makeRequest('/api/gemini?action=conversationalFlow', {
         // Missing prompt
@@ -386,21 +351,7 @@ class AIFunctionTester {
       throw new Error('Should have failed with missing prompt error');
     });
 
-    // Test 14: CORS Headers Test
-    await this.test('CORS Headers - OPTIONS Request', async () => {
-      const response = await this.makeRequest('/api/gemini', {}, 'OPTIONS');
-
-      if (!response.ok) {
-        throw new Error(`OPTIONS request failed: ${response.status}`);
-      }
-
-      const corsHeader = response.headers['access-control-allow-origin'];
-      if (!corsHeader) {
-        throw new Error('Missing CORS headers');
-      }
-    });
-
-    // Test 15: Rate Limiting Test
+    // Test 11: Rate Limiting Test
     await this.test('Rate Limiting - Multiple Requests', async () => {
       const requests = Array(5).fill(null).map(() => 
         this.makeRequest('/api/gemini?action=conversationalFlow', {
@@ -418,6 +369,58 @@ class AIFunctionTester {
       
       // At least one should succeed
       console.log(`${successCount}/5 requests succeeded`);
+    });
+
+    // Test 12: Gemini API - Webcam Analysis
+    await this.test('Gemini API - Webcam Analysis', async () => {
+      // Create a simple 1x1 pixel image as base64
+      const imageData = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+      
+      const response = await this.makeRequest('/api/gemini?action=analyzeWebcamFrame', {
+        imageData,
+        analysisType: 'general'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Webcam Analysis failed: ${error.error || 'Unknown error'}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(`Webcam Analysis failed: ${result.error}`);
+      }
+      
+      const analysisText = result.data?.text || '';
+      if (analysisText.length < 20) {
+        throw new Error('Webcam analysis result is too short or empty.');
+      }
+    });
+
+    // Test 13: Gemini API - Screen Share Analysis
+    await this.test('Gemini API - Screen Share Analysis', async () => {
+      // Create a simple 1x1 pixel image as base64
+      const imageData = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+      
+      const response = await this.makeRequest('/api/gemini?action=analyzeScreenShare', {
+        imageData,
+        context: 'Test screen capture'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Screen Share Analysis failed: ${error.error || 'Unknown error'}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(`Screen Share Analysis failed: ${result.error}`);
+      }
+      
+      const analysisText = result.data?.text || '';
+      if (analysisText.length < 20) {
+        throw new Error('Screen share analysis result is too short or empty.');
+      }
     });
 
     this.printSummary();

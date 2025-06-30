@@ -18,9 +18,10 @@ interface ChatFooterProps {
   onSendMessage: () => void
   isLoading: boolean
   onKeyPress: (e: React.KeyboardEvent) => void
+  onFileUpload: (file: File) => void
 }
 
-export function ChatFooter({ input, setInput, onSendMessage, isLoading, onKeyPress }: ChatFooterProps) {
+export function ChatFooter({ input, setInput, onSendMessage, isLoading, onKeyPress, onFileUpload }: ChatFooterProps) {
   const { addActivity } = useChatContext();
   const [showUploadOptions, setShowUploadOptions] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
@@ -89,13 +90,7 @@ export function ChatFooter({ input, setInput, onSendMessage, isLoading, onKeyPre
   const handleAnyFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      addActivity({
-        type: 'document_analysis',
-        title: 'File Uploaded',
-        description: `Uploaded ${file.name}`,
-        status: 'in_progress'
-      })
-      console.log('File uploaded:', file.name)
+      onFileUpload(file)
     }
   }
 
