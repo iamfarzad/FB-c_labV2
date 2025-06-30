@@ -1,132 +1,147 @@
 "use client"
 
-import { useState, useRef } from "react"
-import { ChatProvider, useChatContext } from "./context/ChatProvider"
-import { ChatHeader } from "@/components/chat/layout/ChatHeader"
-import { ChatMain } from "@/components/chat/layout/ChatMain"
-import { ChatFooter } from "@/components/chat/layout/ChatFooter"
-import { TimelineActivityLog } from "@/components/chat/activity/TimelineActivityLog"
-import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { ChatInput } from "@/components/chat/chat/ChatInput"
-import { ChatMessages } from "@/components/chat/chat/ChatMessages"
-import { sampleTimelineActivities } from "@/components/chat/Sidebar/sampleTimelineData"
-import { useChat } from "@/app/chat/hooks/useChat"
+import { useRef, useEffect } from 'react';
+import { ChatProvider, useChatContext } from './context/ChatProvider';
+import { ChatLayout } from '@/components/chat/layout/ChatLayout';
+import { ChatHeader } from '@/components/chat/layout/ChatHeader';
+import { ChatMain } from '@/components/chat/layout/ChatMain';
+import { ChatFooter } from '@/components/chat/layout/ChatFooter';
+import { DesktopSidebar } from '@/components/chat/Sidebar/DesktopSidebar';
+import { MobileSidebarSheet } from '@/components/chat/Sidebar/MobileSidebarSheet';
+import { TimelineActivityLog } from '@/components/chat/activity/TimelineActivityLog';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { generateFBCReport } from '@/utils/pdfGenerator';
+import { useState } from 'react';
+import { ActivityItem } from './types/chat';
 
 function ChatPageContent() {
-  const {
-    messages,
-    input,
-    isLoading,
+  const { 
+    messages, 
+    input, 
+    setInput, 
+    sendMessage, 
+    isLoading, 
     activities,
-    setInput,
-    sendMessage,
-    addActivity,
-    uploadFile,
-  } = useChatContext()
+    uploadFile 
+  } = useChatContext();
   
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return
-    await sendMessage(input)
-  }
+    if (!input.trim() || isLoading) return;
+    
+    const messageContent = input.trim();
+    setInput('');
+    await sendMessage(messageContent);
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
-      e.preventDefault()
-      handleSendMessage()
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
-  }
+  };
 
-  // Handle download summary
-  const handleDownloadSummary = () => {
-    addActivity({
-      type: 'generating',
-      title: 'Summary Export',
-      description: 'Generating PDF summary of chat conversation',
-      status: 'in_progress'
-    })
+  const handleDownloadSummary = async () => {
+    if (messages.length === 0) return;
     
-    // Simulate export process
-    setTimeout(() => {
-      addActivity({
-        type: 'complete',
-        title: 'Summary Downloaded',
-        description: 'Chat summary has been exported successfully',
-        status: 'completed'
-      })
-    }, 2000)
-  }
+    try {
+      // Create a simple summary for PDF generation
+      const summaryText = messages.map(m => `${m.role}: ${m.content}`).join('\n\n');
+      const summaryData = {
+        name: 'Chat User',
+        email: 'user@example.com',
+        companyName: 'Chat Session',
+        summary: summaryText,
+        leadScore: 85,
+        capabilitiesShown: ['Conversational AI', 'Real-time Chat', 'File Analysis']
+      };
+      
+      const pdfData = await generateFBCReport(summaryData);
+      
+      // Download the PDF
+      const link = document.createElement('a');
+      link.href = pdfData;
+      link.download = `chat-summary-${new Date().toISOString().split('T')[0]}.pdf`;
+      link.click();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
+  };
 
   const handleFileUpload = async (file: File) => {
-    if (!uploadFile) return;
     await uploadFile(file);
-  }
+  };
+
+  const handleNewChat = () => {
+    // Reset chat state - could be implemented in context
+    console.log('New chat requested');
+  };
+
+  const handleActivityClick = (activity: ActivityItem) => {
+    console.log('Activity clicked:', activity);
+  };
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Header - Full width */}
-      <div className="flex flex-col flex-1">
-        <ChatHeader 
-          onDownloadSummary={handleDownloadSummary}
-        />
-        
-        {/* Main content area */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Chat content */}
-          <div className="flex-1 flex flex-col">
-            <ChatMain 
-              messages={messages} 
-              isLoading={isLoading} 
-              messagesEndRef={messagesEndRef}
-            />
-            
-            <ChatFooter
-              input={input}
-              setInput={setInput}
-              onSendMessage={handleSendMessage}
-              isLoading={isLoading}
-              onKeyPress={handleKeyPress}
-              onFileUpload={handleFileUpload}
-            />
-          </div>
+    <ChatLayout>
+      <div className="flex h-full">
+        {/* Desktop Sidebar */}
+        {!isMobile && (
+          <DesktopSidebar
+            activities={activities}
+            isOpen={isSidebarOpen}
+            onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+            onNewChat={handleNewChat}
+            onActivityClick={handleActivityClick}
+          />
+        )}
 
-          {/* Activity Sidebar - Right side */}
-          <div
-            className={cn(
-              "relative border-l bg-background transition-all duration-300 overflow-hidden",
-              sidebarOpen ? "w-[360px]" : "w-0"
-            )}
+        {/* Mobile Sidebar */}
+        {isMobile && (
+          <MobileSidebarSheet 
+            activities={activities}
+            onNewChat={handleNewChat}
+            onActivityClick={handleActivityClick}
           >
-            {/* Sidebar content with activity log */}
-            <div className={cn("w-[360px]", !sidebarOpen && "hidden")}>
-              <TimelineActivityLog activities={activities} />
-            </div>
-          </div>
+            <TimelineActivityLog activities={activities} />
+          </MobileSidebarSheet>
+        )}
 
-          {/* Sidebar Toggle Button - Attached to the edge */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={cn(
-              "absolute right-0 top-20 h-8 w-8 rounded-l-full rounded-r-none bg-background border border-r-0 shadow-md z-10",
-              "hover:bg-accent hover:text-accent-foreground transition-colors"
-            )}
-          >
-            {sidebarOpen ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
-          </Button>
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col h-full">
+          <ChatHeader 
+            onMenuClick={() => setIsSidebarOpen(true)}
+            onDownloadSummary={handleDownloadSummary}
+          />
+          
+          <ChatMain
+            messages={messages}
+            isLoading={isLoading}
+            messagesEndRef={messagesEndRef}
+          />
+          
+          <ChatFooter
+            input={input}
+            setInput={setInput}
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            onKeyPress={handleKeyPress}
+            onFileUpload={handleFileUpload}
+          />
         </div>
       </div>
-    </div>
-  )
+    </ChatLayout>
+  );
 }
 
 export default function ChatPage() {
@@ -134,5 +149,5 @@ export default function ChatPage() {
     <ChatProvider>
       <ChatPageContent />
     </ChatProvider>
-  )
+  );
 } 
