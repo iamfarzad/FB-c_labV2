@@ -96,7 +96,7 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
 
     try {
       // Send frame to AI for analysis
-      const response = await fetch('/api/gemini?action=analyzeScreenShare', {
+              const response = await fetch('/api/ai?action=analyzeScreenShare', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -85,7 +85,7 @@ export function parseJSON(response: string): any {
  * Generate learning app spec from video
  */
 export async function generateSpecFromVideo(videoUrl: string): Promise<string> {
-  const response = await fetch('/api/gemini?action=generateVideoSpec', {
+      const response = await fetch('/api/ai?action=generateVideoSpec', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -114,7 +114,7 @@ export async function generateSpecFromVideo(videoUrl: string): Promise<string> {
  * Generate HTML code from spec
  */
 export async function generateCodeFromSpec(spec: string): Promise<string> {
-  const response = await fetch('/api/gemini?action=generateCodeFromSpec', {
+      const response = await fetch('/api/ai?action=generateCodeFromSpec', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

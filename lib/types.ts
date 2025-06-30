@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type { Message as ChatMessage } from '@/api/ai-service/types';
+export type { Message as ChatMessage } from './ai/types';
 
 export interface Example {
   title: string

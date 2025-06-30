@@ -134,7 +134,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
 
     try {
       // Send to AI for real-time response
-      const response = await fetch('/api/gemini?action=realTimeConversation', {
+              const response = await fetch('/api/ai?action=realTimeConversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

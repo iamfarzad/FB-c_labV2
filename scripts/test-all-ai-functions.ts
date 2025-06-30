@@ -135,9 +135,9 @@ class AIFunctionTester {
       process.exit(1);
     }
 
-    // Test 1: Gemini API - Conversational Flow
-    await this.test('Gemini API - Conversational Flow', async () => {
-      const response = await this.makeRequest('/api/gemini?action=conversationalFlow', {
+    // Test 1: Unified AI API - Conversational Flow
+    await this.test('Unified AI API - Conversational Flow', async () => {
+      const response = await this.makeRequest('/api/ai?action=conversationalFlow', {
         prompt: 'Hello, I need help with AI integration',
         currentConversationState: {
           stage: 'greeting',
@@ -156,9 +156,9 @@ class AIFunctionTester {
       }
     });
 
-    // Test 2: Generate Image API
-    await this.test('Generate Image API', async () => {
-      const response = await this.makeRequest('/api/generate-image', {
+    // Test 2: Unified AI API - Generate Image
+    await this.test('Unified AI API - Generate Image', async () => {
+      const response = await this.makeRequest('/api/ai?action=generateImage', {
         prompt: 'A modern AI-powered business dashboard',
         numberOfImages: 1
       });
@@ -174,9 +174,9 @@ class AIFunctionTester {
       }
     });
 
-    // Test 3: YouTube Transcript API
-    await this.test('YouTube Transcript API', async () => {
-      const response = await this.makeRequest('/api/youtube-transcript', {
+    // Test 3: Unified AI API - YouTube Transcript
+    await this.test('Unified AI API - YouTube Transcript', async () => {
+      const response = await this.makeRequest('/api/ai?action=youtubeTranscript', {
         videoId: 'dQw4w9WgXcQ',
         videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
       });
@@ -192,9 +192,9 @@ class AIFunctionTester {
       }
     });
 
-    // Test 4: Gemini API - Image Generation Action
-    await this.test('Gemini API - Image Generation', async () => {
-      const response = await this.makeRequest('/api/gemini?action=generateImage', {
+    // Test 4: Unified AI API - Image Generation (Alternative)
+    await this.test('Unified AI API - Image Generation (Alternative)', async () => {
+      const response = await this.makeRequest('/api/ai?action=generateImage', {
         prompt: 'Business meeting with AI technology'
       });
 
@@ -209,9 +209,9 @@ class AIFunctionTester {
       }
     });
 
-    // Test 5: Gemini API - Video Analysis
-    await this.test('Gemini API - Video Analysis', async () => {
-      const response = await this.makeRequest('/api/gemini?action=analyzeVideo', {
+    // Test 5: Unified AI API - Video Analysis
+    await this.test('Unified AI API - Video Analysis', async () => {
+      const response = await this.makeRequest('/api/ai?action=analyzeVideo', {
         videoUrl: 'https://www.youtube.com/watch?v=Mdcw3_IdYgE', // A video about AI in business
         prompt: 'Analyze this video for business opportunities and key takeaways.'
       });
@@ -238,9 +238,9 @@ class AIFunctionTester {
       }
     });
 
-    // Test 6: Gemini API - Code Execution
-    await this.test('Gemini API - Code Execution', async () => {
-      const response = await this.makeRequest('/api/gemini?action=executeCode', {
+    // Test 6: Unified AI API - Code Execution
+    await this.test('Unified AI API - Code Execution', async () => {
+      const response = await this.makeRequest('/api/ai?action=executeCode', {
         prompt: 'What is the result of 15 * 24 / 3?'
       });
 
@@ -260,8 +260,8 @@ class AIFunctionTester {
       }
     });
 
-    // Test 7: Gemini API - Document Analysis
-    await this.test('Gemini API - Document Analysis', async () => {
+    // Test 7: Unified AI API - Document Analysis
+    await this.test('Unified AI API - Document Analysis', async () => {
       const documentContent = `
         Business Plan: AI-Powered Analytics Platform
 
@@ -276,7 +276,7 @@ class AIFunctionTester {
       `;
       const documentData = Buffer.from(documentContent).toString('base64');
       
-      const response = await this.makeRequest('/api/gemini?action=analyzeDocument', {
+      const response = await this.makeRequest('/api/ai?action=analyzeDocument', {
         documentData,
         prompt: 'Analyze this document'
       });
@@ -292,9 +292,9 @@ class AIFunctionTester {
       }
     });
 
-    // Test 8: Gemini API - URL Analysis
-    await this.test('Gemini API - URL Analysis', async () => {
-      const response = await this.makeRequest('/api/gemini?action=analyzeURL', {
+    // Test 8: Unified AI API - URL Analysis
+    await this.test('Unified AI API - URL Analysis', async () => {
+      const response = await this.makeRequest('/api/ai?action=analyzeURL', {
         url: 'https://example.com',
         prompt: 'Analyze this website'
       });
@@ -312,7 +312,7 @@ class AIFunctionTester {
 
     // Test 9: Error Handling - Invalid Action
     await this.test('Error Handling - Invalid Action', async () => {
-      const response = await this.makeRequest('/api/gemini?action=invalidAction', {
+      const response = await this.makeRequest('/api/ai?action=invalidAction', {
         prompt: 'Test invalid action'
       });
 
@@ -330,7 +330,7 @@ class AIFunctionTester {
 
     // Test 10: Error Handling - Missing Prompt
     await this.test('Error Handling - Missing Prompt', async () => {
-      const response = await this.makeRequest('/api/gemini?action=conversationalFlow', {
+      const response = await this.makeRequest('/api/ai?action=conversationalFlow', {
         // Missing prompt
         currentConversationState: { stage: 'greeting', messages: [] }
       });
@@ -354,7 +354,7 @@ class AIFunctionTester {
     // Test 11: Rate Limiting Test
     await this.test('Rate Limiting - Multiple Requests', async () => {
       const requests = Array(5).fill(null).map(() => 
-        this.makeRequest('/api/gemini?action=conversationalFlow', {
+        this.makeRequest('/api/ai?action=conversationalFlow', {
           prompt: 'Test message',
           messageCount: 1
         })
@@ -371,12 +371,12 @@ class AIFunctionTester {
       console.log(`${successCount}/5 requests succeeded`);
     });
 
-    // Test 12: Gemini API - Webcam Analysis
-    await this.test('Gemini API - Webcam Analysis', async () => {
+    // Test 12: Unified AI API - Webcam Analysis
+    await this.test('Unified AI API - Webcam Analysis', async () => {
       // Create a simple 1x1 pixel image as base64
       const imageData = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
       
-      const response = await this.makeRequest('/api/gemini?action=analyzeWebcamFrame', {
+      const response = await this.makeRequest('/api/ai?action=analyzeWebcamFrame', {
         imageData,
         analysisType: 'general'
       });
@@ -397,12 +397,12 @@ class AIFunctionTester {
       }
     });
 
-    // Test 13: Gemini API - Screen Share Analysis
-    await this.test('Gemini API - Screen Share Analysis', async () => {
+    // Test 13: Unified AI API - Screen Share Analysis
+    await this.test('Unified AI API - Screen Share Analysis', async () => {
       // Create a simple 1x1 pixel image as base64
       const imageData = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
       
-      const response = await this.makeRequest('/api/gemini?action=analyzeScreenShare', {
+      const response = await this.makeRequest('/api/ai?action=analyzeScreenShare', {
         imageData,
         context: 'Test screen capture'
       });

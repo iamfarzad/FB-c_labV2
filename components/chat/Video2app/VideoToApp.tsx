@@ -95,7 +95,7 @@ export const VideoToApp = forwardRef<{ getSpec: () => string; getCode: () => str
 
     // Generate spec from video
     const generateSpecFromVideo = async (url: string): Promise<string> => {
-      const response = await fetch('/api/gemini?action=generateSpec', {
+      const response = await fetch('/api/ai?action=generateSpec', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ videoUrl: url })
@@ -111,7 +111,7 @@ export const VideoToApp = forwardRef<{ getSpec: () => string; getCode: () => str
 
     // Generate code from spec
     const generateCodeFromSpec = async (spec: string): Promise<string> => {
-      const response = await fetch('/api/gemini?action=generateCode', {
+      const response = await fetch('/api/ai?action=generateCode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ spec })

@@ -3,7 +3,7 @@ import { UnifiedAIService } from './unified-ai-service';
 import {
   ConversationState,
   Message,
-} from '@/api/ai-service/types';
+} from './types';
 import dotenv from 'dotenv';
 import path from 'path';
 

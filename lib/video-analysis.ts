@@ -49,7 +49,7 @@ export async function analyzeVideoForLearning(options: VideoAnalysisOptions): Pr
   const { videoUrl, analysisType = 'learning_modules' } = options
 
   try {
-    const response = await fetch('/api/gemini?action=analyzeVideo', {
+    const response = await fetch('/api/ai?action=analyzeVideo', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -84,7 +84,7 @@ export async function analyzeVideoForLearning(options: VideoAnalysisOptions): Pr
  */
 export async function getVideoTranscript(videoUrl: string): Promise<string> {
   try {
-    const response = await fetch('/api/youtube-transcript', {
+    const response = await fetch('/api/ai?action=youtubeTranscript', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoUrl })
@@ -123,7 +123,7 @@ export async function generateLearningModules(
   `
 
   try {
-    const response = await fetch('/api/gemini?action=generateLearningContent', {
+    const response = await fetch('/api/ai?action=generateLearningContent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

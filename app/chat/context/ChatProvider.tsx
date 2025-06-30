@@ -167,22 +167,19 @@ export function ChatProvider({ children }: ChatProviderProps) {
           includeAudio: false,
       };
 
-      let endpoint = '/api/ai-service?action=conversationalFlow';
+      let endpoint = `/api/ai?action=${action}`;
       
       if (action === 'executeCode') {
-          endpoint = '/api/gemini?action=executeCode';
           body.prompt = lastMessageContent;
       } else if (action === 'analyzeVideo') {
-          endpoint = '/api/gemini?action=analyzeVideo';
           body.videoUrl = lastMessageContent;
           body.prompt = `Analyze this YouTube video: ${lastMessageContent}`;
       } else if (action === 'analyzeURL') {
-          endpoint = '/api/gemini?action=analyzeURL';
           body.url = lastMessageContent;
           body.prompt = `Analyze this URL: ${lastMessageContent}`;
       } else {
-          // Regular chat - use ai-service endpoint
-          body.message = lastMessageContent;
+          // Regular chat - use conversationalFlow action
+          body.prompt = lastMessageContent;
           body.conversationState = {
               messages: allMessages.map(msg => ({
                   role: msg.role === 'assistant' ? 'model' : 'user',
@@ -271,7 +268,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
           status: 'in_progress',
         });
         
-        const response = await fetch('/api/gemini?action=analyzeDocument', {
+        const response = await fetch('/api/ai?action=analyzeDocument', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

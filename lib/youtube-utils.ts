@@ -176,7 +176,7 @@ export async function getVideoTranscript(
   if (!videoId) return format === 'text' ? '' : [];
 
   try {
-    const response = await fetch('/api/youtube-transcript', {
+    const response = await fetch('/api/ai?action=youtubeTranscript', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoId, videoUrl }),

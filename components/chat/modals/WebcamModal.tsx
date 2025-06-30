@@ -84,7 +84,7 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
 
     try {
       // Send frame to AI for analysis
-      const response = await fetch('/api/gemini?action=analyzeWebcamFrame', {
+              const response = await fetch('/api/ai?action=analyzeWebcamFrame', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

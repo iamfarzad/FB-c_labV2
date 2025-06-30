@@ -10,7 +10,7 @@ import {
   Source,
   UserInfo,
   AI_USAGE_LIMITS,
-} from '@/api/ai-service/types';
+} from './types';
 
 // Stage Handler Types
 interface StageHandler {
@@ -187,8 +187,7 @@ export class UnifiedAIService {
       // Generate AI response
       const systemPrompt = this.buildSystemPrompt(currentState, userInfo);
       const model = this.genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
-        tools: [{ googleSearchRetrieval: {} }],
+        model: 'gemini-2.5-flash',
         systemInstruction: systemPrompt,
       });
 
@@ -334,7 +333,7 @@ ${enhancedPrompt}
       }
 
       // Use Gemini to create an even more detailed prompt
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       const result = await model.generateContent(
         `Create a highly detailed, professional image generation prompt for: "${prompt}"
 
@@ -423,7 +422,7 @@ ${detailedPrompt}
         4. Recommended Next Steps`;
 
         const model = this.genAI.getGenerativeModel({
-          model: 'gemini-1.5-flash',
+          model: 'gemini-2.5-flash',
         });
         const result = await model.generateContent(summaryPrompt);
         summary = result.response.text();

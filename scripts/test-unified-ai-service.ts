@@ -8,7 +8,7 @@ import {
   Message,
   ConversationState,
   ProxyRequestBody,
-} from '@/api/ai-service/types';
+} from '../lib/ai/types';
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
