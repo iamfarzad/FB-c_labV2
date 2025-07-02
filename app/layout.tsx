@@ -1,5 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
+import { rajdhani, spaceMono, montserrat } from "@/lib/fonts"
 import ClientLayout from "./ClientLayout"
 import './globals.css'
 
@@ -14,5 +15,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <ClientLayout>{children}</ClientLayout>
+  return (
+    <ClientLayout
+      className={`${rajdhani.variable} ${spaceMono.variable} ${montserrat.variable}`}
+    >
+      {children}
+    </ClientLayout>
+  )
 }

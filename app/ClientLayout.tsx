@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react"
 import { useEffect, useState } from "react"
-import { Rajdhani, Space_Mono, Montserrat } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AccessibilityProvider } from "@/components/accessibility/accessibility-provider"
 import { CookieConsent } from "@/components/legal/cookie-consent"
@@ -11,28 +10,6 @@ import { DataContext } from "@/context/data-context"
 import { ToastProvider } from "@/components/ui/use-toast"
 import type { Example } from "@/lib/types"
 import "./globals.css"
-
-// Initialize fonts with preload and display swap for better performance
-const rajdhani = Rajdhani({ 
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-rajdhani",
-  display: "swap"
-})
-
-const spaceMono = Space_Mono({ 
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-space-mono",
-  display: "swap"
-})
-
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-montserrat",
-  display: "swap"
-})
 
 // Structured data for SEO
 const websiteSchema = {
@@ -57,9 +34,10 @@ const websiteSchema = {
 
 interface ClientLayoutProps {
   children: ReactNode
+  className?: string
 }
 
-export default function ClientLayout({ children }: ClientLayoutProps) {
+export default function ClientLayout({ children, className }: ClientLayoutProps) {
   const [isMounted, setIsMounted] = useState(false)
   const [examples, setExamples] = useState<Example[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -110,16 +88,9 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${rajdhani.variable} ${spaceMono.variable} ${montserrat.variable}`}
-      style={{
-        '--font-rajdhani': rajdhani.style.fontFamily,
-        '--font-space-mono': spaceMono.style.fontFamily,
-        '--font-montserrat': montserrat.style.fontFamily,
-      } as React.CSSProperties}
+      className={className}
     >
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

@@ -143,7 +143,7 @@
     
     <div class="test-info">
         <strong>🧪 Test Instructions:</strong> This test suite validates all AI showcase features. 
-        Make sure the dev server is running on port 3001, then click tests in any order.
+        Make sure the dev server is running on port 3000, then click tests in any order.
     </div>
 
     <div class="stats">
@@ -234,7 +234,7 @@
     
     <div id="log">
         <div style="color: #4caf50;">🚀 F.B/c AI Showcase Test Suite Loaded</div>
-        <div style="color: #2196f3;">📍 Server: http://localhost:3001</div>
+        <div style="color: #2196f3;">📍 Server: http://localhost:3000</div>
         <div style="color: #ff9800;">⚡ Click any test button to start...</div>
     </div>
     
@@ -302,7 +302,7 @@
             log(`🚀 Testing ${action}: ${prompt}`);
             
             try {
-                const response = await fetch(`http://localhost:3001/api/gemini?action=${action}`, {
+                const response = await fetch(`http://localhost:3000/api/ai?action=${action}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -533,7 +533,7 @@
         // Error Handling Tests
         async function testInvalidAPI() {
             try {
-                const response = await fetch('http://localhost:3001/api/gemini?action=invalidAction', {
+                const response = await fetch('http://localhost:3000/api/ai?action=invalidAction', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ test: 'invalid' })
@@ -571,7 +571,7 @@
             log("🔧 Testing environment setup...", null, 'info');
             
             try {
-                const response = await fetch('/api/gemini?action=health');
+                const response = await fetch('/api/ai?action=health');
                 const result = await response.json();
                 
                 if (result.success) {

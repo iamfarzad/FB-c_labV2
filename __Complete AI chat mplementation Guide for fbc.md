@@ -1128,7 +1128,7 @@ export default function ChatPage() {
 
     try {
       // Call the API to get AI response
-      const response = await fetch('/api/gemini', {
+      const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

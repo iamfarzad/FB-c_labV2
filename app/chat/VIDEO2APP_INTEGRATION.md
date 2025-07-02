@@ -38,8 +38,8 @@ The Video2App feature allows users to generate interactive learning applications
 - Uses Gemini AI for content generation
 
 ### API Endpoints
-- `/api/gemini?action=generateSpec` - Generates learning app specification from video
-- `/api/gemini?action=generateCode` - Converts spec to HTML code
+- `/api/ai?action=generateSpec` - Generates learning app specification from video
+- `/api/ai?action=generateCode` - Converts spec to HTML code
 
 ### Features
 - Real-time progress tracking

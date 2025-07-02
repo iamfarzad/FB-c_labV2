@@ -1,8 +1,8 @@
-async function testGeminiProxy() {
+async function testAiApi() {
   try {
     // Test generateImage action
     console.log('Testing generateImage action...');
-    const generateImageResponse = await fetch('http://localhost:3000/api/gemini-proxy?action=generateImage', {
+    const generateImageResponse = await fetch('http://localhost:3000/api/ai?action=generateImage', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -18,7 +18,7 @@ async function testGeminiProxy() {
 
     // Test generateText action
     console.log('\nTesting generateText action...');
-    const generateTextResponse = await fetch('http://localhost:3000/api/gemini-proxy?action=generateText', {
+    const generateTextResponse = await fetch('http://localhost:3000/api/ai?action=generateText', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -34,7 +34,7 @@ async function testGeminiProxy() {
 
     // Test summarizeChat action
     console.log('\nTesting summarizeChat action...');
-    const summarizeChatResponse = await fetch('http://localhost:3000/api/gemini-proxy?action=summarizeChat', {
+    const summarizeChatResponse = await fetch('http://localhost:3000/api/ai?action=summarizeChat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -58,4 +58,4 @@ async function testGeminiProxy() {
 }
 
 // Run the tests
-testGeminiProxy().catch(console.error);
+testAiApi().catch(console.error);

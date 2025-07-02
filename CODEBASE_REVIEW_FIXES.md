@@ -29,7 +29,7 @@ This document outlines all the fixes and improvements made to the F.B/c AI Consu
 #### Fixes Applied:
 - ✅ Updated all imports to use `@google/genai` (new recommended SDK)
 - ✅ Fixed API call syntax to match new SDK structure
-- ✅ Updated `app/api/gemini/route.ts` with correct API patterns
+- ✅ Updated `app/api/ai/route.ts` with correct API patterns
 - ✅ Maintained backward compatibility with fallback responses
 - ✅ Fixed ElevenLabs integration with proper async handling
 
@@ -69,7 +69,7 @@ This document outlines all the fixes and improvements made to the F.B/c AI Consu
 - **Activity Monitoring**: Real-time updates for user actions and system events
 - **State Management**: Improved chat persistence and context handling
 
-### API Route (`app/api/gemini/route.ts`)
+### API Route (`app/api/ai/route.ts`)
 - **New Google Gen AI SDK**: Updated to use `@google/genai` instead of deprecated library
 - **Improved Error Handling**: Better fallbacks and null checks
 - **ElevenLabs Integration**: Fixed voice generation with proper async handling
@@ -135,12 +135,12 @@ open http://localhost:3000/chat
 ### 2. **API Integration**
 ```bash
 # Test new Google Gen AI SDK
-curl -X POST http://localhost:3000/api/gemini?action=conversationalFlow \
+curl -X POST http://localhost:3000/api/ai?action=conversationalFlow \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Hello", "currentConversationState": {"stage": "greeting"}}'
 
 # Test lead capture
-curl -X POST http://localhost:3000/api/gemini?action=leadCapture \
+curl -X POST http://localhost:3000/api/ai?action=leadCapture \
   -H "Content-Type: application/json" \
   -d '{"currentConversationState": {"name": "Test", "email": "test@example.com"}}'
 ```
@@ -194,3 +194,48 @@ curl -X POST http://localhost:3000/api/gemini?action=leadCapture \
 - **Sidebar Enhancement**: Added thread mode for better conversation context
 
 This completes the comprehensive update to create a unified, modern AI chat experience with integrated showcase and lead capture capabilities, using the latest Google Gen AI SDK as recommended by Google's official documentation.
+
+### API Route (`app/api/ai/route.ts`)
+
+- **Status**: ✅ **Implemented and Unified**
+- **File**: `app/api/ai/route.ts`
+- **Description**: This is now the single, unified API endpoint for all AI functionalities. It uses a `action` query parameter to route requests to the appropriate handler within `lib/ai/unified-ai-service.ts`.
+- **Key Changes**:
+  - Consolidated logic from older, separate API routes.
+  - All incoming requests are validated using Zod schemas.
+  - The `UnifiedAIService` handles the core business logic for each action.
+  - Responses are standardized for both success and error cases.
+
+### Chat Hook (`use-chat.ts`)
+
+- **Status**: ✅ **Refactored**
+- **File**: `app/chat/hooks/use-chat.ts`
+- **Description**: The primary hook for managing chat state and interactions.
+- **Key Changes**:
+  - All `fetch` calls now target the `/api/ai` endpoint.
+  - The `action` parameter is dynamically set based on the user's interaction (e.g., `conversationalFlow`, `generateImage`).
+  - State management logic remains the same, ensuring UI consistency.
+  - Error handling now processes the standardized error responses from the unified API.
+
+### Test Plan
+
+- **Objective**: Verify that all AI features work correctly through the unified `/api/ai` endpoint.
+- **Execution**:
+  - Use the `scripts/test-all-ai-functions.ts` script for automated testing.
+  - Manually test the chat interface, ensuring all features (text, image, lead capture) are functional.
+- **Example Test Command**:
+  ```bash
+  # Test conversational flow via the unified endpoint
+  curl -X POST http://localhost:3000/api/ai?action=conversationalFlow \
+    -H "Content-Type: application/json" \
+    -d '{"prompt": "Hello, AI!", "currentConversationState": {}}'
+
+  # Test lead capture via the unified endpoint
+  curl -X POST http://localhost:3000/api/ai?action=leadCapture \
+    -H "Content-Type: application/json" \
+    -d '{"currentConversationState": {"messages": [{"role": "user", "content": "I am interested in your services."}]}}'
+  ```
+
+### Conclusion
+
+The codebase review and subsequent fixes have successfully unified the AI backend under a single, robust API endpoint. This change simplifies the architecture, improves maintainability, and ensures that all AI functionalities are handled consistently. All identified issues have been resolved, and the system is now operating as expected.

@@ -1,7 +1,7 @@
 // Test script for advanced Gemini features
 // Run with: npx ts-node scripts/test-advanced-gemini.ts
 
-async function testAdvancedGemini() {
+async function testAdvancedAiFeatures() {
   const baseUrl = process.env.NODE_ENV === 'production' 
     ? 'https://your-domain.com' 
     : 'http://localhost:3000';
@@ -16,7 +16,7 @@ async function testAdvancedGemini() {
   console.log('✅ Model: gemini-2.5-flash (Stable GA)\n');
 
   try {
-    const response = await fetch(`${baseUrl}/api/gemini-advanced`, {
+    const response = await fetch(`${baseUrl}/api/ai?action=advancedSearch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -61,4 +61,4 @@ async function testAdvancedGemini() {
 }
 
 // Run the test
-testAdvancedGemini(); 
+testAdvancedAiFeatures(); 

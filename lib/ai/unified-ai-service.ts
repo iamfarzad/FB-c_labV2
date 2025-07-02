@@ -10,6 +10,7 @@ import {
   Source,
   UserInfo,
   AI_USAGE_LIMITS,
+  ConversationState,
 } from './types';
 
 // Stage Handler Types
@@ -35,20 +36,6 @@ export interface AIServiceConfig {
   elevenLabsVoiceId?: string;
   supabaseUrl?: string;
   supabaseKey?: string;
-  showBooking?: boolean;
-}
-
-export interface ConversationState {
-  sessionId: string;
-  stage: string;
-  messages: Message[];
-  messagesInStage: number;
-  name?: string;
-  email?: string;
-  companyInfo?: CompanyInfo;
-  aiGuidance?: string;
-  sidebarActivity?: string;
-  isLimitReached?: boolean;
   showBooking?: boolean;
 }
 
