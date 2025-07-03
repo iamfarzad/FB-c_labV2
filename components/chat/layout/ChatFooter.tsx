@@ -7,9 +7,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Send, Camera, Monitor, Mic, MicOff, Paperclip, FileText, Image as ImageIcon, Youtube, Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useChatContext } from "../../../app/chat/context/ChatProvider"
-import { ScreenShareModal } from "../modals/ScreenShareModal"
-import { VoiceInputModal } from "../modals/VoiceInputModal"
-import { WebcamModal } from "../modals/WebcamModal"
+import { ScreenShareModalLive } from "@/components/screen-share-modal-live"
+import { VoiceInputModalLive } from "@/components/voice-input-modal-live"
+import { WebcamModalLive } from "@/components/webcam-modal-live"
 import { Video2AppModal } from "../modals/Video2AppModal"
 
 interface ChatFooterProps {
@@ -32,6 +32,8 @@ export function ChatFooter({ input, setInput, onSendMessage, isLoading, onKeyPre
   const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const anyFileInputRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const uploadMenuItems = [
     {
@@ -270,22 +272,49 @@ export function ChatFooter({ input, setInput, onSendMessage, isLoading, onKeyPre
       />
 
       {/* Modals */}
-      <ScreenShareModal
-        isOpen={showScreenShareModal}
-        onClose={() => setShowScreenShareModal(false)}
-        onStream={handleStream}
+      <ScreenShareModalLive
+        isScreenSharing={showScreenShareModal}
+        onStopScreenShare={() => setShowScreenShareModal(false)}
+        onAIAnalysis={(analysis: string) => {
+          // Handle AI analysis from screen share
+          console.log('Screen Analysis:', analysis)
+          addActivity({
+            type: 'ai_thinking',
+            title: 'Screen Analysis',
+            description: analysis,
+            status: 'completed'
+          })
+        }}
+        theme="dark"
       />
 
-      <VoiceInputModal
-        isOpen={showVoiceModal}
+      <VoiceInputModalLive
+        isListening={showVoiceModal}
         onClose={() => setShowVoiceModal(false)}
-        onTranscript={handleVoiceTranscript}
+        onAIResponse={(response: string) => {
+          // Handle AI response from voice conversation
+          console.log('AI Response:', response)
+          handleVoiceTranscript(response)
+        }}
+        theme="dark"
       />
 
-      <WebcamModal
-        isOpen={showWebcamModal}
-        onClose={() => setShowWebcamModal(false)}
-        onCapture={handleWebcamCapture}
+      <WebcamModalLive
+        videoRef={videoRef}
+        canvasRef={canvasRef}
+        isCameraActive={showWebcamModal}
+        onStopCamera={() => setShowWebcamModal(false)}
+        onAIAnalysis={(analysis: string) => {
+          // Handle AI analysis from webcam
+          console.log('Webcam Analysis:', analysis)
+          addActivity({
+            type: 'ai_thinking',
+            title: 'Vision Analysis',
+            description: analysis,
+            status: 'completed'
+          })
+        }}
+        theme="dark"
       />
 
       <Video2AppModal
