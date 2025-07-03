@@ -19,7 +19,7 @@ Bot-generated PR `fix/ai-service-tests-and-logic` included test fixes for Unifie
 - Established pattern for handling bot-generated PRs: extract value, discard obsolete parts
 
 ## Implementation
-```bash
+\`\`\`bash
 # Cherry-picked with -n flag to stage changes selectively
 git cherry-pick -n a3f0bc2
 
@@ -31,4 +31,4 @@ git commit -m "feat: Add testing infrastructure from bot PR"
 
 # Cleaned up remote branch
 git push origin --delete fix/ai-service-tests-and-logic
-``` 
+\`\`\`

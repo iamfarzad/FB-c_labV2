@@ -122,7 +122,7 @@ Based on the [Google AI documentation](https://ai.google.dev/gemini-api/docs/lib
 ## Testing Recommendations
 
 ### 1. **Unified Chat Experience**
-```bash
+\`\`\`bash
 # Visit the chat page
 open http://localhost:3000/chat
 
@@ -130,10 +130,10 @@ open http://localhost:3000/chat
 # Fill in contact information
 # Try capability demonstrations
 # Verify conversation context is maintained
-```
+\`\`\`
 
 ### 2. **API Integration**
-```bash
+\`\`\`bash
 # Test new Google Gen AI SDK
 curl -X POST http://localhost:3000/api/ai?action=conversationalFlow \
   -H "Content-Type: application/json" \
@@ -143,7 +143,7 @@ curl -X POST http://localhost:3000/api/ai?action=conversationalFlow \
 curl -X POST http://localhost:3000/api/ai?action=leadCapture \
   -H "Content-Type: application/json" \
   -d '{"currentConversationState": {"name": "Test", "email": "test@example.com"}}'
-```
+\`\`\`
 
 ### 3. **Capability Demonstrations**
 - Test each AI capability button in showcase mode
@@ -159,15 +159,15 @@ curl -X POST http://localhost:3000/api/ai?action=leadCapture \
    - [ ] Configure Supabase credentials (optional for real-time)
 
 2. **Dependencies**
-   ```bash
+   \`\`\`bash
    pnpm install  # Installs new @google/genai SDK
-   ```
+   \`\`\`
 
 3. **Build and Deploy**
-   ```bash
+   \`\`\`bash
    pnpm build
    pnpm start
-   ```
+   \`\`\`
 
 4. **Verify Functionality**
    - [ ] Test chat interface at `/chat`
@@ -224,7 +224,7 @@ This completes the comprehensive update to create a unified, modern AI chat expe
   - Use the `scripts/test-all-ai-functions.ts` script for automated testing.
   - Manually test the chat interface, ensuring all features (text, image, lead capture) are functional.
 - **Example Test Command**:
-  ```bash
+  \`\`\`bash
   # Test conversational flow via the unified endpoint
   curl -X POST http://localhost:3000/api/ai?action=conversationalFlow \
     -H "Content-Type: application/json" \
@@ -234,7 +234,7 @@ This completes the comprehensive update to create a unified, modern AI chat expe
   curl -X POST http://localhost:3000/api/ai?action=leadCapture \
     -H "Content-Type: application/json" \
     -d '{"currentConversationState": {"messages": [{"role": "user", "content": "I am interested in your services."}]}}'
-  ```
+  \`\`\`
 
 ### Conclusion
 

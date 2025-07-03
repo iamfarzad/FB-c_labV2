@@ -240,4 +240,4 @@ export const TimelineActivityLog = ({
   );
 };
 
-export default TimelineActivityLog; 
+export default TimelineActivityLog;

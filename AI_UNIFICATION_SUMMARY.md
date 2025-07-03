@@ -23,13 +23,13 @@ The migration to UnifiedAIService has been successfully completed. All AI functi
 ### 3. **All AI Functions Tested and Working** ✅
 
 Test Results (100% Success Rate):
-```
+\`\`\`
 📊 TEST SUMMARY
 Total Tests: 8
 ✅ Passed: 8
 ❌ Failed: 0
 Success Rate: 100.0%
-```
+\`\`\`
 
 Verified Functions:
 - ✅ Conversational Flow with stage management
@@ -44,7 +44,7 @@ Verified Functions:
 ## 📐 Architecture Overview
 
 ### Current Implementation:
-```
+\`\`\`
 Client Request
      ↓
 /app/api/ai/route.ts (Clean Router)
@@ -55,7 +55,7 @@ UnifiedAIService (Centralized Logic)
 │ Gemini AI   │ ElevenLabs  │  Supabase    │
 │ (Text Gen)  │ (Voice Gen) │ (Real-time)  │
 └─────────────┴─────────────┴──────────────┘
-```
+\`\`\`
 
 ### Benefits Achieved:
 1. **Maintainability**: Single source of truth for AI logic

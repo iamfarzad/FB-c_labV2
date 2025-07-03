@@ -8,15 +8,15 @@
 ## Action Plan:
 
 ### 1. DELETE Duplicates
-```bash
+\`\`\`bash
 rm -rf app/components/
-```
+\`\`\`
 
 ### 2. MOVE Chat Components
-```bash
+\`\`\`bash
 # Move chat components to main components directory
 mv app/chat/components/* components/chat/
-```
+\`\`\`
 
 ### 3. UPDATE Imports
 Replace all imports:
@@ -24,14 +24,14 @@ Replace all imports:
 - `@/app/chat/components/*` → `@/components/chat/*`
 
 ### 4. STANDARDIZE Structure
-```
+\`\`\`
 components/
 ├── ui/           # Shadcn UI components
 ├── chat/         # Chat-specific components
 ├── home/         # Home page components
 ├── about/        # About page components
 └── ...
-```
+\`\`\`
 
 ## Files to Update:
 - All TypeScript files with component imports
@@ -42,4 +42,4 @@ components/
 - Single source of truth for components
 - Cleaner imports
 - Better maintainability
-- Proper component organization 
+- Proper component organization

@@ -15,4 +15,4 @@ export function SectionBadge({ icon, children, className }: SectionBadgeProps) {
       </span>
     </div>
   );
-} 
+}

@@ -18,4 +18,4 @@ export const montserrat = Montserrat({
   subsets: ['latin'],
   variable: '--font-montserrat',
   display: 'swap',
-}) 
+})

@@ -256,4 +256,4 @@ function parseVideoAnalysisResult(data: any): VideoAnalysisResult {
     difficulty: data.difficulty || 'intermediate',
     estimatedDuration: data.estimatedDuration || 30
   }
-} 
+}

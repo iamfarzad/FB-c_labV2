@@ -74,4 +74,4 @@ export const CONVERSATION_STAGES = {
   SUMMARY_OFFER: 'summary_offer',
   BOOKING_OFFER: 'booking_offer',
   CONSULTATION_COMPLETE: 'consultation_complete',
-} as const; 
+} as const;

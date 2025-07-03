@@ -551,4 +551,4 @@ export const VideoToAppGenerator = forwardRef<
       </CardContent>
     </Card>
   );
-}); 
+});

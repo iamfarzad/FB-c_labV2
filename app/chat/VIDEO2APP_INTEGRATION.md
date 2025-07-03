@@ -59,4 +59,4 @@ The Video2App feature allows users to generate interactive learning applications
 The feature works out of the box with:
 - Gemini API key configured
 - YouTube URL validation
-- Automatic detection in chat messages 
+- Automatic detection in chat messages

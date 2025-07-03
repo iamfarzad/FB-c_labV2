@@ -57,7 +57,7 @@ This document provides a comprehensive overview of the AI functions and APIs use
 *   **Implementation:**
     *   **Technology:** Supabase (which uses PostgreSQL).
     *   **Table Definition:** A single table named `lead_summaries` is defined with the following SQL structure:
-        ```sql
+        \`\`\`sql
         CREATE TABLE lead_summaries (
           id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
           name TEXT NOT NULL,
@@ -69,7 +69,7 @@ This document provides a comprehensive overview of the AI functions and APIs use
           ai_capabilities_shown TEXT[] DEFAULT '{}',
           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
-        ```
+        \`\`\`
     *   **Key Columns:**
         *   `id`: A unique identifier for each lead record.
         *   `name`, `email`, `company_name`: Basic contact information of the lead.
@@ -79,15 +79,15 @@ This document provides a comprehensive overview of the AI functions and APIs use
         *   `ai_capabilities_shown`: An array of text strings listing the AI features demonstrated to the lead.
         *   `created_at`: Timestamp indicating when the lead record was created.
     *   **Real-time Functionality:** Real-time updates are enabled for this table to allow immediate broadcasting of new lead information. This is configured using the SQL command:
-        ```sql
+        \`\`\`sql
         ALTER PUBLICATION supabase_realtime ADD TABLE lead_summaries;
-        ```
+        \`\`\`
     *   **Performance Optimization:** To ensure efficient data retrieval, indexes are created on key columns:
-        ```sql
+        \`\`\`sql
         CREATE INDEX idx_lead_summaries_email ON lead_summaries(email);
         CREATE INDEX idx_lead_summaries_lead_score ON lead_summaries(lead_score DESC);
         CREATE INDEX idx_lead_summaries_created_at ON lead_summaries(created_at DESC);
-        ```
+        \`\`\`
 
 *   **Comparison with Implementation Guide:** The documented schema is an exact representation of the SQL DDL provided in the `__Complete AI Showcase Implementation Guide with C.md` (Section 3). There are no deviations.
 
@@ -150,7 +150,7 @@ This document provides a comprehensive overview of the AI functions and APIs use
     *   **Technology:** TypeScript.
     *   **Core Libraries:** Primarily uses the `jspdf` library for client-side PDF document creation and manipulation.
     *   **Main Function:** The core of this utility is the asynchronous function `generateFBCReport`.
-        ```typescript
+        \`\`\`typescript
         export const generateFBCReport = async (summaryData: {
           name: string;
           email: string;
@@ -161,7 +161,7 @@ This document provides a comprehensive overview of the AI functions and APIs use
         }): Promise<string> => {
           // ... implementation ...
         };
-        ```
+        \`\`\`
     *   **Key Functionality Steps:**
         1.  **Initialization:** A new `jsPDF` object is instantiated.
         2.  **Branding and Header:**
@@ -270,4 +270,3 @@ The `/api/ai` route is the unified backend endpoint for all AI-related actions. 
 ### Final Assessment
 
 The primary implementation files identified are `app/api/ai/route.ts` for the backend API, `app/chat/page.tsx` for the frontend chat interface, and `utils/pdfGenerator.ts` for PDF reports, with Supabase for the database. The implementation aligns with the guide's goals but uses a more robust and scalable architecture.
-

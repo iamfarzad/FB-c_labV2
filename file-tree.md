@@ -2,7 +2,7 @@
 
 ## 🏗️ Top-Level Directory Structure
 
-```
+\`\`\`
 FB-c_labV2/
 ├── 📱 app/                          # Next.js App Router (Main Application)
 ├── 🧩 components/                   # React Components Library  
@@ -20,11 +20,11 @@ FB-c_labV2/
 ├── 🔨 .next/                        # Next.js Build Output
 ├── 📋 Configuration Files
 └── 📖 Documentation Files
-```
+\`\`\`
 
 ## 🏢 App Directory (Next.js Routes)
 
-```
+\`\`\`
 app/
 ├── api/
 │   └── ai/
@@ -50,11 +50,11 @@ app/
 ├── ⚡ loading.tsx                   # Loading Component (6 lines)
 ├── 📐 layout.tsx                    # Root Layout (19 lines)
 └── 🎭 ClientLayout.tsx              # Client-Side Layout (154 lines)
-```
+\`\`\`
 
 ## 🧩 Components Library
 
-```
+\`\`\`
 components/
 ├── ui/                              # 🎨 UI Components (50+ files)
 │   ├── 🟦 button.tsx                # Button Component (63 lines)
@@ -110,11 +110,11 @@ components/
 ├── 🦶 footer.tsx                    # Footer Component (241 lines)
 ├── 🖼️ ExampleGallery.tsx            # Example Gallery (40 lines)
 └── ⭐ features-section.tsx           # Features Section (103 lines)
-```
+\`\`\`
 
 ## 📚 Library & Core Logic
 
-```
+\`\`\`
 lib/
 ├── ai/                              # 🤖 AI Core Services
 │   ├── unified-ai-service.ts        # 🔥 MAIN AI SERVICE (882 lines)
@@ -135,11 +135,11 @@ lib/
 ├── 📋 types.ts                      # General Types (48 lines)
 ├── 🔧 constants.ts                  # App Constants (4 lines)
 └── 🛠️ utils.ts                      # General Utilities (7 lines)
-```
+\`\`\`
 
 ## 🎨 Public Assets
 
-```
+\`\`\`
 public/
 ├── 👤 Profile Images
 │   ├── farzad-bayat_profile_2AI.JPG  # AI Profile (102KB)
@@ -159,11 +159,11 @@ public/
 │   ├── placeholder.jpg               # General Placeholder (1.0KB)
 │   └── placeholder.svg               # SVG Placeholder (3.2KB)
 └── 📁 .DS_Store                       # macOS System File (6.0KB)
-```
+\`\`\`
 
 ## ⚙️ Configuration & Tooling
 
-```
+\`\`\`
 Configuration Files:
 ├── 📦 package.json                  # Dependencies & Scripts (111 lines)
 ├── 🔒 pnpm-lock.yaml               # Package Lock (9548 lines)
@@ -178,11 +178,11 @@ Configuration Files:
 ├── 🔧 next-env.d.ts                 # Next.js Types (6 lines)
 ├── 📊 tsconfig.tsbuildinfo          # TypeScript Build Info (926KB)
 └── 🧹 check-console.js              # Console Check Script (31 lines)
-```
+\`\`\`
 
 ## 🗂️ Support Directories
 
-```
+\`\`\`
 scripts/                             # 🚀 Development Scripts
 ├── test-unified-ai-service.ts       # Unified AI Tests (181 lines)
 ├── test-all-ai-functions.ts         # Complete AI Tests (484 lines)
@@ -219,11 +219,11 @@ context/                             # 🗂️ React Context
 api/                                 # 🔗 External APIs
 └── ai-service/
     └── types/                       # API Type Definitions
-```
+\`\`\`
 
 ## 📖 Documentation Files
 
-```
+\`\`\`
 Documentation:
 ├── 📋 README.md                     # Main Documentation (93 lines)
 ├── 📱 README-AI-CHAT.md             # Chat Implementation (42 lines)
@@ -239,7 +239,7 @@ Documentation:
 ├── 🔧 CODEBASE_REVIEW_FIXES.md      # Code Review Fixes (196 lines)
 ├── 📚 __Complete AI chat Implementation Guide for fbc.md # Complete Guide (1860 lines)
 └── 🖼️ image_0.jpeg                  # Documentation Image (385KB)
-```
+\`\`\`
 
 ## 🎯 Key Architecture Insights
 
@@ -291,4 +291,4 @@ Documentation:
 
 ---
 
-*This file tree represents a sophisticated AI consulting platform with production-ready architecture, comprehensive documentation, and modern development practices.* 
+*This file tree represents a sophisticated AI consulting platform with production-ready architecture, comprehensive documentation, and modern development practices.*

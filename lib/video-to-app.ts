@@ -162,4 +162,4 @@ export async function generateVideoToApp(options: VideoToAppOptions): Promise<Vi
     code,
     videoUrl
   };
-} 
+}

@@ -44,4 +44,4 @@ export const Video2AppModal = ({ isOpen, onClose, initialVideoUrl }: Video2AppMo
       </DialogContent>
     </Dialog>
   );
-}; 
+};

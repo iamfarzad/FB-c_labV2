@@ -38,7 +38,7 @@
 ### Step 2: Evaluate High-Value Branches (1 by 1)
 For each cursor branch:
 
-```bash
+\`\`\`bash
 # 1. Create evaluation branch
 git checkout -b eval/[branch-name] origin/[branch-name]
 
@@ -59,7 +59,7 @@ echo "---" >> EVALUATION_RESULTS.md
 # 5. Cleanup
 git checkout main
 git branch -D eval/[branch-name]
-```
+\`\`\`
 
 ### Step 3: Cherry-Pick Valuable Features
 After evaluation, for each WORKING branch:
@@ -69,7 +69,7 @@ After evaluation, for each WORKING branch:
 - Commit with clear messages
 
 ### Step 4: Mass Cleanup
-```bash
+\`\`\`bash
 # Delete all stale branches
 git push origin --delete feat/new-sidebar-video-tool-page
 git push origin --delete feature/ai-chat-utils  
@@ -78,7 +78,7 @@ git push origin --delete feature/webapp-clean
 git push origin --delete refactor/chat-api-and-utils
 git push origin --delete refactor/unify-design-system
 git push origin --delete jules_wip_3053795181967652231
-```
+\`\`\`
 
 ## 🎯 Success Criteria
 
@@ -113,11 +113,11 @@ git push origin --delete jules_wip_3053795181967652231
 3. **Small commits**: Cherry-pick individual features, not bulk merges
 
 ### Rollback Plan:
-```bash
+\`\`\`bash
 # If anything breaks main:
 git reset --hard backup-main-[date]
 git push origin main --force-with-lease
-```
+\`\`\`
 
 ## 📈 Expected Timeline
 
@@ -133,4 +133,4 @@ git push origin main --force-with-lease
 3. **Document Everything**: Clear audit trail of decisions
 4. **Risk Management**: Backups and rollback plans
 5. **Value Focus**: Only integrate features that add real value
-6. **Clean House**: Remove technical debt and clutter 
+6. **Clean House**: Remove technical debt and clutter

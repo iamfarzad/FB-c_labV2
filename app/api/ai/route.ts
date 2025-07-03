@@ -625,4 +625,4 @@ async function handleGeminiLive(request: NextRequest): Promise<NextResponse> {
       message: 'Gemini Live API mock response'
     }
   }, { headers: corsHeaders });
-} 
+}

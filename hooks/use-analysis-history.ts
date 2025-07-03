@@ -12,4 +12,4 @@ export function useAnalysisHistory(limit: number = 5) {
   }, []);
 
   return { analysisHistory, addAnalysis, clearHistory };
-} 
+}

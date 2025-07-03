@@ -290,7 +290,7 @@ This document outlines all duplicates found in the codebase and provides a strat
 ## 8. Import Path Updates
 
 ### Major Import Changes:
-```typescript
+\`\`\`typescript
 // Before
 import { WebcamModal } from '@/components/webcam-modal-live'
 // After
@@ -305,7 +305,7 @@ import { Message } from '@/api/ai-service/types'
 import { ActivityLog } from '@/components/chat/activity/ActivityLog'
 // After
 import { TimelineActivityLog } from '@/components/chat/activity/TimelineActivityLog'
-```
+\`\`\`
 
 ## 9. Testing Strategy
 
@@ -356,16 +356,16 @@ Based on my analysis, here are the **key duplicates** I found in your codebase:
 ## 🔍 **Major Duplicates Found:**
 
 ### 1. **SPEC_ADDENDUM Constant** (Exact duplicate)
-```typescript
+\`\`\`typescript
 // lib/prompts.ts:27
 export const SPEC_ADDENDUM = `\n\nThe app must be fully responsive...`
 
 // lib/video-to-app.ts:27  
 export const SPEC_ADDENDUM = `\n\nThe app must be fully responsive...`
-```
+\`\`\`
 
 ### 2. **Message Interface** (Multiple similar definitions)
-```typescript
+\`\`\`typescript
 // api/ai-service/types/index.ts:2
 export interface Message { id: string; role: string; content: string; timestamp?: number; }
 
@@ -377,7 +377,7 @@ export interface Message { id: string; role: string; content: string; timestamp?
 
 // app/chat/types/chat.ts:2
 export interface Message { ... }
-```
+\`\`\`
 
 ### 3. **Webcam Modal Components** (Similar functionality, different implementations)
 - `components/webcam-modal-live.tsx` (358 lines)
@@ -406,16 +406,16 @@ Both handle webcam streaming and AI analysis but with different approaches:
 ### **Immediate Fixes:**
 
 1. **Consolidate SPEC_ADDENDUM:**
-```typescript
+\`\`\`typescript
 // Create lib/constants.ts
 export const SPEC_ADDENDUM = `...`
 
 // Update imports in both files
 import { SPEC_ADDENDUM } from '@/lib/constants'
-```
+\`\`\`
 
 2. **Unify Message Interface:**
-```typescript
+\`\`\`typescript
 // Create types/shared.ts
 export interface Message {
   id: string
@@ -423,7 +423,7 @@ export interface Message {
   content: string
   timestamp?: number
 }
-```
+\`\`\`
 
 3. **Merge Webcam Modals:**
 - Keep the Live version as primary
@@ -431,14 +431,14 @@ export interface Message {
 - Remove the redundant chat version
 
 4. **Abstract Hero Sections:**
-```typescript
+\`\`\`typescript
 // Create components/common/hero-section.tsx
 interface HeroSectionProps {
   title: string
   subtitle: string
   variant: 'home' | 'consulting' | 'about' | 'workshop'
 }
-```
+\`\`\`
 
 ### **Cleanup Strategy:**
 1. Move shared types to `types/shared.ts`
@@ -478,7 +478,7 @@ Based on my comprehensive search, here are the **additional major duplicates** I
 ## 🔍 **Additional Duplicates Found:**
 
 ### 7. **YouTube Utility Functions** (Major overlap in functionality)
-```typescript
+\`\`\`typescript
 // lib/youtube.ts
 export const getYouTubeVideoId = (url: string): string | null => { ... }
 export function getYoutubeEmbedUrl(url: string): string { ... }
@@ -490,7 +490,7 @@ export function extractVideoId(url: string): string | null { ... }
 export function getEmbedUrl(videoUrl: string, options?: {...}): string { ... }
 export async function getVideoInfo(videoUrl: string): Promise<YouTubeVideoInfo | null> { ... }
 export function isValidYouTubeUrl(url: string): boolean { ... }
-```
+\`\`\`
 
 **Key overlaps:**
 - `getYouTubeVideoId` vs `extractVideoId` (same functionality)
@@ -498,13 +498,13 @@ export function isValidYouTubeUrl(url: string): boolean { ... }
 - `detectYouTubeUrl` vs `isValidYouTubeUrl` (similar validation)
 
 ### 8. **getVideoTranscript Functions** (Different return types)
-```typescript
+\`\`\`typescript
 // lib/video-analysis.ts:84
 export async function getVideoTranscript(videoUrl: string): Promise<string>
 
 // lib/youtube-api.ts:94  
 export async function getVideoTranscript(videoUrl: string): Promise<TranscriptSegment[]>
-```
+\`\`\`
 
 ### 9. **CTA Section Components** (Similar structure, different content)
 - `components/cta-section.tsx` (78 lines) - Generic CTA with onStartChat prop
@@ -538,20 +538,20 @@ Both handle video-to-app generation with similar functionality.
 
 ### **Priority 1: Critical Duplicates**
 1. **Merge YouTube utilities:**
-   ```typescript
+   \`\`\`typescript
    // Create lib/youtube/index.ts
    export { extractVideoId, getEmbedUrl, getVideoInfo } from './api'
    export { getVideoTranscript } from './transcript'
-   ```
+   \`\`\`
 
 2. **Consolidate SPEC_ADDENDUM:**
-   ```typescript
+   \`\`\`typescript
    // lib/constants/video-to-app.ts
    export const SPEC_ADDENDUM = "..."
-   ```
+   \`\`\`
 
 3. **Unify Message interfaces:**
-   ```typescript
+   \`\`\`typescript
    // types/chat.ts
    export interface Message {
      id: string
@@ -559,17 +559,17 @@ Both handle video-to-app generation with similar functionality.
      content: string
      timestamp?: number
    }
-   ```
+   \`\`\`
 
 ### **Priority 2: Component Consolidation**
 1. **Abstract CTA sections:**
-   ```typescript
+   \`\`\`typescript
    // components/common/cta-section.tsx
    interface CTASectionProps {
      variant: 'default' | 'about' | 'workshop'
      onStartChat?: () => void
    }
-   ```
+   \`\`\`
 
 2. **Merge webcam modals:**
    - Keep the Live version
@@ -581,13 +581,13 @@ Both handle video-to-app generation with similar functionality.
 
 ### **Priority 3: Function Deduplication**
 1. **Video transcript functions:**
-   ```typescript
+   \`\`\`typescript
    // lib/youtube/transcript.ts
    export async function getVideoTranscript(
      videoUrl: string, 
      format: 'text' | 'segments' = 'segments'
    ): Promise<string | TranscriptSegment[]>
-   ```
+   \`\`\`
 
 2. **Remove deleted ActivityLog references**
 
@@ -640,23 +640,23 @@ Read file: app/chat/loading.tsx
 - Only differ in visual elements (dots vs lines vs particles)
 
 ### 15. **DotPattern Components** (Exact duplicates)
-```typescript
+\`\`\`typescript
 // components/ui/dot-pattern.tsx (57 lines)
 export function DotPattern({ width = 24, height = 24, ... })
 
 // components/ui/dot-pattern-1.tsx (58 lines) 
 export function DotPattern({ width = 24, height = 24, ... })
-```
+\`\`\`
 **100% identical except for 1 extra line break**
 
 ### 16. **Loading Components** (Nearly identical)
-```typescript
+\`\`\`typescript
 // app/loading.tsx
 loading: () => <div className="flex items-center justify-center h-screen">Loading...</div>
 
 // app/chat/loading.tsx  
 loading: () => <div className="flex items-center justify-center h-[80vh]">Loading chat...</div>
-```
+\`\`\`
 **Same structure, only height differs**
 
 ### 17. **ActivityLog Components** (Multiple versions)
@@ -670,9 +670,9 @@ loading: () => <div className="flex items-center justify-center h-[80vh]">Loadin
 - `public/3d/ErrorBoundary3D.tsx` (32 lines) - 3D-specific
 
 ### 19. **analysisHistory State Pattern** (Repeated 5+ times)
-```typescript
+\`\`\`typescript
 const [analysisHistory, setAnalysisHistory] = useState<string[]>([])
-```
+\`\`\`
 Found in:
 - `components/webcam-modal-live.tsx`
 - `components/chat/modals/ScreenShareModal.tsx`
@@ -680,21 +680,21 @@ Found in:
 - `components/screen-share-modal-live.tsx`
 
 ### 20. **Gradient Button Patterns** (Repeated 50+ times)
-```typescript
+\`\`\`typescript
 className="...bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)]..."
-```
+\`\`\`
 **Exact same gradient pattern used in 50+ components**
 
 ### 21. **Glassmorphism Styling** (Repeated 30+ times)
-```typescript
+\`\`\`typescript
 className="glassmorphism..."
-```
+\`\`\`
 **Same glassmorphism class pattern across 30+ components**
 
 ### 22. **Router Usage Pattern** (Repeated pattern)
-```typescript
+\`\`\`typescript
 const router = useRouter()
-```
+\`\`\`
 **Same pattern in multiple components with identical usage**
 
 ## 🛠 **Complete Cleanup Summary:**
@@ -749,22 +749,22 @@ Based on my comprehensive search, here are **additional major duplicates** found
 
 ### 18. **useRef Patterns** (Identical initialization)
 All hero backgrounds have identical ref patterns:
-```typescript
+\`\`\`typescript
 // Found in HeroBackground1-6.tsx
 const mountRef = useRef<HTMLDivElement>(null);
 const animationRef = useRef<number>();
-```
+\`\`\`
 
 ### 19. **Button Styling Classes** (Massive duplication)
 Common button pattern repeated across 40+ files:
-```typescript
+\`\`\`typescript
 "group relative overflow-hidden px-8 py-4 rounded-none bg-gradient-to-r from-[var(--color-orange-accent)] to-[var(--color-orange-accent-light)] text-white font-semibold text-lg shadow-2xl hover:shadow-[var(--color-orange-accent)]/25 transition-all duration-300"
-```
+\`\`\`
 
 ### 20. **Badge/Tag Pattern**
-```typescript
+\`\`\`typescript
 "inline-flex items-center px-4 py-2 rounded-none bg-[var(--color-orange-accent)]/10 border border-[var(--color-orange-accent)]/30"
-```
+\`\`\`
 Found in: hero sections, CTA sections, workshop pages, about pages
 
 ### 21. **Glass Morphism Classes**
@@ -773,14 +773,14 @@ Found in: hero sections, CTA sections, workshop pages, about pages
 
 ### 22. **Form Input Styling**
 Duplicate input field styling across multiple forms:
-```typescript
+\`\`\`typescript
 className="w-full px-4 py-2 rounded-lg border ${inputBorder} ${inputBg} focus:ring-2 focus:ring-[var(--color-orange-accent)] focus:border-transparent transition-colors"
-```
+\`\`\`
 
 ### 23. **Modal Backdrop Pattern**
-```typescript
+\`\`\`typescript
 "fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-```
+\`\`\`
 Found in: WebcamModal, ScreenShareModal, VoiceInputModal
 
 ### 24. **Live Streaming Indicators**
@@ -801,10 +801,10 @@ Both implementing similar error handling logic
 
 ### 27. **Animation Frame Patterns**
 Multiple files using identical animation frame setup:
-```typescript
+\`\`\`typescript
 const animationRef = useRef<number>()
 // ... requestAnimationFrame logic
-```
+\`\`\`
 
 ### 28. **Card Component Patterns**
 Repeated card styling across:

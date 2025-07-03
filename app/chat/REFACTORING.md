@@ -14,7 +14,7 @@ Successfully refactored the monolithic chat page (2212 lines) into a modular, ma
 ## 📁 **Final Structure**
 
 ### **Core Files**
-```
+\`\`\`
 app/chat/
 ├── page.tsx                    # Main entry point (37 lines)
 ├── context/
@@ -27,10 +27,10 @@ app/chat/
 │   └── chat.ts               # TypeScript definitions
 └── utils/
     └── chat-utils.ts         # Utility functions
-```
+\`\`\`
 
 ### **Component Architecture**
-```
+\`\`\`
 components/
 ├── layout/                    # Layout components
 │   ├── ChatLayout.tsx         # Root layout wrapper
@@ -61,7 +61,7 @@ components/
     ├── TimelineActivityLog.tsx # Activity timeline
     ├── SidebarContent.tsx     # Sidebar layout
     └── MobileSidebarSheet.tsx # Mobile sidebar
-```
+\`\`\`
 
 ## 🔧 **Key Features Implemented**
 

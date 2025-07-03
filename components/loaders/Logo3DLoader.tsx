@@ -10,4 +10,4 @@ export const Logo3DLoader: React.FC<Logo3DLoaderProps> = ({ size }) => {
       <div className="text-white">Loading 3D Model...</div>
     </div>
   );
-}; 
+};

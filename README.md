@@ -28,13 +28,13 @@
 ## Development Workflow
 
 1. **Create a feature branch** from the appropriate base branch:
-   ```bash
+   \`\`\`bash
    # For web app features
    git checkout -b feature/my-webapp-feature feature/webapp-clean
 
    # For AI chat features
    git checkout -b feature/my-chat-feature feature/ai-chat-utils
-   ```
+   \`\`\`
 
 2. **Make your changes**
 
@@ -60,7 +60,7 @@
 
 ### Installation
 
-```bash
+\`\`\`bash
 # Clone the repository
 git clone https://github.com/iamfarzad/FB-c_labV2.git
 cd FB-c_labV2
@@ -71,11 +71,11 @@ pnpm install
 # Copy environment variables
 cp .env.example .env.local
 # Edit .env.local with your API keys
-```
+\`\`\`
 
 ### Running the Application
 
-```bash
+\`\`\`bash
 # For web app development
 git checkout feature/webapp-clean
 pnpm dev
@@ -83,7 +83,7 @@ pnpm dev
 # For AI chat development
 git checkout feature/ai-chat-utils
 pnpm dev
-```
+\`\`\`
 
 ## Deployment
 

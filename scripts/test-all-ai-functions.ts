@@ -481,4 +481,4 @@ if (require.main === module) {
   main().catch(console.error);
 }
 
-module.exports = { AIFunctionTester }; 
+module.exports = { AIFunctionTester };

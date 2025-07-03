@@ -58,7 +58,7 @@ Based on your Google AI for Developers capabilities and our entire conversation,
 
 ### **Environment Variables**
 
-```bash
+\`\`\`bash
 # Core AI APIs
 GEMINI_API_KEY=your_gemini_api_key
 ELEVENLABS_API_KEY=your_elevenlabs_key
@@ -76,21 +76,21 @@ EMAIL_PASS=your_app_specific_password
 # Voice Configuration
 ELEVENLABS_VOICE_ID=your_cloned_voice_id
 ELEVENLABS_MODEL=eleven_turbo_v2_5
-```
+\`\`\`
 
 
 ### **Package Dependencies**
 
-```bash
+\`\`\`bash
 npm install @google/genai @supabase/supabase-js elevenlabs
 npm install @vercel/blob nodemailer jspdf html2pdf.js
 npm install react-webcam react-screen-capture
-```
+\`\`\`
 
 
 ## **2. Enhanced Gemini API Handler (Complete Implementation)**
 
-```typescript
+\`\`\`typescript
 // /api/gemini.ts - Complete enhanced version
 import { GoogleGenAI } from "@google/genai"
 import { createClient } from '@supabase/supabase-js'
@@ -1022,12 +1022,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
   }
 }
-```
+\`\`\`
 
 
 ## **3. Database Schema (Supabase)**
 
-```sql
+\`\`\`sql
 -- Lead summaries table (minimal storage)
 CREATE TABLE lead_summaries (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -1048,14 +1048,14 @@ ALTER PUBLICATION supabase_realtime ADD TABLE lead_summaries;
 CREATE INDEX idx_lead_summaries_email ON lead_summaries(email);
 CREATE INDEX idx_lead_summaries_lead_score ON lead_summaries(lead_score DESC);
 CREATE INDEX idx_lead_summaries_created_at ON lead_summaries(created_at DESC);
-```
+\`\`\`
 
 
 ## **4. Frontend React Components**
 
 ### **Main Chat Interface with Sidebar**
 
-```tsx
+\`\`\`tsx
 // app/chat/page.tsx
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -1367,12 +1367,12 @@ function ChatInput({ onSend, disabled }: ChatInputProps) {
     </div>
   )
 }
-```
+\`\`\`
 
 
 ## **5. PDF Generation with F.B/c Branding**
 
-```typescript
+\`\`\`typescript
 // utils/pdfGenerator.ts
 import jsPDF from 'jspdf'
 
@@ -1455,7 +1455,7 @@ export const generateFBCReport = async (summaryData: {
   
   return pdf.output('datauristring')
 }
-```
+\`\`\`
 
 
 ## **6. Implementation Checklist**
@@ -1531,7 +1531,7 @@ The key is to use all 17 functions **behind the scenes** while making the conver
 ### **Function Orchestration by Conversation Stage**
 
 **Stage 1: Greeting & Name Collection (Functions 1-3)**
-```
+\`\`\`
 User: "Hi"
 AI: "Hi! I'm Farzad AI from F.B/c. I can showcase how cutting-edge AI transforms businesses in real-time. What's your name?"
 
@@ -1539,10 +1539,10 @@ Behind the scenes:
 - Text generation (personalized greeting)
 - Speech generation (your cloned voice)
 - Thinking process (side panel: "Initializing conversation...")
-```
+\`\`\`
 
 **Stage 2: Email & Company Intelligence (Functions 4-7)**
-```
+\`\`\`
 User: "I'm Sarah from TechFlow Solutions"
 AI: "Nice to meet you, Sarah! To send you a personalized summary, what's your work email?"
 
@@ -1557,10 +1557,10 @@ Behind the scenes:
 - Long context (remembering all details)
 - Function calling (company intelligence APIs)
 - Side panel: "🔍 Researching TechFlow Solutions... Found: SaaS company, 50+ employees, customer service focus"
-```
+\`\`\`
 
 **Stage 3: Problem Discovery & Multimodal Demo (Functions 8-12)**
-```
+\`\`\`
 User: "We're struggling with customer support response times"
 AI: "That's exactly what I thought. Let me show you something. Can you upload your current support workflow document, or share your website URL? I'll analyze it in real-time and show you specific AI solutions."
 
@@ -1578,10 +1578,10 @@ Behind the scenes:
 - Image generation (workflow visualization)
 - Structured output (organized recommendations)
 - Side panel: "📄 Processing support workflow... ⚡ Calculating ROI... 🎨 Generating solution diagram..."
-```
+\`\`\`
 
 **Stage 4: Personalized Content Generation (Functions 13-15)**
-```
+\`\`\`
 AI: "Let me create a custom solution overview for TechFlow Solutions..."
 
 [Generates personalized business case with:]
@@ -1598,10 +1598,10 @@ Behind the scenes:
 - Audio understanding (if user provides voice input)
 - Long context (maintaining all conversation details)
 - Real-time summary updates in sidebar
-```
+\`\`\`
 
 **Stage 5: Lead Qualification & Service Positioning (Functions 16-17)**
-```
+\`\`\`
 AI: "Based on our conversation, I see two paths for TechFlow Solutions:
 
 1. **AI Training Workshop**: Get your team up to speed with hands-on AI implementation
@@ -1613,45 +1613,45 @@ Behind the scenes:
 - Lead capture and CRM integration (scoring and categorization)
 - Function calling (CRM updates, email triggers)
 - Structured output (generating final summary)
-```
+\`\`\`
 
 ## **The Brilliance Demonstration Strategy**
 
 ### **Show, Don't Tell Intelligence**
 
 **Real-time Insights:**
-```
+\`\`\`
 "I notice from TechFlow's recent LinkedIn posts that you're expanding into European markets. AI customer support with multi-language capabilities would be crucial for that expansion."
-```
+\`\`\`
 
 **Predictive Analysis:**
-```
+\`\`\`
 "Companies similar to TechFlow typically see the biggest ROI from automating their tier-1 support first, then expanding to sales qualification. Should we focus there?"
-```
+\`\`\`
 
 **Live Problem Solving:**
-```
+\`\`\`
 "Let me run a quick analysis of your current support ticket volume... [code executes] Based on these numbers, you'd need 2.3 fewer support agents with AI implementation."
-```
+\`\`\`
 
 ### **Sidebar Transparency Creates Trust**
 
 The side panel shows users exactly what's happening:
-```
+\`\`\`
 Analyzing TechFlow Solutions...
 AI reasoning through support challenges...
 Calculating ROI projections...
 Generating custom workflow diagram...
 Updating personalized summary...
 All capabilities demonstrated: 17/17
-```
+\`\`\`
 
 ## **The Personalization Engine**
 
 ### **Dynamic Content Adaptation**
 Every response uses multiple functions simultaneously:
 
-```python
+\`\`\`python
 def generate_personalized_response(user_input, context):
     # Use 5-7 functions per response
     company_insights = grounded_search(context.email_domain)
@@ -1667,7 +1667,7 @@ def generate_personalized_response(user_input, context):
         'sidebar_activity': thinking_process,
         'summary': summary_update
     }
-```
+\`\`\`
 
 ### **Intelligence Layering**
 Each response demonstrates multiple capabilities:
@@ -1688,24 +1688,24 @@ Users receive immediate value from every function:
 - Industry benchmarking (competitive intelligence)
 
 ### **Progressive Commitment**
-```
+\`\`\`
 1. Name → Personalized greeting
 2. Email → Company research & insights
 3. Business challenge → Custom analysis
 4. Document upload → Detailed recommendations
 5. Interest confirmation → Consultation booking
-```
+\`\`\`
 
 ## **The Conversion Moment**
 
 After experiencing all 17 functions:
-```
+\`\`\`
 "Sarah, you've just experienced what took me 10,000+ hours to build. The real-time analysis, the custom insights, the business intelligence—that's not a demo, that's a working system.
 
 Now imagine your customer support running with this level of intelligence. Your sales team having these insights. Your operations automated with AI that actually thinks.
 
 You've seen it works. The question is: what's the first process we should transform for TechFlow Solutions?"
-```
+\`\`\`
 
 This approach makes every function serve dual purposes: demonstrating AI brilliance AND collecting qualified lead information, creating an irresistible experience that naturally leads to consultation bookings.
 

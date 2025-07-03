@@ -27,7 +27,7 @@
 
 #### Phase 1: Quick Wins (Can do now)
 1. Delete unused files:
-   ```bash
+   \`\`\`bash
    rm components/webcam-modal-live.tsx
    rm components/voice-input-modal-live.tsx
    rm components/screen-share-modal-live.tsx
@@ -35,7 +35,7 @@
    rm components/consulting/process-timeline.tsx.bak
    rm components/consulting/process-cards.tsx.bak
    rm test-ai-showcase.html  # Keep public/test-ai-showcase.html
-   ```
+   \`\`\`
 
 2. Consolidate constants:
    - Move `CONVERSATION_STAGES` from `lib/ai/unified-ai-service.ts` to `api/ai-service/types/index.ts`
@@ -62,7 +62,7 @@
 
 ## Files Safe to Delete Immediately
 
-```bash
+\`\`\`bash
 # Modal duplicates (not used)
 components/webcam-modal-live.tsx
 components/voice-input-modal-live.tsx
@@ -78,7 +78,7 @@ components/ui/dot-pattern-1.tsx
 # Test files
 test-ai-showcase.html  # Keep the one in public/
 test-video2app.html    # If duplicate exists in public/
-```
+\`\`\`
 
 ## Import Updates Needed
 
@@ -120,4 +120,4 @@ After deletion:
 **High Risk Changes** (need extensive testing):
 - API route consolidation
 - Hero background unification
-- YouTube utilities merger 
+- YouTube utilities merger

@@ -20,9 +20,9 @@ This branch contains all web application features **excluding** the AI chat func
 
 ## Testing
 Run tests before merging to `main`:
-```bash
+\`\`\`bash
 pnpm test
-```
+\`\`\`
 
 ## Merging to Main
 1. Ensure all tests pass

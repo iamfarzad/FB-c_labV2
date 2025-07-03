@@ -27,7 +27,7 @@ The Google Gemini Live API enables low-latency, real-time voice and video intera
 - Sub-second latency (600ms for first token)
 
 ### 2. **Supported Models**
-```typescript
+\`\`\`typescript
 // Models with Live API support
 const LIVE_API_MODELS = [
   "gemini-live-2.5-flash-preview",           // Half-cascade audio
@@ -35,7 +35,7 @@ const LIVE_API_MODELS = [
   "gemini-2.5-flash-preview-native-audio-dialog",     // Native audio
   "gemini-2.5-flash-exp-native-audio-thinking-dialog" // Native audio with thinking
 ];
-```
+\`\`\`
 
 ### 3. **Audio Capabilities**
 - **Input**: 16-bit PCM, 16kHz, mono format
@@ -52,7 +52,7 @@ const LIVE_API_MODELS = [
 
 ### Step 1: WebSocket Connection Setup
 
-```typescript
+\`\`\`typescript
 // lib/ai/gemini-live-client.ts
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -114,11 +114,11 @@ export class GeminiLiveClient {
     });
   }
 }
-```
+\`\`\`
 
 ### Step 2: Updated Voice Implementation
 
-```typescript
+\`\`\`typescript
 // components/voice-input-live.tsx
 export const VoiceInputLive: React.FC = () => {
   const [liveClient, setLiveClient] = useState<GeminiLiveClient | null>(null);
@@ -175,11 +175,11 @@ export const VoiceInputLive: React.FC = () => {
     return new Blob([pcmBuffer.buffer], { type: 'audio/pcm;rate=16000' });
   }
 };
-```
+\`\`\`
 
 ### Step 3: Enhanced Webcam Streaming
 
-```typescript
+\`\`\`typescript
 // components/webcam-live.tsx
 export const WebcamLive: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -233,11 +233,11 @@ export const WebcamLive: React.FC = () => {
     };
   };
 };
-```
+\`\`\`
 
 ### Step 4: Screen Share with Live API
 
-```typescript
+\`\`\`typescript
 // components/screen-share-live.tsx
 export const ScreenShareLive: React.FC = () => {
   const [liveClient, setLiveClient] = useState<GeminiLiveClient | null>(null);
@@ -289,11 +289,11 @@ export const ScreenShareLive: React.FC = () => {
     };
   };
 };
-```
+\`\`\`
 
 ### Step 5: Handling Live API Responses
 
-```typescript
+\`\`\`typescript
 // lib/ai/gemini-live-client.ts (continued)
 export class GeminiLiveClient {
   // ... previous code ...
@@ -344,12 +344,12 @@ export class GeminiLiveClient {
     await audio.play();
   }
 }
-```
+\`\`\`
 
 ## Session Management Features
 
 ### Voice Activity Detection (VAD)
-```typescript
+\`\`\`typescript
 // Configure VAD in setup
 {
   realtimeInputConfig: {
@@ -362,10 +362,10 @@ export class GeminiLiveClient {
     }
   }
 }
-```
+\`\`\`
 
 ### Session Resumption
-```typescript
+\`\`\`typescript
 // Enable session resumption
 {
   sessionResumption: {
@@ -373,10 +373,10 @@ export class GeminiLiveClient {
     transparent: true // Auto-reconnect support
   }
 }
-```
+\`\`\`
 
 ### Context Compression
-```typescript
+\`\`\`typescript
 // Configure context window compression
 {
   contextWindowCompression: {
@@ -386,7 +386,7 @@ export class GeminiLiveClient {
     }
   }
 }
-```
+\`\`\`
 
 ## Best Practices
 
@@ -414,9 +414,9 @@ export class GeminiLiveClient {
 ## Next Steps
 
 1. Install required dependencies:
-   ```bash
+   \`\`\`bash
    npm install @google/generative-ai websocket
-   ```
+   \`\`\`
 
 2. Create WebSocket service for Live API
 3. Update existing components to use streaming

@@ -104,4 +104,4 @@ export const topographicVariant = {
       (marker.material as THREE.MeshBasicMaterial).opacity = 0.8 * pulse;
     });
   },
-}; 
+};

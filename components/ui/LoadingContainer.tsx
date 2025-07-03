@@ -22,4 +22,4 @@ export default function LoadingContainer({ height }: LoadingContainerProps) {
       <Loader />
     </div>
   );
-} 
+}

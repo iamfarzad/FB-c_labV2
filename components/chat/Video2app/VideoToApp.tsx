@@ -420,4 +420,4 @@ export const VideoToApp = forwardRef<{ getSpec: () => string; getCode: () => str
 
 VideoToApp.displayName = 'VideoToApp';
 
-export default VideoToApp; 
+export default VideoToApp;

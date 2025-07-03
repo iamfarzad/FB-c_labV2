@@ -20,4 +20,4 @@ export function FeatureCard({ icon, title, description, theme }: FeatureCardProp
       <p className={`text-sm ${mutedTextColor}`}>{description}</p>
     </div>
   );
-} 
+}

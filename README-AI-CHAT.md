@@ -21,12 +21,12 @@ This branch contains all AI chat functionality and related utilities.
 
 ## Testing
 Run the following before merging to `main`:
-```bash
+\`\`\`bash
 pnpm test:chat
 # Or run specific tests
 pnpm test:chat:api
 pnpm test:chat:ui
-```
+\`\`\`
 
 ## Merging to Main
 1. Ensure all tests pass

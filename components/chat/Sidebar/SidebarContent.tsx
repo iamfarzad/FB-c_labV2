@@ -60,6 +60,3 @@ export const SidebarContent = ({
 };
 
 export default SidebarContent;
-
-
-

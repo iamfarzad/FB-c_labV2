@@ -100,9 +100,9 @@ The Google Gemini Live API has been successfully integrated into the project, pr
 ## Environment Setup
 
 Add to your `.env.local`:
-```
+\`\`\`
 GOOGLE_GEMINI_API_KEY=your-api-key-here
-```
+\`\`\`
 
 ## Next Steps
 
