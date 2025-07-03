@@ -11,17 +11,26 @@ import { Video2AppModal } from "../modals/Video2AppModal"
 
 // Dynamically import the Live API modals to prevent SSR issues
 const ScreenShareModalLive = dynamic(
-  () => import("@/components/screen-share-modal-live").then(mod => ({ default: mod.ScreenShareModalLive })),
+  async () => {
+    const mod = await import("@/components/screen-share-modal-live");
+    return { default: mod.ScreenShareModalLive };
+  },
   { ssr: false }
 )
 
 const VoiceInputModalLive = dynamic(
-  () => import("@/components/voice-input-modal-live").then(mod => ({ default: mod.VoiceInputModalLive })),
+  async () => {
+    const mod = await import("@/components/voice-input-modal-live");
+    return { default: mod.VoiceInputModalLive };
+  },
   { ssr: false }
 )
 
 const WebcamModalLive = dynamic(
-  () => import("@/components/webcam-modal-live").then(mod => ({ default: mod.WebcamModalLive })),
+  async () => {
+    const mod = await import("@/components/webcam-modal-live");
+    return { default: mod.WebcamModalLive };
+  },
   { ssr: false }
 )
 
