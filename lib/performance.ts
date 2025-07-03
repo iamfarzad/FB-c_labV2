@@ -47,15 +47,15 @@ export function preloadCriticalResources() {
   if (typeof window === 'undefined') return
 
   const criticalResources: Array<{url: string, as: string, type?: string}> = [
-    // Critical fonts
-    { url: '/fonts/rajdhani-variable.woff2', as: 'font', type: 'font/woff2' },
-    { url: '/fonts/space-mono-regular.woff2', as: 'font', type: 'font/woff2' },
-    { url: '/fonts/montserrat-variable.woff2', as: 'font', type: 'font/woff2' },
+    // Critical fonts - TODO: Add these font files to /public/fonts/
+    // { url: '/fonts/rajdhani-variable.woff2', as: 'font', type: 'font/woff2' },
+    // { url: '/fonts/space-mono-regular.woff2', as: 'font', type: 'font/woff2' },
+    // { url: '/fonts/montserrat-variable.woff2', as: 'font', type: 'font/woff2' },
     
     // Critical images
     { url: '/farzad-bayat_profile_2AI.JPG', as: 'image' },
     
-    // Critical scripts (if any)
+    // Critical scripts
     // { url: '/scripts/critical.js', as: 'script' },
   ]
 
