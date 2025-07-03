@@ -1,16 +1,29 @@
 "use client"
 
-import React from "react"
-import { useState, useRef } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Send, Camera, Monitor, Mic, MicOff, Paperclip, FileText, Image as ImageIcon, Youtube, Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useChatContext } from "../../../app/chat/context/ChatProvider"
-import { ScreenShareModalLive } from "@/components/screen-share-modal-live"
-import { VoiceInputModalLive } from "@/components/voice-input-modal-live"
-import { WebcamModalLive } from "@/components/webcam-modal-live"
+import dynamic from "next/dynamic"
 import { Video2AppModal } from "../modals/Video2AppModal"
+
+// Dynamically import the Live API modals to prevent SSR issues
+const ScreenShareModalLive = dynamic(
+  () => import("@/components/screen-share-modal-live").then(mod => ({ default: mod.ScreenShareModalLive })),
+  { ssr: false }
+)
+
+const VoiceInputModalLive = dynamic(
+  () => import("@/components/voice-input-modal-live").then(mod => ({ default: mod.VoiceInputModalLive })),
+  { ssr: false }
+)
+
+const WebcamModalLive = dynamic(
+  () => import("@/components/webcam-modal-live").then(mod => ({ default: mod.WebcamModalLive })),
+  { ssr: false }
+)
 
 interface ChatFooterProps {
   input: string
@@ -30,10 +43,16 @@ export function ChatFooter({ input, setInput, onSendMessage, isLoading, onKeyPre
   const [showVoiceModal, setShowVoiceModal] = useState(false)
   const [showWebcamModal, setShowWebcamModal] = useState(false)
   const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const anyFileInputRef = useRef<HTMLInputElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  // Ensure we're mounted on client side
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const uploadMenuItems = [
     {
@@ -272,55 +291,59 @@ export function ChatFooter({ input, setInput, onSendMessage, isLoading, onKeyPre
       />
 
       {/* Modals */}
-      <ScreenShareModalLive
-        isScreenSharing={showScreenShareModal}
-        onStopScreenShare={() => setShowScreenShareModal(false)}
-        onAIAnalysis={(analysis: string) => {
-          // Handle AI analysis from screen share
-          console.log('Screen Analysis:', analysis)
-          addActivity({
-            type: 'ai_thinking',
-            title: 'Screen Analysis',
-            description: analysis,
-            status: 'completed'
-          })
-        }}
-        theme="dark"
-      />
+      {isMounted && (
+        <>
+          <ScreenShareModalLive
+            isScreenSharing={showScreenShareModal}
+            onStopScreenShare={() => setShowScreenShareModal(false)}
+            onAIAnalysis={(analysis: string) => {
+              // Handle AI analysis from screen share
+              console.log('Screen Analysis:', analysis)
+              addActivity({
+                type: 'ai_thinking',
+                title: 'Screen Analysis',
+                description: analysis,
+                status: 'completed'
+              })
+            }}
+            theme="dark"
+          />
 
-      <VoiceInputModalLive
-        isListening={showVoiceModal}
-        onClose={() => setShowVoiceModal(false)}
-        onAIResponse={(response: string) => {
-          // Handle AI response from voice conversation
-          console.log('AI Response:', response)
-          handleVoiceTranscript(response)
-        }}
-        theme="dark"
-      />
+          <VoiceInputModalLive
+            isListening={showVoiceModal}
+            onClose={() => setShowVoiceModal(false)}
+            onAIResponse={(response: string) => {
+              // Handle AI response from voice conversation
+              console.log('AI Response:', response)
+              handleVoiceTranscript(response)
+            }}
+            theme="dark"
+          />
 
-      <WebcamModalLive
-        videoRef={videoRef}
-        canvasRef={canvasRef}
-        isCameraActive={showWebcamModal}
-        onStopCamera={() => setShowWebcamModal(false)}
-        onAIAnalysis={(analysis: string) => {
-          // Handle AI analysis from webcam
-          console.log('Webcam Analysis:', analysis)
-          addActivity({
-            type: 'ai_thinking',
-            title: 'Vision Analysis',
-            description: analysis,
-            status: 'completed'
-          })
-        }}
-        theme="dark"
-      />
+          <WebcamModalLive
+            videoRef={videoRef}
+            canvasRef={canvasRef}
+            isCameraActive={showWebcamModal}
+            onStopCamera={() => setShowWebcamModal(false)}
+            onAIAnalysis={(analysis: string) => {
+              // Handle AI analysis from webcam
+              console.log('Webcam Analysis:', analysis)
+              addActivity({
+                type: 'ai_thinking',
+                title: 'Vision Analysis',
+                description: analysis,
+                status: 'completed'
+              })
+            }}
+            theme="dark"
+          />
 
-      <Video2AppModal
-        isOpen={showVideo2AppModal}
-        onClose={() => setShowVideo2AppModal(false)}
-      />
+          <Video2AppModal
+            isOpen={showVideo2AppModal}
+            onClose={() => setShowVideo2AppModal(false)}
+          />
+        </>
+      )}
     </div>
   )
 }

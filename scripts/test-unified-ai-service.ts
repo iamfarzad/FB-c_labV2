@@ -29,7 +29,7 @@ async function testEndpoint(
   console.log(`\n🧪 Testing: ${testName}...`);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/ai-service`, {
+    const response = await fetch(`${API_BASE_URL}/ai-`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
