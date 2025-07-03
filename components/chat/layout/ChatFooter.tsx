@@ -302,55 +302,63 @@ export function ChatFooter({ input, setInput, onSendMessage, isLoading, onKeyPre
       {/* Modals */}
       {isMounted && (
         <>
-          <ScreenShareModalLive
-            isScreenSharing={showScreenShareModal}
-            onStopScreenShare={() => setShowScreenShareModal(false)}
-            onAIAnalysis={(analysis: string) => {
-              // Handle AI analysis from screen share
-              console.log('Screen Analysis:', analysis)
-              addActivity({
-                type: 'ai_thinking',
-                title: 'Screen Analysis',
-                description: analysis,
-                status: 'completed'
-              })
-            }}
-            theme="dark"
-          />
+          {showScreenShareModal && (
+            <ScreenShareModalLive
+              isScreenSharing={showScreenShareModal}
+              onStopScreenShare={() => setShowScreenShareModal(false)}
+              onAIAnalysis={(analysis: string) => {
+                // Handle AI analysis from screen share
+                console.log('Screen Analysis:', analysis)
+                addActivity({
+                  type: 'ai_thinking',
+                  title: 'Screen Analysis',
+                  description: analysis,
+                  status: 'completed'
+                })
+              }}
+              theme="dark"
+            />
+          )}
 
-          <VoiceInputModalLive
-            isListening={showVoiceModal}
-            onClose={() => setShowVoiceModal(false)}
-            onAIResponse={(response: string) => {
-              // Handle AI response from voice conversation
-              console.log('AI Response:', response)
-              handleVoiceTranscript(response)
-            }}
-            theme="dark"
-          />
+          {showVoiceModal && (
+            <VoiceInputModalLive
+              isListening={showVoiceModal}
+              onClose={() => setShowVoiceModal(false)}
+              onAIResponse={(response: string) => {
+                // Handle AI response from voice conversation
+                console.log('AI Response:', response)
+                handleVoiceTranscript(response)
+              }}
+              theme="dark"
+            />
+          )}
 
-          <WebcamModalLive
-            videoRef={videoRef}
-            canvasRef={canvasRef}
-            isCameraActive={showWebcamModal}
-            onStopCamera={() => setShowWebcamModal(false)}
-            onAIAnalysis={(analysis: string) => {
-              // Handle AI analysis from webcam
-              console.log('Webcam Analysis:', analysis)
-              addActivity({
-                type: 'ai_thinking',
-                title: 'Vision Analysis',
-                description: analysis,
-                status: 'completed'
-              })
-            }}
-            theme="dark"
-          />
+          {showWebcamModal && (
+            <WebcamModalLive
+              videoRef={videoRef}
+              canvasRef={canvasRef}
+              isCameraActive={showWebcamModal}
+              onStopCamera={() => setShowWebcamModal(false)}
+              onAIAnalysis={(analysis: string) => {
+                // Handle AI analysis from webcam
+                console.log('Webcam Analysis:', analysis)
+                addActivity({
+                  type: 'ai_thinking',
+                  title: 'Vision Analysis',
+                  description: analysis,
+                  status: 'completed'
+                })
+              }}
+              theme="dark"
+            />
+          )}
 
-          <Video2AppModal
-            isOpen={showVideo2AppModal}
-            onClose={() => setShowVideo2AppModal(false)}
-          />
+          {showVideo2AppModal && (
+            <Video2AppModal
+              isOpen={showVideo2AppModal}
+              onClose={() => setShowVideo2AppModal(false)}
+            />
+          )}
         </>
       )}
     </div>
