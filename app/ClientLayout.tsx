@@ -1,124 +1,72 @@
 "use client"
 
-import type { ReactNode } from "react"
-import { useEffect, useState } from "react"
+import type React from "react"
+import { useState, useEffect } from "react"
 import { ThemeProvider } from "@/components/theme-provider"
-import { AccessibilityProvider } from "@/components/accessibility/accessibility-provider"
-import { CookieConsent } from "@/components/legal/cookie-consent"
-import { initPerformanceOptimizations } from "@/lib/performance"
-import { DataContext } from "@/context/data-context"
-import { ToastProvider } from "@/components/ui/use-toast"
-import type { Example } from "@/lib/types"
-import "./globals.css"
-
-// Structured data for SEO
-const websiteSchema = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "F.B/c AI Consulting",
-  "url": "https://fb-consulting.com",
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": "https://fb-consulting.com/search?q={search_term_string}",
-    "query-input": "required name=search_term_string"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "F.B/c",
-    "logo": {
-      "@type": "ImageObject",
-      "url": "https://fb-consulting.com/logo.png"
-    }
-  }
-}
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+import { Toaster } from "@/components/ui/toaster"
+import { cn } from "@/lib/utils"
 
 interface ClientLayoutProps {
-  children: ReactNode
+  children: React.ReactNode
   className?: string
 }
 
 export default function ClientLayout({ children, className }: ClientLayoutProps) {
-  const [isMounted, setIsMounted] = useState(false)
-  const [examples, setExamples] = useState<Example[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [theme, setTheme] = useState<"light" | "dark">("dark")
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Mark as mounted for client-side rendering
-    setIsMounted(true)
-    
-    // Initialize performance optimizations
-    const cleanup = initPerformanceOptimizations()
-    
-    // Load examples data
-    setIsLoading(true)
-    fetch("/data/examples.json")
-      .then((res) => res.json())
-      .then((fetchedData: Example[]) => {
-        setExamples(fetchedData)
-        setIsLoading(false)
-      })
-      .catch((error) => {
-        console.error("Failed to load examples:", error)
-        setIsLoading(false)
-      })
-    
-    // Cleanup function
-    return () => {
-      cleanup?.()
+    setMounted(true)
+    // Check for saved theme preference or default to dark
+    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null
+    if (savedTheme) {
+      setTheme(savedTheme)
     }
   }, [])
 
-  const empty: Example = {
-    title: "",
-    url: "",
-    spec: "",
-    code: "",
-    description: "",
-    category: "general",
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light"
+    setTheme(newTheme)
+    localStorage.setItem("theme", newTheme)
   }
 
-  const dataContextValue = {
-    examples,
-    isLoading,
-    setExamples,
-    defaultExample: examples.length > 0 ? examples[0] : empty,
+  // Prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <body className="font-sans antialiased">
+        <div className="min-h-screen bg-background">
+          <div className="animate-pulse">
+            <div className="h-16 bg-muted"></div>
+            <div className="container mx-auto px-4 py-8">
+              <div className="space-y-4">
+                <div className="h-8 bg-muted rounded w-3/4"></div>
+                <div className="h-4 bg-muted rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+    )
   }
 
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={className}
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="dark"
+      enableSystem={false}
+      value={{
+        light: "light",
+        dark: "dark",
+      }}
     >
-      <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(websiteSchema)
-          }}
-        />
-      </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
-        <DataContext.Provider value={dataContextValue}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <AccessibilityProvider>
-              <ToastProvider>
-                <div className="min-h-screen bg-background">
-                  {children}
-                  <CookieConsent />
-                </div>
-              </ToastProvider>
-            </AccessibilityProvider>
-          </ThemeProvider>
-        </DataContext.Provider>
-      </body>
-    </html>
+      <div className={cn("min-h-screen bg-background font-sans antialiased", className)}>
+        <Header theme={theme} onThemeToggle={toggleTheme} />
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <Toaster />
+      </div>
+    </ThemeProvider>
   )
 }
-
-// Global styles component removed - styles are now in globals.css
