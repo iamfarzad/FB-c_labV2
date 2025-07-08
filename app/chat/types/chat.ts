@@ -2,7 +2,7 @@ export interface Message {
   id: string
   role: "user" | "assistant" | "system" | "function" | "data" | "tool"
   content: string
-  timestamp: Date // In the stable version, timestamp was required and always a Date object.
+  createdAt?: Date // Using the official, optional `createdAt` property from the AI SDK.
   sources?: any[]
   audioData?: string | null
   imageUrl?: string

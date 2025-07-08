@@ -132,13 +132,15 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
                 </Button>
               </Card>
 
-              {/* This was the original, working implementation. It assumes timestamp always exists. */}
-              <span className="text-xs text-muted-foreground mt-1 px-1">
-                {message.timestamp.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
+              {/* THE FIX: Only render the timestamp if it exists. */}
+              {message.createdAt && (
+                <span className="text-xs text-muted-foreground mt-1 px-1">
+                  {message.createdAt.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              )}
             </div>
 
             {message.role === "user" && (

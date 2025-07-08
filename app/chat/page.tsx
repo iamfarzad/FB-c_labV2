@@ -50,7 +50,6 @@ export default function ChatPage() {
         leadContext: leadCaptureState.leadData,
         sessionId: sessionId,
       },
-      // The stable version correctly added a timestamp to incoming messages.
       onFinish: (message) => {
         activityLogger.log({
           type: "ai_stream",
@@ -72,7 +71,6 @@ export default function ChatPage() {
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   useEffect(scrollToBottom, [messages])
 
-  // This effect correctly triggered the lead capture flow.
   useEffect(() => {
     const userMessages = messages.filter((m) => m.role === "user")
     if (userMessages.length === 1 && leadCaptureState.stage === "initial") {
@@ -106,27 +104,19 @@ export default function ChatPage() {
     toast({ title: "New Chat Started" })
   }, [setMessages, clearActivities, toast])
 
-  // The original, simpler submission logic.
   const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
     if (leadCaptureState.stage === "collecting_info") {
       toast({
         title: "Please complete the form first",
         description: "We need your details to start the AI consultation.",
         variant: "destructive",
       })
-      e.preventDefault()
       return
     }
     if (input.trim()) {
+      handleSubmit(e)
       activityLogger.log({ type: "user_action", title: "User Message Sent", description: input, status: "completed" })
-      handleSubmit(e, {
-        options: {
-          body: {
-            // Ensure the latest lead context is sent with the message
-            leadContext: leadCaptureState.leadData,
-          },
-        },
-      })
     }
   }
 
@@ -134,10 +124,8 @@ export default function ChatPage() {
     setLeadCaptureState({ stage: "consultation", leadData } as LeadCaptureState)
     setShowLeadCapture(false)
     append({
-      id: uuidv4(),
       role: "assistant",
       content: `Hello ${leadData.name}! 👋 Thanks for providing your details. I'm now ready to assist. How can I help with your AI automation goals today?`,
-      timestamp: new Date(),
     })
     toast({ title: "Welcome!", description: `Starting consultation for ${leadData.name}.` })
   }
@@ -145,11 +133,9 @@ export default function ChatPage() {
   const handleImageUpload = useCallback(
     (imageData: string, fileName: string) => {
       append({
-        id: uuidv4(),
         role: "user",
         content: `[Image uploaded: ${fileName}] Please analyze this image.`,
         imageUrl: imageData,
-        timestamp: new Date(),
       })
       activityLogger.log({ type: "image_upload", title: "Image Uploaded", description: fileName, status: "completed" })
     },
@@ -158,10 +144,8 @@ export default function ChatPage() {
 
   const handleFileUpload = (file: File) => {
     append({
-      id: uuidv4(),
       role: "user",
       content: `[File uploaded: ${file.name}] Please summarize or analyze this document.`,
-      timestamp: new Date(),
     })
     activityLogger.log({
       type: "file_upload",
@@ -174,7 +158,7 @@ export default function ChatPage() {
   const handleVoiceTranscript = useCallback(
     (transcript: string) => {
       if (!transcript.trim()) return
-      append({ id: uuidv4(), role: "user", content: transcript, timestamp: new Date() })
+      append({ role: "user", content: transcript })
       activityLogger.log({ type: "voice_input", title: "Voice Input Sent", status: "completed" })
     },
     [append],
@@ -183,11 +167,9 @@ export default function ChatPage() {
   const handleWebcamCapture = useCallback(
     (imageData: string) => {
       append({
-        id: uuidv4(),
         role: "user",
         content: "[Webcam image captured] Please analyze this image.",
         imageUrl: imageData,
-        timestamp: new Date(),
       })
       activityLogger.log({ type: "image_capture", title: "Webcam Photo Captured", status: "completed" })
     },
@@ -197,10 +179,8 @@ export default function ChatPage() {
   const handleScreenShareAnalysis = useCallback(
     (analysis: string) => {
       append({
-        id: uuidv4(),
         role: "assistant",
         content: `**Screen Analysis:**\n${analysis}`,
-        timestamp: new Date(),
       })
       activityLogger.log({ type: "vision_analysis", title: "Screen Analyzed", status: "completed" })
     },
@@ -210,10 +190,8 @@ export default function ChatPage() {
   const handleVideoAppResult = useCallback(
     (result: { spec: string; code: string }) => {
       append({
-        id: uuidv4(),
         role: "assistant",
         content: `I have successfully generated a new learning app based on the video.`,
-        timestamp: new Date(),
       })
       activityLogger.log({ type: "tool_used", title: "Video-to-App Generated", status: "completed" })
     },
@@ -317,10 +295,8 @@ export default function ChatPage() {
           onCapture={handleWebcamCapture}
           onAIAnalysis={(analysis) =>
             append({
-              id: uuidv4(),
               role: "assistant",
               content: `**Webcam Analysis:**\n${analysis}`,
-              timestamp: new Date(),
             })
           }
         />
