@@ -43,7 +43,9 @@ export default function ChatPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
-  const { activityLog, addActivity } = useChatContext()
+
+  // Use the chat context
+  const { activityLog, addActivity, clearActivities } = useChatContext()
   const { toast } = useToast()
 
   const scrollToBottom = () => {
@@ -51,6 +53,18 @@ export default function ChatPage() {
   }
 
   useEffect(scrollToBottom, [messages])
+
+  // Sync activity logger with context
+  useEffect(() => {
+    const handleActivityUpdate = (activity: ActivityItem) => {
+      addActivity(activity)
+    }
+
+    activityLogger.addListener(handleActivityUpdate)
+    return () => {
+      activityLogger.removeListener(handleActivityUpdate)
+    }
+  }, [addActivity])
 
   // Trigger lead capture after first interaction
   useEffect(() => {
@@ -110,12 +124,13 @@ export default function ChatPage() {
       },
     })
     setShowLeadCapture(false)
+    clearActivities()
     activityLogger.clearActivities()
     toast({
       title: "New Chat Started",
       description: "Previous conversation cleared",
     })
-  }, [toast])
+  }, [toast, clearActivities])
 
   const handleActivityClick = (activity: ActivityItem) => {
     console.log("Activity clicked:", activity)
@@ -205,7 +220,6 @@ export default function ChatPage() {
         try {
           // Start AI request activity
           const aiRequestId = activityLogger.startActivity("ai_request", {
-            type: "ai_request",
             title: "Processing AI Request",
             description: "Sending message to Gemini AI",
             details: [
@@ -238,7 +252,6 @@ export default function ChatPage() {
           activityLogger.completeActivity(aiRequestId, {
             title: "AI Request Completed",
             description: "Successfully connected to Gemini AI",
-            status: "completed",
           })
         } catch (error) {
           console.error("Error sending message:", error)

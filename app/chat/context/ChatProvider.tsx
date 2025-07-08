@@ -7,6 +7,7 @@ import type { ActivityItem } from "../types/chat"
 interface ChatContextType {
   activityLog: ActivityItem[]
   addActivity: (item: Omit<ActivityItem, "id" | "timestamp">) => void
+  clearActivities: () => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -23,7 +24,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setActivityLog((prev) => [newActivity, ...prev])
   }, [])
 
-  return <ChatContext.Provider value={{ activityLog, addActivity }}>{children}</ChatContext.Provider>
+  const clearActivities = useCallback(() => {
+    setActivityLog([])
+  }, [])
+
+  const value = {
+    activityLog,
+    addActivity,
+    clearActivities,
+  }
+
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
 }
 
 export function useChatContext() {

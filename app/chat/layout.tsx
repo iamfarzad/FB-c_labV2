@@ -1,6 +1,11 @@
 import type React from "react"
 import { ChatProvider } from "./context/ChatProvider"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 export default function ChatAppLayout({ children }: { children: React.ReactNode }) {
-  return <ChatProvider>{children}</ChatProvider>
+  return (
+    <ErrorBoundary>
+      <ChatProvider>{children}</ChatProvider>
+    </ErrorBoundary>
+  )
 }
