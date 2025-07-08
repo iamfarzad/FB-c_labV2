@@ -15,7 +15,6 @@ import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
 import { WebcamModal } from "@/components/chat/modals/WebcamModal"
 import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
 import type { LeadCaptureState } from "./types/lead-capture"
-import type { Message } from "./types/chat"
 import { useChatContext } from "./context/ChatProvider"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import { supabase } from "@/lib/supabase/client"
@@ -23,6 +22,7 @@ import { sampleTimelineActivities } from "@/components/chat/sidebar/sampleTimeli
 import { useToast } from "@/components/ui/use-toast"
 import { activityLogger } from "@/lib/activity-logger"
 import { v4 as uuidv4 } from "uuid"
+import type { Message } from "./types/chat"
 
 export default function ChatPage() {
   const [sessionId] = useState(() => uuidv4())
@@ -50,6 +50,7 @@ export default function ChatPage() {
         leadContext: leadCaptureState.leadData,
         sessionId: sessionId,
       },
+      // The stable version correctly added a timestamp to incoming messages.
       onFinish: (message) => {
         activityLogger.log({
           type: "ai_stream",
@@ -70,6 +71,19 @@ export default function ChatPage() {
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   useEffect(scrollToBottom, [messages])
+
+  // This effect correctly triggered the lead capture flow.
+  useEffect(() => {
+    const userMessages = messages.filter((m) => m.role === "user")
+    if (userMessages.length === 1 && leadCaptureState.stage === "initial") {
+      setShowLeadCapture(true)
+      setLeadCaptureState((prev) => ({
+        ...prev,
+        stage: "collecting_info",
+        leadData: { ...prev.leadData, initialQuery: userMessages[0]?.content },
+      }))
+    }
+  }, [messages, leadCaptureState.stage])
 
   useEffect(() => {
     const channel = supabase
@@ -92,94 +106,38 @@ export default function ChatPage() {
     toast({ title: "New Chat Started" })
   }, [setMessages, clearActivities, toast])
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!input.trim()) return
-
-    if (leadCaptureState.stage === "initial") {
-      const newUserMessage: Message = {
-        id: uuidv4(),
-        role: "user",
-        content: input,
-        timestamp: new Date(),
-      }
-      setMessages([...messages, newUserMessage])
-
-      setLeadCaptureState((prev) => ({
-        ...prev,
-        stage: "collecting_info",
-        leadData: { ...prev.leadData, initialQuery: input },
-      }))
-      setShowLeadCapture(true)
-      setInput("")
-      activityLogger.log({
-        type: "user_action",
-        title: "Initial Message Sent",
-        description: "Triggering lead capture flow.",
-        status: "completed",
-      })
-    } else if (leadCaptureState.stage === "consultation") {
-      handleSubmit(e)
-      activityLogger.log({ type: "user_action", title: "User Message Sent", description: input, status: "completed" })
-    } else if (leadCaptureState.stage === "collecting_info") {
+  // The original, simpler submission logic.
+  const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
+    if (leadCaptureState.stage === "collecting_info") {
       toast({
         title: "Please complete the form first",
         description: "We need your details to start the AI consultation.",
         variant: "destructive",
       })
+      e.preventDefault()
+      return
+    }
+    if (input.trim()) {
+      activityLogger.log({ type: "user_action", title: "User Message Sent", description: input, status: "completed" })
+      handleSubmit(e, {
+        options: {
+          body: {
+            // Ensure the latest lead context is sent with the message
+            leadContext: leadCaptureState.leadData,
+          },
+        },
+      })
     }
   }
 
-  const handleLeadCaptureComplete = async (leadData: LeadCaptureState["leadData"]) => {
-    activityLogger.log({
-      type: "user_action",
-      title: "Lead Capture Form Submitted",
-      description: `Lead: ${leadData.name}`,
-      status: "completed",
-    })
-
-    try {
-      const response = await fetch("/api/lead-capture", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...leadData,
-          tcAcceptance: {
-            accepted: leadData.agreedToTerms,
-            timestamp: Date.now(),
-            userAgent: navigator.userAgent,
-          },
-        }),
-      })
-      if (!response.ok) throw new Error("Failed to save lead data.")
-      const result = await response.json()
-      activityLogger.log({
-        type: "database",
-        title: "Lead Saved to DB",
-        description: `Lead ID: ${result.leadId}`,
-        status: "completed",
-      })
-    } catch (error) {
-      console.error("Lead capture submission error:", error)
-      toast({
-        title: "Error",
-        description: "Could not save your information. Please try again.",
-        variant: "destructive",
-      })
-      activityLogger.log({
-        type: "error",
-        title: "Lead Capture Failed",
-        description: error instanceof Error ? error.message : "Unknown error",
-        status: "failed",
-      })
-      return
-    }
-
+  const handleLeadCaptureComplete = (leadData: LeadCaptureState["leadData"]) => {
     setLeadCaptureState({ stage: "consultation", leadData } as LeadCaptureState)
     setShowLeadCapture(false)
     append({
+      id: uuidv4(),
       role: "assistant",
       content: `Hello ${leadData.name}! 👋 Thanks for providing your details. I'm now ready to assist. How can I help with your AI automation goals today?`,
+      timestamp: new Date(),
     })
     toast({ title: "Welcome!", description: `Starting consultation for ${leadData.name}.` })
   }
@@ -187,9 +145,11 @@ export default function ChatPage() {
   const handleImageUpload = useCallback(
     (imageData: string, fileName: string) => {
       append({
+        id: uuidv4(),
         role: "user",
         content: `[Image uploaded: ${fileName}] Please analyze this image.`,
         imageUrl: imageData,
+        timestamp: new Date(),
       })
       activityLogger.log({ type: "image_upload", title: "Image Uploaded", description: fileName, status: "completed" })
     },
@@ -198,8 +158,10 @@ export default function ChatPage() {
 
   const handleFileUpload = (file: File) => {
     append({
+      id: uuidv4(),
       role: "user",
       content: `[File uploaded: ${file.name}] Please summarize or analyze this document.`,
+      timestamp: new Date(),
     })
     activityLogger.log({
       type: "file_upload",
@@ -212,7 +174,7 @@ export default function ChatPage() {
   const handleVoiceTranscript = useCallback(
     (transcript: string) => {
       if (!transcript.trim()) return
-      append({ role: "user", content: transcript })
+      append({ id: uuidv4(), role: "user", content: transcript, timestamp: new Date() })
       activityLogger.log({ type: "voice_input", title: "Voice Input Sent", status: "completed" })
     },
     [append],
@@ -220,7 +182,13 @@ export default function ChatPage() {
 
   const handleWebcamCapture = useCallback(
     (imageData: string) => {
-      append({ role: "user", content: "[Webcam image captured] Please analyze this image.", imageUrl: imageData })
+      append({
+        id: uuidv4(),
+        role: "user",
+        content: "[Webcam image captured] Please analyze this image.",
+        imageUrl: imageData,
+        timestamp: new Date(),
+      })
       activityLogger.log({ type: "image_capture", title: "Webcam Photo Captured", status: "completed" })
     },
     [append],
@@ -228,7 +196,12 @@ export default function ChatPage() {
 
   const handleScreenShareAnalysis = useCallback(
     (analysis: string) => {
-      append({ role: "assistant", content: `**Screen Analysis:**\n${analysis}` })
+      append({
+        id: uuidv4(),
+        role: "assistant",
+        content: `**Screen Analysis:**\n${analysis}`,
+        timestamp: new Date(),
+      })
       activityLogger.log({ type: "vision_analysis", title: "Screen Analyzed", status: "completed" })
     },
     [append],
@@ -237,8 +210,10 @@ export default function ChatPage() {
   const handleVideoAppResult = useCallback(
     (result: { spec: string; code: string }) => {
       append({
+        id: uuidv4(),
         role: "assistant",
         content: `I have successfully generated a new learning app based on the video.`,
+        timestamp: new Date(),
       })
       activityLogger.log({ type: "tool_used", title: "Video-to-App Generated", status: "completed" })
     },
@@ -295,7 +270,7 @@ export default function ChatPage() {
             )}
             <ChatMain messages={messages as Message[]} isLoading={isLoading} messagesEndRef={messagesEndRef} />
           </div>
-          <form onSubmit={handleFormSubmit} className="shrink-0">
+          <form onSubmit={handleSendMessage} className="shrink-0">
             <ChatFooter
               input={input}
               setInput={setInput}
@@ -340,7 +315,14 @@ export default function ChatPage() {
           isOpen={showWebcamModal}
           onClose={() => setShowWebcamModal(false)}
           onCapture={handleWebcamCapture}
-          onAIAnalysis={(analysis) => append({ role: "assistant", content: `**Webcam Analysis:**\n${analysis}` })}
+          onAIAnalysis={(analysis) =>
+            append({
+              id: uuidv4(),
+              role: "assistant",
+              content: `**Webcam Analysis:**\n${analysis}`,
+              timestamp: new Date(),
+            })
+          }
         />
       )}
       {showVideo2AppModal && (

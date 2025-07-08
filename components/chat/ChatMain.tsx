@@ -10,13 +10,6 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import type { Message } from "@/app/chat/types/chat"
 
-const formatTimestamp = (ts?: Date | string) => {
-  if (!ts) return ""
-  const date = ts instanceof Date ? ts : new Date(ts)
-  if (isNaN(date.getTime())) return ""
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-}
-
 interface ChatMainProps {
   messages: Message[]
   isLoading: boolean
@@ -139,9 +132,13 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
                 </Button>
               </Card>
 
-              {formatTimestamp(message.timestamp) && (
-                <span className="text-xs text-muted-foreground mt-1 px-1">{formatTimestamp(message.timestamp)}</span>
-              )}
+              {/* This was the original, working implementation. It assumes timestamp always exists. */}
+              <span className="text-xs text-muted-foreground mt-1 px-1">
+                {message.timestamp.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
             </div>
 
             {message.role === "user" && (

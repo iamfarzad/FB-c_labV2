@@ -2,7 +2,7 @@ export interface Message {
   id: string
   role: "user" | "assistant" | "system" | "function" | "data" | "tool"
   content: string
-  timestamp?: Date | string // Make timestamp optional and allow string for API responses
+  timestamp: Date // In the stable version, timestamp was required and always a Date object.
   sources?: any[]
   audioData?: string | null
   imageUrl?: string
@@ -40,7 +40,7 @@ export interface ActivityItem {
   title: string
   description: string
   status: "pending" | "in_progress" | "completed" | "failed"
-  timestamp: number // Use number for timestamp for easier sorting
+  timestamp: number
   duration?: number
   details?: string[]
   metadata?: Record<string, any>
