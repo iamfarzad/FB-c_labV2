@@ -1,10 +1,10 @@
 "use client"
 
+import type React from "react"
 import { useState } from "react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { X } from "lucide-react"
 import { VideoToAppGenerator } from "@/components/video-to-app-generator"
-import { EDUCATIONAL_APP_DEFINITIONS } from "@/lib/education-constants"
-import { Button } from "@/components/ui/button"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface Video2AppModalProps {
   isOpen: boolean
@@ -12,86 +12,89 @@ interface Video2AppModalProps {
   initialVideoUrl?: string
 }
 
-export const Video2AppModal = ({ isOpen, onClose, initialVideoUrl }: Video2AppModalProps) => {
+export const Video2AppModal: React.FC<Video2AppModalProps> = ({ isOpen, onClose, initialVideoUrl }) => {
   const [isExpanded, setIsExpanded] = useState(false)
-  const [showEducationalApps, setShowEducationalApps] = useState(false)
-  const [selectedEducationalApp, setSelectedEducationalApp] = useState<string | null>(null)
+
+  const handleAnalysisComplete = (data: any) => {
+    console.log("Video analysis complete:", data)
+  }
+
+  if (!isOpen) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
-        className={isExpanded ? "max-w-7xl h-[90vh]" : "max-w-5xl h-[80vh]"}
-        aria-describedby="video2app-description"
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm modal-overlay"
+        onClick={onClose}
       >
-        <DialogHeader className="sr-only">
-          <DialogTitle>Video to Learning App Generator</DialogTitle>
-          <DialogDescription id="video2app-description">
-            Transform any YouTube video into an interactive learning application using AI
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="h-full">
-          <VideoToAppGenerator
-            className="h-full"
-            onClose={onClose}
-            initialVideoUrl={initialVideoUrl}
-            isExpanded={isExpanded}
-            onToggleExpand={() => setIsExpanded(!isExpanded)}
-          />
-        </div>
-
-        {showEducationalApps && (
-          <div className="mt-4 border-t pt-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Educational Learning Apps</h3>
-              <Button variant="outline" size="sm" onClick={() => setShowEducationalApps(false)}>
-                Hide Apps
-              </Button>
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          className={`relative bg-background border border-border rounded-2xl shadow-2xl overflow-hidden video-generator-container ${
+            isExpanded ? "w-[95vw] h-[95vh]" : "w-full max-w-4xl max-h-[90vh]"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-border bg-card/50">
+            <div>
+              <h2 className="text-2xl font-bold gradient-text">Video to Learning App</h2>
+              <p className="text-muted-foreground mt-1">
+                Transform YouTube videos into interactive learning experiences with AI
+              </p>
             </div>
-
-            <div className="educational-app-grid">
-              {EDUCATIONAL_APP_DEFINITIONS.map((app) => (
-                <div
-                  key={app.id}
-                  className="educational-app-card"
-                  style={{ backgroundColor: app.color }}
-                  onClick={() => setSelectedEducationalApp(app.id)}
-                >
-                  <div className="educational-app-icon">{app.icon}</div>
-                  <div className="educational-app-name">{app.name}</div>
-                  <div className="educational-app-description">{app.description}</div>
-                </div>
-              ))}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                title={isExpanded ? "Minimize" : "Expand"}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {isExpanded ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 9V4.5M9 9H4.5M9 9L3.5 3.5m11 11v4.5m0-4.5h4.5m0 0l-4.5 4.5M15 3h6v6M9 21H3v-6"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
+                    />
+                  )}
+                </svg>
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-
-            {selectedEducationalApp && (
-              <div className="mt-4 p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  Selected: {EDUCATIONAL_APP_DEFINITIONS.find((app) => app.id === selectedEducationalApp)?.name}
-                </p>
-                <Button
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => {
-                    // This will be handled by the educational content system
-                    console.log("Launch educational app:", selectedEducationalApp)
-                  }}
-                >
-                  Launch Learning Experience
-                </Button>
-              </div>
-            )}
           </div>
-        )}
 
-        {!showEducationalApps && (
-          <div className="mt-4 text-center">
-            <Button variant="outline" onClick={() => setShowEducationalApps(true)} className="gap-2">
-              🎓 Show Educational Apps
-            </Button>
+          {/* Content */}
+          <div className="flex-1 overflow-auto p-6">
+            <VideoToAppGenerator
+              onAnalysisComplete={handleAnalysisComplete}
+              initialVideoUrl={initialVideoUrl}
+              isExpanded={isExpanded}
+              onToggleExpand={() => setIsExpanded(!isExpanded)}
+              onClose={onClose}
+            />
           </div>
-        )}
-      </DialogContent>
-    </Dialog>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   )
 }
+
+export default Video2AppModal

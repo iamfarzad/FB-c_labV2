@@ -1,138 +1,129 @@
-import { GoogleGenerativeAI } from "@google/generative-ai"
-import { logActivity } from "@/lib/activity-logger"
-import { TokenCostCalculator } from "@/lib/token-cost-calculator"
 import { type NextRequest, NextResponse } from "next/server"
+import { GoogleGenerativeAI } from "@google/generative-ai"
+import { supabase } from "@/lib/supabase/server"
+import { calculateTokenCost, logTokenUsage } from "@/lib/token-cost-calculator"
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+interface ChatMessage {
+  role: "user" | "assistant" | "system"
+  parts: { text: string }[]
+}
 
-export async function POST(req: NextRequest) {
+interface LeadContext {
+  name?: string
+  email?: string
+  company?: string
+  engagementType?: string
+  initialQuery?: string
+}
+
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json()
-    const { prompt, conversationHistory, leadContext, sessionId } = body
-
-    if (!prompt) {
-      return NextResponse.json({ error: "No prompt provided" }, { status: 400 })
-    }
+    const { prompt, conversationHistory = [], leadContext, sessionId } = await request.json()
 
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json({ error: "Gemini API key not configured" }, { status: 500 })
     }
 
-    // LOGIC: Use consistent model name - Gemini 1.5 Flash (current stable model)
-    // WHY: Stable, cost-effective, good for general chat conversations
-    const modelName = "gemini-1.5-flash"
-    const model = genAI.getGenerativeModel({ model: modelName })
+    // Initialize Gemini
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      generationConfig: {
+        temperature: 0.7,
+        topP: 0.8,
+        topK: 40,
+        maxOutputTokens: 2048,
+      },
+    })
 
-    // LOGIC: Build conversation context from history
-    // WHY: Maintains conversation continuity, limits to last 5 messages for cost control
-    let fullPrompt = prompt
-    if (conversationHistory && conversationHistory.length > 0) {
-      const context = conversationHistory
-        .slice(-5) // Last 5 messages for context
-        .map((msg: any) => `${msg.role}: ${msg.parts[0]?.text || ""}`)
-        .join("\n")
+    // Build conversation context
+    const systemPrompt = `You are F.B/c AI Assistant, an expert in AI automation and business consulting. 
+${leadContext?.name ? `The user's name is ${leadContext.name}.` : ""}
+${leadContext?.company ? `They work at ${leadContext.company}.` : ""}
+${leadContext?.engagementType ? `They engaged via ${leadContext.engagementType}.` : ""}
 
-      fullPrompt = `Previous conversation:\n${context}\n\nUser: ${prompt}`
-    }
+Provide helpful, personalized responses about AI automation, business processes, and technology solutions.
+Be conversational, professional, and focus on practical business value.`
 
-    // LOGIC: Add lead context for personalized responses
-    // WHY: Enables AI to provide contextual responses based on lead information
-    if (leadContext) {
-      fullPrompt = `Lead context: ${JSON.stringify(leadContext)}\n\n${fullPrompt}`
-    }
+    // Prepare conversation history (last 5 messages for context)
+    const recentHistory = conversationHistory.slice(-5)
+    const messages = [
+      { role: "system" as const, parts: [{ text: systemPrompt }] },
+      ...recentHistory,
+      { role: "user" as const, parts: [{ text: prompt }] },
+    ]
 
-    console.log("Generating content with prompt:", fullPrompt.substring(0, 200) + "...")
+    // Generate response
+    const result = await model.generateContent(
+      messages.map((msg) => ({
+        role: msg.role === "system" ? "user" : msg.role,
+        parts: msg.parts,
+      })),
+    )
 
-    // LOGIC: Generate response with error handling
-    // WHY: Robust error handling for API failures, rate limits, etc.
-    const result = await model.generateContent(fullPrompt)
     const response = await result.response
-    const text = response.text()
+    const aiResponse = response.text()
 
-    // LOGIC: Extract token usage for cost tracking
-    // WHY: Monitor API costs, track usage patterns, billing transparency
-    const usageMetadata = response.usageMetadata
-    const inputTokens = usageMetadata?.promptTokenCount || 0
-    const outputTokens = usageMetadata?.candidatesTokenCount || 0
-    const totalTokens = usageMetadata?.totalTokenCount || inputTokens + outputTokens
+    // Calculate token usage and cost
+    const usage = await result.response.usageMetadata
+    const inputTokens = usage?.promptTokenCount || 0
+    const outputTokens = usage?.candidatesTokenCount || 0
+    const totalTokens = inputTokens + outputTokens
 
-    // LOGIC: Calculate costs using consistent model name
-    // WHY: Accurate cost tracking across different models and providers
-    const costCalculation = TokenCostCalculator.calculateCost("gemini", modelName, {
+    const cost = calculateTokenCost("gemini-1.5-flash", inputTokens, outputTokens)
+
+    // Log token usage
+    await logTokenUsage({
+      provider: "gemini",
+      model: "gemini-1.5-flash",
       inputTokens,
       outputTokens,
       totalTokens,
+      cost,
+      sessionId: sessionId || "unknown",
+      endpoint: "/api/chat",
     })
 
-    // LOGIC: Log token usage for analytics
-    // WHY: Track usage patterns, optimize costs, monitor performance
-    await TokenCostCalculator.logUsage(
-      "gemini",
-      modelName,
-      { inputTokens, outputTokens, totalTokens },
-      sessionId,
-      undefined,
-      {
-        promptLength: fullPrompt.length,
-        responseLength: text.length,
-        hasLeadContext: !!leadContext,
-        conversationLength: conversationHistory?.length || 0,
-      },
-    )
+    // Create AI message
+    const aiMessage = {
+      id: `ai_${Date.now()}`,
+      role: "assistant" as const,
+      content: aiResponse,
+      timestamp: new Date().toISOString(),
+    }
 
-    console.log("Generated response:", text.substring(0, 200) + "...")
-    console.log("Token usage:", { inputTokens, outputTokens, totalTokens })
-    console.log("Cost:", costCalculation)
+    // Broadcast to real-time channel
+    if (sessionId) {
+      const channel = supabase.channel(`ai-showcase-${sessionId}`)
+      await channel.send({
+        type: "broadcast",
+        event: "ai-response",
+        payload: aiMessage,
+      })
+    }
 
     return NextResponse.json({
-      content: text,
+      message: aiMessage,
       usage: {
         inputTokens,
         outputTokens,
         totalTokens,
+        cost,
       },
-      cost: costCalculation,
-      model: modelName,
-      provider: "gemini",
-      success: true,
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error("Chat API error:", error)
 
-    // LOGIC: Comprehensive error logging and handling
-    // WHY: Debug issues, track failures, provide meaningful error responses
-    try {
-      await logActivity({
-        type: "error",
-        description: `Chat API error: ${error.message}`,
-        metadata: {
-          error: error.message,
-          stack: error.stack,
-          timestamp: new Date().toISOString(),
-        },
-        sessionId: req.headers.get("x-session-id") || "unknown",
-      })
-    } catch (logError) {
-      console.error("Failed to log activity:", logError)
+    // Handle specific error types
+    if (error instanceof Error) {
+      if (error.message.includes("quota")) {
+        return NextResponse.json({ error: "API quota exceeded. Please try again later." }, { status: 429 })
+      }
+      if (error.message.includes("authentication")) {
+        return NextResponse.json({ error: "Authentication failed" }, { status: 401 })
+      }
     }
 
-    // LOGIC: Categorize errors for appropriate responses
-    // WHY: Different error types need different handling (rate limits vs auth errors)
-    const isRateLimited = error.message?.includes("quota") || error.message?.includes("rate")
-    const isInvalidKey = error.message?.includes("API key") || error.message?.includes("authentication")
-
-    return NextResponse.json(
-      {
-        error: "Failed to generate response",
-        details: isRateLimited
-          ? "Rate limit exceeded. Please try again later."
-          : isInvalidKey
-            ? "API configuration error."
-            : "An unexpected error occurred.",
-        success: false,
-        retryable: isRateLimited,
-      },
-      { status: isRateLimited ? 429 : isInvalidKey ? 401 : 500 },
-    )
+    return NextResponse.json({ error: "Failed to process chat request" }, { status: 500 })
   }
 }
