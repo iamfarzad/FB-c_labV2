@@ -1,58 +1,66 @@
+"use client"
+
 import {
   MessageSquare,
-  FileText,
+  Bot,
+  Upload,
   Camera,
-  Monitor,
   Mic,
+  Monitor,
+  FileText,
   Search,
-  BrainCircuit,
-  Sparkles,
-  Code,
-  Youtube,
-  UserCheck,
-  Activity,
-  type LightbulbIcon as LucideProps,
-  FileUp,
-  Video,
+  Link,
+  Brain,
+  Eye,
+  AlertTriangle,
+  Database,
+  Zap,
 } from "lucide-react"
+import { cn } from "@/lib/utils"
+import type { ActivityItem } from "@/app/chat/types/chat"
 
-interface ActivityIconProps extends LucideProps {
-  type: string
+interface ActivityIconProps {
+  type: ActivityItem["type"]
+  className?: string
 }
 
-export function ActivityIcon({ type, ...props }: ActivityIconProps) {
-  switch (type) {
-    case "message":
-      return <MessageSquare {...props} />
-    case "file_upload":
-      return <FileUp {...props} />
-    case "document_analysis":
-      return <FileText {...props} />
-    case "image_analysis":
-      return <Camera {...props} />
-    case "screen_share":
-      return <Monitor {...props} />
-    case "voice_input":
-      return <Mic {...props} />
-    case "web_search":
-      return <Search {...props} />
-    case "insight_generation":
-      return <BrainCircuit {...props} />
-    case "summary_generation":
-      return <Sparkles {...props} />
-    case "code_generation":
-      return <Code {...props} />
-    case "video_analysis":
-      return <Youtube {...props} />
-    case "video_to_app":
-      return <Video {...props} />
-    case "lead_captured":
-      return <UserCheck {...props} />
-    case "ai_interaction":
-      return <Sparkles {...props} />
-    case "tool_used":
-      return <Search {...props} />
-    default:
-      return <Activity {...props} />
+export function ActivityIcon({ type, className }: ActivityIconProps) {
+  const getIcon = () => {
+    switch (type) {
+      case "user_action":
+        return <MessageSquare className={cn("text-blue-500", className)} />
+      case "ai_request":
+      case "ai_stream":
+        return <Bot className={cn("text-green-500", className)} />
+      case "image_upload":
+      case "file_upload":
+        return <Upload className={cn("text-purple-500", className)} />
+      case "image_capture":
+        return <Camera className={cn("text-orange-500", className)} />
+      case "voice_input":
+      case "voice_response":
+        return <Mic className={cn("text-pink-500", className)} />
+      case "screen_share":
+        return <Monitor className={cn("text-indigo-500", className)} />
+      case "doc_analysis":
+        return <FileText className={cn("text-yellow-500", className)} />
+      case "google_search":
+      case "search":
+        return <Search className={cn("text-red-500", className)} />
+      case "link":
+        return <Link className={cn("text-cyan-500", className)} />
+      case "ai_thinking":
+        return <Brain className={cn("text-violet-500", className)} />
+      case "vision_analysis":
+        return <Eye className={cn("text-teal-500", className)} />
+      case "error":
+        return <AlertTriangle className={cn("text-red-600", className)} />
+      case "database":
+        return <Database className={cn("text-gray-500", className)} />
+      default:
+        return <Zap className={cn("text-gray-400", className)} />
+    }
   }
+
+  return getIcon()
 }

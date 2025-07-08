@@ -1,29 +1,35 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useState, useCallback } from "react"
+import { createContext, useContext, type ReactNode } from "react"
+import { useRealTimeActivities } from "@/hooks/use-real-time-activities"
 import type { ActivityItem } from "../types/chat"
 
 interface ChatContextType {
   activityLog: ActivityItem[]
-  addActivity: (item: Omit<ActivityItem, "id" | "timestamp">) => void
+  addActivity: (activity: Omit<ActivityItem, "id" | "timestamp">) => void
+  updateActivity: (id: string, updates: Partial<ActivityItem>) => void
+  clearActivities: () => void
+  isConnected: boolean
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
-export function ChatProvider({ children }: { children: React.ReactNode }) {
-  const [activityLog, setActivityLog] = useState<ActivityItem[]>([])
+export function ChatProvider({ children }: { children: ReactNode }) {
+  const { activities, addActivity, updateActivity, clearActivities, isConnected } = useRealTimeActivities()
 
-  const addActivity = useCallback((item: Omit<ActivityItem, "id" | "timestamp">) => {
-    const newActivity: ActivityItem = {
-      ...item,
-      id: Date.now().toString(),
-      timestamp: Date.now(),
-    }
-    setActivityLog((prev) => [newActivity, ...prev])
-  }, [])
-
-  return <ChatContext.Provider value={{ activityLog, addActivity }}>{children}</ChatContext.Provider>
+  return (
+    <ChatContext.Provider
+      value={{
+        activityLog: activities,
+        addActivity,
+        updateActivity,
+        clearActivities,
+        isConnected,
+      }}
+    >
+      {children}
+    </ChatContext.Provider>
+  )
 }
 
 export function useChatContext() {

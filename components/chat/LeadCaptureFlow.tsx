@@ -1,12 +1,14 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { User, CheckCircle } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useToast } from "@/components/ui/use-toast"
 import type { LeadCaptureState } from "@/app/chat/types/lead-capture"
 
 interface LeadCaptureFlowProps {
@@ -22,6 +24,7 @@ export function LeadCaptureFlow({
   engagementType = "chat",
   initialQuery,
 }: LeadCaptureFlowProps) {
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,112 +33,123 @@ export function LeadCaptureFlow({
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    const leadData: LeadCaptureState["leadData"] = {
-      name: formData.name,
-      email: formData.email,
-      company: formData.company,
-      engagementType,
-      initialQuery,
+    if (!formData.name || !formData.email || !formData.agreedToTerms) {
+      toast({
+        title: "Please fill in all required fields",
+        description: "Name, email, and terms agreement are required.",
+        variant: "destructive",
+      })
+      return
     }
 
-    onComplete(leadData)
-    setIsSubmitting(false)
-  }
+    setIsSubmitting(true)
 
-  const isFormValid = () => {
-    return (
-      formData.name.trim().length > 0 &&
-      formData.email.trim().length > 0 &&
-      formData.company.trim().length > 0 &&
-      formData.agreedToTerms
-    )
+    try {
+      // Submit lead data to backend
+      const response = await fetch("/api/lead-capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          engagementType,
+          initialQuery,
+          source: "chat_onboarding",
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to submit lead data")
+      }
+
+      // Complete the flow
+      onComplete({
+        name: formData.name,
+        email: formData.email,
+        company: formData.company,
+        engagementType,
+        initialQuery,
+      })
+
+      toast({
+        title: "Welcome!",
+        description: "Your information has been saved. Let's start the consultation.",
+      })
+    } catch (error) {
+      console.error("Lead capture error:", error)
+      toast({
+        title: "Error",
+        description: "Failed to save your information. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (!isVisible) return null
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <Card className="border shadow-lg">
-        <CardHeader className="text-center">
-          <div className="w-12 h-12 mx-auto bg-orange-500 rounded-full flex items-center justify-center mb-4">
-            <User className="w-6 h-6 text-white" />
-          </div>
-          <CardTitle className="text-xl">Welcome to F.B/c AI</CardTitle>
-          <CardDescription>Please provide your details to start the consultation</CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="name">Full Name</Label>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Welcome to F.B/c AI</CardTitle>
+        <CardDescription>Please provide your details to start your AI consultation</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Name *</Label>
             <Input
               id="name"
-              placeholder="Enter your name"
+              type="text"
               value={formData.name}
-              onChange={(e) => handleInputChange("name", e.target.value)}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Your full name"
+              required
             />
           </div>
 
-          <div>
-            <Label htmlFor="email">Email</Label>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email *</Label>
             <Input
               id="email"
               type="email"
-              placeholder="your.email@company.com"
               value={formData.email}
-              onChange={(e) => handleInputChange("email", e.target.value)}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="your@email.com"
+              required
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="company">Company</Label>
             <Input
               id="company"
-              placeholder="Your company name"
+              type="text"
               value={formData.company}
-              onChange={(e) => handleInputChange("company", e.target.value)}
+              onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+              placeholder="Your company name"
             />
           </div>
 
-          <div className="flex items-start space-x-2">
+          <div className="flex items-center space-x-2">
             <Checkbox
               id="terms"
               checked={formData.agreedToTerms}
-              onCheckedChange={(checked) => handleInputChange("agreedToTerms", checked as boolean)}
+              onCheckedChange={(checked) => setFormData({ ...formData, agreedToTerms: !!checked })}
             />
-            <Label htmlFor="terms" className="text-sm leading-relaxed">
-              I agree to receive AI consultation and understand that my information will be used to provide personalized
-              recommendations.
+            <Label htmlFor="terms" className="text-sm">
+              I agree to the terms and conditions and privacy policy *
             </Label>
           </div>
 
-          <Button onClick={handleSubmit} disabled={!isFormValid() || isSubmitting} className="w-full">
-            {isSubmitting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                Starting...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Start Consultation
-              </>
-            )}
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Starting..." : "Start Consultation"}
           </Button>
-        </CardContent>
-      </Card>
-    </div>
+        </form>
+      </CardContent>
+    </Card>
   )
 }
