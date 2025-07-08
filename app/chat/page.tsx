@@ -10,7 +10,9 @@ import { ChatFooter } from "@/components/chat/ChatFooter"
 import { DesktopSidebar } from "@/components/chat/sidebar/DesktopSidebar"
 import { LeadCaptureFlow } from "@/components/chat/LeadCaptureFlow"
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal"
-import type { Message } from "./types/chat"
+import { ScreenShareModal } from "@/components/chat/modals/ScreenShareModal"
+import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
+import { WebcamModal } from "@/components/chat/modals/WebcamModal"
 import type { LeadCaptureState } from "./types/lead-capture"
 import { useChatContext } from "./context/ChatProvider"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
@@ -40,12 +42,11 @@ export default function ChatPage() {
   })
   const [showLeadCapture, setShowLeadCapture] = useState(false)
 
-  const { messages, setMessages, input, setInput, handleInputChange, handleSubmit, isLoading, error, append, reload } =
-    useChat({
+  const { messages, setMessages, input, setInput, handleInputChange, handleSubmit, isLoading, error, append } = useChat(
+    {
       api: "/api/chat",
       id: sessionId,
       body: {
-        // Send additional data to the API
         leadContext: leadCaptureState.leadData,
         sessionId: sessionId,
       },
@@ -53,35 +54,23 @@ export default function ChatPage() {
         activityLogger.log({
           type: "ai_stream",
           title: "AI Response Received",
-          description: `Received full response. Length: ${message.content.length}`,
+          description: `Full response generated.`,
           status: "completed",
         })
       },
       onError: (err) => {
-        toast({
-          title: "An error occurred",
-          description: err.message,
-          variant: "destructive",
-        })
-        activityLogger.log({
-          type: "error",
-          title: "Chat API Error",
-          description: err.message,
-          status: "failed",
-        })
+        toast({ title: "Chat Error", description: err.message, variant: "destructive" })
+        activityLogger.log({ type: "error", title: "Chat API Error", description: err.message, status: "failed" })
       },
-    })
+    },
+  )
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   useEffect(scrollToBottom, [messages])
 
-  // Trigger lead capture after first user message
   useEffect(() => {
     const userMessages = messages.filter((m) => m.role === "user")
     if (userMessages.length === 1 && leadCaptureState.stage === "initial") {
@@ -89,27 +78,20 @@ export default function ChatPage() {
       setLeadCaptureState((prev) => ({
         ...prev,
         stage: "collecting_info",
-        leadData: {
-          ...prev.leadData,
-          initialQuery: userMessages[0]?.content,
-        },
+        leadData: { ...prev.leadData, initialQuery: userMessages[0]?.content },
       }))
     }
   }, [messages, leadCaptureState.stage])
 
-  // Listen for real-time activity updates from Supabase
   useEffect(() => {
     const channel = supabase
-      .channel(`activity-log-${Date.now()}`)
-      .on("broadcast", { event: "activity-update" }, ({ payload }) => {
-        addActivity(payload)
-      })
+      .channel(`activity-log-${sessionId}`)
+      .on("broadcast", { event: "activity-update" }, ({ payload }) => addActivity(payload))
       .subscribe()
-
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [addActivity])
+  }, [addActivity, sessionId])
 
   const handleNewChat = useCallback(() => {
     setMessages([])
@@ -122,96 +104,109 @@ export default function ChatPage() {
     })
     setShowLeadCapture(false)
     clearActivities()
-    toast({
-      title: "New Chat Started",
-      description: "Previous conversation cleared",
-    })
+    toast({ title: "New Chat Started" })
   }, [setMessages, clearActivities, toast])
-
-  const handleImageUpload = useCallback(
-    (imageData: string, fileName: string) => {
-      const imageMessage: Message = {
-        id: `img_${Date.now()}`,
-        role: "user",
-        content: `📸 Uploaded image: ${fileName}`,
-        imageUrl: imageData,
-      }
-      append(imageMessage) // Use `append` from useChat to add message without triggering API call yet
-
-      activityLogger.log({
-        type: "image_upload",
-        title: "Image Added to Chat",
-        description: `${fileName} ready for AI analysis`,
-        status: "completed",
-      })
-      toast({
-        title: "Image Uploaded",
-        description: `${fileName} added to conversation`,
-      })
-    },
-    [append, toast],
-  )
 
   const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
     if (leadCaptureState.stage !== "consultation") {
       toast({
-        title: "Please complete the form",
-        description: "We need a bit more information to start the consultation.",
+        title: "Please complete the form first",
+        description: "We need your details to start the AI consultation.",
         variant: "destructive",
       })
-      e.preventDefault() // Prevent submission
+      e.preventDefault()
       return
     }
-    activityLogger.log({
-      type: "user_action",
-      title: "User Message Sent",
-      description: input.substring(0, 80) + (input.length > 80 ? "..." : ""),
-      status: "completed",
-    })
-    handleSubmit(e)
+    if (input.trim()) {
+      activityLogger.log({ type: "user_action", title: "User Message Sent", description: input, status: "completed" })
+      handleSubmit(e)
+    }
   }
 
   const handleLeadCaptureComplete = (leadData: LeadCaptureState["leadData"]) => {
-    setLeadCaptureState((prev) => ({
-      ...prev,
-      stage: "consultation",
-      leadData,
-    }))
+    setLeadCaptureState({ stage: "consultation", leadData } as LeadCaptureState)
     setShowLeadCapture(false)
-
-    const welcomeMessage: Message = {
-      id: `welcome_${Date.now()}`,
+    append({
       role: "assistant",
-      content: `Hello ${leadData.name}! 👋 Thank you for providing your details. I'm now ready to assist you. How can I help you with AI automation today?`,
-    }
-    setMessages([...messages, welcomeMessage])
-
-    toast({
-      title: "Welcome to F.B/c AI!",
-      description: `Starting personalized consultation for ${leadData.name}`,
+      content: `Hello ${leadData.name}! 👋 Thanks for providing your details. I'm now ready to assist. How can I help with your AI automation goals today?`,
     })
+    toast({ title: "Welcome!", description: `Starting consultation for ${leadData.name}.` })
   }
 
+  const handleImageUpload = useCallback(
+    (imageData: string, fileName: string) => {
+      append({
+        role: "user",
+        content: `[Image uploaded: ${fileName}] Please analyze this image.`,
+        imageUrl: imageData,
+      })
+      activityLogger.log({ type: "image_upload", title: "Image Uploaded", description: fileName, status: "completed" })
+      toast({ title: "Image Uploaded", description: `${fileName} ready for analysis.` })
+    },
+    [append, toast],
+  )
+
   const handleFileUpload = (file: File) => {
+    // For now, we just log the activity. A real implementation would upload to storage.
     activityLogger.log({
       type: "file_upload",
       title: "File Uploaded",
       description: file.name,
       status: "completed",
-      details: [`File: ${file.name}`, `Size: ${(file.size / 1024 / 1024).toFixed(2)}MB`],
+      details: [`Size: ${(file.size / 1024 / 1024).toFixed(2)}MB`],
     })
+    append({
+      role: "user",
+      content: `[File uploaded: ${file.name}] Please summarize or analyze this document.`,
+    })
+    toast({ title: "File Uploaded", description: `${file.name} is ready for processing.` })
   }
 
   const handleVoiceTranscript = useCallback(
     (transcript: string) => {
       if (!transcript.trim()) return
-      setInput(transcript) // Set the input field, user can review before sending
-      toast({
-        title: "Transcript Ready",
-        description: "Voice input has been transcribed. Press send to submit.",
+      append({ role: "user", content: transcript })
+      activityLogger.log({
+        type: "voice_input",
+        title: "Voice Input Sent",
+        description: transcript,
+        status: "completed",
       })
     },
-    [setInput, toast],
+    [append],
+  )
+
+  const handleWebcamCapture = useCallback(
+    (imageData: string) => {
+      append({ role: "user", content: "[Webcam image captured] Please analyze this image.", imageUrl: imageData })
+      activityLogger.log({ type: "image_capture", title: "Webcam Photo Captured", status: "completed" })
+      toast({ title: "Webcam Photo Captured" })
+    },
+    [append, toast],
+  )
+
+  const handleScreenShareAnalysis = useCallback(
+    (analysis: string) => {
+      append({ role: "assistant", content: `**Screen Analysis:**\n${analysis}` })
+      activityLogger.log({
+        type: "vision_analysis",
+        title: "Screen Analyzed",
+        description: analysis,
+        status: "completed",
+      })
+    },
+    [append],
+  )
+
+  const handleVideoAppResult = useCallback(
+    (result: { spec: string; code: string }) => {
+      append({
+        role: "assistant",
+        content: `I have successfully generated a new learning app based on the video. You can view the code and specifications in the "Video to App" tab.`,
+      })
+      activityLogger.log({ type: "tool_used", title: "Video-to-App Generated", status: "completed" })
+    },
+    [append],
   )
 
   const handleDownloadSummary = useCallback(() => {
@@ -231,16 +226,7 @@ export default function ChatPage() {
 
   useKeyboardShortcuts({
     onNewChat: handleNewChat,
-    onSendMessage: () => {
-      if (input.trim()) {
-        const form = inputRef.current?.closest("form")
-        if (form)
-          handleSendMessage({
-            preventDefault: () => {},
-            ...new Event("submit", { cancelable: true }),
-          } as unknown as React.FormEvent<HTMLFormElement>)
-      }
-    },
+    onSendMessage: () => inputRef.current?.closest("form")?.requestSubmit(),
     onExportSummary: handleDownloadSummary,
     onToggleSidebar: handleToggleSidebar,
     onFocusInput: handleFocusInput,
@@ -257,15 +243,9 @@ export default function ChatPage() {
           isOpen={isSidebarOpen}
           onToggle={handleToggleSidebar}
           onNewChat={handleNewChat}
-          onActivityClick={(activity) => console.log("Activity clicked:", activity)}
         />
         <div className="flex flex-col flex-1 h-full">
-          <ChatHeader
-            onDownloadSummary={handleDownloadSummary}
-            activities={activityLog.length > 0 ? activityLog : sampleTimelineActivities}
-            onNewChat={handleNewChat}
-            onActivityClick={(activity) => console.log("Activity clicked:", activity)}
-          />
+          <ChatHeader onDownloadSummary={handleDownloadSummary} activities={activityLog} onNewChat={handleNewChat} />
           <div className="flex-1 overflow-hidden relative">
             {showLeadCapture && (
               <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -282,17 +262,9 @@ export default function ChatPage() {
           <form onSubmit={handleSendMessage} className="shrink-0">
             <ChatFooter
               input={input}
-              setInput={setInput} // Pass setInput for direct manipulation if needed
-              onSendMessage={() => {
-                /* Let form's onSubmit handle it */
-              }}
+              setInput={setInput}
+              handleInputChange={handleInputChange}
               isLoading={isLoading}
-              onKeyPress={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                  e.currentTarget.closest("form")?.requestSubmit()
-                }
-              }}
               onFileUpload={handleFileUpload}
               onImageUpload={handleImageUpload}
               onVoiceTranscript={handleVoiceTranscript}
@@ -308,6 +280,33 @@ export default function ChatPage() {
         </div>
       </div>
       <KeyboardShortcutsModal isOpen={showKeyboardShortcuts} onClose={() => setShowKeyboardShortcuts(false)} />
+
+      {/* Modals with correct callbacks */}
+      {showScreenShareModal && (
+        <ScreenShareModal
+          isOpen={showScreenShareModal}
+          onClose={() => setShowScreenShareModal(false)}
+          onAIAnalysis={handleScreenShareAnalysis}
+          onStream={() =>
+            activityLogger.log({ type: "screen_share", title: "Screen Share Started", status: "in_progress" })
+          }
+        />
+      )}
+      {showVoiceModal && (
+        <VoiceInputModal
+          isOpen={showVoiceModal}
+          onClose={() => setShowVoiceModal(false)}
+          onTransferToChat={handleVoiceTranscript}
+        />
+      )}
+      {showWebcamModal && (
+        <WebcamModal
+          isOpen={showWebcamModal}
+          onClose={() => setShowWebcamModal(false)}
+          onCapture={handleWebcamCapture}
+          onAIAnalysis={(analysis) => append({ role: "assistant", content: `**Webcam Analysis:**\n${analysis}` })}
+        />
+      )}
     </ChatLayout>
   )
 }
