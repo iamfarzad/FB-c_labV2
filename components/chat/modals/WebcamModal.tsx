@@ -83,9 +83,18 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
       setIsAnalyzing(true)
 
       try {
-        // Mock AI analysis
+        // TODO: Replace with real Gemini API call
+        // const response = await fetch('/api/analyze-image', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ image: base64Data, type: 'webcam' })
+        // })
+        // const { analysis } = await response.json()
+
+        // Mock AI analysis - REPLACE THIS
         await new Promise((resolve) => setTimeout(resolve, 1500))
         const analysis = "AI analysis of the webcam feed would appear here. It seems to be a person in a room."
+
         setCurrentAnalysis(analysis)
         addAnalysis(analysis)
         if (onAIAnalysis) {
