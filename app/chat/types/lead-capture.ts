@@ -7,8 +7,12 @@ export interface LeadCaptureState {
     name?: string
     email?: string
     company?: string
+    role?: string
+    interests?: string
     initialQuery?: string
     engagementType: "chat" | "voice" | "screen_share" | "webcam"
+    agreedToTerms?: boolean
+    capturedAt?: string
   }
 }
 
