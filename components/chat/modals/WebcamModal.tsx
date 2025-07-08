@@ -1,9 +1,12 @@
 "use client"
 
-import type React from "react"
-import { useState, useEffect, useCallback, useRef } from "react"
-import { X, Loader, Eye, Brain } from "lucide-react"
-import { useAnalysisHistory } from "@/hooks/use-analysis-history"
+import { useState, useRef, useEffect } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Camera, CameraOff, RotateCcw, Download, Zap, SwitchCamera } from 'lucide-react'
+import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
 
 interface WebcamModalProps {
   isOpen: boolean
@@ -13,272 +16,309 @@ interface WebcamModalProps {
   theme?: "light" | "dark"
 }
 
-export const WebcamModal: React.FC<WebcamModalProps> = ({
+export default function WebcamModal({
   isOpen,
   onClose,
   onCapture,
   onAIAnalysis,
-  theme = "dark",
-}) => {
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [currentAnalysis, setCurrentAnalysis] = useState("")
-  const { analysisHistory, addAnalysis, clearHistory } = useAnalysisHistory()
-  const [isCameraActive, setIsCameraActive] = useState(false)
+  theme = "dark"
+}: WebcamModalProps) {
+  const [isActive, setIsActive] = useState(false)
   const [stream, setStream] = useState<MediaStream | null>(null)
+  const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user")
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([])
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("")
+  
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  // Start camera
-  const startCamera = useCallback(async () => {
+  // Get available cameras
+  useEffect(() => {
+    const getDevices = async () => {
+      try {
+        const deviceList = await navigator.mediaDevices.enumerateDevices()
+        const videoDevices = deviceList.filter(device => device.kind === 'videoinput')
+        setDevices(videoDevices)
+        if (videoDevices.length > 0 && !selectedDeviceId) {
+          setSelectedDeviceId(videoDevices[0].deviceId)
+        }
+      } catch (err) {
+        console.error("Error getting devices:", err)
+      }
+    }
+
+    if (isOpen) {
+      getDevices()
+    }
+  }, [isOpen, selectedDeviceId])
+
+  const startWebcam = async () => {
+    setError(null)
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
+      const constraints: MediaStreamConstraints = {
         video: {
+          facingMode,
           width: { ideal: 1280 },
           height: { ideal: 720 },
+          ...(selectedDeviceId && { deviceId: selectedDeviceId })
         },
-        audio: false,
-      })
+        audio: false
+      }
 
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints)
       setStream(mediaStream)
-      setIsCameraActive(true)
-
+      setIsActive(true)
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream
+        videoRef.current.play()
       }
-    } catch (error) {
-      console.error("Camera access failed:", error)
-    }
-  }, [])
 
-  // Stop camera
-  const stopCamera = useCallback(() => {
+    } catch (err) {
+      setError("Failed to access camera. Please check permissions.")
+      console.error("Webcam error:", err)
+    }
+  }
+
+  const stopWebcam = () => {
     if (stream) {
-      stream.getTracks().forEach((track) => track.stop())
+      stream.getTracks().forEach(track => track.stop())
       setStream(null)
     }
-    setIsCameraActive(false)
-    onClose()
-  }, [stream, onClose])
+    setIsActive(false)
+    setCapturedImage(null)
+  }
 
-  const handleAnalysis = useCallback(
-    async (imageData: string) => {
-      if (!videoRef.current || !canvasRef.current || !isCameraActive) return
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return
 
-      const video = videoRef.current
-      const canvas = canvasRef.current
-      const ctx = canvas.getContext("2d")
-
-      if (!ctx) return
-
-      // Set canvas size to match video
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-
-      // Draw current frame to canvas
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-      // Convert to base64
-      const base64Data = imageData.split(",")[1]
-
-      setIsAnalyzing(true)
-
-      try {
-        // Mock AI analysis
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        const analysis = "AI analysis of the webcam feed would appear here. It seems to be a person in a room."
-        setCurrentAnalysis(analysis)
-        addAnalysis(analysis)
-        if (onAIAnalysis) {
-          onAIAnalysis(analysis)
-        }
-      } catch (error) {
-        console.error("AI analysis error:", error)
-      } finally {
-        setIsAnalyzing(false)
-      }
-    },
-    [isCameraActive, onAIAnalysis, addAnalysis],
-  )
-
-  const analyzeCurrentFrame = useCallback(async () => {
-    if (!stream) return
     const video = videoRef.current
-    if (!video) return
-
-    const streamTracks = stream.getTracks()
-    if (streamTracks.length === 0) return
-
-    const track = streamTracks[0]
-    if (!track) return
-
     const canvas = canvasRef.current
-    if (!canvas) {
-      console.error("Canvas is not initialized")
-      return
+    const ctx = canvas.getContext('2d')
+
+    if (!ctx) return
+
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    
+    // Flip image if using front camera
+    if (facingMode === "user") {
+      ctx.scale(-1, 1)
+      ctx.drawImage(video, -canvas.width, 0)
+    } else {
+      ctx.drawImage(video, 0, 0)
     }
+    
+    const imageData = canvas.toDataURL('image/jpeg', 0.9)
+    setCapturedImage(imageData)
+    onCapture?.(imageData)
+    
+    return imageData
+  }
 
-    const ctx = canvas.getContext("2d")
-    if (!ctx) {
-      console.error("Canvas context is not initialized")
-      return
+  const switchCamera = async () => {
+    const newFacingMode = facingMode === "user" ? "environment" : "user"
+    setFacingMode(newFacingMode)
+    
+    if (isActive) {
+      stopWebcam()
+      setTimeout(() => {
+        setFacingMode(newFacingMode)
+        startWebcam()
+      }, 100)
     }
+  }
 
-    const videoWidth = video.videoWidth
-    const videoHeight = video.videoHeight
+  const analyzeWithAI = async () => {
+    if (!capturedImage) return
 
-    canvas.width = videoWidth
-    canvas.height = videoHeight
-
-    ctx.drawImage(video, 0, 0, videoWidth, videoHeight)
-
-    const imageData = canvas.toDataURL("image/jpeg", 0.8)
-    await handleAnalysis(imageData)
-  }, [stream, handleAnalysis])
-
-  // Auto-analyze every 3 seconds when camera is active
-  useEffect(() => {
-    if (!isCameraActive) return
-
-    const interval = setInterval(analyzeCurrentFrame, 3000)
-    return () => clearInterval(interval)
-  }, [isCameraActive, analyzeCurrentFrame])
-
-  // Start camera when modal opens
-  useEffect(() => {
-    if (isOpen && !isCameraActive) {
-      startCamera()
+    setIsAnalyzing(true)
+    try {
+      // Simulate AI analysis
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      const analysis = "AI Analysis: I can see a person in the image. The lighting appears to be indoor lighting, and the background suggests an office or home environment. The image quality is good with clear details visible."
+      
+      onAIAnalysis?.(analysis)
+    } catch (err) {
+      setError("Failed to analyze image")
+    } finally {
+      setIsAnalyzing(false)
     }
-  }, [isOpen, isCameraActive, startCamera])
+  }
+
+  const downloadImage = () => {
+    if (!capturedImage) return
+    
+    const link = document.createElement('a')
+    link.download = `webcam-capture-${Date.now()}.jpg`
+    link.href = capturedImage
+    link.click()
+  }
+
+  const retakePhoto = () => {
+    setCapturedImage(null)
+  }
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (stream) {
-        stream.getTracks().forEach((track) => track.stop())
+        stream.getTracks().forEach(track => track.stop())
       }
     }
   }, [stream])
 
-  useEffect(() => {
-    if (!isOpen) {
-      clearHistory()
-    }
-  }, [isOpen, clearHistory])
-
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 transition-all duration-500 bg-black/50 backdrop-blur-sm">
-      <div className="relative p-8 rounded-2xl flex flex-col items-center justify-center w-full h-full max-w-6xl">
-        <button
-          onClick={stopCamera}
-          className="absolute top-8 right-8 p-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 z-30 transition-all duration-300 shadow-lg group"
-          aria-label="Stop webcam stream"
-        >
-          <X size={24} className="group-hover:rotate-90 transition-transform" />
-        </button>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className={cn(
+        "modal-content max-w-2xl",
+        theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+      )}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Camera className="w-5 h-5" />
+            Webcam Capture
+          </DialogTitle>
+        </DialogHeader>
 
-        <div className="flex justify-center space-x-4">
-          {/* Manual Analysis Button */}
-          <button
-            onClick={analyzeCurrentFrame}
-            disabled={isAnalyzing || !isCameraActive}
-            className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 z-30 transition-all duration-300 shadow-lg group disabled:opacity-50"
-            aria-label="Analyze current view"
-          >
-            <Brain className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          </button>
-        </div>
-
-        <h2 className="text-3xl font-bold mb-6 text-white gradient-text">
-          {isCameraActive ? "AI-Powered Webcam Analysis" : "Activating Camera..."}
-        </h2>
-
-        <div className="flex gap-6 w-full max-w-6xl">
-          {/* Video Stream */}
-          <div className="relative flex-1 aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/20">
-            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-            <canvas ref={canvasRef} style={{ display: "none" }} />
-
-            {!isCameraActive && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-                <div className="text-center">
-                  <div className="p-6 rounded-full bg-white/10 mb-4">
-                    <Loader size={48} className="animate-spin text-orange-500" />
-                  </div>
-                  <p className="text-lg text-white">Initializing camera...</p>
-                </div>
-              </div>
-            )}
-
-            {isCameraActive && (
-              <div className="absolute bottom-4 left-4 right-4 bg-black/50 backdrop-blur-sm rounded-xl p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
-                    <span className="text-sm font-medium text-white">LIVE</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Eye size={16} className="text-white" />
-                    <span className="text-sm text-white">AI Watching</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* AI Analysis Panel */}
-          <div className="w-80 bg-black/20 backdrop-blur-xl rounded-2xl p-4 border border-white/20">
-            <h3 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
-              <Brain size={20} />
-              AI Analysis
-            </h3>
-
-            {/* Current Analysis */}
-            {currentAnalysis && (
-              <div className="mb-4 p-3 bg-white/10 rounded-lg">
-                <h4 className="text-sm font-semibold text-white mb-2">Current View:</h4>
-                <p className="text-sm text-white opacity-90">{currentAnalysis}</p>
-              </div>
-            )}
-
-            {/* Analysis History */}
-            {analysisHistory.length > 1 && (
-              <div>
-                <h4 className="text-sm font-semibold text-white mb-2">Recent Analysis:</h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {analysisHistory.slice(1).map((analysis, index) => (
-                    <div key={index} className="p-2 bg-white/5 rounded text-xs text-white opacity-70">
-                      {analysis.substring(0, 100)}...
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Status */}
-            <div className="mt-4 pt-4 border-t border-white/20">
-              <div className="flex items-center gap-2 text-sm text-white">
-                {isAnalyzing ? (
-                  <>
-                    <Loader size={16} className="animate-spin" />
-                    <span>Analyzing...</span>
-                  </>
+        <div className="space-y-4">
+          {/* Camera Preview or Captured Image */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+                {capturedImage ? (
+                  <img
+                    src={capturedImage || "/placeholder.svg"}
+                    alt="Captured"
+                    className="w-full h-full object-cover"
+                  />
+                ) : isActive ? (
+                  <video
+                    ref={videoRef}
+                    className="w-full h-full object-cover"
+                    muted
+                    playsInline
+                    style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
+                  />
                 ) : (
-                  <>
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Ready for analysis</span>
-                  </>
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <Camera className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p>Click "Start Camera" to begin</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Camera Controls Overlay */}
+                {isActive && !capturedImage && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={capturePhoto}
+                      className="w-16 h-16 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center shadow-lg"
+                    >
+                      <div className="w-12 h-12 bg-white rounded-full" />
+                    </motion.button>
+                  </div>
+                )}
+
+                {/* Switch Camera Button */}
+                {isActive && devices.length > 1 && (
+                  <div className="absolute top-4 right-4">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={switchCamera}
+                      className="bg-black/50 hover:bg-black/70 text-white"
+                    >
+                      <SwitchCamera className="w-4 h-4" />
+                    </Button>
+                  </div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Error Display */}
+          {error && (
+            <div className="text-red-500 text-sm text-center p-2 bg-red-50 dark:bg-red-900/20 rounded">
+              {error}
             </div>
+          )}
+
+          {/* Controls */}
+          <div className="flex gap-2">
+            {!isActive && !capturedImage ? (
+              <Button
+                onClick={startWebcam}
+                className="flex-1"
+                size="lg"
+              >
+                <Camera className="w-4 h-4 mr-2" />
+                Start Camera
+              </Button>
+            ) : capturedImage ? (
+              <>
+                <Button
+                  onClick={retakePhoto}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Retake
+                </Button>
+                <Button
+                  onClick={downloadImage}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+              </>
+            ) : (
+              <Button
+                onClick={stopWebcam}
+                variant="destructive"
+                className="flex-1"
+              >
+                <CameraOff className="w-4 h-4 mr-2" />
+                Stop Camera
+              </Button>
+            )}
           </div>
+
+          {/* AI Analysis */}
+          {capturedImage && (
+            <Button
+              onClick={analyzeWithAI}
+              disabled={isAnalyzing}
+              className="w-full"
+              variant="secondary"
+            >
+              {isAnalyzing ? (
+                <>
+                  <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Analyzing with AI...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 mr-2" />
+                  Analyze with AI
+                </>
+              )}
+            </Button>
+          )}
         </div>
 
-        <p className="mt-6 text-lg text-white opacity-80">AI is analyzing your webcam feed in real-time</p>
-      </div>
-    </div>
+        {/* Hidden canvas for capture */}
+        <canvas ref={canvasRef} className="hidden" />
+      </DialogContent>
+    </Dialog>
   )
 }
-
-export default WebcamModal

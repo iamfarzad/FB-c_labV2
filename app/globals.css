@@ -4,64 +4,50 @@
 
 @layer base {
   :root {
-    --font-sans: "Inter", sans-serif;
-
-    /* Custom Theme Variables */
-    --color-orange-accent: 22 100% 51%;
-    --color-gunmetal: 0 0% 10%;
-    --color-light-silver: 0 0% 96%;
-    --color-gunmetal-lighter: 0 0% 16%;
-    --color-light-silver-darker: 0 0% 88%;
-    --color-orange-accent-hover: 22 100% 45%;
-
-    /* Light Mode */
-    --background: 0 0% 98%;
-    --foreground: var(--color-gunmetal);
-    --primary: var(--color-gunmetal);
-    --primary-foreground: var(--color-light-silver);
-    --secondary: var(--color-light-silver);
-    --secondary-foreground: var(--color-gunmetal);
-    --accent: var(--color-orange-accent);
-    --accent-foreground: var(--color-light-silver);
-    --muted: var(--color-light-silver-darker);
-    --muted-foreground: 0 0% 40%;
-    --border: 0 0% 85%;
-    --input: 0 0% 85%;
-    --ring: var(--color-orange-accent);
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
-    --card-foreground: var(--color-gunmetal);
-    --popover: var(--card);
-    --popover-foreground: var(--card-foreground);
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --glass-bg: rgba(255, 255, 255, 0.5);
-    --glass-border: rgba(0, 0, 0, 0.1);
-    --radius: 0.75rem;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+    --orange-accent: 24 100% 50%;
   }
 
   .dark {
-    /* Dark Mode */
-    --background: var(--color-gunmetal);
-    --foreground: var(--color-light-silver);
-    --primary: var(--color-light-silver);
-    --primary-foreground: var(--color-gunmetal);
-    --secondary: var(--color-gunmetal-lighter);
-    --secondary-foreground: var(--color-light-silver);
-    --accent: var(--color-orange-accent);
-    --accent-foreground: var(--color-gunmetal);
-    --muted: var(--color-gunmetal-lighter);
-    --muted-foreground: 0 0% 60%;
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: var(--color-orange-accent);
-    --card: var(--color-gunmetal-lighter);
-    --card-foreground: var(--color-light-silver);
-    --popover: var(--card);
-    --popover-foreground: var(--card-foreground);
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 98%;
-    --glass-bg: rgba(26, 26, 26, 0.5);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+    --orange-accent: 24 100% 50%;
   }
 }
 
@@ -69,322 +55,219 @@
   * {
     @apply border-border;
   }
+  
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html {
     scroll-behavior: smooth;
-    /* Prevent horizontal scroll on mobile */
-    overflow-x: hidden;
   }
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-display font-semibold tracking-tight;
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/30;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
   }
 }
 
-/* Mobile-first responsive utilities */
-@layer utilities {
-  .mobile\:h-\[100dvh\] {
+@layer components {
+  /* Glass morphism effect */
+  .glass-header {
+    @apply bg-background/80 backdrop-blur-md border-b border-border/50;
+  }
+
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50;
+  }
+
+  /* Chat specific styles */
+  .chat-container {
     height: 100dvh;
+    @apply flex flex-col overflow-hidden;
   }
 
-  .mobile\:overflow-hidden {
-    overflow: hidden;
+  .chat-messages {
+    @apply flex-1 overflow-y-auto;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
   }
 
-  /* Touch-friendly tap targets */
-  .touch-target {
-    min-height: 44px;
-    min-width: 44px;
+  /* Modal animations */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 bg-black/80 backdrop-blur-sm;
+    animation: fadeIn 0.2s ease-out;
   }
 
-  /* Safe area handling for mobile devices */
-  .safe-area-inset {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+  .modal-content {
+    @apply fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2;
+    animation: slideIn 0.3s ease-out;
   }
 
-  /* Improved scrolling on mobile */
-  .mobile-scroll {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
-  /* Text selection improvements */
-  .select-text {
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    -ms-user-select: text;
-    user-select: text;
+  @keyframes slideIn {
+    from { 
+      opacity: 0; 
+      transform: translate(-50%, -50%) scale(0.95);
+    }
+    to { 
+      opacity: 1; 
+      transform: translate(-50%, -50%) scale(1);
+    }
   }
 
-  /* Focus improvements for accessibility */
-  .focus-visible-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  /* Voice orb animation */
+  .voice-orb {
+    @apply relative w-32 h-32 rounded-full;
+    background: linear-gradient(45deg, 
+      hsl(var(--primary)), 
+      hsl(var(--orange-accent)), 
+      hsl(var(--primary))
+    );
+    background-size: 200% 200%;
+    animation: voiceOrb 2s ease-in-out infinite;
   }
 
-  /* Educational app grid styles */
-  .educational-app-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
+  .voice-orb.recording {
+    animation: voiceOrbRecording 1s ease-in-out infinite;
   }
 
-  .educational-app-card {
-    padding: 1rem;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    color: white;
-    text-align: center;
+  @keyframes voiceOrb {
+    0%, 100% { 
+      background-position: 0% 50%;
+      transform: scale(1);
+    }
+    50% { 
+      background-position: 100% 50%;
+      transform: scale(1.05);
+    }
   }
 
-  .educational-app-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  @keyframes voiceOrbRecording {
+    0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 0 20px hsl(var(--primary) / 0.5);
+    }
+    50% { 
+      transform: scale(1.1);
+      box-shadow: 0 0 40px hsl(var(--primary) / 0.8);
+    }
   }
 
-  .educational-app-icon {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+  /* Activity timeline */
+  .activity-timeline {
+    @apply relative;
   }
 
-  .educational-app-name {
-    font-weight: 600;
-    margin-bottom: 0.25rem;
+  .activity-timeline::before {
+    @apply absolute left-4 top-0 bottom-0 w-px bg-border;
+    content: '';
   }
 
-  .educational-app-description {
-    font-size: 0.875rem;
-    opacity: 0.9;
+  .activity-item {
+    @apply relative pl-10 pb-4;
   }
 
-  /* Gradient text effect */
-  .gradient-text {
-    background: linear-gradient(135deg, hsl(var(--color-orange-accent)), hsl(var(--primary)));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-}
-
-.glass-header {
-  @apply sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-lg;
-}
-
-/* Custom animation for the background texture */
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  33% {
-    transform: translateY(-10px) rotate(1deg);
-  }
-  66% {
-    transform: translateY(5px) rotate(-1deg);
-  }
-}
-
-/* Responsive breakpoints */
-@media (max-width: 767px) {
-  .mobile\:block {
-    display: block;
-  }
-  .mobile\:hidden {
-    display: none;
-  }
-  .mobile\:flex {
-    display: flex;
-  }
-  .mobile\:inline {
-    display: inline;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .tablet\:block {
-    display: block;
-  }
-  .tablet\:hidden {
-    display: none;
-  }
-  .tablet\:flex {
-    display: flex;
-  }
-  .tablet\:inline {
-    display: inline;
-  }
-}
-
-@media (min-width: 1024px) {
-  .desktop\:block {
-    display: block;
-  }
-  .desktop\:hidden {
-    display: none;
-  }
-  .desktop\:flex {
-    display: flex;
-  }
-  .desktop\:inline {
-    display: inline;
-  }
-}
-
-/* Improved modal and overlay handling */
-.modal-overlay {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-/* Better button and interactive element sizing for touch */
-@media (max-width: 767px) {
-  .btn-touch {
-    min-height: 44px;
-    min-width: 44px;
-    padding: 12px 16px;
+  .activity-item::before {
+    @apply absolute left-3 top-2 w-2 h-2 bg-primary rounded-full;
+    content: '';
   }
 
-  .input-touch {
-    min-height: 48px;
-    font-size: 16px; /* Prevents zoom on iOS */
+  .activity-item.in-progress::before {
+    @apply animate-pulse bg-orange-500;
   }
-}
 
-/* Improved text readability */
-.text-readable {
-  line-height: 1.6;
-  letter-spacing: 0.01em;
-}
-
-/* Animation performance improvements */
-.gpu-accelerated {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-/* Scroll improvements */
-.smooth-scroll {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Voice modal specific styles */
-.voice-orb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-}
-
-.voice-orb.listening {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  box-shadow: 0 8px 32px rgba(79, 172, 254, 0.4);
-}
-
-.voice-orb.processing {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-  box-shadow: 0 8px 32px rgba(250, 112, 154, 0.4);
-}
-
-.voice-orb.speaking {
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-  box-shadow: 0 8px 32px rgba(168, 237, 234, 0.4);
-}
-
-/* Screen share modal styles */
-.screen-share-overlay {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%);
-}
-
-/* Webcam modal styles */
-.webcam-overlay {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.85) 100%);
-}
-
-/* Video-to-app generator styles */
-.video-generator-container {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Chat layout improvements */
-.chat-container {
-  height: 100vh;
-  height: 100dvh; /* Dynamic viewport height for mobile */
-}
-
-.chat-sidebar {
-  width: 320px;
-  min-width: 320px;
-}
-
-@media (max-width: 768px) {
-  .chat-sidebar {
-    width: 100%;
-    min-width: 100%;
+  .activity-item.completed::before {
+    @apply bg-green-500;
   }
-}
 
-/* Activity timeline styles */
-.activity-timeline {
-  position: relative;
-}
-
-.activity-timeline::before {
-  content: "";
-  position: absolute;
-  left: 1rem;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: linear-gradient(to bottom, hsl(var(--border)), transparent);
-}
-
-.activity-item {
-  position: relative;
-  padding-left: 2.5rem;
-  margin-bottom: 1rem;
-}
-
-.activity-item::before {
-  content: "";
-  position: absolute;
-  left: 0.75rem;
-  top: 0.5rem;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: hsl(var(--primary));
-  border: 2px solid hsl(var(--background));
-}
-
-.activity-item.in-progress::before {
-  background: hsl(var(--color-orange-accent));
-  animation: pulse 2s infinite;
-}
-
-.activity-item.completed::before {
-  background: #10b981;
-}
-
-.activity-item.failed::before {
-  background: hsl(var(--destructive));
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
+  .activity-item.failed::before {
+    @apply bg-red-500;
   }
-  50% {
-    opacity: 0.5;
+
+  /* Educational app grid */
+  .educational-grid {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .educational-card {
+    @apply glass-card p-6 rounded-lg hover:shadow-lg transition-all duration-300;
+  }
+
+  .educational-card:hover {
+    @apply transform -translate-y-1;
+  }
+
+  /* Responsive utilities */
+  .mobile\:text-xs {
+    @media (max-width: 767px) {
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
+  }
+
+  .mobile\:p-3 {
+    @media (max-width: 767px) {
+      padding: 0.75rem;
+    }
+  }
+
+  .mobile\:h-\[100dvh\] {
+    @media (max-width: 767px) {
+      height: 100dvh;
+    }
+  }
+
+  .tablet\:text-sm {
+    @media (min-width: 768px) and (max-width: 1023px) {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+  }
+
+  .desktop\:text-base {
+    @media (min-width: 1024px) {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
+  }
+
+  /* Focus styles for accessibility */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+
+  /* Loading states */
+  .loading-shimmer {
+    background: linear-gradient(90deg, 
+      hsl(var(--muted)) 0%, 
+      hsl(var(--muted-foreground) / 0.1) 50%, 
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
   }
 }
