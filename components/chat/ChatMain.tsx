@@ -10,6 +10,19 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import type { Message } from "@/app/chat/types/chat"
 
+// --- helper ---------------------------------------------------------------
+const formatTimestamp = (ts?: Date | string) => {
+  if (!ts) return "" // no timestamp -> show nothing
+  const date =
+    ts instanceof Date
+      ? ts
+      : // handle ISO strings coming from the server / SDK
+        new Date(ts)
+  if (Number.isNaN(date.getTime())) return ""
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+}
+// --------------------------------------------------------------------------
+
 interface ChatMainProps {
   messages: Message[]
   isLoading: boolean
@@ -138,12 +151,9 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
               </Card>
 
               {/* Timestamp */}
-              <span className="text-xs text-muted-foreground mt-1 px-1">
-                {message.timestamp.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
+              {formatTimestamp(message.timestamp) && (
+                <span className="text-xs text-muted-foreground mt-1 px-1">{formatTimestamp(message.timestamp)}</span>
+              )}
             </div>
 
             {message.role === "user" && (
