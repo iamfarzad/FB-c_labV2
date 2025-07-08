@@ -1,297 +1,224 @@
 "use client"
 
-import type React from "react"
-import { useState, useEffect, useCallback, useRef } from "react"
-import { X, Loader, Eye, Brain } from "lucide-react"
-import { useAnalysisHistory } from "@/hooks/use-analysis-history"
+import { useState, useRef, useCallback, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Camera, RotateCcw, Zap } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import { activityLogger } from "@/lib/activity-logger"
 
 interface WebcamModalProps {
   isOpen: boolean
   onClose: () => void
-  onCapture?: (imageData: string) => void
-  onAIAnalysis?: (analysis: string) => void
-  theme?: "light" | "dark"
+  onCapture: (imageData: string) => void
+  onAIAnalysis: (analysis: string) => void
 }
 
-export const WebcamModal: React.FC<WebcamModalProps> = ({
-  isOpen,
-  onClose,
-  onCapture,
-  onAIAnalysis,
-  theme = "dark",
-}) => {
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [currentAnalysis, setCurrentAnalysis] = useState("")
-  const { analysisHistory, addAnalysis, clearHistory } = useAnalysisHistory()
-  const [isCameraActive, setIsCameraActive] = useState(false)
-  const [stream, setStream] = useState<MediaStream | null>(null)
+export function WebcamModal({ isOpen, onClose, onCapture, onAIAnalysis }: WebcamModalProps) {
+  const { toast } = useToast()
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
-  // Start camera
   const startCamera = useCallback(async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 480 },
       })
 
-      setStream(mediaStream)
-      setIsCameraActive(true)
-
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream
+        videoRef.current.srcObject = stream
+        setIsStreaming(true)
+        activityLogger.log({
+          type: "webcam",
+          title: "Webcam Started",
+          description: "Camera stream initiated",
+          status: "in_progress",
+        })
       }
     } catch (error) {
-      console.error("Camera access failed:", error)
+      console.error("Camera access error:", error)
+      toast({
+        title: "Camera Access Denied",
+        description: "Please allow camera access to use this feature.",
+        variant: "destructive",
+      })
+    }
+  }, [toast])
+
+  const stopCamera = useCallback(() => {
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream
+      stream.getTracks().forEach((track) => track.stop())
+      videoRef.current.srcObject = null
+      setIsStreaming(false)
     }
   }, [])
 
-  // Stop camera
-  const stopCamera = useCallback(() => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop())
-      setStream(null)
-    }
-    setIsCameraActive(false)
-    onClose()
-  }, [stream, onClose])
-
-  const handleAnalysis = useCallback(
-    async (imageData: string) => {
-      if (!videoRef.current || !canvasRef.current || !isCameraActive) return
-
-      const video = videoRef.current
-      const canvas = canvasRef.current
-      const ctx = canvas.getContext("2d")
-
-      if (!ctx) return
-
-      // Set canvas size to match video
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-
-      // Draw current frame to canvas
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-      // Convert to base64
-      const base64Data = imageData.split(",")[1]
-
-      setIsAnalyzing(true)
-
-      try {
-        // Real Gemini API call
-        const response = await fetch("/api/analyze-image", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: base64Data, type: "webcam" }),
-        })
-
-        if (!response.ok) {
-          throw new Error("Failed to analyze image")
-        }
-
-        const { analysis } = await response.json()
-
-        setCurrentAnalysis(analysis)
-        addAnalysis(analysis)
-        if (onAIAnalysis) {
-          onAIAnalysis(analysis)
-        }
-      } catch (error) {
-        console.error("AI analysis error:", error)
-        const fallbackAnalysis = "Unable to analyze image at this time. Please try again."
-        setCurrentAnalysis(fallbackAnalysis)
-        addAnalysis(fallbackAnalysis)
-      } finally {
-        setIsAnalyzing(false)
-      }
-    },
-    [isCameraActive, onAIAnalysis, addAnalysis],
-  )
-
-  const analyzeCurrentFrame = useCallback(async () => {
-    if (!stream) return
-    const video = videoRef.current
-    if (!video) return
-
-    const streamTracks = stream.getTracks()
-    if (streamTracks.length === 0) return
-
-    const track = streamTracks[0]
-    if (!track) return
+  const capturePhoto = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current) return
 
     const canvas = canvasRef.current
-    if (!canvas) {
-      console.error("Canvas is not initialized")
-      return
-    }
+    const video = videoRef.current
+    const context = canvas.getContext("2d")
 
-    const ctx = canvas.getContext("2d")
-    if (!ctx) {
-      console.error("Canvas context is not initialized")
-      return
-    }
+    if (!context) return
 
-    const videoWidth = video.videoWidth
-    const videoHeight = video.videoHeight
-
-    canvas.width = videoWidth
-    canvas.height = videoHeight
-
-    ctx.drawImage(video, 0, 0, videoWidth, videoHeight)
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    context.drawImage(video, 0, 0)
 
     const imageData = canvas.toDataURL("image/jpeg", 0.8)
-    await handleAnalysis(imageData)
-  }, [stream, handleAnalysis])
+    setCapturedImage(imageData)
 
-  // Auto-analyze every 3 seconds when camera is active
-  useEffect(() => {
-    if (!isCameraActive) return
+    activityLogger.log({
+      type: "image_capture",
+      title: "Photo Captured",
+      description: "Webcam photo taken successfully",
+      status: "completed",
+    })
 
-    const interval = setInterval(analyzeCurrentFrame, 3000)
-    return () => clearInterval(interval)
-  }, [isCameraActive, analyzeCurrentFrame])
+    toast({
+      title: "Photo Captured",
+      description: "Image ready for analysis or chat",
+    })
+  }, [toast])
 
-  // Start camera when modal opens
-  useEffect(() => {
-    if (isOpen && !isCameraActive) {
-      startCamera()
-    }
-  }, [isOpen, isCameraActive, startCamera])
+  const analyzeWithAI = useCallback(async () => {
+    if (!capturedImage) return
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop())
+    setIsAnalyzing(true)
+    activityLogger.log({
+      type: "vision_analysis",
+      title: "AI Analysis Started",
+      description: "Analyzing captured image with Gemini Vision",
+      status: "in_progress",
+    })
+
+    try {
+      const response = await fetch("/api/analyze-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageData: capturedImage,
+          prompt:
+            "Analyze this webcam image. Describe what you see, identify any objects, people, or text, and provide insights about the context or setting.",
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Analysis failed")
       }
+
+      const { analysis } = await response.json()
+
+      onAIAnalysis(analysis)
+      activityLogger.log({
+        type: "vision_analysis",
+        title: "AI Analysis Complete",
+        description: "Image analyzed successfully",
+        status: "completed",
+      })
+
+      toast({
+        title: "Analysis Complete",
+        description: "AI has analyzed your image",
+      })
+    } catch (error) {
+      console.error("Analysis error:", error)
+      activityLogger.log({
+        type: "error",
+        title: "Analysis Failed",
+        description: "Failed to analyze image",
+        status: "failed",
+      })
+      toast({
+        title: "Analysis Failed",
+        description: "Could not analyze the image. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsAnalyzing(false)
     }
-  }, [stream])
+  }, [capturedImage, onAIAnalysis, toast])
+
+  const sendToChat = useCallback(() => {
+    if (capturedImage) {
+      onCapture(capturedImage)
+      onClose()
+    }
+  }, [capturedImage, onCapture, onClose])
+
+  const retakePhoto = useCallback(() => {
+    setCapturedImage(null)
+  }, [])
 
   useEffect(() => {
-    if (!isOpen) {
-      clearHistory()
+    if (isOpen) {
+      startCamera()
+    } else {
+      stopCamera()
+      setCapturedImage(null)
     }
-  }, [isOpen, clearHistory])
 
-  if (!isOpen) return null
+    return () => stopCamera()
+  }, [isOpen, startCamera, stopCamera])
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 transition-all duration-500 bg-black/50 backdrop-blur-sm">
-      <div className="relative p-8 rounded-2xl flex flex-col items-center justify-center w-full h-full max-w-6xl">
-        <button
-          onClick={stopCamera}
-          className="absolute top-8 right-8 p-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 z-30 transition-all duration-300 shadow-lg group"
-          aria-label="Stop webcam stream"
-        >
-          <X size={24} className="group-hover:rotate-90 transition-transform" />
-        </button>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Camera className="w-5 h-5" />
+            Webcam Capture
+          </DialogTitle>
+        </DialogHeader>
 
-        <div className="flex justify-center space-x-4">
-          {/* Manual Analysis Button */}
-          <button
-            onClick={analyzeCurrentFrame}
-            disabled={isAnalyzing || !isCameraActive}
-            className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 z-30 transition-all duration-300 shadow-lg group disabled:opacity-50"
-            aria-label="Analyze current view"
-          >
-            <Brain className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          </button>
-        </div>
+        <div className="space-y-4">
+          {!capturedImage ? (
+            <div className="relative">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full rounded-lg bg-black"
+                style={{ aspectRatio: "4/3" }}
+              />
+              <canvas ref={canvasRef} className="hidden" />
 
-        <h2 className="text-3xl font-bold mb-6 text-white gradient-text">
-          {isCameraActive ? "AI-Powered Webcam Analysis" : "Activating Camera..."}
-        </h2>
-
-        <div className="flex gap-6 w-full max-w-6xl">
-          {/* Video Stream */}
-          <div className="relative flex-1 aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/20">
-            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-            <canvas ref={canvasRef} style={{ display: "none" }} />
-
-            {!isCameraActive && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-                <div className="text-center">
-                  <div className="p-6 rounded-full bg-white/10 mb-4">
-                    <Loader size={48} className="animate-spin text-orange-500" />
-                  </div>
-                  <p className="text-lg text-white">Initializing camera...</p>
+              {isStreaming && (
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                  <Button onClick={capturePhoto} size="lg" className="rounded-full">
+                    <Camera className="w-5 h-5 mr-2" />
+                    Capture Photo
+                  </Button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <img src={capturedImage || "/placeholder.svg"} alt="Captured" className="w-full rounded-lg" />
 
-            {isCameraActive && (
-              <div className="absolute bottom-4 left-4 right-4 bg-black/50 backdrop-blur-sm rounded-xl p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
-                    <span className="text-sm font-medium text-white">LIVE</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Eye size={16} className="text-white" />
-                    <span className="text-sm text-white">AI Watching</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+              <div className="flex gap-2 justify-center">
+                <Button onClick={retakePhoto} variant="outline">
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Retake
+                </Button>
 
-          {/* AI Analysis Panel */}
-          <div className="w-80 bg-black/20 backdrop-blur-xl rounded-2xl p-4 border border-white/20">
-            <h3 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
-              <Brain size={20} />
-              AI Analysis
-            </h3>
+                <Button onClick={analyzeWithAI} disabled={isAnalyzing} variant="secondary">
+                  <Zap className="w-4 h-4 mr-2" />
+                  {isAnalyzing ? "Analyzing..." : "AI Analysis"}
+                </Button>
 
-            {/* Current Analysis */}
-            {currentAnalysis && (
-              <div className="mb-4 p-3 bg-white/10 rounded-lg">
-                <h4 className="text-sm font-semibold text-white mb-2">Current View:</h4>
-                <p className="text-sm text-white opacity-90">{currentAnalysis}</p>
-              </div>
-            )}
-
-            {/* Analysis History */}
-            {analysisHistory.length > 1 && (
-              <div>
-                <h4 className="text-sm font-semibold text-white mb-2">Recent Analysis:</h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {analysisHistory.slice(1).map((analysis, index) => (
-                    <div key={index} className="p-2 bg-white/5 rounded text-xs text-white opacity-70">
-                      {analysis.substring(0, 100)}...
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Status */}
-            <div className="mt-4 pt-4 border-t border-white/20">
-              <div className="flex items-center gap-2 text-sm text-white">
-                {isAnalyzing ? (
-                  <>
-                    <Loader size={16} className="animate-spin" />
-                    <span>Analyzing...</span>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Ready for analysis</span>
-                  </>
-                )}
+                <Button onClick={sendToChat}>Send to Chat</Button>
               </div>
             </div>
-          </div>
+          )}
         </div>
-
-        <p className="mt-6 text-lg text-white opacity-80">AI is analyzing your webcam feed in real-time</p>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
-
-export default WebcamModal

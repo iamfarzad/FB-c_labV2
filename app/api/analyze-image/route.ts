@@ -1,30 +1,27 @@
-import { type NextRequest, NextResponse } from "next/server"
 import { GoogleGenerativeAI } from "@google/generative-ai"
+import { type NextRequest, NextResponse } from "next/server"
 
-export async function POST(request: NextRequest) {
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+
+export async function POST(req: NextRequest) {
   try {
-    const { image, type } = await request.json()
+    const { imageData, prompt = "Analyze this image and provide detailed insights." } = await req.json()
 
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY not configured")
+    if (!imageData) {
+      return NextResponse.json({ error: "No image data provided" }, { status: 400 })
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+    // Remove data URL prefix if present
+    const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, "")
 
-    const prompt =
-      type === "webcam"
-        ? "Analyze this webcam image. Describe what you see, including people, objects, activities, and the environment. Be specific and helpful for business consultation purposes."
-        : type === "screen"
-          ? "Analyze this screen capture. Describe what application or content is being shown, what the user might be working on, and any notable elements or activities visible. Provide business insights if relevant."
-          : "Analyze this image and provide detailed insights relevant to business automation and AI consultation."
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
     const result = await model.generateContent([
       prompt,
       {
         inlineData: {
+          data: base64Data,
           mimeType: "image/jpeg",
-          data: image,
         },
       },
     ])
@@ -32,9 +29,12 @@ export async function POST(request: NextRequest) {
     const response = await result.response
     const analysis = response.text()
 
-    return NextResponse.json({ analysis })
-  } catch (error) {
+    return NextResponse.json({
+      analysis,
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error: any) {
     console.error("Image analysis error:", error)
-    return NextResponse.json({ error: "Failed to analyze image" }, { status: 500 })
+    return NextResponse.json({ error: error.message || "Failed to analyze image" }, { status: 500 })
   }
 }

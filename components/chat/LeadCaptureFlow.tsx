@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -53,10 +52,16 @@ export function LeadCaptureFlow({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
+          name: formData.name,
+          email: formData.email,
+          company: formData.company,
           engagementType,
           initialQuery,
-          source: "chat_onboarding",
+          tcAcceptance: {
+            accepted: formData.agreedToTerms,
+            timestamp: Date.now(),
+            userAgent: navigator.userAgent,
+          },
         }),
       })
 
