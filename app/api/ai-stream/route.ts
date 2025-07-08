@@ -16,8 +16,7 @@ export async function POST(req: NextRequest) {
     const body: StreamRequestBody = await req.json()
     const { prompt, conversationHistory, enableStreaming = true, sessionId } = body
 
-    // LOGIC: Validate input thoroughly
-    // WHY: Prevent empty/invalid requests that waste API calls
+    // Validate input
     if (!prompt || typeof prompt !== "string") {
       return NextResponse.json(
         {
@@ -39,21 +38,19 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // LOGIC: Use Gemini 2.5 Flash for streaming
-    // WHY: Better streaming performance, lower latency, cost-effective
+    // Initialize Gemini AI
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       generationConfig: {
-        temperature: 0.7, // Balanced creativity
-        topP: 0.8, // Focus on likely tokens
-        topK: 40, // Limit token choices
-        maxOutputTokens: 2048, // Control response length
+        temperature: 0.7,
+        topP: 0.8,
+        topK: 40,
+        maxOutputTokens: 2048,
       },
     })
 
-    // LOGIC: Convert conversation history to Gemini format
-    // WHY: Gemini expects specific role/parts structure
+    // Convert conversation history to the correct format
     const history = Array.isArray(conversationHistory)
       ? conversationHistory.map((msg: any) => ({
           role: msg.role === "assistant" ? "model" : "user",
@@ -65,15 +62,13 @@ export async function POST(req: NextRequest) {
     const supabase = getSupabase()
 
     if (enableStreaming) {
-      // LOGIC: Server-Sent Events (SSE) streaming
-      // WHY: Real-time response delivery, better UX, progressive loading
+      // Streaming response
       const encoder = new TextEncoder()
 
       const stream = new ReadableStream({
         async start(controller) {
           try {
-            // LOGIC: Real-time activity logging via Supabase channels
-            // WHY: Live monitoring, debugging, user activity tracking
+            // Log AI request start
             const channel = supabase.channel(`ai-stream-${sessionId || "default"}`)
 
             await channel.send({
@@ -94,8 +89,6 @@ export async function POST(req: NextRequest) {
               },
             })
 
-            // LOGIC: Stream response in chunks
-            // WHY: Progressive loading, better perceived performance
             const result = await chat.sendMessageStream(trimmedPrompt)
             let fullText = ""
             let chunkCount = 0
@@ -106,8 +99,7 @@ export async function POST(req: NextRequest) {
                 fullText += text
                 chunkCount++
 
-                // LOGIC: Log each streaming chunk
-                // WHY: Monitor streaming performance, debug issues
+                // Log streaming chunk
                 await channel.send({
                   type: "broadcast",
                   event: "activity-update",
@@ -122,14 +114,11 @@ export async function POST(req: NextRequest) {
                   },
                 })
 
-                // LOGIC: Send SSE formatted data
-                // WHY: Standard SSE format for client consumption
                 controller.enqueue(encoder.encode(`data: ${text}\n\n`))
               }
             }
 
-            // LOGIC: Broadcast final response via Supabase
-            // WHY: Real-time updates to connected clients
+            // Broadcast final response
             await channel.send({
               type: "broadcast",
               event: "ai-response",
@@ -143,8 +132,7 @@ export async function POST(req: NextRequest) {
               },
             })
 
-            // LOGIC: Log completion metrics
-            // WHY: Performance monitoring, usage analytics
+            // Log completion
             await channel.send({
               type: "broadcast",
               event: "activity-update",
@@ -163,15 +151,12 @@ export async function POST(req: NextRequest) {
               },
             })
 
-            // LOGIC: Signal stream completion
-            // WHY: Client needs to know when streaming is done
             controller.enqueue(encoder.encode("event: done\ndata: [DONE]\n\n"))
             controller.close()
           } catch (error) {
             console.error("Streaming error:", error)
 
-            // LOGIC: Error handling in streaming context
-            // WHY: Graceful error recovery, user notification
+            // Log error
             const channel = supabase.channel(`ai-stream-${sessionId || "default"}`)
             await channel.send({
               type: "broadcast",
@@ -207,8 +192,7 @@ export async function POST(req: NextRequest) {
         },
       })
     } else {
-      // LOGIC: Standard non-streaming response
-      // WHY: Fallback for clients that don't support streaming
+      // Standard response
       const result = await chat.sendMessage(trimmedPrompt)
       const response = result.response
       const text = response.text()
@@ -251,8 +235,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// LOGIC: CORS handling for cross-origin requests
-// WHY: Enable frontend to call API from different domains
+// Handle OPTIONS for CORS
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,

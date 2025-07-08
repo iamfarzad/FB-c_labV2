@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { GoogleGenAI } from "@google/genai"
 import { getSupabase } from "@/lib/supabase/server"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
@@ -18,20 +18,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Name and email are required" }, { status: 400 })
     }
 
-    // LOGIC: Use Google GenAI with web search capabilities
-    // WHY: Lead research requires real-time web data, not just training data
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-pro", // Use a more powerful model for research tasks
-      tools: [
-        {
-          googleSearch: {}, // Correctly enable Google Search
-        },
-      ],
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY!,
     })
 
-    // LOGIC: Comprehensive research prompt
-    // WHY: Structured research approach for actionable business insights
+    const tools = [
+      { urlContext: {} }, // Enable web search
+    ]
+
+    const config = {
+      thinkingConfig: {
+        thinkingBudget: -1, // Unlimited thinking time for thorough research
+      },
+      tools,
+      responseMimeType: "text/plain",
+    }
+
+    const model = "gemini-2.5-flash"
+
     const researchPrompt = `
 I need you to research ${name} with email ${email}${company ? ` from company ${company}` : ""}${linkedinUrl ? ` (LinkedIn: ${linkedinUrl})` : ""}.
 
@@ -45,12 +49,21 @@ Please:
 Focus on finding actionable insights for AI consulting opportunities.
 `
 
-    // LOGIC: Stream research process
-    // WHY: Research takes time, streaming shows progress to user
-    const response = await model.generateContentStream(researchPrompt)
+    const contents = [
+      {
+        role: "user",
+        parts: [{ text: researchPrompt }],
+      },
+    ]
 
-    // LOGIC: Server-sent events for research progress
-    // WHY: Real-time feedback during lengthy research process
+    // Stream the research process
+    const response = await ai.models.generateContentStream({
+      model,
+      config,
+      contents,
+    })
+
+    // Create streaming response to show research progress
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
@@ -73,8 +86,7 @@ Focus on finding actionable insights for AI consulting opportunities.
             }
           }
 
-          // LOGIC: Save research to database when complete
-          // WHY: Persist research for future reference and lead management
+          // Save to Supabase when complete
           const supabase = getSupabase()
           await supabase.from("lead_summaries").insert({
             name,
@@ -116,9 +128,8 @@ Focus on finding actionable insights for AI consulting opportunities.
   }
 }
 
-// LOGIC: Extract key insights for consultant
-// WHY: Summarize research into actionable points
 function extractConsultantBrief(research: string): string {
+  // Extract key points for consultant
   const lines = research.split("\n")
   const briefPoints = lines.filter(
     (line) =>
@@ -130,8 +141,6 @@ function extractConsultantBrief(research: string): string {
   return briefPoints.slice(0, 5).join("\n")
 }
 
-// LOGIC: Calculate lead quality score
-// WHY: Prioritize leads based on AI readiness indicators
 function calculateLeadScore(research: string): number {
   let score = 0
 
@@ -145,8 +154,6 @@ function calculateLeadScore(research: string): number {
   return Math.min(score, 100)
 }
 
-// LOGIC: Extract relevant AI capabilities
-// WHY: Match AI solutions to lead's specific needs
 function extractAICapabilities(research: string): string[] {
   const capabilities = []
 

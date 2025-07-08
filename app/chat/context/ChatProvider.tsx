@@ -1,47 +1,29 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
+import type React from "react"
+import { createContext, useContext, useState, useCallback } from "react"
 import type { ActivityItem } from "../types/chat"
 
 interface ChatContextType {
   activityLog: ActivityItem[]
-  addActivity: (activity: ActivityItem) => void
-  clearActivities: () => void
-  updateActivity: (id: string, updates: Partial<ActivityItem>) => void
+  addActivity: (item: Omit<ActivityItem, "id" | "timestamp">) => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
-export function ChatProvider({ children }: { children: ReactNode }) {
+export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [activityLog, setActivityLog] = useState<ActivityItem[]>([])
 
-  const addActivity = useCallback((activity: ActivityItem) => {
-    setActivityLog((prev) => [
-      ...prev,
-      {
-        ...activity,
-        id: activity.id || `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        timestamp: activity.timestamp || new Date(),
-      },
-    ])
+  const addActivity = useCallback((item: Omit<ActivityItem, "id" | "timestamp">) => {
+    const newActivity: ActivityItem = {
+      ...item,
+      id: Date.now().toString(),
+      timestamp: Date.now(),
+    }
+    setActivityLog((prev) => [newActivity, ...prev])
   }, [])
 
-  const clearActivities = useCallback(() => {
-    setActivityLog([])
-  }, [])
-
-  const updateActivity = useCallback((id: string, updates: Partial<ActivityItem>) => {
-    setActivityLog((prev) => prev.map((activity) => (activity.id === id ? { ...activity, ...updates } : activity)))
-  }, [])
-
-  const value: ChatContextType = {
-    activityLog,
-    addActivity,
-    clearActivities,
-    updateActivity,
-  }
-
-  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
+  return <ChatContext.Provider value={{ activityLog, addActivity }}>{children}</ChatContext.Provider>
 }
 
 export function useChatContext() {

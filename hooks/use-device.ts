@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react"
 
-interface DeviceInfo {
+export interface DeviceInfo {
   isMobile: boolean
   isTablet: boolean
   isDesktop: boolean
-  screenWidth: number
-  screenHeight: number
+  width: number
+  height: number
 }
 
 export function useDevice(): DeviceInfo {
@@ -15,8 +15,8 @@ export function useDevice(): DeviceInfo {
     isMobile: false,
     isTablet: false,
     isDesktop: true,
-    screenWidth: 1024,
-    screenHeight: 768,
+    width: 1024,
+    height: 768,
   })
 
   useEffect(() => {
@@ -24,12 +24,16 @@ export function useDevice(): DeviceInfo {
       const width = window.innerWidth
       const height = window.innerHeight
 
+      const isMobile = width < 768
+      const isTablet = width >= 768 && width < 1024
+      const isDesktop = width >= 1024
+
       setDeviceInfo({
-        isMobile: width < 768,
-        isTablet: width >= 768 && width < 1024,
-        isDesktop: width >= 1024,
-        screenWidth: width,
-        screenHeight: height,
+        isMobile,
+        isTablet,
+        isDesktop,
+        width,
+        height,
       })
     }
 

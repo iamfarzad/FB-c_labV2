@@ -1,7 +1,5 @@
 /**
  * Educational AI service for generating learning content
- * LOGIC: Personalized educational content based on user interactions
- * WHY: Adaptive learning requires understanding user behavior and progress
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai"
@@ -43,13 +41,12 @@ const getGeminiClient = () => {
   return new GoogleGenerativeAI(apiKey)
 }
 
-// LOGIC: Stream educational content based on interaction history
-// WHY: Personalized learning requires analyzing user behavior patterns
 export async function* streamEducationalContent(
   interactionHistory: EducationalInteractionData[],
   videoContext: VideoLearningContext,
   currentMaxHistoryLength: number,
 ): AsyncGenerator<string, void, void> {
+  // Use the current stable model
   const modelName = "gemini-2.5-flash"
 
   try {
@@ -65,14 +62,12 @@ export async function* streamEducationalContent(
     const model = genAI.getGenerativeModel({
       model: modelName,
       generationConfig: {
-        temperature: 0.7, // Balanced creativity for educational content
+        temperature: 0.7,
         topP: 0.8,
         topK: 40,
       },
     })
 
-    // LOGIC: Build educational system prompt
-    // WHY: Context-aware educational responses need structured prompting
     const systemPrompt = getEducationalSystemPrompt(
       `Video: ${videoContext.videoTitle || videoContext.videoUrl}
       Spec: ${videoContext.generatedSpec}
@@ -85,8 +80,7 @@ export async function* streamEducationalContent(
     const currentInteraction = interactionHistory[0]
     const pastInteractions = interactionHistory.slice(1)
 
-    // LOGIC: Analyze current interaction context
-    // WHY: Understanding what user just did helps generate relevant content
+    // Build educational context
     const currentElementName = currentInteraction.elementText || currentInteraction.id || "Unknown Element"
     let currentInteractionSummary = `Current Learning Interaction: User interacted with '${currentElementName}' (Type: ${currentInteraction.type}, ID: ${currentInteraction.id}).`
 
@@ -98,15 +92,12 @@ export async function* streamEducationalContent(
       currentInteractionSummary += ` Learning objective: ${currentInteraction.learningObjective}.`
     }
 
-    // LOGIC: Identify educational app context
-    // WHY: Different educational apps need different pedagogical approaches
     const currentAppDef = EDUCATIONAL_APP_DEFINITIONS.find((app) => app.id === currentInteraction.appContext)
     const currentAppContext = currentInteraction.appContext
       ? `Current Educational App: '${currentAppDef?.name || currentInteraction.appContext}' (${currentAppDef?.description || "Educational tool"}).`
       : "No specific educational app context."
 
-    // LOGIC: Analyze learning performance patterns
-    // WHY: Adaptive learning requires understanding user's progress and struggles
+    // Analyze learning patterns from history
     let learningAnalysis = ""
     if (pastInteractions.length > 0) {
       const correctAnswers = pastInteractions.filter((i) => i.isCorrect === true).length
@@ -123,8 +114,6 @@ Learning Performance Analysis:
 `
     }
 
-    // LOGIC: Build interaction history context
-    // WHY: Learning progression requires understanding past interactions
     let historyPromptSegment = ""
     if (pastInteractions.length > 0) {
       historyPromptSegment = `\n\nPrevious Learning Interactions (${pastInteractions.length} most recent):`
@@ -146,8 +135,6 @@ Learning Performance Analysis:
       })
     }
 
-    // LOGIC: Comprehensive educational prompt
-    // WHY: Rich context enables personalized, adaptive educational responses
     const fullPrompt = `${systemPrompt}
 
 ${currentInteractionSummary}
@@ -163,8 +150,6 @@ Video Learning Context:
 
 Generate educational HTML content that builds on this context and interaction history:`
 
-    // LOGIC: Stream educational content
-    // WHY: Educational explanations can be lengthy, streaming improves UX
     const result = await model.generateContentStream(fullPrompt)
 
     for await (const chunk of result.stream) {
@@ -189,9 +174,8 @@ Generate educational HTML content that builds on this context and interaction hi
   }
 }
 
-// LOGIC: Extract learning objectives from video specification
-// WHY: Learning objectives guide educational content generation
 export function extractLearningObjectives(videoSpec: string): string[] {
+  // Extract learning objectives from the generated spec
   const objectives: string[] = []
 
   // Look for numbered lists or bullet points that might be objectives
@@ -246,8 +230,6 @@ export function extractLearningObjectives(videoSpec: string): string[] {
   return objectives.slice(0, 5) // Limit to 5 objectives
 }
 
-// LOGIC: Extract key topics from video specification
-// WHY: Key topics help focus educational content on relevant concepts
 export function extractKeyTopics(videoSpec: string): string[] {
   const topics: string[] = []
 

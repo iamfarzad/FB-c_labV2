@@ -1,32 +1,23 @@
 import type React from "react"
-import type { Metadata } from "next"
-import { Inter, JetBrains_Mono, Playfair_Display } from "next/font/google"
+import { Rajdhani, Space_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import Header from "@/components/header"
+import Footer from "@/components/footer"
 import { Toaster } from "@/components/ui/toaster"
-import { ErrorBoundary } from "@/components/error-boundary"
 import { cn } from "@/lib/utils"
 
-const fontSans = Inter({
+const fontDisplay = Rajdhani({
   subsets: ["latin"],
-  variable: "--font-sans",
-})
-
-const fontMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
-
-const fontDisplay = Playfair_Display({
-  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-display",
 })
 
-export const metadata: Metadata = {
-  title: "F.B/c - AI Automation Consulting",
-  description: "Transform your business with AI automation solutions",
-    generator: 'v0.dev'
-}
+const fontMono = Space_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-mono",
+})
 
 export default function RootLayout({
   children,
@@ -35,21 +26,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          fontSans.variable,
-          fontMono.variable,
-          fontDisplay.variable,
-        )}
-      >
-        <ErrorBoundary>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <main>{children}</main>
-            <Toaster />
-          </ThemeProvider>
-        </ErrorBoundary>
+      <body className={cn("font-sans antialiased", fontDisplay.variable, fontMono.variable)}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <Header />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )
 }
+
+export const metadata = {
+      generator: 'v0.dev'
+    };

@@ -9,16 +9,14 @@ import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import type { Message } from "@/app/chat/types/chat"
-import { WelcomeScreen } from "./WelcomeScreen"
 
 interface ChatMainProps {
   messages: Message[]
   isLoading: boolean
   messagesEndRef: React.RefObject<HTMLDivElement>
-  onExampleClick?: (example: string) => void
 }
 
-export function ChatMain({ messages, isLoading, messagesEndRef, onExampleClick }: ChatMainProps) {
+export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps) {
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
 
   const copyToClipboard = async (text: string, messageId: string) => {
@@ -41,9 +39,20 @@ export function ChatMain({ messages, isLoading, messagesEndRef, onExampleClick }
   }
 
   return (
-    <ScrollArea className="flex-1 p-4" aria-live="polite">
+    <ScrollArea className="flex-1 p-4">
       <div className="max-w-3xl mx-auto space-y-6">
-        {messages.length === 0 && !isLoading && <WelcomeScreen onExampleClick={onExampleClick} />}
+        {messages.length === 0 && !isLoading && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+              <Bot className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Welcome to F.B/c AI</h3>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Start a conversation by typing a message, uploading an image, or using voice input. I'm here to help with
+              AI automation, analysis, and consultation.
+            </p>
+          </div>
+        )}
 
         {messages.map((message) => (
           <div

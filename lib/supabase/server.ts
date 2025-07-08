@@ -1,25 +1,19 @@
 import { createClient } from "@supabase/supabase-js"
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabaseUrl = "https://ksmxqswuzrmdgckwxkvn.supabase.co"
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzbXhxc3d1enJtZGdja3d4a3ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3ODUyNjIsImV4cCI6MjA1NzM2MTI2Mn0.YKz7fKPbl7pbvEMN08lFOPm1SSg59R4lu8tzV8Kkz2E"
 
-if (!supabaseUrl) {
-  throw new Error("Missing SUPABASE_URL environment variable")
-}
-
-if (!supabaseServiceKey) {
-  throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable")
-}
-
-// Server-side client with service role key for admin operations
+// Server-side client (no auth persistence needed)
 export const getSupabase = () => {
-  return createClient(supabaseUrl, supabaseServiceKey, {
+  return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-      autoRefreshToken: false,
       persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
     },
   })
 }
 
-// For use in API routes that need admin privileges
-export const supabaseAdmin = getSupabase()
+// Export default instance for backward compatibility
+export const supabase = getSupabase()

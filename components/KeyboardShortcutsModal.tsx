@@ -1,9 +1,10 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Keyboard, Command } from "lucide-react"
+import { Keyboard, X } from "lucide-react"
 
 interface KeyboardShortcutsModalProps {
   isOpen: boolean
@@ -11,88 +12,112 @@ interface KeyboardShortcutsModalProps {
 }
 
 export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsModalProps) {
-  const isMac = typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0
-  const modifierKey = isMac ? "⌘" : "Ctrl"
+  const [isMac, setIsMac] = useState(false)
 
-  const shortcuts = [
+  useEffect(() => {
+    setIsMac(navigator.platform.toUpperCase().indexOf("MAC") >= 0)
+  }, [])
+
+  const mod = isMac ? "⌘" : "Ctrl"
+
+  const shortcutSections = [
     {
-      category: "Chat Controls",
-      items: [
-        { keys: [`${modifierKey}`, "N"], description: "Start new chat" },
-        { keys: [`${modifierKey}`, "Enter"], description: "Send message" },
-        { keys: [`${modifierKey}`, "K"], description: "Focus input field" },
-        { keys: [`${modifierKey}`, "E"], description: "Export chat summary" },
+      category: "General",
+      shortcuts: [
+        { key: [`${mod}`, "D"], description: "Toggle dark/light theme" },
+        { key: [`${mod}`, "K"], description: "Focus search/input" },
+        { key: ["/"], description: "Focus search/input (alternative)" },
+        { key: ["Esc"], description: "Close modal or clear focus" },
+        { key: [`${mod}`, "?"], description: "Show keyboard shortcuts" },
+        { key: ["F1"], description: "Show help" },
+      ],
+    },
+    {
+      category: "Chat",
+      shortcuts: [
+        { key: [`${mod}`, "N"], description: "Start new chat" },
+        { key: [`${mod}`, "Enter"], description: "Send message" },
+        { key: [`${mod}`, "E"], description: "Export chat summary" },
+        { key: [`${mod}`, "B"], description: "Toggle sidebar" },
+      ],
+    },
+    {
+      category: "Media & Tools",
+      shortcuts: [
+        { key: [`${mod}`, "Shift", "V"], description: "Open voice input" },
+        { key: [`${mod}`, "Shift", "C"], description: "Open camera" },
+        { key: [`${mod}`, "Shift", "S"], description: "Start screen share" },
       ],
     },
     {
       category: "Navigation",
-      items: [
-        { keys: [`${modifierKey}`, "B"], description: "Toggle sidebar" },
-        { keys: ["F1"], description: "Show keyboard shortcuts" },
-        { keys: ["Shift", "Enter"], description: "New line in message" },
-      ],
-    },
-    {
-      category: "Media Input",
-      items: [
-        { keys: [`${modifierKey}`, "Shift", "V"], description: "Open voice input" },
-        { keys: [`${modifierKey}`, "Shift", "C"], description: "Open camera" },
-        { keys: [`${modifierKey}`, "Shift", "S"], description: "Share screen" },
+      shortcuts: [
+        { key: ["Alt", "H"], description: "Go to Home" },
+        { key: ["Alt", "C"], description: "Go to Chat" },
+        { key: ["Alt", "1"], description: "Go to Consulting" },
+        { key: ["Alt", "2"], description: "Go to About" },
+        { key: ["Alt", "3"], description: "Go to Workshop" },
+        { key: ["Alt", "4"], description: "Go to Contact" },
       ],
     },
   ]
 
+  const KeyCombo = ({ keys }: { keys: string[] }) => (
+    <div className="flex items-center gap-1">
+      {keys.map((key, index) => (
+        <div key={index} className="flex items-center gap-1">
+          <Badge variant="outline" className="px-2 py-1 text-xs font-mono bg-muted/50">
+            {key}
+          </Badge>
+          {index < keys.length - 1 && <span className="text-muted-foreground text-xs">+</span>}
+        </div>
+      ))}
+    </div>
+  )
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Keyboard className="w-5 h-5" />
             Keyboard Shortcuts
           </DialogTitle>
-          <DialogDescription>
-            Use these keyboard shortcuts to navigate and control the AI assistant more efficiently.
-          </DialogDescription>
+          <DialogDescription>Speed up your workflow with these keyboard shortcuts</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {shortcuts.map((category, categoryIndex) => (
-            <div key={categoryIndex} className="space-y-3">
-              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                {category.category}
-              </h3>
+          {shortcutSections.map((section) => (
+            <div key={section.category}>
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">{section.category}</h3>
               <div className="space-y-2">
-                {category.items.map((shortcut, shortcutIndex) => (
-                  <div key={shortcutIndex} className="flex items-center justify-between py-2">
-                    <span className="text-sm">{shortcut.description}</span>
-                    <div className="flex items-center gap-1">
-                      {shortcut.keys.map((key, keyIndex) => (
-                        <div key={keyIndex} className="flex items-center gap-1">
-                          <Badge variant="outline" className="font-mono text-xs px-2 py-1">
-                            {key === "⌘" ? <Command className="w-3 h-3" /> : key}
-                          </Badge>
-                          {keyIndex < shortcut.keys.length - 1 && (
-                            <span className="text-muted-foreground text-xs">+</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                {section.shortcuts.map((shortcut, index) => (
+                  <div key={index} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/50">
+                    <span className="text-sm text-muted-foreground">{shortcut.description}</span>
+                    <KeyCombo keys={shortcut.key} />
                   </div>
                 ))}
               </div>
-              {categoryIndex < shortcuts.length - 1 && <Separator />}
             </div>
           ))}
         </div>
 
-        <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-          <p className="text-sm text-muted-foreground">
-            <strong>Tip:</strong> Most shortcuts work globally throughout the application. Press{" "}
-            <Badge variant="outline" className="font-mono text-xs">
+        <div className="flex items-center justify-between pt-4 border-t">
+          <div className="text-xs text-muted-foreground">
+            Press{" "}
+            <Badge variant="outline" className="px-1 py-0.5 text-xs">
               F1
             </Badge>{" "}
-            anytime to view this help.
-          </p>
+            or{" "}
+            <Badge variant="outline" className="px-1 py-0.5 text-xs">
+              {mod} + ?
+            </Badge>{" "}
+            anytime to see shortcuts
+          </div>
+          <Button variant="outline" onClick={onClose}>
+            <X className="w-4 h-4 mr-2" />
+            Close
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

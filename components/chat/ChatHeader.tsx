@@ -7,7 +7,7 @@ import { Download, Bot, Menu } from "lucide-react"
 import { MobileSidebarSheet } from "./sidebar/MobileSidebarSheet"
 import type { ActivityItem } from "@/app/chat/types/chat"
 import { cn } from "@/lib/utils"
-import { useDevice } from "@/hooks/use-device"
+import { useState, useEffect } from "react"
 
 interface ChatHeaderProps {
   onDownloadSummary: () => void
@@ -18,7 +18,21 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivityClick, className }: ChatHeaderProps) {
-  const { isMobile } = useDevice()
+  const [isMobile, setIsMobile] = useState(false)
+  const [isTablet, setIsTablet] = useState(false)
+
+  useEffect(() => {
+    const checkDevice = () => {
+      const width = window.innerWidth
+      setIsMobile(width < 768)
+      setIsTablet(width >= 768 && width < 1024)
+    }
+
+    checkDevice()
+    window.addEventListener("resize", checkDevice)
+    return () => window.removeEventListener("resize", checkDevice)
+  }, [])
+
   const liveActivities = activities.filter((a) => a.status === "in_progress" || a.status === "pending").length
 
   return (

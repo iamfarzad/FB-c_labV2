@@ -1,180 +1,195 @@
-interface TokenUsage {
-  provider: string
-  model: string
+/**
+ * Token cost calculator for multiple AI providers
+ * Updated with current pricing as of January 2025
+ */
+
+export interface TokenUsage {
   inputTokens: number
   outputTokens: number
   totalTokens: number
-  cost: number
-  sessionId: string
-  endpoint: string
-  timestamp?: Date
 }
 
-// Updated pricing for current models (as of 2024)
-const MODEL_PRICING = {
-  // Gemini Models
-  "gemini-1.5-flash": {
-    input: 0.075 / 1000000, // $0.075 per 1M input tokens
-    output: 0.3 / 1000000, // $0.30 per 1M output tokens
-  },
-  "gemini-2.5-flash": {
-    input: 0.075 / 1000000, // $0.075 per 1M input tokens
-    output: 0.3 / 1000000, // $0.30 per 1M output tokens
-  },
-  "gemini-2.5": {
-    input: 1.25 / 1000000, // $1.25 per 1M input tokens
-    output: 5.0 / 1000000, // $5.00 per 1M output tokens
-  },
-
-  // OpenAI Models
-  "gpt-4o": {
-    input: 2.5 / 1000000, // $2.50 per 1M input tokens
-    output: 10.0 / 1000000, // $10.00 per 1M output tokens
-  },
-  "gpt-4o-mini": {
-    input: 0.15 / 1000000, // $0.15 per 1M input tokens
-    output: 0.6 / 1000000, // $0.60 per 1M output tokens
-  },
-  "gpt-3.5-turbo": {
-    input: 0.5 / 1000000, // $0.50 per 1M input tokens
-    output: 1.5 / 1000000, // $1.50 per 1M output tokens
-  },
-
-  // Anthropic Models
-  "claude-3-5-sonnet": {
-    input: 3.0 / 1000000, // $3.00 per 1M input tokens
-    output: 15.0 / 1000000, // $15.00 per 1M output tokens
-  },
-  "claude-3-haiku": {
-    input: 0.25 / 1000000, // $0.25 per 1M input tokens
-    output: 1.25 / 1000000, // $1.25 per 1M output tokens
-  },
-
-  // Groq Models
-  "llama-3.1-70b": {
-    input: 0.59 / 1000000, // $0.59 per 1M input tokens
-    output: 0.79 / 1000000, // $0.79 per 1M output tokens
-  },
-  "mixtral-8x7b": {
-    input: 0.24 / 1000000, // $0.24 per 1M input tokens
-    output: 0.24 / 1000000, // $0.24 per 1M output tokens
-  },
-
-  // xAI Models
-  "grok-3": {
-    input: 5.0 / 1000000, // $5.00 per 1M input tokens
-    output: 15.0 / 1000000, // $15.00 per 1M output tokens
-  },
-} as const
-
-export function calculateTokenCost(model: string, inputTokens: number, outputTokens: number): number {
-  const pricing = MODEL_PRICING[model as keyof typeof MODEL_PRICING]
-
-  if (!pricing) {
-    console.warn(`No pricing found for model: ${model}`)
-    return 0
-  }
-
-  const inputCost = inputTokens * pricing.input
-  const outputCost = outputTokens * pricing.output
-  const totalCost = inputCost + outputCost
-
-  return Math.round(totalCost * 100000) / 100000 // Round to 5 decimal places
-}
-
-export async function logTokenUsage(usage: TokenUsage): Promise<void> {
-  try {
-    // Log to console in development
-    if (process.env.NODE_ENV === "development") {
-      console.log("Token Usage:", {
-        model: usage.model,
-        tokens: `${usage.inputTokens}/${usage.outputTokens}`,
-        cost: `$${usage.cost.toFixed(5)}`,
-        endpoint: usage.endpoint,
-      })
-    }
-
-    // In a real app, you would save this to your database
-    // For now, we'll just store it in memory or localStorage
-    if (typeof window !== "undefined") {
-      const existingUsage = JSON.parse(localStorage.getItem("tokenUsage") || "[]")
-      existingUsage.push({
-        ...usage,
-        timestamp: new Date().toISOString(),
-      })
-
-      // Keep only last 1000 entries
-      if (existingUsage.length > 1000) {
-        existingUsage.splice(0, existingUsage.length - 1000)
-      }
-
-      localStorage.setItem("tokenUsage", JSON.stringify(existingUsage))
-    }
-  } catch (error) {
-    console.error("Failed to log token usage:", error)
-  }
-}
-
-export function getTokenUsageStats(): {
+export interface CostCalculation {
+  inputCost: number
+  outputCost: number
   totalCost: number
-  totalTokens: number
-  usageByModel: Record<string, { tokens: number; cost: number; calls: number }>
-  usageByEndpoint: Record<string, { tokens: number; cost: number; calls: number }>
-} {
-  if (typeof window === "undefined") {
+  provider: string
+  model: string
+  timestamp: string
+}
+
+export interface ProviderPricing {
+  inputPrice: number // per 1M tokens
+  outputPrice: number // per 1M tokens
+  currency: string
+}
+
+// Current pricing as of January 2025 (per 1M tokens)
+export const PROVIDER_PRICING: Record<string, Record<string, ProviderPricing>> = {
+  gemini: {
+    "gemini-2.5-flash": {
+      inputPrice: 0.075, // $0.075 per 1M input tokens
+      outputPrice: 0.3, // $0.30 per 1M output tokens
+      currency: "USD",
+    },
+    "gemini-2.5": {
+      inputPrice: 1.25, // $1.25 per 1M input tokens
+      outputPrice: 5.0, // $5.00 per 1M output tokens
+      currency: "USD",
+    },
+  },
+  openai: {
+    "gpt-4o": {
+      inputPrice: 2.5, // $2.50 per 1M input tokens
+      outputPrice: 10.0, // $10.00 per 1M output tokens
+      currency: "USD",
+    },
+    "gpt-4o-mini": {
+      inputPrice: 0.15, // $0.15 per 1M input tokens
+      outputPrice: 0.6, // $0.60 per 1M output tokens
+      currency: "USD",
+    },
+    "gpt-4-turbo": {
+      inputPrice: 10.0, // $10.00 per 1M input tokens
+      outputPrice: 30.0, // $30.00 per 1M output tokens
+      currency: "USD",
+    },
+    "gpt-3.5-turbo": {
+      inputPrice: 0.5, // $0.50 per 1M input tokens
+      outputPrice: 1.5, // $1.50 per 1M output tokens
+      currency: "USD",
+    },
+  },
+  anthropic: {
+    "claude-3-5-sonnet": {
+      inputPrice: 3.0, // $3.00 per 1M input tokens
+      outputPrice: 15.0, // $15.00 per 1M output tokens
+      currency: "USD",
+    },
+    "claude-3-haiku": {
+      inputPrice: 0.25, // $0.25 per 1M input tokens
+      outputPrice: 1.25, // $1.25 per 1M output tokens
+      currency: "USD",
+    },
+    "claude-3-opus": {
+      inputPrice: 15.0, // $15.00 per 1M input tokens
+      outputPrice: 75.0, // $75.00 per 1M output tokens
+      currency: "USD",
+    },
+  },
+  groq: {
+    "llama-3.1-70b": {
+      inputPrice: 0.59, // $0.59 per 1M input tokens
+      outputPrice: 0.79, // $0.79 per 1M output tokens
+      currency: "USD",
+    },
+    "llama-3.1-8b": {
+      inputPrice: 0.05, // $0.05 per 1M input tokens
+      outputPrice: 0.08, // $0.08 per 1M output tokens
+      currency: "USD",
+    },
+    "mixtral-8x7b": {
+      inputPrice: 0.24, // $0.24 per 1M input tokens
+      outputPrice: 0.24, // $0.24 per 1M output tokens
+      currency: "USD",
+    },
+  },
+  xai: {
+    "grok-beta": {
+      inputPrice: 5.0, // $5.00 per 1M input tokens
+      outputPrice: 15.0, // $15.00 per 1M output tokens
+      currency: "USD",
+    },
+  },
+}
+
+export class TokenCostCalculator {
+  static calculateCost(provider: string, model: string, usage: TokenUsage): CostCalculation {
+    const pricing = PROVIDER_PRICING[provider]?.[model]
+
+    if (!pricing) {
+      console.warn(`No pricing found for ${provider}/${model}`)
+      return {
+        inputCost: 0,
+        outputCost: 0,
+        totalCost: 0,
+        provider,
+        model,
+        timestamp: new Date().toISOString(),
+      }
+    }
+
+    const inputCost = (usage.inputTokens / 1_000_000) * pricing.inputPrice
+    const outputCost = (usage.outputTokens / 1_000_000) * pricing.outputPrice
+    const totalCost = inputCost + outputCost
+
     return {
-      totalCost: 0,
-      totalTokens: 0,
-      usageByModel: {},
-      usageByEndpoint: {},
+      inputCost: Number(inputCost.toFixed(6)),
+      outputCost: Number(outputCost.toFixed(6)),
+      totalCost: Number(totalCost.toFixed(6)),
+      provider,
+      model,
+      timestamp: new Date().toISOString(),
     }
   }
 
-  try {
-    const usage: TokenUsage[] = JSON.parse(localStorage.getItem("tokenUsage") || "[]")
+  static getProviderModels(provider: string): string[] {
+    return Object.keys(PROVIDER_PRICING[provider] || {})
+  }
 
-    const stats = {
-      totalCost: 0,
-      totalTokens: 0,
-      usageByModel: {} as Record<string, { tokens: number; cost: number; calls: number }>,
-      usageByEndpoint: {} as Record<string, { tokens: number; cost: number; calls: number }>,
+  static getAllProviders(): string[] {
+    return Object.keys(PROVIDER_PRICING)
+  }
+
+  static getModelPricing(provider: string, model: string): ProviderPricing | null {
+    return PROVIDER_PRICING[provider]?.[model] || null
+  }
+
+  static estimateCost(
+    provider: string,
+    model: string,
+    estimatedInputTokens: number,
+    estimatedOutputTokens: number,
+  ): number {
+    const pricing = PROVIDER_PRICING[provider]?.[model]
+    if (!pricing) return 0
+
+    const inputCost = (estimatedInputTokens / 1_000_000) * pricing.inputPrice
+    const outputCost = (estimatedOutputTokens / 1_000_000) * pricing.outputPrice
+
+    return Number((inputCost + outputCost).toFixed(6))
+  }
+
+  static formatCost(cost: number): string {
+    if (cost < 0.001) {
+      return `$${(cost * 1000).toFixed(3)}k` // Show in thousandths
     }
+    return `$${cost.toFixed(4)}`
+  }
 
-    usage.forEach((entry) => {
-      stats.totalCost += entry.cost
-      stats.totalTokens += entry.totalTokens
+  static calculateDailyCosts(usageLogs: any[]): Record<string, number> {
+    const dailyCosts: Record<string, number> = {}
 
-      // By model
-      if (!stats.usageByModel[entry.model]) {
-        stats.usageByModel[entry.model] = { tokens: 0, cost: 0, calls: 0 }
-      }
-      stats.usageByModel[entry.model].tokens += entry.totalTokens
-      stats.usageByModel[entry.model].cost += entry.cost
-      stats.usageByModel[entry.model].calls += 1
-
-      // By endpoint
-      if (!stats.usageByEndpoint[entry.endpoint]) {
-        stats.usageByEndpoint[entry.endpoint] = { tokens: 0, cost: 0, calls: 0 }
-      }
-      stats.usageByEndpoint[entry.endpoint].tokens += entry.totalTokens
-      stats.usageByEndpoint[entry.endpoint].cost += entry.cost
-      stats.usageByEndpoint[entry.endpoint].calls += 1
+    usageLogs.forEach((log) => {
+      const date = new Date(log.created_at).toISOString().split("T")[0]
+      dailyCosts[date] = (dailyCosts[date] || 0) + log.total_cost
     })
 
-    return stats
-  } catch (error) {
-    console.error("Failed to get token usage stats:", error)
-    return {
-      totalCost: 0,
-      totalTokens: 0,
-      usageByModel: {},
-      usageByEndpoint: {},
-    }
+    return dailyCosts
   }
-}
 
-export function clearTokenUsage(): void {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("tokenUsage")
+  static calculateProviderBreakdown(usageLogs: any[]): Record<string, { cost: number; usage: number }> {
+    const breakdown: Record<string, { cost: number; usage: number }> = {}
+
+    usageLogs.forEach((log) => {
+      const provider = log.provider
+      if (!breakdown[provider]) {
+        breakdown[provider] = { cost: 0, usage: 0 }
+      }
+      breakdown[provider].cost += log.total_cost
+      breakdown[provider].usage += log.total_tokens
+    })
+
+    return breakdown
   }
 }

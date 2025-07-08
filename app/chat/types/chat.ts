@@ -3,36 +3,67 @@ export interface Message {
   role: "user" | "assistant"
   content: string
   timestamp: Date
+  sources?: string[]
+  audioData?: string | null
   imageUrl?: string
-  metadata?: {
-    tokens?: number
-    cost?: number
-    model?: string
-    processingTime?: number
-  }
+  metadata?: Record<string, any>
 }
 
 export interface ActivityItem {
   id: string
-  type: "user_action" | "ai_request" | "search" | "file_upload" | "image_upload" | "voice_input" | "error" | "system"
+  type:
+    | "user_action"
+    | "ai_request"
+    | "ai_stream"
+    | "stream_chunk"
+    | "tool_used"
+    | "google_search"
+    | "web_scrape"
+    | "doc_analysis"
+    | "memory_update"
+    | "grounding"
+    | "function_call"
+    | "image_upload"
+    | "image_capture"
+    | "voice_input"
+    | "voice_response"
+    | "screen_share"
+    | "file_upload"
+    | "lead_capture"
+    | "search"
+    | "link"
+    | "ai_thinking"
+    | "vision_analysis"
+    | "error"
+    | "generic"
   title: string
   description: string
-  timestamp: number
-  status: "in_progress" | "completed" | "failed"
+  status: "pending" | "in_progress" | "completed" | "failed"
+  timestamp?: Date
+  duration?: number
   details?: string[]
-  metadata?: {
-    tokens?: number
-    cost?: number
-    model?: string
-    duration?: number
-  }
+  metadata?: Record<string, any>
 }
 
-export interface ChatSession {
-  id: string
+export interface ChatState {
   messages: Message[]
-  activities: ActivityItem[]
-  createdAt: Date
-  updatedAt: Date
-  leadData?: any
+  isLoading: boolean
+  error?: string
+  sessionId: string
+}
+
+export interface StreamChunk {
+  type: "text" | "function_call" | "tool_use" | "error"
+  content: string
+  metadata?: Record<string, any>
+}
+
+export interface AIResponse {
+  id: string
+  content: string
+  role: "assistant"
+  timestamp: string
+  sources?: string[]
+  audioData?: string | null
+  metadata?: Record<string, any>
 }
