@@ -31,7 +31,6 @@ export async function POST(req: NextRequest) {
     const systemPrompt = buildSystemPrompt(leadContext)
     const userMessages = (messages as Message[]).filter((m) => m.role === "user" || m.role === "assistant")
 
-    // Build the prompt for Gemini
     const geminiPrompt = {
       system_instruction: {
         role: "system",
@@ -45,11 +44,8 @@ export async function POST(req: NextRequest) {
 
     const geminiResponse = await genAI.getGenerativeModel({ model }).generateContentStream(geminiPrompt)
 
-    // Convert the response into a friendly text-stream
     const stream = GoogleGenerativeAIStream(geminiResponse, {
       onFinal: async (completion) => {
-        // This callback is called when the stream is finished.
-        // We can use it to log the final token usage.
         try {
           const { usageMetadata } = await geminiResponse.response
           if (usageMetadata) {
@@ -73,9 +69,7 @@ export async function POST(req: NextRequest) {
               total_cost: cost.totalCost,
               request_type: "chat",
               user_id: userId,
-              metadata: {
-                final_response_length: completion.length,
-              },
+              metadata: { final_response_length: completion.length },
             })
           }
         } catch (dbError) {

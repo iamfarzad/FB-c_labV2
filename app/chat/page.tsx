@@ -13,6 +13,7 @@ import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal"
 import { ScreenShareModal } from "@/components/chat/modals/ScreenShareModal"
 import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
 import { WebcamModal } from "@/components/chat/modals/WebcamModal"
+import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
 import type { LeadCaptureState } from "./types/lead-capture"
 import { useChatContext } from "./context/ChatProvider"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
@@ -32,6 +33,7 @@ export default function ChatPage() {
   const [showVoiceModal, setShowVoiceModal] = useState(false)
   const [showWebcamModal, setShowWebcamModal] = useState(false)
   const [showScreenShareModal, setShowScreenShareModal] = useState(false)
+  const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
 
   const [leadCaptureState, setLeadCaptureState] = useState<LeadCaptureState>({
     stage: "initial",
@@ -147,7 +149,6 @@ export default function ChatPage() {
   )
 
   const handleFileUpload = (file: File) => {
-    // For now, we just log the activity. A real implementation would upload to storage.
     activityLogger.log({
       type: "file_upload",
       title: "File Uploaded",
@@ -275,13 +276,13 @@ export default function ChatPage() {
               setShowWebcamModal={setShowWebcamModal}
               showScreenShareModal={showScreenShareModal}
               setShowScreenShareModal={setShowScreenShareModal}
+              setShowVideo2AppModal={setShowVideo2AppModal}
             />
           </form>
         </div>
       </div>
       <KeyboardShortcutsModal isOpen={showKeyboardShortcuts} onClose={() => setShowKeyboardShortcuts(false)} />
 
-      {/* Modals with correct callbacks */}
       {showScreenShareModal && (
         <ScreenShareModal
           isOpen={showScreenShareModal}
@@ -305,6 +306,13 @@ export default function ChatPage() {
           onClose={() => setShowWebcamModal(false)}
           onCapture={handleWebcamCapture}
           onAIAnalysis={(analysis) => append({ role: "assistant", content: `**Webcam Analysis:**\n${analysis}` })}
+        />
+      )}
+      {showVideo2AppModal && (
+        <Video2AppModal
+          isOpen={showVideo2AppModal}
+          onClose={() => setShowVideo2AppModal(false)}
+          onAnalysisComplete={handleVideoAppResult}
         />
       )}
     </ChatLayout>

@@ -1,86 +1,52 @@
--- Admin dashboard tables for comprehensive business management
--- Token usage tracking, meetings, and email campaigns
-
--- Token usage logs for cost tracking
-CREATE TABLE IF NOT EXISTS token_usage_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID,
-  provider TEXT NOT NULL CHECK (provider IN ('gemini', 'openai', 'anthropic', 'groq')),
-  model TEXT NOT NULL,
-  input_tokens INTEGER NOT NULL DEFAULT 0,
-  output_tokens INTEGER NOT NULL DEFAULT 0,
-  input_cost DECIMAL(10, 6) NOT NULL DEFAULT 0,
-  output_cost DECIMAL(10, 6) NOT NULL DEFAULT 0,
-  total_cost DECIMAL(10, 6) NOT NULL DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Meetings table for consultation scheduling
+-- Meetings Table
 CREATE TABLE IF NOT EXISTS meetings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  lead_id UUID REFERENCES lead_summaries(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  company TEXT,
-  meeting_date DATE NOT NULL,
-  meeting_time TIME NOT NULL,
-  time_zone TEXT NOT NULL DEFAULT 'EST',
-  status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'confirmed', 'completed', 'cancelled', 'no-show')),
-  meeting_link TEXT NOT NULL,
-  notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    lead_id UUID REFERENCES lead_summaries(id) ON DELETE SET NULL,
+    attendee_name TEXT NOT NULL,
+    attendee_email TEXT NOT NULL,
+    start_time TIMESTAMPTZ NOT NULL,
+    end_time TIMESTAMPTZ NOT NULL,
+    status TEXT NOT NULL DEFAULT 'scheduled', -- e.g., scheduled, completed, cancelled, no-show
+    meeting_link TEXT,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Email campaigns for lead nurturing
+-- Email Campaigns Table
 CREATE TABLE IF NOT EXISTS email_campaigns (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  subject TEXT NOT NULL,
-  template TEXT NOT NULL DEFAULT 'lead-followup',
-  target_segment TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'scheduled')),
-  sent_count INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    body_template TEXT NOT NULL,
+    target_segment TEXT, -- e.g., 'new_leads', 'high_score_leads'
+    status TEXT NOT NULL DEFAULT 'draft', -- e.g., draft, scheduled, sending, sent, archived
+    scheduled_at TIMESTAMPTZ,
+    sent_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Indexes for performance
-CREATE INDEX IF NOT EXISTS idx_token_usage_logs_created_at ON token_usage_logs(created_at);
-CREATE INDEX IF NOT EXISTS idx_token_usage_logs_provider ON token_usage_logs(provider);
-CREATE INDEX IF NOT EXISTS idx_token_usage_logs_session_id ON token_usage_logs(session_id);
+-- Triggers for updated_at
+CREATE TRIGGER update_meetings_updated_at
+BEFORE UPDATE ON meetings
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
 
-CREATE INDEX IF NOT EXISTS idx_meetings_date ON meetings(meeting_date);
-CREATE INDEX IF NOT EXISTS idx_meetings_status ON meetings(status);
-CREATE INDEX IF NOT EXISTS idx_meetings_lead_id ON meetings(lead_id);
-CREATE INDEX IF NOT EXISTS idx_meetings_email ON meetings(email);
+CREATE TRIGGER update_email_campaigns_updated_at
+BEFORE UPDATE ON email_campaigns
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
 
-CREATE INDEX IF NOT EXISTS idx_email_campaigns_status ON email_campaigns(status);
-CREATE INDEX IF NOT EXISTS idx_email_campaigns_created_at ON email_campaigns(created_at);
-
--- Row Level Security (RLS)
-ALTER TABLE token_usage_logs ENABLE ROW LEVEL SECURITY;
+-- RLS for Meetings
 ALTER TABLE meetings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow admin access to meetings" ON meetings FOR ALL USING (auth.role() = 'service_role');
+
+-- RLS for Email Campaigns
 ALTER TABLE email_campaigns ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow admin access to email campaigns" ON email_campaigns FOR ALL USING (auth.role() = 'service_role');
 
--- RLS Policies for service role access
-CREATE POLICY "Service role can manage token_usage_logs"
-  ON token_usage_logs
-  FOR ALL
-  TO authenticated
-  USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
-
-CREATE POLICY "Service role can manage meetings"
-  ON meetings
-  FOR ALL
-  TO authenticated
-  USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
-
-CREATE POLICY "Service role can manage email_campaigns"
-  ON email_campaigns
-  FOR ALL
-  TO authenticated
-  USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_meetings_lead_id ON meetings(lead_id);
+CREATE INDEX IF NOT EXISTS idx_meetings_start_time ON meetings(start_time);
+CREATE INDEX IF NOT EXISTS idx_email_campaigns_status ON email_campaigns(status);

@@ -3,19 +3,16 @@
 import { useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { VideoToAppGenerator } from "@/components/video-to-app-generator"
-import { EDUCATIONAL_APP_DEFINITIONS } from "@/lib/education-constants"
-import { Button } from "@/components/ui/button"
 
 interface Video2AppModalProps {
   isOpen: boolean
   onClose: () => void
   initialVideoUrl?: string
+  onAnalysisComplete: (data: { spec: string; code: string }) => void
 }
 
-export const Video2AppModal = ({ isOpen, onClose, initialVideoUrl }: Video2AppModalProps) => {
+export const Video2AppModal = ({ isOpen, onClose, initialVideoUrl, onAnalysisComplete }: Video2AppModalProps) => {
   const [isExpanded, setIsExpanded] = useState(false)
-  const [showEducationalApps, setShowEducationalApps] = useState(false)
-  const [selectedEducationalApp, setSelectedEducationalApp] = useState<string | null>(null)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -37,60 +34,9 @@ export const Video2AppModal = ({ isOpen, onClose, initialVideoUrl }: Video2AppMo
             initialVideoUrl={initialVideoUrl}
             isExpanded={isExpanded}
             onToggleExpand={() => setIsExpanded(!isExpanded)}
+            onAnalysisComplete={onAnalysisComplete}
           />
         </div>
-
-        {showEducationalApps && (
-          <div className="mt-4 border-t pt-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Educational Learning Apps</h3>
-              <Button variant="outline" size="sm" onClick={() => setShowEducationalApps(false)}>
-                Hide Apps
-              </Button>
-            </div>
-
-            <div className="educational-app-grid">
-              {EDUCATIONAL_APP_DEFINITIONS.map((app) => (
-                <div
-                  key={app.id}
-                  className="educational-app-card"
-                  style={{ backgroundColor: app.color }}
-                  onClick={() => setSelectedEducationalApp(app.id)}
-                >
-                  <div className="educational-app-icon">{app.icon}</div>
-                  <div className="educational-app-name">{app.name}</div>
-                  <div className="educational-app-description">{app.description}</div>
-                </div>
-              ))}
-            </div>
-
-            {selectedEducationalApp && (
-              <div className="mt-4 p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  Selected: {EDUCATIONAL_APP_DEFINITIONS.find((app) => app.id === selectedEducationalApp)?.name}
-                </p>
-                <Button
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => {
-                    // This will be handled by the educational content system
-                    console.log("Launch educational app:", selectedEducationalApp)
-                  }}
-                >
-                  Launch Learning Experience
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {!showEducationalApps && (
-          <div className="mt-4 text-center">
-            <Button variant="outline" onClick={() => setShowEducationalApps(true)} className="gap-2">
-              🎓 Show Educational Apps
-            </Button>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   )

@@ -5,14 +5,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Send, Camera, Monitor, Mic, Paperclip, Youtube, MoreHorizontal } from "lucide-react"
-import { useChatContext } from "@/app/chat/context/ChatProvider"
-import dynamic from "next/dynamic"
-import { Video2AppModal } from "./modals/Video2AppModal"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-
-const ScreenShareModal = dynamic(() => import("./modals/ScreenShareModal"), { ssr: false })
-const VoiceInputModal = dynamic(() => import("./modals/VoiceInputModal"), { ssr: false })
-const WebcamModal = dynamic(() => import("./modals/WebcamModal"), { ssr: false })
 
 interface ChatFooterProps {
   input: string
@@ -29,33 +22,27 @@ interface ChatFooterProps {
   setShowWebcamModal: (show: boolean) => void
   showScreenShareModal: boolean
   setShowScreenShareModal: (show: boolean) => void
+  setShowVideo2AppModal: (show: boolean) => void
 }
 
 export function ChatFooter({
   input,
-  setInput,
   handleInputChange,
   isLoading,
   onFileUpload,
   onImageUpload,
   inputRef,
-  showVoiceModal,
   setShowVoiceModal,
-  showWebcamModal,
   setShowWebcamModal,
-  showScreenShareModal,
   setShowScreenShareModal,
+  setShowVideo2AppModal,
 }: ChatFooterProps) {
-  const { addActivity } = useChatContext()
-  const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const checkDevice = () => setIsMobile(window.innerWidth < 768)
     checkDevice()
-    setIsMounted(true)
     window.addEventListener("resize", checkDevice)
     return () => window.removeEventListener("resize", checkDevice)
   }, [])
@@ -75,7 +62,7 @@ export function ChatFooter({
     } else {
       onFileUpload(file)
     }
-    e.target.value = "" // Reset input
+    if (e.target) e.target.value = ""
   }
 
   const actions = [
@@ -108,7 +95,7 @@ export function ChatFooter({
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex items-center gap-1 absolute left-2 bottom-2">
+              <div className="absolute left-2 bottom-2 flex items-center gap-1">
                 {actions.map((action) => (
                   <Button key={action.id} variant="ghost" size="icon" onClick={action.action} title={action.title}>
                     <action.icon className="w-5 h-5 text-muted-foreground" />
@@ -127,7 +114,7 @@ export function ChatFooter({
                 }
               }}
               placeholder="Type your message..."
-              className="resize-none border-2 focus:border-primary/50 transition-colors w-full pl-36 pr-12 py-3 min-h-[56px] max-h-[200px]"
+              className="resize-none border-2 focus:border-primary/50 transition-colors w-full pl-40 pr-4 py-3 min-h-[56px] max-h-[200px]"
             />
           </div>
           <Button type="submit" disabled={!input.trim() || isLoading} className="h-[56px] px-6 shrink-0">
@@ -140,9 +127,6 @@ export function ChatFooter({
         </div>
       </div>
       <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
-      {isMounted && showVideo2AppModal && (
-        <Video2AppModal isOpen={showVideo2AppModal} onClose={() => setShowVideo2AppModal(false)} />
-      )}
     </div>
   )
 }
