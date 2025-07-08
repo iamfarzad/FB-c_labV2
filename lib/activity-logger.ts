@@ -1,58 +1,83 @@
-import { supabase } from "@/lib/supabase/client"
-import type { ActivityItem } from "@/app/chat/types/chat"
+import { getSupabase } from "@/lib/supabase/server"
+
+export interface ActivityLog {
+  type: string
+  title: string
+  description?: string
+  status: "in_progress" | "completed" | "failed"
+  metadata?: Record<string, any>
+  timestamp?: string
+}
 
 class ActivityLogger {
-  private channel: any = null
+  private supabase = getSupabase()
 
-  constructor() {
-    this.initializeChannel()
-  }
-
-  private initializeChannel() {
+  async log(activity: ActivityLog) {
     try {
-      // Ensure this runs only on the client
-      if (typeof window !== "undefined") {
-        this.channel = supabase.channel(`activity-log-${Date.now()}`)
-        this.channel.subscribe((status: string) => {
-          if (status === "SUBSCRIBED") {
-            console.log("Activity logger connected to Supabase channel.")
-          }
-        })
+      const { error } = await this.supabase.from("activity_logs").insert({
+        type: activity.type,
+        title: activity.title,
+        description: activity.description || null,
+        status: activity.status,
+        metadata: activity.metadata || null,
+        timestamp: activity.timestamp || new Date().toISOString(),
+      })
+
+      if (error) {
+        console.error("Failed to log activity:", error)
       }
+
+      // Also broadcast to real-time channel for live updates
+      await this.supabase.channel("activity_updates").send({
+        type: "broadcast",
+        event: "activity_logged",
+        payload: activity,
+      })
     } catch (error) {
-      console.warn("Failed to initialize activity logger channel:", error)
+      console.error("Activity logging error:", error)
     }
   }
 
-  log(activityData: Omit<ActivityItem, "id" | "timestamp">): string {
-    const id = `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    const newActivity: ActivityItem = {
-      ...activityData,
-      id,
-      timestamp: Date.now(),
-    }
+  async getRecentActivities(limit = 50) {
+    try {
+      const { data, error } = await this.supabase
+        .from("activity_logs")
+        .select("*")
+        .order("timestamp", { ascending: false })
+        .limit(limit)
 
-    // Broadcast the activity to all clients
-    if (this.channel) {
-      this.channel.send({
-        type: "broadcast",
-        event: "activity-update",
-        payload: newActivity,
-      })
-    } else {
-      // Fallback for server-side or if channel is not ready
-      console.log("[Activity Logged]:", newActivity.title)
-    }
+      if (error) {
+        console.error("Failed to fetch activities:", error)
+        return []
+      }
 
-    return id
+      return data || []
+    } catch (error) {
+      console.error("Failed to fetch activities:", error)
+      return []
+    }
+  }
+
+  async getActivitiesByType(type: string, limit = 20) {
+    try {
+      const { data, error } = await this.supabase
+        .from("activity_logs")
+        .select("*")
+        .eq("type", type)
+        .order("timestamp", { ascending: false })
+        .limit(limit)
+
+      if (error) {
+        console.error("Failed to fetch activities by type:", error)
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error("Failed to fetch activities by type:", error)
+      return []
+    }
   }
 }
 
 export const activityLogger = new ActivityLogger()
-
-// A simple server-side logging function if needed, though client-side is primary for this setup
-export async function logActivity(activityData: Omit<ActivityItem, "id" | "timestamp">) {
-  // This is a placeholder for potential server-side logging if required.
-  // For this architecture, we rely on the client-side logger instance.
-  console.log(`[Server Activity]: ${activityData.title}`)
-}
