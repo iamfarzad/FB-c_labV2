@@ -101,3 +101,11 @@ class ActivityLogger {
 }
 
 export const activityLogger = new ActivityLogger()
+
+/**
+ * Convenience helper – keeps existing API surface while exposing a named export.
+ * Usage: import { logActivity } from "@/lib/activity-logger"
+ */
+export function logActivity(activity: Omit<ActivityItem, "id" | "timestamp">): string {
+  return activityLogger.logActivity(activity)
+}

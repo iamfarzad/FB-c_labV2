@@ -449,3 +449,6 @@ export default function TokenCostAnalytics() {
     </div>
   )
 }
+
+// Named export so consumers can import { TokenCostAnalytics }
+export { TokenCostAnalytics }
