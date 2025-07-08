@@ -2,17 +2,15 @@
 
 import type React from "react"
 import { useState, useEffect, useCallback, useRef } from "react"
-import { X, Loader, Monitor, Brain, Square, Play, Pause } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+import { Loader, Monitor, Brain, Square, Play, Pause } from "lucide-react"
 import { useAnalysisHistory } from "@/hooks/use-analysis-history"
 
 interface ScreenShareModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onAIAnalysis?: (analysis: string) => void;
-  onStream: (stream: MediaStream) => void;
-  theme?: "light" | "dark";
+  isOpen: boolean
+  onClose: () => void
+  onAIAnalysis?: (analysis: string) => void
+  onStream: (stream: MediaStream) => void
+  theme?: "light" | "dark"
 }
 
 export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
@@ -23,16 +21,13 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
   theme = "dark",
 }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [lastAnalysis, setLastAnalysis] = useState<string>("")
   const { analysisHistory, addAnalysis, clearHistory } = useAnalysisHistory()
   const [isAutoAnalyzing, setIsAutoAnalyzing] = useState(false)
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [isScreenSharing, setIsScreenSharing] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [isCapturing, setIsCapturing] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [currentAnalysis, setCurrentAnalysis] = useState('')
+  const [currentAnalysis, setCurrentAnalysis] = useState("")
 
   // Start screen sharing
   const startScreenShare = useCallback(async () => {
@@ -40,32 +35,31 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
       const mediaStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
         audio: false,
-      });
-      setStream(mediaStream);
-      setIsScreenSharing(true);
+      })
+      setStream(mediaStream)
+      setIsScreenSharing(true)
       if (onStream) {
-        onStream(mediaStream);
+        onStream(mediaStream)
       }
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream
       }
 
       // Listen for screen share end
-      mediaStream.getVideoTracks()[0].addEventListener('ended', () => {
+      mediaStream.getVideoTracks()[0].addEventListener("ended", () => {
         stopScreenShare()
       })
-
     } catch (error) {
-      console.error("Error starting screen share:", error);
-      onClose();
+      console.error("Error starting screen share:", error)
+      onClose()
     }
   }, [onClose, onStream])
 
   // Stop screen sharing
   const stopScreenShare = useCallback(() => {
     if (stream) {
-      stream.getTracks().forEach(track => track.stop())
+      stream.getTracks().forEach((track) => track.stop())
       setStream(null)
     }
     setIsAutoAnalyzing(false)
@@ -73,73 +67,68 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
     onClose()
   }, [stream, onClose])
 
-  const handleAnalysis = useCallback(async (imageData: string) => {
+  const handleAnalysis = useCallback(
+    async (imageData: string) => {
+      if (!videoRef.current || !canvasRef.current || !stream) return
+
+      const video = videoRef.current
+      const canvas = canvasRef.current
+      const ctx = canvas.getContext("2d")
+
+      if (!ctx) return
+
+      // Set canvas size to match video
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+
+      // Draw current frame to canvas
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      // Convert to base64
+      const base64Data = imageData.split(",")[1]
+
+      setIsAnalyzing(true)
+
+      try {
+        // Mock AI analysis
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+        const analysis =
+          "AI analysis of the screen content would appear here. It seems you are currently viewing a code editor."
+        setCurrentAnalysis(analysis)
+        addAnalysis(analysis)
+        if (onAIAnalysis) {
+          onAIAnalysis(analysis)
+        }
+      } catch (error) {
+        console.error("Screen analysis error:", error)
+      } finally {
+        setIsAnalyzing(false)
+      }
+    },
+    [onAIAnalysis, addAnalysis, stream],
+  )
+
+  const analyzeCurrentFrame = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current || !stream) return
 
     const video = videoRef.current
     const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-
-    if (!ctx) return
-
-    // Set canvas size to match video
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
+    const context = canvas.getContext("2d")
+    if (!context) return
+    context.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-    // Draw current frame to canvas
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-    // Convert to base64
-    const base64Data = imageData.split(',')[1]
-
-    setIsAnalyzing(true)
-
-    try {
-      // Send frame to AI for analysis
-              const response = await fetch('/api/ai?action=analyzeScreenShare', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageData: base64Data,
-          prompt: 'Analyze this screen share. Describe what applications are open, what the user is working on, and provide insights about their workflow or any notable content visible.'
-        })
-      })
-
-      const data = await response.json()
-      const analysis = data.data?.text || 'No analysis available.'
-      setCurrentAnalysis(analysis)
-      addAnalysis(analysis)
-      if (onAIAnalysis) {
-        onAIAnalysis(analysis)
-      }
-    } catch (error) {
-      console.error('Screen analysis error:', error)
-    } finally {
-      setIsAnalyzing(false)
-    }
-  }, [onAIAnalysis, addAnalysis])
-
-  const analyzeCurrentFrame = useCallback(async () => {
-    if (!videoRef.current || !canvasRef.current || !stream) return;
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-    if (!context) return;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const imageData = canvas.toDataURL('image/jpeg', 0.8);
-    await handleAnalysis(imageData);
-  }, [stream, handleAnalysis]);
+    const imageData = canvas.toDataURL("image/jpeg", 0.8)
+    await handleAnalysis(imageData)
+  }, [stream, handleAnalysis])
 
   // Auto-analyze every 5 seconds when enabled
   useEffect(() => {
-    if (!isAutoAnalyzing || !stream) return;
-    const interval = setInterval(analyzeCurrentFrame, 5000);
-    return () => clearInterval(interval);
-  }, [isAutoAnalyzing, stream, analyzeCurrentFrame]);
+    if (!isAutoAnalyzing || !stream) return
+    const interval = setInterval(analyzeCurrentFrame, 5000)
+    return () => clearInterval(interval)
+  }, [isAutoAnalyzing, stream, analyzeCurrentFrame])
 
   // Start screen share on mount if not already sharing
   useEffect(() => {
@@ -154,7 +143,7 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
     }
   }, [isOpen, clearHistory])
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 transition-all duration-500 bg-black/50 backdrop-blur-sm">
@@ -166,8 +155,8 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
             onClick={() => setIsAutoAnalyzing(!isAutoAnalyzing)}
             className={`p-3 rounded-xl transition-all duration-300 shadow-lg group ${
               isAutoAnalyzing
-                ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
-                : 'bg-gradient-to-r from-gray-500 to-gray-600 text-white hover:from-gray-600 hover:to-gray-700'
+                ? "bg-gradient-to-r from-green-500 to-green-600 text-white"
+                : "bg-gradient-to-r from-gray-500 to-gray-600 text-white hover:from-gray-600 hover:to-gray-700"
             }`}
             aria-label="Toggle auto-analysis"
           >
@@ -209,13 +198,7 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
         <div className="flex gap-6 w-full max-w-6xl h-[70vh]">
           {/* Screen Share Display */}
           <div className="relative flex-1 bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/20">
-            <video 
-              ref={videoRef} 
-              autoPlay 
-              playsInline 
-              muted
-              className="w-full h-full object-contain bg-black"
-            />
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-contain bg-black" />
             <canvas ref={canvasRef} style={{ display: "none" }} />
 
             {!stream && (
@@ -225,9 +208,7 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
                     <Loader size={48} className="animate-spin text-orange-500" />
                   </div>
                   <p className="text-lg text-white">Requesting screen access...</p>
-                  <p className="text-sm text-white opacity-70 mt-2">
-                    Please select a screen or window to share
-                  </p>
+                  <p className="text-sm text-white opacity-70 mt-2">Please select a screen or window to share</p>
                 </div>
               </div>
             )}
@@ -241,9 +222,7 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
                   </div>
                   <div className="flex items-center space-x-2">
                     <Monitor size={16} className="text-white" />
-                    <span className="text-sm text-white">
-                      {isAutoAnalyzing ? "Auto-analyzing" : "Manual mode"}
-                    </span>
+                    <span className="text-sm text-white">{isAutoAnalyzing ? "Auto-analyzing" : "Manual mode"}</span>
                   </div>
                 </div>
               </div>
@@ -286,13 +265,13 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
                   onClick={() => setIsAutoAnalyzing(!isAutoAnalyzing)}
                   className={`w-full p-2 rounded-lg text-sm transition-colors ${
                     isAutoAnalyzing
-                      ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-                      : 'bg-gray-500/20 text-gray-400 hover:bg-gray-500/30'
+                      ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                      : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/30"
                   }`}
                 >
-                  {isAutoAnalyzing ? 'Stop Auto-Analysis' : 'Start Auto-Analysis'}
+                  {isAutoAnalyzing ? "Stop Auto-Analysis" : "Start Auto-Analysis"}
                 </button>
-                
+
                 <div className="flex items-center gap-2 text-sm text-white">
                   {isAnalyzing ? (
                     <>
@@ -311,12 +290,10 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
           </div>
         </div>
 
-        <p className="mt-6 text-lg text-white opacity-80">
-          AI is analyzing your screen share in real-time
-        </p>
+        <p className="mt-6 text-lg text-white opacity-80">AI is analyzing your screen share in real-time</p>
       </div>
     </div>
   )
 }
 
-export default ScreenShareModal;
+export default ScreenShareModal

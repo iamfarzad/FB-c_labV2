@@ -1,15 +1,17 @@
-import { useState, useCallback } from 'react';
+"use client"
 
-export function useAnalysisHistory(limit: number = 5) {
-  const [analysisHistory, setAnalysisHistory] = useState<string[]>([]);
+import { useState, useCallback } from "react"
+
+export function useAnalysisHistory() {
+  const [analysisHistory, setAnalysisHistory] = useState<string[]>([])
 
   const addAnalysis = useCallback((analysis: string) => {
-    setAnalysisHistory(prev => [analysis, ...prev.slice(0, limit - 1)]);
-  }, [limit]);
+    setAnalysisHistory((prev) => [analysis, ...prev])
+  }, [])
 
   const clearHistory = useCallback(() => {
-    setAnalysisHistory([]);
-  }, []);
+    setAnalysisHistory([])
+  }, [])
 
-  return { analysisHistory, addAnalysis, clearHistory };
+  return { analysisHistory, addAnalysis, clearHistory }
 }

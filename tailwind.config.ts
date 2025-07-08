@@ -20,10 +20,9 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-inter)"],
-        heading: ["var(--font-rajdhani)"],
-        mono: ["var(--font-space-mono)"],
-        display: ["var(--font-montserrat)"],
+        sans: ["var(--font-sans)", "sans-serif"],
+        display: ["var(--font-display)", "sans-serif"],
+        mono: ["var(--font-mono)", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -59,11 +58,9 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        brand: {
-          primary: "rgb(var(--brand-primary))",
-          secondary: "rgb(var(--brand-secondary))",
-          accent: "rgb(var(--brand-accent))",
-        },
+        "orange-accent": "hsl(var(--color-orange-accent))",
+        gunmetal: "hsl(var(--color-gunmetal))",
+        "light-silver": "hsl(var(--color-light-silver))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -79,39 +76,19 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        "fade-in": {
-          "0%": { opacity: "0", transform: "translateY(10px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
-        "slide-in": {
-          "0%": { transform: "translateX(-100%)" },
-          "100%": { transform: "translateX(0)" },
-        },
-        "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px rgba(59, 130, 246, 0.3)" },
-          "50%": { boxShadow: "0 0 40px rgba(59, 130, 246, 0.6)" },
+        shine: {
+          from: { backgroundPosition: "200% 0" },
+          to: { backgroundPosition: "-200% 0" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.5s ease-out",
-        "slide-in": "slide-in 0.3s ease-out",
-        "pulse-glow": "pulse-glow 2s infinite",
-      },
-      backdropBlur: {
-        xs: "2px",
-      },
-      spacing: {
-        "18": "4.5rem",
-        "88": "22rem",
-      },
-      screens: {
-        xs: "475px",
+        shine: "shine 6s linear infinite",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config
 
 export default config

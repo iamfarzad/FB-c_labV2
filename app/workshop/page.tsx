@@ -1,46 +1,81 @@
-'use client'
+import { PageHeader, PageShell } from "@/components/page-shell"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { CheckCircle } from "lucide-react"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
-import { Layout } from '@/components/layout'
-import { WorkshopHero as HeroSection } from '@/components/workshop/hero-section'
-import { WhatToExpect } from '@/components/workshop/what-to-expect'
-import { ToolsSection } from '@/components/workshop/tools-section'
-import { DeliverySection } from '@/components/workshop/delivery-section'
-import { WhyItWorks } from '@/components/workshop/why-it-works'
-import { CTASection as CtaSection } from '@/components/workshop/cta-section'
-import { GridPattern } from '@/components/ui/grid-pattern'
-import { useTheme } from 'next-themes'
+const workshopFeatures = [
+  "No prior coding or AI experience required",
+  "Clear explanations of prompts, tokens, and APIs",
+  "You’ll leave knowing how to troubleshoot basic AI issues",
+  "You learn by doing and build real tools",
+]
 
 export default function WorkshopPage() {
-  const { resolvedTheme } = useTheme()
-
   return (
-    <Layout>
-      <div
-        className='min-h-screen'
-        style={{
-          backgroundColor: 'var(--bg-primary)',
-          color: 'var(--text-primary)',
-          paddingTop: '80px' // Adjust based on header height
-        }}
-      >
-        {/* Hero Section */}
-        <HeroSection />
+    <>
+      <PageShell>
+        <PageHeader
+          title="Hands-On AI Workshops for Your Team"
+          subtitle="Coming Soon – Get notified when the full workshop schedule is live."
+        />
+        <div className="mt-10 flex items-center justify-center gap-x-6">
+          <Button asChild size="lg">
+            <Link href="/contact">Join the Waitlist</Link>
+          </Button>
+        </div>
+      </PageShell>
 
-        {/* What to Expect Section */}
-        <WhatToExpect theme={resolvedTheme === 'dark' ? 'dark' : 'light'} />
-
-        {/* Tools Section */}
-        <ToolsSection theme={resolvedTheme === 'dark' ? 'dark' : 'light'} />
-
-        {/* Delivery Options Section */}
-        <DeliverySection theme={resolvedTheme === 'dark' ? 'dark' : 'light'} />
-
-        {/* Why It Works Section */}
-        <WhyItWorks theme={resolvedTheme === 'dark' ? 'dark' : 'light'} />
-
-        {/* CTA Section */}
-        <CtaSection theme={resolvedTheme === 'dark' ? 'dark' : 'light'} />
-      </div>
-    </Layout>
+      <PageShell>
+        <div className="grid md:grid-cols-2 gap-10 items-center">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-2xl">What to Expect</CardTitle>
+              <CardDescription>
+                These workshops are built from real-world experience—not theory. Every session is designed to give your
+                team a working understanding of AI.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-4">
+                {workshopFeatures.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+          <Card className="h-full bg-secondary">
+            <CardHeader>
+              <CardTitle className="text-2xl">Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold">Workshop Format</h3>
+                <p className="text-muted-foreground">
+                  <strong className="text-primary">3 hours theory:</strong> What LLMs are, how they work, risks, and
+                  limitations.
+                </p>
+                <p className="text-muted-foreground">
+                  <strong className="text-primary">3 hours hands-on:</strong> Build a chatbot, automate a task, or
+                  create an assistant.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Delivery Options</h3>
+                <p className="text-muted-foreground">On-site (Norway + Europe) or Remote (Global).</p>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button asChild variant="outline" className="w-full bg-transparent">
+                <Link href="/contact">Book a Consultation Instead</Link>
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      </PageShell>
+    </>
   )
 }

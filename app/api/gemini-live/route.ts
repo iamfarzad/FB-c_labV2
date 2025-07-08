@@ -1,67 +1,75 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from "@google/generative-ai"
+import type { NextRequest } from "next/server"
+import { NextResponse } from "next/server"
 
-const ALLOWED_MODELS = [
-  'gemini-live-2.5-flash-preview',
-  'gemini-2.0-flash-live-001',
-  'gemini-2.5-flash-preview-native-audio-dialog',
-  'gemini-2.5-flash-exp-native-audio-thinking-dialog'
-];
-
-export async function GET(request: NextRequest) {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
-
+export async function POST(req: NextRequest) {
   try {
-    // In production, you might want to use ephemeral tokens instead of exposing API key
-    const apiKey = process.env.GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'API key not configured',
-          mockMode: true,
-          wsUrl: 'wss://mock.generativelanguage.googleapis.com/v1beta/models',
-          models: ALLOWED_MODELS
-        },
-        { status: 200, headers }
-      );
+    const { prompt, enableAudio = false, enableTTS = false, voiceStyle = "neutral" } = await req.json()
+
+    if (!prompt) {
+      return NextResponse.json({ error: "Prompt is required" }, { status: 400 })
     }
 
-    // Return WebSocket connection info
-    return NextResponse.json({
-      success: true,
-      wsUrl: 'wss://generativelanguage.googleapis.com/v1beta/models',
-      apiKey: apiKey, // In production, use ephemeral tokens
-      models: ALLOWED_MODELS,
-      defaultModel: 'gemini-live-2.5-flash-preview',
-      features: {
-        voiceActivityDetection: true,
-        sessionResumption: true,
-        interruptions: true,
-        nativeAudio: true,
-        multimodal: true
-      }
-    }, { headers });
-  } catch (error: any) {
-    console.error('Gemini Live API error:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Failed to get connection info' },
-      { status: 500, headers }
-    );
-  }
-}
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+    if (enableTTS) {
+      // Use TTS-specific model for audio generation
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash-preview-tts",
+        generationConfig: {
+          temperature: 0.7,
+        },
+      })
+
+      const result = await model.generateContent(prompt)
+      const response = await result.response
+
+      // In a real implementation, this would return audio data
+      return NextResponse.json({
+        success: true,
+        content: response.text(),
+        audioSupported: true,
+        audioData: null, // Would contain base64 audio data
+        voiceStyle: voiceStyle,
+      })
+    } else if (enableAudio) {
+      // Use Live API model for interactive voice
+      const model = genAI.getGenerativeModel({
+        model: "gemini-live-2.5-flash-preview",
+        generationConfig: {
+          temperature: 0.7,
+        },
+      })
+
+      // For now, return a placeholder for Live API setup
+      // In production, this would establish a WebSocket connection
+      return NextResponse.json({
+        success: true,
+        message: "Live audio session ready - WebSocket connection would be established",
+        audioSupported: true,
+        liveApiReady: true,
+      })
+    } else {
+      // Standard text generation with multimodal support
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        generationConfig: {
+          temperature: 0.7,
+        },
+      })
+
+      const result = await model.generateContent(prompt)
+      const response = await result.response
+      const text = response.text()
+
+      return NextResponse.json({
+        success: true,
+        content: text,
+        audioSupported: false,
+      })
+    }
+  } catch (error: any) {
+    console.error("Gemini Live API error:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 }

@@ -1,182 +1,70 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { useTheme } from "next-themes"
-import {
-  Menu,
-  X,
-  Moon,
-  Sun,
-  Home,
-  Sparkles,
-  Briefcase,
-  User,
-  Calendar,
-  Mail
-} from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Menu, Bot } from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { cn } from "@/lib/utils"
 
-interface HeaderProps {
-  theme?: "light" | "dark"
-  onThemeToggle?: () => void
-}
+const navLinks = [
+  { href: "/", label: "Home" },
+  { href: "/consulting", label: "Consulting" },
+  { href: "/about", label: "About" },
+  { href: "/workshop", label: "Workshop" },
+  { href: "/contact", label: "Contact" },
+]
 
-export const Header: React.FC<HeaderProps> = ({ theme: propTheme, onThemeToggle }) => {
+export default function Header() {
   const pathname = usePathname()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const { theme: systemTheme, setTheme: setSystemTheme } = useTheme()
-  const currentTheme = propTheme || systemTheme
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  const handleThemeToggle = () => {
-    if (onThemeToggle) {
-      onThemeToggle()
-    } else {
-      setSystemTheme(currentTheme === "light" ? "dark" : "light")
-    }
-  }
-
-  const navItems = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/consulting", label: "Consulting", icon: Briefcase },
-    { href: "/about", label: "About", icon: User },
-    { href: "/workshop", label: "Workshop", icon: Calendar },
-    { href: "/contact", label: "Contact", icon: Mail },
-  ]
+  const NavLinks = ({ className }: { className?: string }) => (
+    <nav className={cn("flex items-center gap-6", className)}>
+      {navLinks.map(({ href, label }) => (
+        <Link
+          key={href}
+          href={href}
+          className={cn(
+            "text-sm font-medium transition-colors hover:text-primary",
+            pathname === href ? "text-primary" : "text-muted-foreground",
+          )}
+        >
+          {label}
+        </Link>
+      ))}
+    </nav>
+  )
 
   return (
-    <header
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        scrolled
-          ? "bg-background/80 backdrop-blur-lg border-b border-border shadow-sm"
-          : "bg-transparent"
-      )}
-    >
-      <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg blur-md opacity-75" />
-              <div className="relative bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold text-xl px-3 py-1 rounded-lg">
-                F.B/c
-              </div>
-            </div>
-            <span className="font-semibold text-lg hidden sm:inline">AI Consulting</span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-1">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href
-              const Icon = item.icon
-              
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200",
-                    isActive
-                      ? "bg-orange-500/10 text-orange-600 dark:text-orange-400"
-                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
-              )
-            })}
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center space-x-2">
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleThemeToggle}
-              className="rounded-full"
-            >
-              {currentTheme === "light" ? (
-                <Moon className="h-5 w-5" />
-              ) : (
-                <Sun className="h-5 w-5" />
-              )}
-            </Button>
-
-
-
-            {/* Mobile Menu Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden"
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 glass-header">
+      <div className="container flex h-16 items-center">
+        <Link href="/" className="flex items-center gap-2">
+          <Bot className="h-6 w-6 text-orange-accent" />
+          <span className="font-bold uppercase font-display tracking-wider">F.B</span>
+        </Link>
+        <div className="hidden md:flex ml-10">
+          <NavLinks />
+        </div>
+        <div className="flex flex-1 items-center justify-end space-x-2">
+          <ThemeToggle />
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Open navigation menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <div className="p-4 mt-6">
+                  <NavLinks className="flex-col items-start space-y-4" />
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
-      </nav>
-
-      {/* Mobile Navigation */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="lg:hidden border-t border-border bg-background/95 backdrop-blur-lg"
-          >
-            <div className="container mx-auto px-4 py-4 space-y-2">
-              {navItems.map((item) => {
-                const isActive = pathname === item.href
-                const Icon = item.icon
-                
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsMenuOpen(false)}
-                    className={cn(
-                      "flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200",
-                      isActive
-                        ? "bg-orange-500/10 text-orange-600 dark:text-orange-400"
-                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                    )}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </Link>
-                )
-              })}
-              
-
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </div>
     </header>
   )
 }

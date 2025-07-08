@@ -2,28 +2,263 @@
 
 import type React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Mic, X, Loader, Sparkles, Volume2, Brain, Pause, Play } from "lucide-react"
+import { X, Volume2, VolumeX, Send } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import { useChatContext } from "@/app/chat/context/ChatProvider"
 
 interface VoiceInputModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onTranscript?: (transcript: string) => void;
-  onAIResponse?: (response: string) => void;
-  onConversationUpdate?: (conversation: ConversationTurn[]) => void;
-  theme?: "light" | "dark";
-  isRealTimeMode?: boolean;
-  isListening?: boolean;
-  currentTranscription?: string;
-  aiState?: "listening" | "processing" | "idle" | "error" | "speaking";
+  isOpen: boolean
+  onClose: () => void
+  onTranscript?: (transcript: string) => void
+  onAIResponse?: (response: string) => void
+  onConversationUpdate?: (conversation: ConversationTurn[]) => void
+  onTransferToChat?: (fullTranscript: string) => void
+  theme?: "light" | "dark"
 }
 
 interface ConversationTurn {
   id: string
-  type: 'user' | 'ai'
+  type: "user" | "ai"
   text: string
   timestamp: number
-  audioData?: string
+  isComplete: boolean
+}
+
+// AI States matching your design
+type AIState = "idle" | "listening" | "processing" | "speaking" | "error"
+
+interface Message {
+  id: string
+  content: string
+  sender: "user" | "ai"
+  timestamp: Date
+  transcription?: string
+}
+
+// AI Orb Component with breathing animation
+interface AIOrbProps {
+  state: AIState
+  isRecording: boolean
+  className?: string
+  onClick?: () => void
+}
+
+function AIOrb({ state, isRecording, className, onClick }: AIOrbProps) {
+  const getOrbColor = () => {
+    switch (state) {
+      case "listening":
+        return "from-blue-400 to-blue-600"
+      case "processing":
+        return "from-yellow-400 to-orange-500"
+      case "speaking":
+        return "from-green-400 to-emerald-600"
+      case "error":
+        return "from-red-400 to-red-600"
+      default:
+        return "from-purple-400 to-indigo-600"
+    }
+  }
+
+  const getGlowColor = () => {
+    switch (state) {
+      case "listening":
+        return "shadow-blue-500/50"
+      case "processing":
+        return "shadow-yellow-500/50"
+      case "speaking":
+        return "shadow-green-500/50"
+      case "error":
+        return "shadow-red-500/50"
+      default:
+        return "shadow-purple-500/50"
+    }
+  }
+
+  return (
+    <div className={cn("relative flex items-center justify-center", className)}>
+      {/* Outer glow rings */}
+      <motion.div
+        className={cn("absolute inset-0 rounded-full bg-gradient-to-r opacity-20", getOrbColor())}
+        animate={{
+          scale: state === "listening" || isRecording ? [1, 1.3, 1] : [1, 1.1, 1],
+          opacity: [0.2, 0.4, 0.2],
+        }}
+        transition={{
+          duration: state === "listening" || isRecording ? 1.5 : 3,
+          repeat: Number.POSITIVE_INFINITY,
+          ease: "easeInOut",
+        }}
+      />
+
+      <motion.div
+        className={cn("absolute inset-2 rounded-full bg-gradient-to-r opacity-30", getOrbColor())}
+        animate={{
+          scale: state === "listening" || isRecording ? [1, 1.2, 1] : [1, 1.05, 1],
+          opacity: [0.3, 0.6, 0.3],
+        }}
+        transition={{
+          duration: state === "listening" || isRecording ? 1.2 : 2.5,
+          repeat: Number.POSITIVE_INFINITY,
+          ease: "easeInOut",
+          delay: 0.2,
+        }}
+      />
+
+      {/* Main orb */}
+      <motion.div
+        className={cn(
+          "relative w-32 h-32 rounded-full bg-gradient-to-r shadow-2xl cursor-pointer",
+          getOrbColor(),
+          getGlowColor(),
+        )}
+        animate={{
+          scale: state === "listening" || isRecording ? [1, 1.1, 1] : [1, 1.02, 1],
+        }}
+        transition={{
+          duration: state === "listening" || isRecording ? 1 : 4,
+          repeat: Number.POSITIVE_INFINITY,
+          ease: "easeInOut",
+        }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={onClick}
+      >
+        {/* Inner glow */}
+        <div className="absolute inset-2 rounded-full bg-white/20 backdrop-blur-sm" />
+
+        {/* Voice visualization bars */}
+        <AnimatePresence>
+          {(state === "listening" || state === "speaking" || isRecording) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <div className="flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="w-1 bg-white/80 rounded-full"
+                    animate={{
+                      height: [8, Math.random() * 20 + 10, 8],
+                    }}
+                    transition={{
+                      duration: 0.5 + Math.random() * 0.5,
+                      repeat: Number.POSITIVE_INFINITY,
+                      repeatType: "reverse",
+                      delay: i * 0.1,
+                    }}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Microphone icon when idle */}
+        <AnimatePresence>
+          {state === "idle" && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <svg className="w-8 h-8 text-white/90" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z" />
+                <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+                <path d="M12 18v4" />
+                <path d="M8 22h8" />
+              </svg>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Processing spinner */}
+        <AnimatePresence>
+          {state === "processing" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, rotate: 360 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <div className="w-8 h-8 border-2 border-white/30 border-t-white/90 rounded-full" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </div>
+  )
+}
+
+// Transcription Display Component
+interface TranscriptionDisplayProps {
+  currentTranscription: string
+  lastMessage?: Message
+  state: AIState
+}
+
+function TranscriptionDisplay({ currentTranscription, lastMessage, state }: TranscriptionDisplayProps) {
+  return (
+    <div className="w-full max-w-2xl mx-auto space-y-4">
+      {/* Live transcription */}
+      <AnimatePresence>
+        {currentTranscription && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="text-center"
+          >
+            <div className="text-sm text-muted-foreground mb-2">You're saying:</div>
+            <div className="text-lg text-foreground bg-background/50 backdrop-blur-sm rounded-lg p-4 border">
+              {currentTranscription}
+              <motion.span
+                animate={{ opacity: [1, 0] }}
+                transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY }}
+                className="ml-1"
+              >
+                |
+              </motion.span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Last AI response */}
+      <AnimatePresence>
+        {lastMessage && lastMessage.sender === "ai" && !currentTranscription && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="text-center"
+          >
+            <div className="text-sm text-muted-foreground mb-2">AI Response:</div>
+            <div className="text-lg text-foreground bg-background/50 backdrop-blur-sm rounded-lg p-4 border">
+              {lastMessage.content}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* State indicator */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
+        <div className="text-sm text-muted-foreground">
+          {state === "idle" && "Tap the orb to start speaking"}
+          {state === "listening" && "Listening... Speak now"}
+          {state === "processing" && "Processing your request..."}
+          {state === "speaking" && "AI is responding..."}
+          {state === "error" && "Something went wrong. Try again."}
+        </div>
+      </motion.div>
+    </div>
+  )
 }
 
 export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
@@ -32,246 +267,258 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   onTranscript,
   onAIResponse,
   onConversationUpdate,
-  theme = "dark",
-  isRealTimeMode = false,
-  isListening = false,
-  currentTranscription = "",
-  aiState = "idle"
+  onTransferToChat,
 }) => {
+  const { addActivity } = useChatContext()
   const [conversation, setConversation] = useState<ConversationTurn[]>([])
-  const [isRealTimeActive, setIsRealTimeActive] = useState(false)
-  const [audioLevel, setAudioLevel] = useState(0)
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false)
-  const audioContextRef = useRef<AudioContext | null>(null)
-  const analyserRef = useRef<AnalyserNode | null>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-  const conversationRef = useRef<HTMLDivElement>(null)
+  const [isActive, setIsActive] = useState(false)
+  const [aiState, setAIState] = useState<AIState>("idle")
+  const [isRecording, setIsRecording] = useState(false)
+  const [isMuted, setIsMuted] = useState(false)
+  const [currentTranscription, setCurrentTranscription] = useState("")
+  const [messages, setMessages] = useState<Message[]>([])
 
-  // Real-time audio analysis for voice level visualization
-  const startAudioAnalysis = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      streamRef.current = stream
-      
-      const audioContext = new AudioContext()
-      const analyser = audioContext.createAnalyser()
-      const microphone = audioContext.createMediaStreamSource(stream)
-      
-      analyser.smoothingTimeConstant = 0.8
-      analyser.fftSize = 1024
-      
-      microphone.connect(analyser)
-      
-      audioContextRef.current = audioContext
-      analyserRef.current = analyser
-      
-      // Start audio level monitoring
-      const updateAudioLevel = () => {
-        if (analyserRef.current) {
-          const bufferLength = analyserRef.current.frequencyBinCount
-          const dataArray = new Uint8Array(bufferLength)
-          analyserRef.current.getByteFrequencyData(dataArray)
-          
-          const average = dataArray.reduce((a, b) => a + b) / bufferLength
-          setAudioLevel(average / 255) // Normalize to 0-1
+  const recordingTimeout = useRef<NodeJS.Timeout>()
+  const recognitionRef = useRef<any>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+
+  // Initialize speech recognition
+  const initializeSpeechRecognition = useCallback(() => {
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
+      const recognition = new SpeechRecognition()
+
+      recognition.continuous = true
+      recognition.interimResults = true
+      recognition.lang = "en-US"
+
+      recognition.onstart = () => {
+        setAIState("listening")
+        setIsRecording(true)
+      }
+
+      recognition.onresult = (event: any) => {
+        let interimTranscript = ""
+        let finalTranscript = ""
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript
+          } else {
+            interimTranscript += transcript
+          }
         }
-        
-        if (isRealTimeActive) {
-          requestAnimationFrame(updateAudioLevel)
+
+        setCurrentTranscription(finalTranscript + interimTranscript)
+
+        if (finalTranscript) {
+          processUserInput(finalTranscript.trim())
         }
       }
-      
-      updateAudioLevel()
-    } catch (error) {
-      console.error('Audio analysis setup failed:', error)
-    }
-  }, [isRealTimeActive])
 
-  // Start real-time conversation mode
-  const startRealTimeMode = useCallback(async () => {
-    setIsRealTimeActive(true)
-    await startAudioAnalysis()
-    
-    // Add welcome message
-    const welcomeTurn: ConversationTurn = {
-      id: Date.now().toString(),
-      type: 'ai',
-      text: "Real-time conversation mode activated! I'm listening and ready to chat.",
-      timestamp: Date.now()
-    }
-    
-    setConversation([welcomeTurn])
-    onConversationUpdate?.([welcomeTurn])
-  }, [startAudioAnalysis, onConversationUpdate])
+      recognition.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error)
+        setAIState("error")
+      }
 
-  // Stop real-time mode
-  const stopRealTimeMode = useCallback(() => {
-    setIsRealTimeActive(false)
-    
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
+      recognition.onend = () => {
+        if (isActive && aiState === "listening") {
+          recognition.start() // Restart if still active
+        }
+      }
+
+      recognitionRef.current = recognition
     }
-    
-    if (audioContextRef.current) {
-      audioContextRef.current.close()
+  }, [isActive, aiState])
+
+  const startRecording = useCallback(() => {
+    setIsActive(true)
+    setIsRecording(true)
+    setAIState("listening")
+    setCurrentTranscription("")
+
+    addActivity({
+      type: "voice_input",
+      title: "Voice Recording Started",
+      description: "Listening for voice input",
+      status: "in_progress",
+    })
+
+    if (recognitionRef.current) {
+      recognitionRef.current.start()
+    }
+
+    // Auto-stop recording after 10 seconds
+    recordingTimeout.current = setTimeout(() => {
+      stopRecording()
+    }, 10000)
+  }, [addActivity])
+
+  const stopRecording = useCallback(() => {
+    setIsRecording(false)
+    setAIState("processing")
+    if (recordingTimeout.current) {
+      clearTimeout(recordingTimeout.current)
+    }
+
+    if (recognitionRef.current) {
+      recognitionRef.current.stop()
     }
   }, [])
 
-  // Process voice input and get AI response
-  const processVoiceInput = useCallback(async (transcription: string) => {
-    if (!transcription.trim()) return
+  const processUserInput = useCallback(
+    async (userText: string) => {
+      if (!userText.trim()) return
 
-    // Add user turn
-    const userTurn: ConversationTurn = {
-      id: Date.now().toString(),
-      type: 'user',
-      text: transcription,
-      timestamp: Date.now()
-    }
-
-    const updatedConversation = [...conversation, userTurn]
-    setConversation(updatedConversation)
-
-    try {
-      // Send to AI for real-time response
-              const response = await fetch('/api/ai?action=realTimeConversation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: transcription,
-          conversationHistory: updatedConversation,
-          includeAudio: true
-        })
+      addActivity({
+        type: "voice_input",
+        title: "Voice Input Received",
+        description: `User said: "${userText.substring(0, 50)}..."`,
+        status: "completed",
       })
 
-      const result = await response.json()
-      
-      if (result.success) {
+      setIsRecording(false)
+      setAIState("processing")
+
+      // Add user message
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: userText,
+        sender: "user",
+        timestamp: new Date(),
+        transcription: userText,
+      }
+
+      setMessages((prev) => [...prev, userMessage])
+
+      // Add to conversation
+      const userTurn: ConversationTurn = {
+        id: Date.now().toString(),
+        type: "user",
+        text: userText,
+        timestamp: Date.now(),
+        isComplete: true,
+      }
+
+      setConversation((prev) => [...prev, userTurn])
+      setCurrentTranscription("")
+
+      try {
+        // Simulate AI processing
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+
+        setAIState("speaking")
+
+        // Simulate AI response generation
+        const aiResponse = `I understand you said: "${userText}". Here's my thoughtful response to continue our conversation.`
+
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: aiResponse,
+          sender: "ai",
+          timestamp: new Date(),
+        }
+
+        setMessages((prev) => [...prev, aiMessage])
+
+        // Add AI response to conversation
         const aiTurn: ConversationTurn = {
           id: (Date.now() + 1).toString(),
-          type: 'ai',
-          text: result.data.text,
+          type: "ai",
+          text: aiResponse,
           timestamp: Date.now(),
-          audioData: result.data.audioData
+          isComplete: true,
         }
 
-        const finalConversation = [...updatedConversation, aiTurn]
-        setConversation(finalConversation)
-        onConversationUpdate?.(finalConversation)
-        onAIResponse?.(result.data.text)
+        setConversation((prev) => [...prev, aiTurn])
 
-        // Play AI audio response if available
-        if (result.data.audioData) {
-          playAudioResponse(result.data.audioData)
-        }
+        // Simulate AI speech duration
+        await new Promise((resolve) => setTimeout(resolve, 3000))
+
+        // Return to idle
+        setAIState("idle")
+        setIsActive(false)
+
+        onAIResponse?.(aiResponse)
+
+        addActivity({
+          type: "ai_thinking",
+          title: "AI Voice Response",
+          description: "AI responded with voice message",
+          status: "completed",
+        })
+      } catch (error) {
+        console.error("AI processing error:", error)
+        setAIState("error")
       }
-    } catch (error) {
-      console.error('Real-time conversation error:', error)
-    }
-  }, [conversation, onAIResponse, onConversationUpdate])
+    },
+    [onAIResponse, addActivity],
+  )
 
-  // Play AI audio response
-  const playAudioResponse = useCallback((audioData: string) => {
-    try {
-      setIsAudioPlaying(true)
-      const audio = new Audio(`data:audio/mpeg;base64,${audioData}`)
-      
-      audio.onended = () => setIsAudioPlaying(false)
-      audio.onerror = () => setIsAudioPlaying(false)
-      
-      audio.play()
-    } catch (error) {
-      console.error('Audio playback error:', error)
-      setIsAudioPlaying(false)
-    }
-  }, [])
+  const handleOrbClick = useCallback(() => {
+    if (aiState === "processing" || aiState === "speaking") return
 
-  // Auto-scroll conversation
+    if (isRecording) {
+      stopRecording()
+    } else {
+      startRecording()
+    }
+  }, [aiState, isRecording, startRecording, stopRecording])
+
+  // Initialize speech recognition on mount
   useEffect(() => {
-    if (conversationRef.current) {
-      conversationRef.current.scrollTop = conversationRef.current.scrollHeight
+    if (isOpen) {
+      initializeSpeechRecognition()
     }
-  }, [conversation])
+  }, [isOpen, initializeSpeechRecognition])
 
-  // Process transcription when it changes
-  useEffect(() => {
-    if (isRealTimeActive && currentTranscription && aiState === 'processing') {
-      processVoiceInput(currentTranscription)
+  // Handle modal close
+  const handleClose = useCallback(() => {
+    if (conversation.length > 0) {
+      const fullTranscript = `Voice Conversation Summary:
+${conversation
+  .map((turn, index) => {
+    const speaker = turn.type === "user" ? "You" : "AI Assistant"
+    const timestamp = new Date(turn.timestamp).toLocaleTimeString()
+    return `${index + 1}. ${speaker} (${timestamp}): ${turn.text}`
+  })
+  .join("\n\n")}
+
+---
+Continue this conversation in text chat below:`
+
+      addActivity({
+        type: "chat_summary",
+        title: "Voice Transcript Transferred",
+        description: `${conversation.length} voice messages sent to chat`,
+        status: "completed",
+      })
+
+      onTransferToChat?.(fullTranscript)
     }
-  }, [currentTranscription, aiState, isRealTimeActive, processVoiceInput])
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stopRealTimeMode()
-    }
-  }, [stopRealTimeMode])
+    setIsActive(false)
+    setIsRecording(false)
+    setAIState("idle")
+    setCurrentTranscription("")
+    setMessages([])
+    setConversation([])
 
-  const getStateConfig = () => {
-    if (isRealTimeActive) {
-      return {
-        title: isListening ? "Listening..." : "Real-time Chat Active",
-        subtitle: isListening ? "Speak naturally" : "AI is ready to respond",
-        icon: isListening ? Mic : Brain,
-        iconColor: isListening ? "text-orange-500" : "text-blue-500",
-        bgGlow: isListening ? "bg-orange-500/10" : "bg-blue-500/10",
-        animate: isListening || isAudioPlaying
-      }
+    if (recognitionRef.current) {
+      recognitionRef.current.stop()
     }
 
-    switch (aiState) {
-      case "listening":
-        return {
-          title: "Listening...",
-          subtitle: "Speak clearly into your microphone",
-          icon: Mic,
-          iconColor: "text-orange-500",
-          bgGlow: "bg-orange-500/10",
-          animate: true
-        }
-      case "processing":
-        return {
-          title: "Processing...",
-          subtitle: "AI is analyzing your voice input",
-          icon: Sparkles,
-          iconColor: "text-blue-500",
-          bgGlow: "bg-blue-500/10",
-          animate: true
-        }
-      case "speaking":
-        return {
-          title: "AI Speaking...",
-          subtitle: "Listen to the AI response",
-          icon: Volume2,
-          iconColor: "text-green-500",
-          bgGlow: "bg-green-500/10",
-          animate: true
-        }
-      case "error":
-        return {
-          title: "Error",
-          subtitle: "Voice input failed. Please try again.",
-          icon: X,
-          iconColor: "text-red-500",
-          bgGlow: "bg-red-500/10",
-          animate: false
-        }
-      default:
-        return {
-          title: "Ready",
-          subtitle: "Click the microphone to start",
-          icon: Mic,
-          iconColor: "text-muted-foreground",
-          bgGlow: "bg-muted/10",
-          animate: false
-        }
+    if (recordingTimeout.current) {
+      clearTimeout(recordingTimeout.current)
     }
-  }
 
-  const config = getStateConfig()
-  const IconComponent = config.icon
+    onClose()
+  }, [conversation, onTransferToChat, onClose, addActivity])
 
-  if (!isOpen) return null;
+  const lastMessage = messages[messages.length - 1]
+
+  if (!isOpen) return null
 
   return (
     <AnimatePresence>
@@ -280,172 +527,108 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={handleClose}
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="relative w-full max-w-4xl mx-4 h-[80vh]"
+          className="w-full h-full"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Main Modal Card - Advanced Design */}
-          <div className={`border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl bg-white/10 dark:bg-black/20 overflow-hidden relative h-full ${config.animate ? 'shadow-orange-500/20 shadow-2xl' : ''}`}>
-            {/* Glass Reflection Effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none rounded-2xl" />
-            <div className="relative z-10 h-full flex flex-col">
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-white/20 dark:border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${config.bgGlow}`}>
-                    <IconComponent className={`w-5 h-5 ${config.iconColor}`} />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white dark:text-white">{config.title}</h3>
-                    <p className="text-sm text-white/70 dark:text-white/70">{config.subtitle}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {/* Real-time Mode Toggle */}
-                  <button
-                    onClick={isRealTimeActive ? stopRealTimeMode : startRealTimeMode}
-                    className={`p-2 rounded-lg transition-colors ${
-                      isRealTimeActive 
-                        ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30' 
-                        : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
-                    }`}
-                    title={isRealTimeActive ? "Stop Real-time Mode" : "Start Real-time Mode"}
-                  >
-                    {isRealTimeActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  </button>
-                  <button
-                    onClick={onClose}
-                    className="p-2 rounded-lg hover:bg-white/10 dark:hover:bg-white/5 transition-colors"
-                  >
-                    <X className="w-4 h-4 text-white/70 dark:text-white/70 hover:text-white" />
-                  </button>
-                </div>
-              </div>
+          <div className="min-h-screen w-full flex flex-col items-center justify-center p-8 relative overflow-hidden">
+            {/* Background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/20" />
 
-              {/* Main Content */}
-              <div className="flex-1 flex">
-                {/* Voice Visualization */}
-                <div className="w-1/2 p-6 flex flex-col items-center justify-center border-r border-white/20 dark:border-white/10">
-                  {/* Voice Waveform */}
-                  <div className="flex items-center justify-center gap-1 h-24 mb-6">
-                    {Array.from({ length: 12 }).map((_, i) => (
-                      <motion.div
-                        key={i}
-                        className={`w-2 rounded-full ${config.animate ? 'bg-orange-500' : 'bg-white/30 dark:bg-white/20'}`}
-                        initial={{ height: 4 }}
-                        animate={config.animate ? {
-                          height: [4, (audioLevel * 60) + (Math.random() * 40) + 20, 4],
-                          opacity: [0.3, 1, 0.3]
-                        } : { height: 4 }}
-                        transition={{
-                          duration: 0.3 + Math.random() * 0.3,
-                          repeat: config.animate ? Infinity : 0,
-                          ease: "easeInOut",
-                          delay: i * 0.05
-                        }}
-                      />
-                    ))}
-                  </div>
-                  
-                  {/* State Icon */}
-                  <div className={`p-4 rounded-full ${config.bgGlow} mb-4`}>
-                    <IconComponent className={`w-8 h-8 ${config.iconColor}`} />
-                  </div>
-
-                  {/* Current Transcription */}
-                  <AnimatePresence>
-                    {currentTranscription && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="w-full"
-                      >
-                        <div className="p-3 bg-white/10 dark:bg-white/5 rounded-lg border border-white/20 dark:border-white/10 backdrop-blur-sm">
-                          <p className="text-xs text-white/70 dark:text-white/70 mb-1">Current:</p>
-                          <p className="text-white dark:text-white text-sm">
-                            {currentTranscription || "Start speaking..."}
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Audio Level Indicator */}
-                  {isRealTimeActive && (
-                    <div className="mt-4 w-full">
-                      <div className="w-full bg-white/20 rounded-full h-2">
-                        <div 
-                          className="bg-orange-500 h-2 rounded-full transition-all duration-100"
-                          style={{ width: `${audioLevel * 100}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-white/70 text-center mt-1">Voice Level</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Conversation History */}
-                <div className="w-1/2 flex flex-col">
-                  <div className="p-4 border-b border-white/20 dark:border-white/10">
-                    <h4 className="text-white font-medium flex items-center gap-2">
-                      <Brain className="w-4 h-4" />
-                      Conversation
-                    </h4>
-                  </div>
-                  
-                  <div 
-                    ref={conversationRef}
-                    className="flex-1 overflow-y-auto p-4 space-y-3"
-                  >
-                    {conversation.map((turn) => (
-                      <motion.div
-                        key={turn.id}
-                        initial={{ opacity: 0, x: turn.type === 'user' ? 20 : -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className={`flex ${turn.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-[80%] p-3 rounded-lg ${
-                            turn.type === 'user'
-                              ? 'bg-orange-500/20 text-white border border-orange-500/30'
-                              : 'bg-blue-500/20 text-white border border-blue-500/30'
-                          }`}
-                        >
-                          <p className="text-sm">{turn.text}</p>
-                          <p className="text-xs opacity-70 mt-1">
-                            {new Date(turn.timestamp).toLocaleTimeString()}
-                          </p>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="px-4 py-3 bg-white/5 dark:bg-white/5 border-t border-white/20 dark:border-white/10">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-white/60 dark:text-white/60">
-                    {isRealTimeActive 
-                      ? "Real-time conversation active - speak naturally" 
-                      : "Click play button to start real-time mode"
-                    }
-                  </p>
-                  {isAudioPlaying && (
-                    <div className="flex items-center gap-2 text-green-400">
-                      <Volume2 className="w-4 h-4 animate-pulse" />
-                      <span className="text-xs">AI Speaking</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+            {/* Floating particles */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {[...Array(20)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 bg-foreground/10 rounded-full"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                  }}
+                  animate={{
+                    y: [0, -100, 0],
+                    opacity: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 3 + Math.random() * 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    delay: Math.random() * 2,
+                  }}
+                />
+              ))}
             </div>
+
+            {/* Close button */}
+            <div className="absolute top-8 right-8 z-10 flex items-center gap-2">
+              {conversation.length > 0 && (
+                <Button variant="outline" size="sm" onClick={handleClose} className="gap-2 bg-background/50">
+                  <Send className="w-4 h-4" />
+                  Send to Chat
+                </Button>
+              )}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsMuted(!isMuted)}
+                className="p-3 rounded-full bg-background/50 backdrop-blur-sm border border-border hover:bg-background/70 transition-colors"
+              >
+                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              </motion.button>
+              <Button variant="ghost" size="icon" onClick={handleClose} className="rounded-full bg-background/50">
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            {/* Main content */}
+            <div className="relative z-10 flex flex-col items-center justify-center space-y-12 w-full max-w-4xl">
+              {/* AI Orb */}
+              <AIOrb state={aiState} isRecording={isRecording} className="w-48 h-48" onClick={handleOrbClick} />
+
+              {/* Transcription Display */}
+              <TranscriptionDisplay
+                currentTranscription={currentTranscription}
+                lastMessage={lastMessage}
+                state={aiState}
+              />
+
+              {/* Recording indicator */}
+              <AnimatePresence>
+                {isRecording && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="flex items-center gap-2 text-sm text-muted-foreground"
+                  >
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
+                      className="w-2 h-2 bg-red-500 rounded-full"
+                    />
+                    Recording... Tap orb to stop
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Conversation history indicator */}
+            <AnimatePresence>
+              {messages.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className="absolute bottom-8 left-8 text-sm text-muted-foreground"
+                >
+                  {messages.length} message{messages.length !== 1 ? "s" : ""} exchanged
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
       </motion.div>
@@ -453,4 +636,4 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   )
 }
 
-export default VoiceInputModal;
+export default VoiceInputModal
