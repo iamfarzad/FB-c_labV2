@@ -15,6 +15,7 @@ import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
 import { WebcamModal } from "@/components/chat/modals/WebcamModal"
 import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
 import type { LeadCaptureState } from "./types/lead-capture"
+import type { Message } from "./types/chat"
 import { useChatContext } from "./context/ChatProvider"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import { supabase } from "@/lib/supabase/client"
@@ -95,22 +96,21 @@ export default function ChatPage() {
     e.preventDefault()
     if (!input.trim()) return
 
-    // This is the core logic fix.
-    // It correctly handles the state transitions based on user actions.
     if (leadCaptureState.stage === "initial") {
-      // 1. This is the user's first message.
-      // Append it to the chat locally so they see their message.
-      append({ role: "user", content: input })
+      const newUserMessage: Message = {
+        id: uuidv4(),
+        role: "user",
+        content: input,
+        timestamp: new Date(),
+      }
+      setMessages([...messages, newUserMessage])
 
-      // 2. Update the state to 'collecting_info' and show the lead capture form.
       setLeadCaptureState((prev) => ({
         ...prev,
         stage: "collecting_info",
         leadData: { ...prev.leadData, initialQuery: input },
       }))
       setShowLeadCapture(true)
-
-      // 3. Clear the input field.
       setInput("")
       activityLogger.log({
         type: "user_action",
@@ -119,13 +119,9 @@ export default function ChatPage() {
         status: "completed",
       })
     } else if (leadCaptureState.stage === "consultation") {
-      // The user has completed the form and is in a consultation.
-      // We can now use the standard `handleSubmit` to send the message to the AI.
-      activityLogger.log({ type: "user_action", title: "User Message Sent", description: input, status: "completed" })
       handleSubmit(e)
+      activityLogger.log({ type: "user_action", title: "User Message Sent", description: input, status: "completed" })
     } else if (leadCaptureState.stage === "collecting_info") {
-      // The user is trying to send another message while the form is open.
-      // Remind them to complete the form.
       toast({
         title: "Please complete the form first",
         description: "We need your details to start the AI consultation.",
@@ -142,7 +138,6 @@ export default function ChatPage() {
       status: "completed",
     })
 
-    // Persist the lead data to the backend
     try {
       const response = await fetch("/api/lead-capture", {
         method: "POST",
@@ -156,9 +151,7 @@ export default function ChatPage() {
           },
         }),
       })
-      if (!response.ok) {
-        throw new Error("Failed to save lead data.")
-      }
+      if (!response.ok) throw new Error("Failed to save lead data.")
       const result = await response.json()
       activityLogger.log({
         type: "database",
@@ -179,7 +172,7 @@ export default function ChatPage() {
         description: error instanceof Error ? error.message : "Unknown error",
         status: "failed",
       })
-      return // Do not proceed if saving fails
+      return
     }
 
     setLeadCaptureState({ stage: "consultation", leadData } as LeadCaptureState)
@@ -199,36 +192,28 @@ export default function ChatPage() {
         imageUrl: imageData,
       })
       activityLogger.log({ type: "image_upload", title: "Image Uploaded", description: fileName, status: "completed" })
-      toast({ title: "Image Uploaded", description: `${fileName} ready for analysis.` })
     },
-    [append, toast],
+    [append],
   )
 
   const handleFileUpload = (file: File) => {
+    append({
+      role: "user",
+      content: `[File uploaded: ${file.name}] Please summarize or analyze this document.`,
+    })
     activityLogger.log({
       type: "file_upload",
       title: "File Uploaded",
       description: file.name,
       status: "completed",
-      details: [`Size: ${(file.size / 1024 / 1024).toFixed(2)}MB`],
     })
-    append({
-      role: "user",
-      content: `[File uploaded: ${file.name}] Please summarize or analyze this document.`,
-    })
-    toast({ title: "File Uploaded", description: `${file.name} is ready for processing.` })
   }
 
   const handleVoiceTranscript = useCallback(
     (transcript: string) => {
       if (!transcript.trim()) return
       append({ role: "user", content: transcript })
-      activityLogger.log({
-        type: "voice_input",
-        title: "Voice Input Sent",
-        description: transcript,
-        status: "completed",
-      })
+      activityLogger.log({ type: "voice_input", title: "Voice Input Sent", status: "completed" })
     },
     [append],
   )
@@ -237,20 +222,14 @@ export default function ChatPage() {
     (imageData: string) => {
       append({ role: "user", content: "[Webcam image captured] Please analyze this image.", imageUrl: imageData })
       activityLogger.log({ type: "image_capture", title: "Webcam Photo Captured", status: "completed" })
-      toast({ title: "Webcam Photo Captured" })
     },
-    [append, toast],
+    [append],
   )
 
   const handleScreenShareAnalysis = useCallback(
     (analysis: string) => {
       append({ role: "assistant", content: `**Screen Analysis:**\n${analysis}` })
-      activityLogger.log({
-        type: "vision_analysis",
-        title: "Screen Analyzed",
-        description: analysis,
-        status: "completed",
-      })
+      activityLogger.log({ type: "vision_analysis", title: "Screen Analyzed", status: "completed" })
     },
     [append],
   )
@@ -259,7 +238,7 @@ export default function ChatPage() {
     (result: { spec: string; code: string }) => {
       append({
         role: "assistant",
-        content: `I have successfully generated a new learning app based on the video. You can view the code and specifications in the "Video to App" tab.`,
+        content: `I have successfully generated a new learning app based on the video.`,
       })
       activityLogger.log({ type: "tool_used", title: "Video-to-App Generated", status: "completed" })
     },
@@ -314,7 +293,7 @@ export default function ChatPage() {
                 />
               </div>
             )}
-            <ChatMain messages={messages} isLoading={isLoading} messagesEndRef={messagesEndRef} />
+            <ChatMain messages={messages as Message[]} isLoading={isLoading} messagesEndRef={messagesEndRef} />
           </div>
           <form onSubmit={handleFormSubmit} className="shrink-0">
             <ChatFooter

@@ -10,18 +10,12 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import type { Message } from "@/app/chat/types/chat"
 
-// --- helper ---------------------------------------------------------------
 const formatTimestamp = (ts?: Date | string) => {
-  if (!ts) return "" // no timestamp -> show nothing
-  const date =
-    ts instanceof Date
-      ? ts
-      : // handle ISO strings coming from the server / SDK
-        new Date(ts)
-  if (Number.isNaN(date.getTime())) return ""
+  if (!ts) return ""
+  const date = ts instanceof Date ? ts : new Date(ts)
+  if (isNaN(date.getTime())) return ""
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
-// --------------------------------------------------------------------------
 
 interface ChatMainProps {
   messages: Message[]
@@ -43,7 +37,6 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
   }
 
   const formatMessageContent = (content: string) => {
-    // Handle markdown-style formatting
     return content
       .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
       .replace(/\*(.*?)\*/g, "<em>$1</em>")
@@ -87,7 +80,6 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
                   message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted/50",
                 )}
               >
-                {/* Image Display */}
                 {message.imageUrl && (
                   <div className="mb-3">
                     <div className="relative group/image">
@@ -111,7 +103,6 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
                   </div>
                 )}
 
-                {/* Message Content */}
                 <div
                   className="prose prose-sm max-w-none dark:prose-invert"
                   dangerouslySetInnerHTML={{
@@ -119,7 +110,6 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
                   }}
                 />
 
-                {/* Sources */}
                 {message.sources && message.sources.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-border/50">
                     <p className="text-xs font-medium mb-2 opacity-70">Sources:</p>
@@ -139,7 +129,6 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
                   </div>
                 )}
 
-                {/* Copy Button */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -150,7 +139,6 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
                 </Button>
               </Card>
 
-              {/* Timestamp */}
               {formatTimestamp(message.timestamp) && (
                 <span className="text-xs text-muted-foreground mt-1 px-1">{formatTimestamp(message.timestamp)}</span>
               )}
@@ -166,7 +154,6 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
           </div>
         ))}
 
-        {/* Loading Indicator */}
         {isLoading && (
           <div className="flex gap-3">
             <Avatar className="w-8 h-8 shrink-0">

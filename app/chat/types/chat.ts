@@ -2,8 +2,8 @@ export interface Message {
   id: string
   role: "user" | "assistant" | "system" | "function" | "data" | "tool"
   content: string
-  timestamp?: Date // Make timestamp optional as SDK might not provide it
-  sources?: any[] // Use `any[]` for broader compatibility with SDK sources
+  timestamp?: Date | string // Make timestamp optional and allow string for API responses
+  sources?: any[]
   audioData?: string | null
   imageUrl?: string
   metadata?: Record<string, any>
@@ -36,6 +36,7 @@ export interface ActivityItem {
     | "vision_analysis"
     | "error"
     | "generic"
+    | "database"
   title: string
   description: string
   status: "pending" | "in_progress" | "completed" | "failed"
