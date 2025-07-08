@@ -64,10 +64,10 @@ export function TestStatusIndicator() {
   }, [])
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-sm">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold">System Status</h3>
+          <h3 className="font-semibold">System Health</h3>
           <Button
             variant="outline"
             size="sm"
