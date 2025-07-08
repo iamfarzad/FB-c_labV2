@@ -30,7 +30,7 @@ const WebcamModal = dynamic(() => import("./modals/WebcamModal"), { ssr: false }
 
 interface ChatFooterProps {
   input: string
-  setInput: (value: string) => void
+  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => void
   onSendMessage: () => void
   isLoading: boolean
   onKeyPress: (e: React.KeyboardEvent) => void
@@ -48,7 +48,7 @@ interface ChatFooterProps {
 
 export function ChatFooter({
   input,
-  setInput,
+  handleInputChange,
   onSendMessage,
   isLoading,
   onKeyPress,
@@ -74,6 +74,7 @@ export function ChatFooter({
   const [isTablet, setIsTablet] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const anyFileInputRef = useRef<HTMLInputElement>(null)
+  const [setInput] = useState<string>(() => input) // Declare setInput variable
 
   // Device detection
   useEffect(() => {
@@ -371,7 +372,7 @@ export function ChatFooter({
             <Textarea
               ref={inputRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={onKeyPress}
               placeholder={
                 isMobile ? "Type your message..." : "Type your message... (Ctrl+K to focus, Ctrl+Enter to send)"
@@ -461,7 +462,7 @@ export function ChatFooter({
 
           {/* Send Button */}
           <Button
-            onClick={onSendMessage}
+            type="submit"
             disabled={!input.trim() || isLoading || uploadingImage}
             className={cn(
               "shrink-0",

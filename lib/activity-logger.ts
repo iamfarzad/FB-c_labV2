@@ -1,108 +1,58 @@
+import { supabase } from "@/lib/supabase/client"
 import type { ActivityItem } from "@/app/chat/types/chat"
 
 class ActivityLogger {
-  private activities: Map<string, ActivityItem> = new Map()
-  private listeners: ((activity: ActivityItem) => void)[] = []
+  private channel: any = null
 
-  addListener(callback: (activity: ActivityItem) => void) {
-    this.listeners.push(callback)
+  constructor() {
+    this.initializeChannel()
   }
 
-  removeListener(callback: (activity: ActivityItem) => void) {
-    this.listeners = this.listeners.filter((listener) => listener !== callback)
-  }
-
-  private notifyListeners(activity: ActivityItem) {
-    this.listeners.forEach((listener) => {
-      try {
-        listener(activity)
-      } catch (error) {
-        console.error("Error in activity listener:", error)
+  private initializeChannel() {
+    try {
+      // Ensure this runs only on the client
+      if (typeof window !== "undefined") {
+        this.channel = supabase.channel(`activity-log-${Date.now()}`)
+        this.channel.subscribe((status: string) => {
+          if (status === "SUBSCRIBED") {
+            console.log("Activity logger connected to Supabase channel.")
+          }
+        })
       }
-    })
+    } catch (error) {
+      console.warn("Failed to initialize activity logger channel:", error)
+    }
   }
 
-  logActivity(activity: Omit<ActivityItem, "id" | "timestamp">): string {
+  log(activityData: Omit<ActivityItem, "id" | "timestamp">): string {
     const id = `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    const fullActivity: ActivityItem = {
-      ...activity,
+    const newActivity: ActivityItem = {
+      ...activityData,
       id,
       timestamp: Date.now(),
     }
 
-    this.activities.set(id, fullActivity)
-    this.notifyListeners(fullActivity)
-
-    console.log(`[Activity] ${activity.title}:`, activity.description)
+    // Broadcast the activity to all clients
+    if (this.channel) {
+      this.channel.send({
+        type: "broadcast",
+        event: "activity-update",
+        payload: newActivity,
+      })
+    } else {
+      // Fallback for server-side or if channel is not ready
+      console.log("[Activity Logged]:", newActivity.title)
+    }
 
     return id
-  }
-
-  startActivity(
-    type: ActivityItem["type"],
-    activity: Omit<ActivityItem, "id" | "timestamp" | "type" | "status">,
-  ): string {
-    return this.logActivity({
-      ...activity,
-      type,
-      status: "in_progress",
-    })
-  }
-
-  completeActivity(id: string, updates: Partial<Pick<ActivityItem, "title" | "description" | "details" | "metadata">>) {
-    const activity = this.activities.get(id)
-    if (activity) {
-      const updatedActivity: ActivityItem = {
-        ...activity,
-        ...updates,
-        status: "completed",
-        timestamp: Date.now(),
-      }
-      this.activities.set(id, updatedActivity)
-      this.notifyListeners(updatedActivity)
-    }
-  }
-
-  failActivity(id: string, error: string, details?: string[]) {
-    const activity = this.activities.get(id)
-    if (activity) {
-      const updatedActivity: ActivityItem = {
-        ...activity,
-        status: "failed",
-        description: error,
-        details: details || activity.details,
-        timestamp: Date.now(),
-      }
-      this.activities.set(id, updatedActivity)
-      this.notifyListeners(updatedActivity)
-    }
-  }
-
-  getActivity(id: string): ActivityItem | undefined {
-    return this.activities.get(id)
-  }
-
-  getAllActivities(): ActivityItem[] {
-    return Array.from(this.activities.values()).sort((a, b) => b.timestamp - a.timestamp)
-  }
-
-  clearActivities() {
-    this.activities.clear()
-    console.log("[Activity] All activities cleared")
-  }
-
-  getActivitiesByType(type: ActivityItem["type"]): ActivityItem[] {
-    return this.getAllActivities().filter((activity) => activity.type === type)
-  }
-
-  getActivitiesByStatus(status: ActivityItem["status"]): ActivityItem[] {
-    return this.getAllActivities().filter((activity) => activity.status === status)
   }
 }
 
 export const activityLogger = new ActivityLogger()
 
-// Named export for compatibility
-export function logActivity(activity: Omit<ActivityItem, "id" | "timestamp">): string {
-  return activityLogger.logActivity(activity)
+// A simple server-side logging function if needed, though client-side is primary for this setup
+export async function logActivity(activityData: Omit<ActivityItem, "id" | "timestamp">) {
+  // This is a placeholder for potential server-side logging if required.
+  // For this architecture, we rely on the client-side logger instance.
+  console.log(`[Server Activity]: ${activityData.title}`)
 }
