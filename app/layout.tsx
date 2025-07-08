@@ -41,7 +41,7 @@ export default function RootLayout({
           }}
         >
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-            <div className="min-h-screen flex flex-col">
+            <div className="rounded-lg border bg-card text-card-foreground shadow-sm font-mono">
               <Header />
               <main className="flex-1">
                 <ErrorBoundary>{children}</ErrorBoundary>
