@@ -1,126 +1,66 @@
+"use client"
+
 import {
   MessageSquare,
-  Zap,
-  Search,
-  FileText,
-  Brain,
-  Link2,
-  ImageIcon,
+  Bot,
+  Upload,
+  Camera,
   Mic,
   Monitor,
-  Upload,
-  User,
-  AlertCircle,
-  Loader2,
-  Edit3,
-  Globe,
-  Database,
+  FileText,
+  Search,
+  Link,
+  Brain,
   Eye,
-  Sparkles,
+  AlertTriangle,
+  Database,
+  Zap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { ActivityItem } from "@/app/chat/types/chat"
 
 interface ActivityIconProps {
-  type: string
-  status: "pending" | "in_progress" | "completed" | "failed"
+  type: ActivityItem["type"]
   className?: string
-  size?: "sm" | "md" | "lg"
 }
 
-export function ActivityIcon({ type, status, className, size = "md" }: ActivityIconProps) {
-  const sizeClasses = {
-    sm: "w-3 h-3",
-    md: "w-4 h-4",
-    lg: "w-5 h-5",
-  }
-
+export function ActivityIcon({ type, className }: ActivityIconProps) {
   const getIcon = () => {
     switch (type) {
       case "user_action":
-        return User
+        return <MessageSquare className={cn("text-blue-500", className)} />
       case "ai_request":
-        return Sparkles
       case "ai_stream":
-        return Edit3
-      case "stream_chunk":
-        return Edit3
-      case "tool_used":
-        return Zap
-      case "google_search":
-        return Search
-      case "web_scrape":
-        return Globe
-      case "doc_analysis":
-        return FileText
-      case "memory_update":
-        return Database
-      case "grounding":
-        return Link2
-      case "function_call":
-        return Zap
+        return <Bot className={cn("text-green-500", className)} />
       case "image_upload":
+      case "file_upload":
+        return <Upload className={cn("text-purple-500", className)} />
       case "image_capture":
-        return ImageIcon
+        return <Camera className={cn("text-orange-500", className)} />
       case "voice_input":
       case "voice_response":
-        return Mic
+        return <Mic className={cn("text-pink-500", className)} />
       case "screen_share":
-        return Monitor
-      case "file_upload":
-        return Upload
-      case "lead_capture":
-        return User
+        return <Monitor className={cn("text-indigo-500", className)} />
+      case "doc_analysis":
+        return <FileText className={cn("text-yellow-500", className)} />
+      case "google_search":
       case "search":
-        return Search
+        return <Search className={cn("text-red-500", className)} />
       case "link":
-        return Link2
+        return <Link className={cn("text-cyan-500", className)} />
       case "ai_thinking":
-        return Brain
+        return <Brain className={cn("text-violet-500", className)} />
       case "vision_analysis":
-        return Eye
+        return <Eye className={cn("text-teal-500", className)} />
       case "error":
-        return AlertCircle
+        return <AlertTriangle className={cn("text-red-600", className)} />
+      case "database":
+        return <Database className={cn("text-gray-500", className)} />
       default:
-        return MessageSquare
+        return <Zap className={cn("text-gray-400", className)} />
     }
   }
 
-  const getStatusColor = () => {
-    switch (status) {
-      case "pending":
-        return "text-yellow-500"
-      case "in_progress":
-        return "text-blue-500"
-      case "completed":
-        return "text-green-500"
-      case "failed":
-        return "text-red-500"
-      default:
-        return "text-muted-foreground"
-    }
-  }
-
-  const Icon = getIcon()
-  const isLoading = status === "in_progress" || status === "pending"
-
-  return (
-    <div className={cn("relative flex items-center justify-center", className)}>
-      {isLoading ? (
-        <Loader2 className={cn(sizeClasses[size], "animate-spin", getStatusColor())} />
-      ) : (
-        <Icon className={cn(sizeClasses[size], getStatusColor())} />
-      )}
-
-      {/* Status indicator dot */}
-      <div
-        className={cn(
-          "absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-background",
-          status === "completed" && "bg-green-500",
-          status === "failed" && "bg-red-500",
-          status === "in_progress" && "bg-blue-500 animate-pulse",
-          status === "pending" && "bg-yellow-500",
-        )}
-      />
-    </div>
-  )
+  return getIcon()
 }
