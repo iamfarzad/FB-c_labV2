@@ -14,7 +14,7 @@ import type { LeadCaptureState } from "@/app/chat/types/lead-capture"
 interface LeadCaptureFlowProps {
   isVisible: boolean
   onComplete: (leadData: LeadCaptureState["leadData"]) => void
-  engagementType?: string
+  engagementType?: "chat" | "voice" | "webcam" | "screen_share"
   initialQuery?: string
 }
 
@@ -24,7 +24,7 @@ export function LeadCaptureFlow({
   engagementType = "chat",
   initialQuery,
 }: LeadCaptureFlowProps) {
-  const [currentStep, setCurrentStep] = useState(0)
+  const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -35,226 +35,291 @@ export function LeadCaptureFlow({
     agreedToTerms: false,
   })
 
-  const steps = [
-    {
-      title: "Welcome to F.B/c AI",
-      description: "Let's personalize your experience",
-      icon: User,
-    },
-    {
-      title: "Tell us about yourself",
-      description: "Basic information to get started",
-      icon: Building,
-    },
-    {
-      title: "Your business context",
-      description: "Help us understand your needs",
-      icon: MessageSquare,
-    },
-    {
-      title: "Ready to begin!",
-      description: "Start your AI consultation",
-      icon: CheckCircle,
-    },
-  ]
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const validateStep = (currentStep: number): boolean => {
+    const newErrors: Record<string, string> = {}
+
+    if (currentStep === 1) {
+      if (!formData.name.trim()) newErrors.name = "Name is required"
+      if (!formData.email.trim()) newErrors.email = "Email is required"
+      else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Please enter a valid email"
+    }
+
+    if (currentStep === 3) {
+      if (!formData.agreedToTerms) newErrors.agreedToTerms = "You must agree to the terms to continue"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1)
+    if (validateStep(step)) {
+      setStep(step + 1)
     }
   }
 
   const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
-    }
+    setStep(step - 1)
+    setErrors({})
   }
 
   const handleComplete = () => {
-    onComplete({
-      name: formData.name,
-      email: formData.email,
-      company: formData.company,
-      role: formData.role,
-      industry: formData.industry,
-      challenges: formData.challenges,
-      engagementType,
-      initialQuery,
-      agreedToTerms: formData.agreedToTerms,
-    })
+    if (validateStep(step)) {
+      onComplete({
+        name: formData.name,
+        email: formData.email,
+        company: formData.company,
+        role: formData.role,
+        industry: formData.industry,
+        challenges: formData.challenges,
+        engagementType,
+        initialQuery,
+        agreedToTerms: formData.agreedToTerms,
+      })
+    }
   }
 
-  const canProceed = () => {
-    switch (currentStep) {
-      case 0:
-        return true
-      case 1:
-        return formData.name.trim() && formData.email.trim()
-      case 2:
-        return formData.company.trim() || formData.industry.trim()
-      case 3:
-        return formData.agreedToTerms
-      default:
-        return false
+  const updateFormData = (field: string, value: string | boolean) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }))
     }
   }
 
   if (!isVisible) return null
 
-  const currentStepIcon = steps[currentStep].icon
-  const currentStepTitle = steps[currentStep].title
-  const currentStepDescription = steps[currentStep].description
+  const getEngagementIcon = () => {
+    switch (engagementType) {
+      case "voice":
+        return "🎤"
+      case "webcam":
+        return "📹"
+      case "screen_share":
+        return "🖥️"
+      default:
+        return "💬"
+    }
+  }
+
+  const getEngagementLabel = () => {
+    switch (engagementType) {
+      case "voice":
+        return "Voice Consultation"
+      case "webcam":
+        return "Video Consultation"
+      case "screen_share":
+        return "Screen Share Session"
+      default:
+        return "Chat Consultation"
+    }
+  }
 
   return (
-    <Card className="w-full max-w-lg mx-auto">
-      <CardHeader className="text-center">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-            {currentStepIcon && <currentStepIcon className="w-5 h-5 text-primary-foreground" />}
+    <div className="w-full max-w-md mx-auto">
+      <Card>
+        <CardHeader className="text-center">
+          <div className="w-12 h-12 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
+            <span className="text-2xl">{getEngagementIcon()}</span>
           </div>
-          <Badge variant="outline">{engagementType}</Badge>
-        </div>
-        <CardTitle>{currentStepTitle}</CardTitle>
-        <CardDescription>{currentStepDescription}</CardDescription>
+          <CardTitle>Welcome to F.B/c AI</CardTitle>
+          <CardDescription>Let's personalize your {getEngagementLabel().toLowerCase()} experience</CardDescription>
+          <Badge variant="secondary" className="mx-auto">
+            {getEngagementLabel()}
+          </Badge>
+        </CardHeader>
 
-        {/* Progress indicator */}
-        <div className="flex gap-2 justify-center mt-4">
-          {steps.map((_, index) => (
-            <div
-              key={index}
-              className={`w-2 h-2 rounded-full transition-colors ${index <= currentStep ? "bg-primary" : "bg-muted"}`}
-            />
-          ))}
-        </div>
-      </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Progress Indicator */}
+          <div className="flex items-center justify-center space-x-2">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  i === step
+                    ? "bg-primary text-primary-foreground"
+                    : i < step
+                      ? "bg-green-500 text-white"
+                      : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {i < step ? <CheckCircle className="w-4 h-4" /> : i}
+              </div>
+            ))}
+          </div>
 
-      <CardContent className="space-y-4">
-        {currentStep === 0 && (
-          <div className="text-center space-y-4">
-            <p className="text-muted-foreground">
-              Welcome! I'm your AI automation consultant. To provide the most relevant insights, I'd like to learn a bit
-              about you and your business.
-            </p>
-            {initialQuery && (
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm">
-                  <strong>Your question:</strong> "{initialQuery}"
+          {/* Step 1: Basic Information */}
+          {step === 1 && (
+            <div className="space-y-4">
+              <div className="text-center mb-4">
+                <h3 className="font-semibold flex items-center justify-center gap-2">
+                  <User className="w-4 h-4" />
+                  Tell us about yourself
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  This helps us provide personalized AI automation insights
                 </p>
               </div>
+
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="name">Full Name *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => updateFormData("name", e.target.value)}
+                    placeholder="Enter your full name"
+                    className={errors.name ? "border-destructive" : ""}
+                  />
+                  {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
+                </div>
+
+                <div>
+                  <Label htmlFor="email">Email Address *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => updateFormData("email", e.target.value)}
+                    placeholder="Enter your email address"
+                    className={errors.email ? "border-destructive" : ""}
+                  />
+                  {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Business Information */}
+          {step === 2 && (
+            <div className="space-y-4">
+              <div className="text-center mb-4">
+                <h3 className="font-semibold flex items-center justify-center gap-2">
+                  <Building className="w-4 h-4" />
+                  Your Business Context
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">Help us understand your industry and challenges</p>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="company">Company Name</Label>
+                  <Input
+                    id="company"
+                    value={formData.company}
+                    onChange={(e) => updateFormData("company", e.target.value)}
+                    placeholder="Your company name (optional)"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="role">Your Role</Label>
+                  <Input
+                    id="role"
+                    value={formData.role}
+                    onChange={(e) => updateFormData("role", e.target.value)}
+                    placeholder="e.g., CEO, Marketing Manager, Developer"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="industry">Industry</Label>
+                  <Input
+                    id="industry"
+                    value={formData.industry}
+                    onChange={(e) => updateFormData("industry", e.target.value)}
+                    placeholder="e.g., E-commerce, Healthcare, SaaS"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="challenges">Current Challenges</Label>
+                  <Textarea
+                    id="challenges"
+                    value={formData.challenges}
+                    onChange={(e) => updateFormData("challenges", e.target.value)}
+                    placeholder="What business processes would you like to automate?"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Agreement */}
+          {step === 3 && (
+            <div className="space-y-4">
+              <div className="text-center mb-4">
+                <h3 className="font-semibold flex items-center justify-center gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  Ready to Start
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">Review your information and agree to our terms</p>
+              </div>
+
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium">Name:</span>
+                  <span className="text-sm">{formData.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium">Email:</span>
+                  <span className="text-sm">{formData.email}</span>
+                </div>
+                {formData.company && (
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Company:</span>
+                    <span className="text-sm">{formData.company}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium">Session Type:</span>
+                  <span className="text-sm">{getEngagementLabel()}</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={formData.agreedToTerms}
+                    onCheckedChange={(checked) => updateFormData("agreedToTerms", checked as boolean)}
+                    className={errors.agreedToTerms ? "border-destructive" : ""}
+                  />
+                  <Label htmlFor="terms" className="text-sm leading-relaxed">
+                    I agree to receive personalized AI automation insights and understand that this consultation is for
+                    informational purposes. I consent to the processing of my information for this session.
+                  </Label>
+                </div>
+                {errors.agreedToTerms && <p className="text-sm text-destructive">{errors.agreedToTerms}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex gap-3 pt-4">
+            {step > 1 && (
+              <Button variant="outline" onClick={handleBack} className="flex-1 bg-transparent">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+            )}
+
+            {step < 3 ? (
+              <Button onClick={handleNext} className="flex-1">
+                Next
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button onClick={handleComplete} className="flex-1">
+                Start Consultation
+                <CheckCircle className="w-4 h-4 ml-2" />
+              </Button>
             )}
           </div>
-        )}
-
-        {currentStep === 1 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter your full name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="Enter your email address"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">Your Role</Label>
-              <Input
-                id="role"
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                placeholder="e.g., CEO, Marketing Manager, Developer"
-              />
-            </div>
-          </div>
-        )}
-
-        {currentStep === 2 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="company">Company Name</Label>
-              <Input
-                id="company"
-                value={formData.company}
-                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                placeholder="Enter your company name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="industry">Industry</Label>
-              <Input
-                id="industry"
-                value={formData.industry}
-                onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                placeholder="e.g., E-commerce, Healthcare, Finance"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="challenges">Current Challenges (Optional)</Label>
-              <Textarea
-                id="challenges"
-                value={formData.challenges}
-                onChange={(e) => setFormData({ ...formData, challenges: e.target.value })}
-                placeholder="What business challenges are you looking to solve with AI?"
-                rows={3}
-              />
-            </div>
-          </div>
-        )}
-
-        {currentStep === 3 && (
-          <div className="space-y-4">
-            <div className="text-center space-y-2">
-              <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
-              <p className="text-muted-foreground">
-                Perfect! I now have everything I need to provide personalized AI automation insights.
-              </p>
-            </div>
-
-            <div className="flex items-start space-x-2">
-              <Checkbox
-                id="terms"
-                checked={formData.agreedToTerms}
-                onCheckedChange={(checked) => setFormData({ ...formData, agreedToTerms: checked as boolean })}
-              />
-              <Label htmlFor="terms" className="text-sm leading-relaxed">
-                I agree to receive personalized AI consultation and understand that my information will be used to
-                provide relevant business automation insights.
-              </Label>
-            </div>
-          </div>
-        )}
-
-        <div className="flex gap-2 pt-4">
-          {currentStep > 0 && (
-            <Button variant="outline" onClick={handleBack} className="flex-1 bg-transparent">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          )}
-
-          {currentStep < steps.length - 1 ? (
-            <Button onClick={handleNext} disabled={!canProceed()} className="flex-1">
-              Next
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          ) : (
-            <Button onClick={handleComplete} disabled={!canProceed()} className="flex-1">
-              Start Consultation
-              <CheckCircle className="w-4 h-4 ml-2" />
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

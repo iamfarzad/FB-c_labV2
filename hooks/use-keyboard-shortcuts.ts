@@ -24,68 +24,43 @@ export function useKeyboardShortcuts({
   onOpenScreenShare,
 }: KeyboardShortcutsProps) {
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0
-      const modifier = isMac ? e.metaKey : e.ctrlKey
+      const modifier = isMac ? event.metaKey : event.ctrlKey
 
-      // Prevent shortcuts when typing in inputs
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement ||
-        (e.target as HTMLElement)?.contentEditable === "true"
-      ) {
-        // Allow Ctrl+Enter to send message even in textarea
-        if (modifier && e.key === "Enter") {
-          e.preventDefault()
-          onSendMessage?.()
-          return
-        }
-        return
-      }
-
-      // Handle shortcuts
-      if (modifier && !e.altKey) {
-        switch (e.key.toLowerCase()) {
-          case "n":
-            if (e.shiftKey) {
-              e.preventDefault()
-              onNewChat?.()
-            }
+      // Prevent default for our shortcuts
+      if (modifier || event.key === "F1") {
+        switch (true) {
+          case modifier && event.key === "n" && !event.shiftKey:
+            event.preventDefault()
+            onNewChat?.()
             break
-          case "k":
-            e.preventDefault()
-            onFocusInput?.()
-            break
-          case "e":
-            if (e.shiftKey) {
-              e.preventDefault()
-              onExportSummary?.()
-            }
-            break
-          case "b":
-            e.preventDefault()
-            onToggleSidebar?.()
-            break
-          case "enter":
-            e.preventDefault()
+          case modifier && event.key === "Enter":
+            event.preventDefault()
             onSendMessage?.()
             break
-        }
-      }
-
-      // Voice, camera, screen share shortcuts
-      if (modifier && e.shiftKey && !e.altKey) {
-        switch (e.key.toLowerCase()) {
-          case "v":
-            e.preventDefault()
+          case modifier && event.key === "e" && !event.shiftKey:
+            event.preventDefault()
+            onExportSummary?.()
+            break
+          case modifier && event.key === "b" && !event.shiftKey:
+            event.preventDefault()
+            onToggleSidebar?.()
+            break
+          case modifier && event.key === "k" && !event.shiftKey:
+            event.preventDefault()
+            onFocusInput?.()
+            break
+          case modifier && event.shiftKey && event.key === "V":
+            event.preventDefault()
             onOpenVoice?.()
             break
-          case "c":
-            e.preventDefault()
+          case modifier && event.shiftKey && event.key === "C":
+            event.preventDefault()
             onOpenCamera?.()
             break
-          case "s":
-            e.preventDefault()
+          case modifier && event.shiftKey && event.key === "S":
+            event.preventDefault()
             onOpenScreenShare?.()
             break
         }

@@ -13,7 +13,7 @@ interface ErrorBoundaryState {
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
-  fallback?: React.ComponentType<{ error: Error; resetError: () => void }>
+  fallback?: React.ComponentType<{ error?: Error; resetError: () => void }>
 }
 
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -30,7 +30,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Error caught by boundary:", error, errorInfo)
+    console.error("ErrorBoundary caught an error:", error, errorInfo)
     this.setState({
       error,
       errorInfo,
@@ -45,7 +45,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     if (this.state.hasError) {
       if (this.props.fallback) {
         const FallbackComponent = this.props.fallback
-        return <FallbackComponent error={this.state.error!} resetError={this.resetError} />
+        return <FallbackComponent error={this.state.error} resetError={this.resetError} />
       }
 
       return (
@@ -65,7 +65,9 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
                 <div className="p-3 bg-muted rounded-md">
                   <p className="text-sm font-mono text-destructive">{this.state.error.message}</p>
                   {this.state.error.stack && (
-                    <pre className="text-xs mt-2 overflow-auto max-h-32">{this.state.error.stack}</pre>
+                    <pre className="text-xs mt-2 overflow-auto max-h-32 text-muted-foreground">
+                      {this.state.error.stack}
+                    </pre>
                   )}
                 </div>
               )}

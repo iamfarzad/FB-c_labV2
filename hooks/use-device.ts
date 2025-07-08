@@ -24,14 +24,10 @@ export function useDevice(): DeviceInfo {
       const width = window.innerWidth
       const height = window.innerHeight
 
-      const isMobile = width < 768
-      const isTablet = width >= 768 && width < 1024
-      const isDesktop = width >= 1024
-
       setDeviceInfo({
-        isMobile,
-        isTablet,
-        isDesktop,
+        isMobile: width < 768,
+        isTablet: width >= 768 && width < 1024,
+        isDesktop: width >= 1024,
         screenWidth: width,
         screenHeight: height,
       })
@@ -40,11 +36,12 @@ export function useDevice(): DeviceInfo {
     // Initial check
     updateDeviceInfo()
 
-    // Add event listener
+    // Listen for resize events
     window.addEventListener("resize", updateDeviceInfo)
 
-    // Cleanup
-    return () => window.removeEventListener("resize", updateDeviceInfo)
+    return () => {
+      window.removeEventListener("resize", updateDeviceInfo)
+    }
   }, [])
 
   return deviceInfo

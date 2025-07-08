@@ -9,5 +9,5 @@ interface ChatLayoutProps {
 }
 
 export function ChatLayout({ children, className }: ChatLayoutProps) {
-  return <div className={cn("h-screen flex flex-col bg-background", className)}>{children}</div>
+  return <div className={cn("h-screen w-full flex flex-col bg-background", className)}>{children}</div>
 }
