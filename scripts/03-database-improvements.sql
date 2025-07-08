@@ -1,14 +1,5 @@
 -- Database improvements: auto-updating timestamps and enhanced security
 
--- Function to auto-update updated_at column
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ language 'plpgsql';
-
 -- Apply auto-update triggers to meetings table
 DROP TRIGGER IF EXISTS update_meetings_updated_at ON meetings;
 CREATE TRIGGER update_meetings_updated_at
@@ -23,34 +14,41 @@ CREATE TRIGGER update_email_campaigns_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
--- Enhanced RLS policies with WITH CHECK for better security
-DROP POLICY IF EXISTS "Service role can manage token_usage_logs" ON token_usage_logs;
-CREATE POLICY "Service role can manage token_usage_logs"
-  ON token_usage_logs
-  FOR ALL
-  TO authenticated
-  USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
+-- Enable RLS on all tables if not already enabled
+ALTER TABLE token_usage_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meetings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE email_campaigns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lead_summaries ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Service role can manage meetings" ON meetings;
-CREATE POLICY "Service role can manage meetings"
-  ON meetings
-  FOR ALL
-  TO authenticated
-  USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
+-- RLS Policies for service role access
+CREATE POLICY "Service role can manage all tables"
+ ON token_usage_logs
+ FOR ALL
+ USING (auth.role() = 'service_role')
+ WITH CHECK (auth.role() = 'service_role');
 
-DROP POLICY IF EXISTS "Service role can manage email_campaigns" ON email_campaigns;
-CREATE POLICY "Service role can manage email_campaigns"
-  ON email_campaigns
-  FOR ALL
-  TO authenticated
-  USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
+CREATE POLICY "Service role can manage all tables"
+ ON meetings
+ FOR ALL
+ USING (auth.role() = 'service_role')
+ WITH CHECK (auth.role() = 'service_role');
+
+CREATE POLICY "Service role can manage all tables"
+ ON email_campaigns
+ FOR ALL
+ USING (auth.role() = 'service_role')
+ WITH CHECK (auth.role() = 'service_role');
+
+CREATE POLICY "Service role can manage all tables"
+ ON lead_summaries
+ FOR ALL
+ USING (auth.role() = 'service_role')
+ WITH CHECK (auth.role() = 'service_role');
+
 
 -- Analytics views for better performance
 CREATE OR REPLACE VIEW admin_stats_view AS
-SELECT 
+SELECT
   COUNT(DISTINCT ls.id) as total_leads,
   COUNT(DISTINCT CASE WHEN ls.lead_score > 70 THEN ls.id END) as high_score_leads,
   COUNT(DISTINCT m.id) as total_meetings,
@@ -64,3 +62,4 @@ LEFT JOIN email_campaigns ec ON ec.created_at >= CURRENT_DATE - INTERVAL '30 day
 
 -- Grant access to the view
 GRANT SELECT ON admin_stats_view TO authenticated;
+GRANT SELECT ON admin_stats_view TO service_role;

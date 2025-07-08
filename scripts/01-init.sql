@@ -1,17 +1,14 @@
 -- Create lead_summaries table
 CREATE TABLE IF NOT EXISTS lead_summaries (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL,
     company_name TEXT,
-    role TEXT,
-    interests TEXT,
-    lead_score INTEGER,
-    conversation_summary TEXT,
-    consultant_brief TEXT,
-    ai_capabilities_shown TEXT[],
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+    conversation_summary TEXT NOT NULL,
+    consultant_brief TEXT NOT NULL,
+    lead_score INTEGER DEFAULT 0,
+    ai_capabilities_shown TEXT[] DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create function to update 'updated_at' column
@@ -42,6 +39,10 @@ CREATE POLICY "Allow user update" ON lead_summaries FOR UPDATE USING (auth.uid()
 -- Allow service_role to bypass RLS
 CREATE POLICY "Allow service_role access" ON lead_summaries FOR ALL USING (auth.role() = 'service_role');
 
--- Add indexes
+-- Enable realtime for the lead_summaries table
+ALTER PUBLICATION supabase_realtime ADD TABLE lead_summaries;
+
+-- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_lead_summaries_email ON lead_summaries(email);
-CREATE INDEX IF NOT EXISTS idx_lead_summaries_created_at ON lead_summaries(created_at);
+CREATE INDEX IF NOT EXISTS idx_lead_summaries_lead_score ON lead_summaries(lead_score DESC);
+CREATE INDEX IF NOT EXISTS idx_lead_summaries_created_at ON lead_summaries(created_at DESC);
