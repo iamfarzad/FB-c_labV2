@@ -19,6 +19,11 @@ const config = {
       },
     },
     extend: {
+      screens: {
+        mobile: "320px", // Custom breakpoint for mobile devices
+        tablet: "768px", // Custom breakpoint for tablets
+        desktop: "1024px", // Custom breakpoint for desktops
+      },
       fontFamily: {
         sans: ["var(--font-sans)", "sans-serif"],
         display: ["var(--font-display)", "sans-serif"],

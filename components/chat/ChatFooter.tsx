@@ -22,6 +22,7 @@ import { activityLogger } from "@/lib/activity-logger"
 import dynamic from "next/dynamic"
 import { Video2AppModal } from "./modals/Video2AppModal"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useDevice } from "@/hooks/use-device"
 
 // Dynamically import the Live API modals to prevent SSR issues
 const ScreenShareModal = dynamic(() => import("./modals/ScreenShareModal"), { ssr: false })
@@ -70,23 +71,13 @@ export function ChatFooter({
   const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-  const [isTablet, setIsTablet] = useState(false)
+  const { isMobile } = useDevice() // Use the hook here
   const fileInputRef = useRef<HTMLInputElement>(null)
   const anyFileInputRef = useRef<HTMLInputElement>(null)
 
-  // Device detection
+  // Remove the old device detection useEffect
   useEffect(() => {
-    const checkDevice = () => {
-      const width = window.innerWidth
-      setIsMobile(width < 768)
-      setIsTablet(width >= 768 && width < 1024)
-    }
-
-    checkDevice()
     setIsMounted(true)
-    window.addEventListener("resize", checkDevice)
-    return () => window.removeEventListener("resize", checkDevice)
   }, [])
 
   const uploadMenuItems = [
