@@ -37,9 +37,6 @@ export default function ChatPage() {
 
   const [leadCaptureState, setLeadCaptureState] = useState<LeadCaptureState>({
     stage: "initial",
-    hasName: false,
-    hasEmail: false,
-    hasAgreedToTC: false,
     leadData: { engagementType: "chat" },
   })
   const [showLeadCapture, setShowLeadCapture] = useState(false)
@@ -74,18 +71,6 @@ export default function ChatPage() {
   useEffect(scrollToBottom, [messages])
 
   useEffect(() => {
-    const userMessages = messages.filter((m) => m.role === "user")
-    if (userMessages.length === 1 && leadCaptureState.stage === "initial") {
-      setShowLeadCapture(true)
-      setLeadCaptureState((prev) => ({
-        ...prev,
-        stage: "collecting_info",
-        leadData: { ...prev.leadData, initialQuery: userMessages[0]?.content },
-      }))
-    }
-  }, [messages, leadCaptureState.stage])
-
-  useEffect(() => {
     const channel = supabase
       .channel(`activity-log-${sessionId}`)
       .on("broadcast", { event: "activity-update" }, ({ payload }) => addActivity(payload))
@@ -99,9 +84,6 @@ export default function ChatPage() {
     setMessages([])
     setLeadCaptureState({
       stage: "initial",
-      hasName: false,
-      hasEmail: false,
-      hasAgreedToTC: false,
       leadData: { engagementType: "chat" },
     })
     setShowLeadCapture(false)
@@ -109,23 +91,97 @@ export default function ChatPage() {
     toast({ title: "New Chat Started" })
   }, [setMessages, clearActivities, toast])
 
-  const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
-    if (leadCaptureState.stage !== "consultation") {
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!input.trim()) return
+
+    // This is the core logic fix.
+    // It correctly handles the state transitions based on user actions.
+    if (leadCaptureState.stage === "initial") {
+      // 1. This is the user's first message.
+      // Append it to the chat locally so they see their message.
+      append({ role: "user", content: input })
+
+      // 2. Update the state to 'collecting_info' and show the lead capture form.
+      setLeadCaptureState((prev) => ({
+        ...prev,
+        stage: "collecting_info",
+        leadData: { ...prev.leadData, initialQuery: input },
+      }))
+      setShowLeadCapture(true)
+
+      // 3. Clear the input field.
+      setInput("")
+      activityLogger.log({
+        type: "user_action",
+        title: "Initial Message Sent",
+        description: "Triggering lead capture flow.",
+        status: "completed",
+      })
+    } else if (leadCaptureState.stage === "consultation") {
+      // The user has completed the form and is in a consultation.
+      // We can now use the standard `handleSubmit` to send the message to the AI.
+      activityLogger.log({ type: "user_action", title: "User Message Sent", description: input, status: "completed" })
+      handleSubmit(e)
+    } else if (leadCaptureState.stage === "collecting_info") {
+      // The user is trying to send another message while the form is open.
+      // Remind them to complete the form.
       toast({
         title: "Please complete the form first",
         description: "We need your details to start the AI consultation.",
         variant: "destructive",
       })
-      e.preventDefault()
-      return
-    }
-    if (input.trim()) {
-      activityLogger.log({ type: "user_action", title: "User Message Sent", description: input, status: "completed" })
-      handleSubmit(e)
     }
   }
 
-  const handleLeadCaptureComplete = (leadData: LeadCaptureState["leadData"]) => {
+  const handleLeadCaptureComplete = async (leadData: LeadCaptureState["leadData"]) => {
+    activityLogger.log({
+      type: "user_action",
+      title: "Lead Capture Form Submitted",
+      description: `Lead: ${leadData.name}`,
+      status: "completed",
+    })
+
+    // Persist the lead data to the backend
+    try {
+      const response = await fetch("/api/lead-capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...leadData,
+          tcAcceptance: {
+            accepted: leadData.agreedToTerms,
+            timestamp: Date.now(),
+            userAgent: navigator.userAgent,
+          },
+        }),
+      })
+      if (!response.ok) {
+        throw new Error("Failed to save lead data.")
+      }
+      const result = await response.json()
+      activityLogger.log({
+        type: "database",
+        title: "Lead Saved to DB",
+        description: `Lead ID: ${result.leadId}`,
+        status: "completed",
+      })
+    } catch (error) {
+      console.error("Lead capture submission error:", error)
+      toast({
+        title: "Error",
+        description: "Could not save your information. Please try again.",
+        variant: "destructive",
+      })
+      activityLogger.log({
+        type: "error",
+        title: "Lead Capture Failed",
+        description: error instanceof Error ? error.message : "Unknown error",
+        status: "failed",
+      })
+      return // Do not proceed if saving fails
+    }
+
     setLeadCaptureState({ stage: "consultation", leadData } as LeadCaptureState)
     setShowLeadCapture(false)
     append({
@@ -260,7 +316,7 @@ export default function ChatPage() {
             )}
             <ChatMain messages={messages} isLoading={isLoading} messagesEndRef={messagesEndRef} />
           </div>
-          <form onSubmit={handleSendMessage} className="shrink-0">
+          <form onSubmit={handleFormSubmit} className="shrink-0">
             <ChatFooter
               input={input}
               setInput={setInput}
