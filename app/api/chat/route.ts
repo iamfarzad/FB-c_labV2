@@ -18,8 +18,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Gemini API key not configured" }, { status: 500 })
     }
 
-    // Use Gemini 2.5 Flash model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+    // Use consistent model name - Gemini 1.5 Flash (current stable model)
+    const modelName = "gemini-1.5-flash"
+    const model = genAI.getGenerativeModel({ model: modelName })
 
     // Build conversation context
     let fullPrompt = prompt
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     console.log("Generating content with prompt:", fullPrompt.substring(0, 200) + "...")
 
-    // Generate response
+    // Generate response with error handling
     const result = await model.generateContent(fullPrompt)
     const response = await result.response
     const text = response.text()
@@ -50,8 +51,8 @@ export async function POST(req: NextRequest) {
     const outputTokens = usageMetadata?.candidatesTokenCount || 0
     const totalTokens = usageMetadata?.totalTokenCount || inputTokens + outputTokens
 
-    // Calculate costs using Gemini 2.5 Flash pricing
-    const costCalculation = TokenCostCalculator.calculateCost("gemini", "gemini-2.5-flash", {
+    // Calculate costs using consistent model name
+    const costCalculation = TokenCostCalculator.calculateCost("gemini", modelName, {
       inputTokens,
       outputTokens,
       totalTokens,
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
     // Log token usage
     await TokenCostCalculator.logUsage(
       "gemini",
-      "gemini-2.5-flash",
+      modelName,
       { inputTokens, outputTokens, totalTokens },
       sessionId,
       undefined,
@@ -84,29 +85,45 @@ export async function POST(req: NextRequest) {
         totalTokens,
       },
       cost: costCalculation,
-      model: "gemini-2.5-flash",
+      model: modelName,
       provider: "gemini",
       success: true,
     })
   } catch (error: any) {
     console.error("Chat API error:", error)
 
-    // Log activity
-    await logActivity({
-      type: "error",
-      description: `Chat API error: ${error.message}`,
-      metadata: { error: error.message },
-      sessionId: req.headers.get("x-session-id") || "unknown",
-    })
+    // Log activity with proper error handling
+    try {
+      await logActivity({
+        type: "error",
+        description: `Chat API error: ${error.message}`,
+        metadata: {
+          error: error.message,
+          stack: error.stack,
+          timestamp: new Date().toISOString(),
+        },
+        sessionId: req.headers.get("x-session-id") || "unknown",
+      })
+    } catch (logError) {
+      console.error("Failed to log activity:", logError)
+    }
 
-    // Return detailed error information
+    // Return appropriate error response
+    const isRateLimited = error.message?.includes("quota") || error.message?.includes("rate")
+    const isInvalidKey = error.message?.includes("API key") || error.message?.includes("authentication")
+
     return NextResponse.json(
       {
         error: "Failed to generate response",
-        details: error.message,
+        details: isRateLimited
+          ? "Rate limit exceeded. Please try again later."
+          : isInvalidKey
+            ? "API configuration error."
+            : "An unexpected error occurred.",
         success: false,
+        retryable: isRateLimited,
       },
-      { status: 500 },
+      { status: isRateLimited ? 429 : isInvalidKey ? 401 : 500 },
     )
   }
 }

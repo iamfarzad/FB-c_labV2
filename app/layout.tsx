@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { Toaster } from "@/components/ui/toaster"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { cn } from "@/lib/utils"
 
 const fontDisplay = Rajdhani({
@@ -19,6 +20,12 @@ const fontMono = Space_Mono({
   variable: "--font-mono",
 })
 
+export const metadata = {
+  title: "F.B/C AI - AI Automation Consulting",
+  description: "Professional AI automation consulting and implementation services",
+    generator: 'v0.dev'
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -27,17 +34,24 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn("font-sans antialiased", fontDisplay.variable, fontMono.variable)}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <Header />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-          <Toaster />
-        </ThemeProvider>
+        <ErrorBoundary
+          onError={(error, errorInfo) => {
+            // Log to monitoring service in production
+            console.error("Global error:", error, errorInfo)
+          }}
+        >
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+            <div className="min-h-screen flex flex-col">
+              <Header />
+              <main className="flex-1">
+                <ErrorBoundary>{children}</ErrorBoundary>
+              </main>
+              <Footer />
+            </div>
+            <Toaster />
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )
 }
-
-export const metadata = {
-      generator: 'v0.dev'
-    };

@@ -1,11 +1,16 @@
 import { createClient } from "@supabase/supabase-js"
 
-// IMPORTANT: These values are hardcoded for v0 preview demonstration ONLY.
-// In a real application, always use environment variables (e.g., process.env.NEXT_PUBLIC_SUPABASE_URL)
-// configured in your Vercel project settings for security and flexibility.
-const supabaseUrl = "https://ksmxqswuzrmdgckwxkvn.supabase.co"
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzbXhxc3d1enJtZGdja3d4a3ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3ODUyNjIsImV4cCI6MjA1NzM2MTI2Mn0.YKz7fKPbl7pbvEMN08lFOPm1SSg59R4lu8tzV8Kkz2E"
+// Use environment variables for security
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    "Missing Supabase environment variables. Please check your .env.local file contains:\n" +
+      "NEXT_PUBLIC_SUPABASE_URL=your_supabase_url\n" +
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key",
+  )
+}
 
 // Create a singleton instance to prevent multiple clients
 let supabaseInstance: ReturnType<typeof createClient> | null = null
