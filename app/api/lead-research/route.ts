@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 import { getSupabase } from "@/lib/supabase/server"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
@@ -20,23 +20,15 @@ export async function POST(req: NextRequest) {
 
     // LOGIC: Use Google GenAI with web search capabilities
     // WHY: Lead research requires real-time web data, not just training data
-    const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY!,
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-pro", // Use a more powerful model for research tasks
+      tools: [
+        {
+          googleSearch: {}, // Correctly enable Google Search
+        },
+      ],
     })
-
-    const tools = [
-      { urlContext: {} }, // Enable web search
-    ]
-
-    const config = {
-      thinkingConfig: {
-        thinkingBudget: -1, // Unlimited thinking time for thorough research
-      },
-      tools,
-      responseMimeType: "text/plain",
-    }
-
-    const model = "gemini-2.5-flash"
 
     // LOGIC: Comprehensive research prompt
     // WHY: Structured research approach for actionable business insights
@@ -53,20 +45,9 @@ Please:
 Focus on finding actionable insights for AI consulting opportunities.
 `
 
-    const contents = [
-      {
-        role: "user",
-        parts: [{ text: researchPrompt }],
-      },
-    ]
-
     // LOGIC: Stream research process
     // WHY: Research takes time, streaming shows progress to user
-    const response = await ai.models.generateContentStream({
-      model,
-      config,
-      contents,
-    })
+    const response = await model.generateContentStream(researchPrompt)
 
     // LOGIC: Server-sent events for research progress
     // WHY: Real-time feedback during lengthy research process

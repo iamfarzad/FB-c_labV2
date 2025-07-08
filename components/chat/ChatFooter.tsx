@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useChatContext } from "@/app/chat/context/ChatProvider"
+import { activityLogger } from "@/lib/activity-logger"
 import dynamic from "next/dynamic"
 import { Video2AppModal } from "./modals/Video2AppModal"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -106,10 +107,10 @@ export function ChatFooter({
         setInput(input + (input ? " " : "") + "https://youtube.com/watch?v=")
         setShowUploadOptions(false)
         addActivity({
-          type: "user_action",
-          title: "YouTube Link Pasted",
-          description: "User is preparing to analyze a YouTube video.",
-          status: "completed",
+          type: "link",
+          title: "YouTube Video Ready",
+          description: "Paste your YouTube URL to analyze the video",
+          status: "pending",
         })
       },
     },
@@ -167,6 +168,7 @@ export function ChatFooter({
       return
     }
 
+    // Check file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       addActivity({
         type: "error",
@@ -178,41 +180,89 @@ export function ChatFooter({
     }
 
     setUploadingImage(true)
-    const activityId = addActivity({
+
+    // Start activity tracking
+    const activityId = activityLogger.startActivity("image_upload", {
       type: "image_upload",
       title: "Uploading Image",
-      description: `Processing ${file.name}`,
-      status: "in_progress",
+      description: `Processing ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`,
+      details: [`File: ${file.name}`, `Size: ${(file.size / 1024 / 1024).toFixed(2)}MB`, `Type: ${file.type}`],
     })
 
     try {
       const reader = new FileReader()
-      reader.onload = (event) => {
+
+      reader.onload = async (event) => {
         const imageData = event.target?.result as string
+
+        // Complete the upload activity
+        activityLogger.completeActivity(activityId, {
+          title: "Image Uploaded Successfully",
+          description: `${file.name} ready for analysis`,
+          status: "completed",
+        })
+
+        // Add image to chat if callback provided
         if (onImageUpload) {
           onImageUpload(imageData, file.name)
         }
-        setInput((prev) => prev + `\n[Image Attached: ${file.name}]`)
+
+        // Update input with image context
+        const imagePrompt = `📸 **Image Uploaded: ${file.name}**\n\nPlease analyze this image and tell me what you see.`
+        setInput(input + (input ? "\n\n" : "") + imagePrompt)
+
+        // Log successful upload
+        addActivity({
+          type: "image_capture",
+          title: "Image Ready for Analysis",
+          description: `${file.name} uploaded successfully`,
+          status: "completed",
+          details: [`File: ${file.name}`, `Size: ${(file.size / 1024 / 1024).toFixed(2)}MB`, "Ready for AI analysis"],
+        })
+
         setUploadingImage(false)
       }
+
       reader.onerror = () => {
+        activityLogger.completeActivity(activityId, {
+          title: "Image Upload Failed",
+          description: "Failed to read the image file",
+          status: "failed",
+        })
+
         addActivity({
           type: "error",
           title: "Upload Failed",
-          description: "Could not read the image file.",
+          description: "Could not read the image file",
           status: "failed",
         })
+
         setUploadingImage(false)
       }
+
       reader.readAsDataURL(file)
     } catch (error) {
+      console.error("Image upload error:", error)
+
+      activityLogger.completeActivity(activityId, {
+        title: "Image Upload Error",
+        description: "An error occurred while processing the image",
+        status: "failed",
+      })
+
       addActivity({
         type: "error",
         title: "Upload Error",
-        description: "An unexpected error occurred during image upload.",
+        description: "An unexpected error occurred",
         status: "failed",
       })
+
       setUploadingImage(false)
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
     }
   }
 
@@ -228,7 +278,7 @@ export function ChatFooter({
     addActivity({
       type: "screen_share",
       title: "Screen Sharing Started",
-      description: "Sharing screen with the AI assistant.",
+      description: "Sharing your screen with the AI assistant",
       status: "in_progress",
     })
 
@@ -270,11 +320,11 @@ export function ChatFooter({
   }
 
   const handleVoiceTranscript = (transcript: string) => {
-    setInput((prev) => prev + " " + transcript)
+    setInput(input + (input ? " " : "") + transcript)
     addActivity({
       type: "voice_input",
       title: "Voice Input Received",
-      description: "Transcribed voice to text.",
+      description: "Transcribed voice to text",
       status: "completed",
     })
   }
@@ -288,9 +338,11 @@ export function ChatFooter({
     addActivity({
       type: "image_capture",
       title: "Photo Captured",
-      description: "Captured photo from webcam.",
+      description: "Captured photo from webcam",
       status: "completed",
     })
+
+    setInput(input + (input ? "\n\n" : "") + "📸 **Photo Captured**\n\nPlease analyze this image I just took.")
   }
 
   return (
@@ -312,7 +364,9 @@ export function ChatFooter({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyPress}
-              placeholder={isMobile ? "Type a message..." : "Type a message or ask about AI... (Ctrl+Enter to send)"}
+              placeholder={
+                isMobile ? "Type your message..." : "Type your message... (Ctrl+K to focus, Ctrl+Enter to send)"
+              }
               className={cn(
                 "resize-none border-2 focus:border-primary/50 transition-colors",
                 // Responsive sizing
@@ -322,8 +376,7 @@ export function ChatFooter({
                 // Responsive padding for action buttons
                 isMobile ? "pr-20" : "pr-32",
               )}
-              disabled={isLoading || uploadingImage}
-              aria-label="Chat input"
+              disabled={uploadingImage}
             />
 
             {/* Action Buttons Container */}
@@ -352,8 +405,7 @@ export function ChatFooter({
                     action.active && "bg-primary/10 text-primary hover:bg-primary/20",
                   )}
                   title={action.title}
-                  aria-label={action.title}
-                  disabled={isLoading || uploadingImage}
+                  disabled={uploadingImage}
                 >
                   <action.icon
                     className={cn("mobile:w-4 mobile:h-4", "tablet:w-4 tablet:h-4", "desktop:w-5 desktop:h-5")}
@@ -366,7 +418,7 @@ export function ChatFooter({
                 // Mobile: Dropdown menu for secondary actions
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="w-8 h-8" disabled={isLoading || uploadingImage}>
+                    <Button variant="ghost" size="icon" className="w-8 h-8" disabled={uploadingImage}>
                       <MoreHorizontal className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -389,8 +441,7 @@ export function ChatFooter({
                     onClick={action.action}
                     className={cn("tablet:w-9 tablet:h-9", "desktop:w-10 desktop:h-10")}
                     title={action.title}
-                    aria-label={action.title}
-                    disabled={isLoading || uploadingImage}
+                    disabled={uploadingImage}
                   >
                     <action.icon className={cn("tablet:w-4 tablet:h-4", "desktop:w-5 desktop:h-5")} />
                   </Button>
@@ -410,7 +461,6 @@ export function ChatFooter({
               "tablet:h-[56px] tablet:px-5",
               "desktop:h-[60px] desktop:px-6",
             )}
-            aria-label="Send message"
           >
             <Send className={cn("mobile:w-4 mobile:h-4", "tablet:w-4 tablet:h-4", "desktop:w-5 desktop:h-5")} />
             <span
@@ -436,7 +486,7 @@ export function ChatFooter({
                   size="sm"
                   className="w-full justify-start gap-2 h-8 px-2 py-1.5 text-sm font-normal hover:bg-accent hover:text-accent-foreground"
                   onClick={item.action}
-                  disabled={isLoading || uploadingImage}
+                  disabled={uploadingImage}
                 >
                   <item.icon className="w-3.5 h-3.5" />
                   {item.label}
@@ -515,7 +565,9 @@ export function ChatFooter({
                 console.log("AI Response:", response)
                 handleVoiceTranscript(response)
               }}
-              onTransferToChat={onVoiceTranscript}
+              onTransferToChat={(transcript: string) => {
+                onVoiceTranscript?.(transcript)
+              }}
               theme="dark"
             />
           )}

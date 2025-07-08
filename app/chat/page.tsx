@@ -9,12 +9,14 @@ import { ChatFooter } from "@/components/chat/ChatFooter"
 import { DesktopSidebar } from "@/components/chat/sidebar/DesktopSidebar"
 import { LeadCaptureFlow } from "@/components/chat/LeadCaptureFlow"
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal"
-import type { Message } from "./types/chat"
+import type { Message, ActivityItem } from "./types/chat"
 import type { LeadCaptureState } from "./types/lead-capture"
 import { useChatContext } from "./context/ChatProvider"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import { supabase } from "@/lib/supabase/client"
+import { sampleTimelineActivities } from "@/components/chat/sidebar/sampleTimelineData"
 import { useToast } from "@/components/ui/use-toast"
+import { activityLogger } from "@/lib/activity-logger"
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
@@ -27,19 +29,23 @@ export default function ChatPage() {
   const [showScreenShareModal, setShowScreenShareModal] = useState(false)
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`)
 
+  // Lead capture state
   const [leadCaptureState, setLeadCaptureState] = useState<LeadCaptureState>({
     stage: "initial",
     hasName: false,
     hasEmail: false,
     hasAgreedToTC: false,
-    leadData: { engagementType: "chat" },
+    leadData: {
+      engagementType: "chat",
+    },
   })
   const [showLeadCapture, setShowLeadCapture] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const { activityLog, addActivity, updateActivity, clearActivities } = useChatContext()
+  // Use the chat context
+  const { activityLog, addActivity, clearActivities } = useChatContext()
   const { toast } = useToast()
 
   const scrollToBottom = () => {
@@ -48,36 +54,63 @@ export default function ChatPage() {
 
   useEffect(scrollToBottom, [messages])
 
+  // Sync activity logger with context
+  useEffect(() => {
+    const handleActivityUpdate = (activity: ActivityItem) => {
+      addActivity(activity)
+    }
+
+    activityLogger.addListener(handleActivityUpdate)
+    return () => {
+      activityLogger.removeListener(handleActivityUpdate)
+    }
+  }, [addActivity])
+
+  // Trigger lead capture after first interaction
   useEffect(() => {
     if (messages.length === 1 && leadCaptureState.stage === "initial") {
       setShowLeadCapture(true)
       setLeadCaptureState((prev) => ({
         ...prev,
         stage: "collecting_info",
-        leadData: { ...prev.leadData, initialQuery: messages[0]?.content },
+        leadData: {
+          ...prev.leadData,
+          initialQuery: messages[0]?.content,
+        },
       }))
     }
-  }, [messages, leadCaptureState.stage])
+  }, [messages.length, leadCaptureState.stage])
 
+  // Listen for real-time updates from Supabase
   useEffect(() => {
     const channel = supabase.channel(`ai-showcase-${sessionId}`)
+
     channel
       .on("broadcast", { event: "ai-response" }, ({ payload }) => {
         try {
-          const newMessage: Message = { ...payload, timestamp: new Date(payload.timestamp) }
+          const newMessage: Message = {
+            ...payload,
+            timestamp: new Date(payload.timestamp),
+          }
           setMessages((prev) => [...prev, newMessage])
+          setIsLoading(false)
         } catch (error) {
           console.error("Error processing AI response:", error)
-          toast({ title: "Real-time Error", description: "Failed to receive AI response.", variant: "destructive" })
-        } finally {
           setIsLoading(false)
         }
       })
+      .on("broadcast", { event: "sidebar-update" }, ({ payload }) => {
+        addActivity(payload)
+      })
+      .on("broadcast", { event: "activity-update" }, ({ payload }) => {
+        addActivity(payload)
+      })
       .subscribe()
+
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [sessionId, toast])
+  }, [addActivity, sessionId])
 
   const handleNewChat = useCallback(() => {
     setMessages([])
@@ -86,125 +119,173 @@ export default function ChatPage() {
       hasName: false,
       hasEmail: false,
       hasAgreedToTC: false,
-      leadData: { engagementType: "chat" },
+      leadData: {
+        engagementType: "chat",
+      },
     })
     setShowLeadCapture(false)
     clearActivities()
-    toast({ title: "New Chat Started", description: "Previous conversation cleared." })
+    activityLogger.clearActivities()
+    toast({
+      title: "New Chat Started",
+      description: "Previous conversation cleared",
+    })
   }, [toast, clearActivities])
+
+  const handleActivityClick = (activity: ActivityItem) => {
+    console.log("Activity clicked:", activity)
+  }
 
   const handleImageUpload = useCallback(
     (imageData: string, fileName: string) => {
+      // Create a message with the uploaded image
       const imageMessage: Message = {
         id: `img_${Date.now()}`,
         role: "user",
-        content: `[Image: ${fileName}]`,
+        content: `📸 Uploaded image: ${fileName}`,
         timestamp: new Date(),
         imageUrl: imageData,
       }
+
       setMessages((prev) => [...prev, imageMessage])
-      addActivity({
+
+      // Log the image upload activity
+      activityLogger.logActivity({
         type: "image_upload",
         title: "Image Added to Chat",
-        description: `${fileName} ready for analysis.`,
+        description: `${fileName} ready for AI analysis`,
         status: "completed",
+        details: [`File: ${fileName}`, "Image displayed in chat", "Ready for AI vision analysis"],
       })
-      toast({ title: "Image Uploaded", description: `${fileName} added to the conversation.` })
+
+      toast({
+        title: "Image Uploaded",
+        description: `${fileName} added to conversation`,
+      })
     },
-    [addActivity, toast],
+    [toast],
   )
 
-  const handleSendMessage = useCallback(async () => {
-    const trimmedInput = input.trim()
-    if (!trimmedInput) return
+  const handleSendMessage = useCallback(
+    async (inputOverride?: string | React.KeyboardEvent) => {
+      // Handle different input types
+      let inputToUse: string
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: trimmedInput,
-      timestamp: new Date(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-    setIsLoading(true)
-
-    addActivity({
-      type: "user_action",
-      title: "User Message Sent",
-      description: trimmedInput.substring(0, 80),
-      status: "completed",
-    })
-
-    if (leadCaptureState.stage !== "consultation") {
-      setIsLoading(false)
-      // Potentially show a message that they need to complete the lead form first
-      return
-    }
-
-    const activityId = addActivity({
-      type: "ai_request",
-      title: "Processing AI Request",
-      description: "Sending message to Gemini AI...",
-      status: "in_progress",
-    })
-
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: trimmedInput,
-          conversationHistory: messages.map((m) => ({ role: m.role, parts: [{ text: m.content }] })),
-          leadContext: leadCaptureState.leadData,
-          sessionId,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+      if (typeof inputOverride === "string") {
+        inputToUse = inputOverride
+      } else if (inputOverride && "target" in inputOverride) {
+        // It's a keyboard event, ignore it and use current input
+        inputToUse = input
+      } else {
+        inputToUse = input
       }
 
-      // The response is now handled by the Supabase listener, so we just update the activity
-      updateActivity(activityId, {
-        title: "AI Request Sent",
-        description: "Waiting for real-time response.",
+      // Ensure inputToUse is a string and validate
+      if (typeof inputToUse !== "string") {
+        console.error("Invalid input type:", typeof inputToUse, inputToUse)
+        return
+      }
+
+      const trimmedInput = inputToUse.trim()
+      if (!trimmedInput) {
+        return
+      }
+
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: "user",
+        content: trimmedInput,
+        timestamp: new Date(),
+      }
+
+      setMessages((prev) => [...prev, userMessage])
+      setInput("")
+      setIsLoading(true)
+
+      // Log user message activity
+      activityLogger.logActivity({
+        type: "user_action",
+        title: "User Message Sent",
+        description: trimmedInput.substring(0, 80) + (trimmedInput.length > 80 ? "..." : ""),
         status: "completed",
+        details: [
+          `Message length: ${trimmedInput.length} characters`,
+          `Timestamp: ${new Date().toISOString()}`,
+          `Session: ${sessionId}`,
+        ],
       })
-    } catch (error) {
-      console.error("Error sending message:", error)
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
-      updateActivity(activityId, {
-        title: "AI Request Failed",
-        description: errorMessage,
-        status: "failed",
-      })
-      setIsLoading(false)
-      toast({
-        title: "Error",
-        description: `Failed to get AI response: ${errorMessage}`,
-        variant: "destructive",
-      })
-    }
-  }, [input, messages, leadCaptureState, toast, sessionId, addActivity, updateActivity])
+
+      // For demo purposes, simulate an AI response after a delay
+      setTimeout(() => {
+        const aiResponse: Message = {
+          id: `ai_${Date.now()}`,
+          role: "assistant",
+          content: `This is a simulated response to your message: "${trimmedInput}"\n\nIn a real application, this would be generated by an AI model like Gemini 2.5 Flash. The response would be streamed in real-time and would provide helpful, contextual information based on your query.`,
+          timestamp: new Date(),
+        }
+
+        setMessages((prev) => [...prev, aiResponse])
+        setIsLoading(false)
+
+        // Log AI response activity
+        activityLogger.logActivity({
+          type: "ai_response",
+          title: "AI Response Generated",
+          description: "Response generated successfully",
+          status: "completed",
+          details: [
+            `Response length: ${aiResponse.content.length} characters`,
+            `Timestamp: ${new Date().toISOString()}`,
+            `Session: ${sessionId}`,
+          ],
+        })
+      }, 1500)
+    },
+    [input, sessionId],
+  )
+
+  const handleExampleClick = (example: string) => {
+    setInput(example)
+    setTimeout(() => {
+      inputRef.current?.focus()
+    }, 100)
+  }
 
   const handleLeadCaptureComplete = (leadData: LeadCaptureState["leadData"]) => {
-    setLeadCaptureState({ ...leadCaptureState, stage: "consultation", leadData })
+    setLeadCaptureState((prev) => ({
+      ...prev,
+      stage: "consultation",
+      leadData,
+    }))
     setShowLeadCapture(false)
+
+    // Add welcome message with personalization
     const welcomeMessage: Message = {
       id: Date.now().toString(),
       role: "assistant",
-      content: `Hello ${leadData.name}! 👋 Thanks for connecting. I'm analyzing your profile to provide personalized AI automation insights. I'll be back shortly.`,
+      content: `Hello ${leadData.name}! 👋\n\nThank you for agreeing to explore AI automation with F.B/c. I'm now analyzing your background and industry to provide personalized insights.\n\n${leadData.company ? `I see you're with ${leadData.company}. ` : ""}Let me research your industry's specific challenges and how AI can help automate your workflows.\n\nI'll be back with tailored recommendations in just a moment...`,
       timestamp: new Date(),
     }
+
     setMessages((prev) => [...prev, welcomeMessage])
-    toast({ title: "Welcome!", description: `Starting personalized consultation for ${leadData.name}.` })
-    addActivity({
+
+    toast({
+      title: "Welcome to F.B/c AI!",
+      description: `Starting personalized consultation for ${leadData.name}`,
+    })
+
+    // Trigger background research
+    activityLogger.logActivity({
       type: "search",
       title: "Lead Research Started",
-      description: `Researching ${leadData.name} for industry insights.`,
+      description: `Researching ${leadData.name} and industry insights`,
       status: "in_progress",
+      details: [
+        `Lead: ${leadData.name}`,
+        `Company: ${leadData.company || "Not specified"}`,
+        `Email: ${leadData.email}`,
+        `Session: ${sessionId}`,
+      ],
     })
   }
 
@@ -216,57 +297,170 @@ export default function ChatPage() {
   }
 
   const handleFileUpload = (file: File) => {
-    addActivity({
+    activityLogger.logActivity({
       type: "file_upload",
       title: "File Uploaded",
       description: file.name,
       status: "completed",
+      details: [
+        `File: ${file.name}`,
+        `Size: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+        `Type: ${file.type}`,
+        `Session: ${sessionId}`,
+      ],
     })
   }
 
-  const handleVoiceTranscript = useCallback((transcript: string) => {
-    if (!transcript.trim()) return
-    setInput((prev) => prev + transcript)
-  }, [])
+  const handleVoiceTranscript = useCallback(
+    (transcript: string) => {
+      // Validate transcript
+      if (typeof transcript !== "string" || !transcript.trim()) {
+        console.error("Invalid transcript:", transcript)
+        return
+      }
+
+      // Update engagement type to voice
+      setLeadCaptureState((prev) => ({
+        ...prev,
+        leadData: {
+          ...prev.leadData,
+          engagementType: "voice",
+        },
+      }))
+
+      const voiceMessage: Message = {
+        id: Date.now().toString(),
+        role: "user",
+        content: transcript.trim(),
+        timestamp: new Date(),
+      }
+
+      setMessages((prev) => [...prev, voiceMessage])
+
+      activityLogger.logActivity({
+        type: "voice_input",
+        title: "Voice Transcript Added",
+        description: "Voice conversation transferred to chat",
+        status: "completed",
+        details: [
+          `Transcript: ${transcript.substring(0, 100)}...`,
+          "Source: Voice input modal",
+          `Session: ${sessionId}`,
+        ],
+      })
+
+      setTimeout(() => {
+        handleSendMessage(transcript)
+      }, 500)
+    },
+    [handleSendMessage, sessionId],
+  )
 
   const handleDownloadSummary = useCallback(() => {
-    // ... download logic
+    const summary = messages.map((m) => `${m.role.toUpperCase()}: ${m.content}`).join("\n\n")
+    const blob = new Blob([summary], { type: "text/plain" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "chat_summary.txt"
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+
+    toast({
+      title: "Summary Exported",
+      description: "Chat summary downloaded successfully",
+    })
   }, [messages, toast])
 
-  const handleFocusInput = useCallback(() => inputRef.current?.focus(), [])
-  const handleToggleSidebar = useCallback(() => setIsSidebarOpen((prev) => !prev), [])
+  const handleFocusInput = useCallback(() => {
+    inputRef.current?.focus()
+    toast({
+      title: "Input Focused",
+      description: "Ready to type your message",
+    })
+  }, [toast])
 
+  const handleToggleSidebar = useCallback(() => {
+    setIsSidebarOpen(!isSidebarOpen)
+    toast({
+      title: isSidebarOpen ? "Sidebar Hidden" : "Sidebar Shown",
+      description: `Activity timeline ${isSidebarOpen ? "hidden" : "visible"}`,
+    })
+  }, [isSidebarOpen, toast])
+
+  // Setup keyboard shortcuts
   useKeyboardShortcuts({
     onNewChat: handleNewChat,
     onSendMessage: handleSendMessage,
     onExportSummary: handleDownloadSummary,
     onToggleSidebar: handleToggleSidebar,
     onFocusInput: handleFocusInput,
-    onOpenVoice: () => setShowVoiceModal(true),
-    onOpenCamera: () => setShowWebcamModal(true),
-    onOpenScreenShare: () => setShowScreenShareModal(true),
+    onOpenVoice: () => {
+      setShowVoiceModal(true)
+      setLeadCaptureState((prev) => ({
+        ...prev,
+        leadData: { ...prev.leadData, engagementType: "voice" },
+      }))
+    },
+    onOpenCamera: () => {
+      setShowWebcamModal(true)
+      setLeadCaptureState((prev) => ({
+        ...prev,
+        leadData: { ...prev.leadData, engagementType: "webcam" },
+      }))
+    },
+    onOpenScreenShare: () => {
+      setShowScreenShareModal(true)
+      setLeadCaptureState((prev) => ({
+        ...prev,
+        leadData: { ...prev.leadData, engagementType: "screen_share" },
+      }))
+    },
   })
+
+  // Listen for help shortcut globally
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0
+      const modifier = isMac ? e.metaKey : e.ctrlKey
+
+      if (
+        e.key === "F1" ||
+        (modifier && e.key === "?" && !e.altKey && !e.shiftKey) ||
+        (modifier && e.shiftKey && e.key === "/" && !e.altKey)
+      ) {
+        e.preventDefault()
+        setShowKeyboardShortcuts(true)
+      }
+    }
+
+    document.addEventListener("keydown", handleGlobalKeyDown)
+    return () => document.removeEventListener("keydown", handleGlobalKeyDown)
+  }, [])
 
   return (
     <ChatLayout>
       <div className="flex h-full">
         <DesktopSidebar
-          activities={activityLog}
+          activities={activityLog.length > 0 ? activityLog : sampleTimelineActivities}
           isOpen={isSidebarOpen}
           onToggle={handleToggleSidebar}
           onNewChat={handleNewChat}
-          onActivityClick={() => {}}
+          onActivityClick={handleActivityClick}
         />
-        <div className="flex flex-1 flex-col h-full">
+        <div className="flex flex-col flex-1 h-full">
           <ChatHeader
             onDownloadSummary={handleDownloadSummary}
-            activities={activityLog}
+            activities={activityLog.length > 0 ? activityLog : sampleTimelineActivities}
             onNewChat={handleNewChat}
-            onActivityClick={() => {}}
+            onActivityClick={handleActivityClick}
           />
-          <div className="relative flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden relative">
+            {/* Lead Capture Overlay */}
             {showLeadCapture && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/95 p-4 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                 <LeadCaptureFlow
                   isVisible={showLeadCapture}
                   onComplete={handleLeadCaptureComplete}
@@ -275,7 +469,13 @@ export default function ChatPage() {
                 />
               </div>
             )}
-            <ChatMain messages={messages} isLoading={isLoading} messagesEndRef={messagesEndRef} />
+
+            <ChatMain
+              messages={messages}
+              isLoading={isLoading}
+              messagesEndRef={messagesEndRef}
+              onExampleClick={handleExampleClick}
+            />
           </div>
           <ChatFooter
             input={input}
@@ -296,6 +496,8 @@ export default function ChatPage() {
           />
         </div>
       </div>
+
+      {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcutsModal isOpen={showKeyboardShortcuts} onClose={() => setShowKeyboardShortcuts(false)} />
     </ChatLayout>
   )
