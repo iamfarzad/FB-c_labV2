@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
       maxHistoryLength?: number
     } = await request.json()
 
-    // Validate required data
+    // LOGIC: Validate educational context
+    // WHY: Educational content requires interaction history and video context
     if (!interactionHistory || interactionHistory.length === 0) {
       return NextResponse.json({ error: "No interaction history provided" }, { status: 400 })
     }
@@ -28,7 +29,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Video context is required" }, { status: 400 })
     }
 
-    // Extract learning objectives and topics if not provided
+    // LOGIC: Extract learning metadata if missing
+    // WHY: Learning objectives and topics are essential for personalized education
     if (!videoContext.learningObjectives || videoContext.learningObjectives.length === 0) {
       videoContext.learningObjectives = extractLearningObjectives(videoContext.generatedSpec)
     }
@@ -37,7 +39,8 @@ export async function POST(request: NextRequest) {
       videoContext.keyTopics = extractKeyTopics(videoContext.generatedSpec)
     }
 
-    // Create a readable stream for the response
+    // LOGIC: Stream educational content
+    // WHY: Educational content can be lengthy, streaming provides better UX
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {

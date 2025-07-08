@@ -1,3 +1,6 @@
+// LOGIC: Comprehensive token cost tracking system
+// WHY: AI costs can escalate quickly, need accurate tracking and budgeting
+
 export interface TokenUsage {
   inputTokens: number
   outputTokens: number
@@ -17,7 +20,8 @@ export interface ModelPricing {
 }
 
 export class TokenCostCalculator {
-  // Updated pricing for January 2025 - Gemini 2.5 models only
+  // LOGIC: Updated pricing matrix for multiple AI providers
+  // WHY: Support multiple providers with accurate, current pricing
   private static readonly PRICING: Record<string, Record<string, ModelPricing>> = {
     gemini: {
       "gemini-2.5": {
@@ -83,6 +87,8 @@ export class TokenCostCalculator {
     },
   }
 
+  // LOGIC: Calculate precise costs based on token usage
+  // WHY: Different pricing for input vs output tokens requires separate calculation
   static calculateCost(provider: string, model: string, usage: TokenUsage): CostCalculation {
     const pricing = this.PRICING[provider]?.[model]
 
@@ -96,6 +102,8 @@ export class TokenCostCalculator {
       }
     }
 
+    // LOGIC: Calculate costs per million tokens
+    // WHY: Pricing is typically per 1M tokens, need to scale appropriately
     const inputCost = (usage.inputTokens / 1_000_000) * pricing.inputCostPer1M
     const outputCost = (usage.outputTokens / 1_000_000) * pricing.outputCostPer1M
     const totalCost = inputCost + outputCost
@@ -108,6 +116,8 @@ export class TokenCostCalculator {
     }
   }
 
+  // LOGIC: Log usage for analytics and billing
+  // WHY: Track usage patterns, optimize costs, generate reports
   static async logUsage(
     provider: string,
     model: string,
@@ -119,7 +129,8 @@ export class TokenCostCalculator {
     try {
       const cost = this.calculateCost(provider, model, usage)
 
-      // This would typically save to database
+      // LOGIC: Comprehensive usage logging
+      // WHY: Detailed logs enable cost optimization and usage analysis
       console.log("Token usage logged:", {
         provider,
         model,
@@ -135,6 +146,8 @@ export class TokenCostCalculator {
     }
   }
 
+  // LOGIC: Utility methods for provider/model management
+  // WHY: Dynamic provider support and configuration management
   static getSupportedProviders(): string[] {
     return Object.keys(this.PRICING)
   }

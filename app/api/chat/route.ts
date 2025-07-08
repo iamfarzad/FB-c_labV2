@@ -18,11 +18,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Gemini API key not configured" }, { status: 500 })
     }
 
-    // Use consistent model name - Gemini 1.5 Flash (current stable model)
+    // LOGIC: Use consistent model name - Gemini 1.5 Flash (current stable model)
+    // WHY: Stable, cost-effective, good for general chat conversations
     const modelName = "gemini-1.5-flash"
     const model = genAI.getGenerativeModel({ model: modelName })
 
-    // Build conversation context
+    // LOGIC: Build conversation context from history
+    // WHY: Maintains conversation continuity, limits to last 5 messages for cost control
     let fullPrompt = prompt
     if (conversationHistory && conversationHistory.length > 0) {
       const context = conversationHistory
@@ -33,32 +35,37 @@ export async function POST(req: NextRequest) {
       fullPrompt = `Previous conversation:\n${context}\n\nUser: ${prompt}`
     }
 
-    // Add lead context if available
+    // LOGIC: Add lead context for personalized responses
+    // WHY: Enables AI to provide contextual responses based on lead information
     if (leadContext) {
       fullPrompt = `Lead context: ${JSON.stringify(leadContext)}\n\n${fullPrompt}`
     }
 
     console.log("Generating content with prompt:", fullPrompt.substring(0, 200) + "...")
 
-    // Generate response with error handling
+    // LOGIC: Generate response with error handling
+    // WHY: Robust error handling for API failures, rate limits, etc.
     const result = await model.generateContent(fullPrompt)
     const response = await result.response
     const text = response.text()
 
-    // Get token usage from response
+    // LOGIC: Extract token usage for cost tracking
+    // WHY: Monitor API costs, track usage patterns, billing transparency
     const usageMetadata = response.usageMetadata
     const inputTokens = usageMetadata?.promptTokenCount || 0
     const outputTokens = usageMetadata?.candidatesTokenCount || 0
     const totalTokens = usageMetadata?.totalTokenCount || inputTokens + outputTokens
 
-    // Calculate costs using consistent model name
+    // LOGIC: Calculate costs using consistent model name
+    // WHY: Accurate cost tracking across different models and providers
     const costCalculation = TokenCostCalculator.calculateCost("gemini", modelName, {
       inputTokens,
       outputTokens,
       totalTokens,
     })
 
-    // Log token usage
+    // LOGIC: Log token usage for analytics
+    // WHY: Track usage patterns, optimize costs, monitor performance
     await TokenCostCalculator.logUsage(
       "gemini",
       modelName,
@@ -92,7 +99,8 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("Chat API error:", error)
 
-    // Log activity with proper error handling
+    // LOGIC: Comprehensive error logging and handling
+    // WHY: Debug issues, track failures, provide meaningful error responses
     try {
       await logActivity({
         type: "error",
@@ -108,7 +116,8 @@ export async function POST(req: NextRequest) {
       console.error("Failed to log activity:", logError)
     }
 
-    // Return appropriate error response
+    // LOGIC: Categorize errors for appropriate responses
+    // WHY: Different error types need different handling (rate limits vs auth errors)
     const isRateLimited = error.message?.includes("quota") || error.message?.includes("rate")
     const isInvalidKey = error.message?.includes("API key") || error.message?.includes("authentication")
 

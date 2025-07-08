@@ -18,6 +18,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Name and email are required" }, { status: 400 })
     }
 
+    // LOGIC: Use Google GenAI with web search capabilities
+    // WHY: Lead research requires real-time web data, not just training data
     const ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY!,
     })
@@ -36,6 +38,8 @@ export async function POST(req: NextRequest) {
 
     const model = "gemini-2.5-flash"
 
+    // LOGIC: Comprehensive research prompt
+    // WHY: Structured research approach for actionable business insights
     const researchPrompt = `
 I need you to research ${name} with email ${email}${company ? ` from company ${company}` : ""}${linkedinUrl ? ` (LinkedIn: ${linkedinUrl})` : ""}.
 
@@ -56,14 +60,16 @@ Focus on finding actionable insights for AI consulting opportunities.
       },
     ]
 
-    // Stream the research process
+    // LOGIC: Stream research process
+    // WHY: Research takes time, streaming shows progress to user
     const response = await ai.models.generateContentStream({
       model,
       config,
       contents,
     })
 
-    // Create streaming response to show research progress
+    // LOGIC: Server-sent events for research progress
+    // WHY: Real-time feedback during lengthy research process
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
@@ -86,7 +92,8 @@ Focus on finding actionable insights for AI consulting opportunities.
             }
           }
 
-          // Save to Supabase when complete
+          // LOGIC: Save research to database when complete
+          // WHY: Persist research for future reference and lead management
           const supabase = getSupabase()
           await supabase.from("lead_summaries").insert({
             name,
@@ -128,8 +135,9 @@ Focus on finding actionable insights for AI consulting opportunities.
   }
 }
 
+// LOGIC: Extract key insights for consultant
+// WHY: Summarize research into actionable points
 function extractConsultantBrief(research: string): string {
-  // Extract key points for consultant
   const lines = research.split("\n")
   const briefPoints = lines.filter(
     (line) =>
@@ -141,6 +149,8 @@ function extractConsultantBrief(research: string): string {
   return briefPoints.slice(0, 5).join("\n")
 }
 
+// LOGIC: Calculate lead quality score
+// WHY: Prioritize leads based on AI readiness indicators
 function calculateLeadScore(research: string): number {
   let score = 0
 
@@ -154,6 +164,8 @@ function calculateLeadScore(research: string): number {
   return Math.min(score, 100)
 }
 
+// LOGIC: Extract relevant AI capabilities
+// WHY: Match AI solutions to lead's specific needs
 function extractAICapabilities(research: string): string[] {
   const capabilities = []
 
