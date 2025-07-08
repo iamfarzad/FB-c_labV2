@@ -1,256 +1,281 @@
 "use client"
 
+import type React from "react"
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Textarea } from "@/components/ui/textarea"
-import { ArrowRight, Check, Mic, Camera, Monitor } from "lucide-react"
-import { cn } from "@/lib/utils"
-import type { LeadCaptureState } from "@/app/chat/types/lead-capture"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { UserCheck, Shield, Sparkles, ArrowRight } from "lucide-react"
+import { useChatContext } from "@/app/chat/context/ChatProvider"
+import type { LeadCaptureState, TCAcceptance } from "@/app/chat/types/lead-capture"
 
 interface LeadCaptureFlowProps {
   isVisible: boolean
   onComplete: (leadData: LeadCaptureState["leadData"]) => void
-  engagementType?: string
+  engagementType: "chat" | "voice" | "screen_share" | "webcam"
   initialQuery?: string
 }
 
-export function LeadCaptureFlow({
-  isVisible,
-  onComplete,
-  engagementType = "chat",
-  initialQuery = "",
-}: LeadCaptureFlowProps) {
-  const [step, setStep] = useState(1)
-  const [formData, setFormData] = useState<LeadCaptureState["leadData"]>({
+export function LeadCaptureFlow({ isVisible, onComplete, engagementType, initialQuery }: LeadCaptureFlowProps) {
+  const { addActivity } = useChatContext()
+  const [leadState, setLeadState] = useState<LeadCaptureState>({
+    stage: "collecting_info",
+    hasName: false,
+    hasEmail: false,
+    hasAgreedToTC: false,
+    leadData: {
+      engagementType,
+      initialQuery,
+    },
+  })
+
+  const [showTCModal, setShowTCModal] = useState(false)
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     company: "",
-    role: "",
-    industry: "",
-    interests: [],
-    engagementType: engagementType || "chat",
-    initialQuery: initialQuery || "",
   })
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [agreedToTerms, setAgreedToTerms] = useState(false)
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!formData.name || !formData.email) return
+
+    setLeadState((prev) => ({
+      ...prev,
+      hasName: true,
+      hasEmail: true,
+      leadData: {
+        ...prev.leadData,
+        name: formData.name,
+        email: formData.email,
+        company: formData.company,
+      },
+    }))
+
+    addActivity({
+      type: "user_action",
+      title: "Lead Information Captured",
+      description: `${formData.name} (${formData.email}) provided contact details`,
+      status: "completed",
+    })
+
+    // Show Terms & Conditions
+    setShowTCModal(true)
+  }
+
+  const handleTCAcceptance = async (accepted: boolean) => {
+    if (!accepted) {
+      setShowTCModal(false)
+      return
+    }
+
+    const tcAcceptance: TCAcceptance = {
+      accepted: true,
+      timestamp: Date.now(),
+      userAgent: navigator.userAgent,
+    }
+
+    setLeadState((prev) => ({
+      ...prev,
+      hasAgreedToTC: true,
+      stage: "research",
+    }))
+
+    addActivity({
+      type: "system_message",
+      title: "Terms & Conditions Accepted",
+      description: "Legal consent obtained for AI consultation",
+      status: "completed",
+    })
+
+    setShowTCModal(false)
+
+    // Save to Supabase with TC acceptance
+    await fetch("/api/lead-capture", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...leadState.leadData,
+        name: formData.name,
+        email: formData.email,
+        company: formData.company,
+        tcAcceptance,
+        engagementType,
+        initialQuery,
+      }),
+    })
+
+    // Complete the flow
+    onComplete({
+      ...leadState.leadData,
+      name: formData.name,
+      email: formData.email,
+      company: formData.company,
+    })
+  }
 
   if (!isVisible) return null
 
-  const validateStep = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (step === 1) {
-      if (!formData.name) newErrors.name = "Name is required"
-      if (!formData.email) {
-        newErrors.email = "Email is required"
-      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-        newErrors.email = "Please enter a valid email"
-      }
-    }
-
-    if (step === 3 && !agreedToTerms) {
-      newErrors.terms = "You must agree to the terms to continue"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleNext = () => {
-    if (validateStep()) {
-      if (step < 3) {
-        setStep(step + 1)
-      } else {
-        onComplete(formData)
-      }
-    }
-  }
-
-  const getEngagementIcon = () => {
-    switch (formData.engagementType) {
-      case "voice":
-        return <Mic className="w-5 h-5" />
-      case "webcam":
-        return <Camera className="w-5 h-5" />
-      case "screen_share":
-        return <Monitor className="w-5 h-5" />
-      default:
-        return null
-    }
-  }
-
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          {getEngagementIcon()}
-          {step === 1 && "Welcome to F.B/c AI"}
-          {step === 2 && "Tell us about yourself"}
-          {step === 3 && "Almost there!"}
-        </CardTitle>
-        <CardDescription>
-          {step === 1 && "Let's get to know you better to personalize your experience"}
-          {step === 2 && "Help us tailor our AI consultation to your needs"}
-          {step === 3 && "Review your information and agree to our terms"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {step === 1 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Your Name</Label>
+    <>
+      {/* Lead Capture Form */}
+      <Card className="mx-auto max-w-md border-2 border-orange-accent/20 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-12 h-12 bg-orange-accent/10 rounded-full flex items-center justify-center mb-2">
+            <UserCheck className="w-6 h-6 text-orange-accent" />
+          </div>
+          <CardTitle className="text-xl">Welcome to F.B/c AI Assistant!</CardTitle>
+          <CardDescription>
+            I'm excited to help you explore AI automation for your business. Let's start with a quick introduction.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleFormSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Your Name *</Label>
               <Input
                 id="name"
-                placeholder="Enter your full name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={errors.name ? "border-destructive" : ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                placeholder="John Doe"
+                required
+                className="bg-white/50"
               />
-              {errors.name && <p className="text-destructive text-sm">{errors.name}</p>}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+
+            <div>
+              <Label htmlFor="email">Business Email *</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className={errors.email ? "border-destructive" : ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                placeholder="john@company.com"
+                required
+                className="bg-white/50"
               />
-              {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
             </div>
-            <div className="space-y-2">
+
+            <div>
               <Label htmlFor="company">Company (Optional)</Label>
               <Input
                 id="company"
-                placeholder="Your company name"
                 value={formData.company}
-                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                onChange={(e) => setFormData((prev) => ({ ...prev, company: e.target.value }))}
+                placeholder="Acme Corp"
+                className="bg-white/50"
               />
             </div>
+
+            <Button
+              type="submit"
+              className="w-full gap-2 bg-orange-accent hover:bg-orange-accent/90"
+              disabled={!formData.name || !formData.email}
+            >
+              Continue to AI Consultation
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </form>
+
+          <div className="mt-4 text-center">
+            <p className="text-xs text-muted-foreground">
+              By continuing, you'll be asked to agree to our Terms & Conditions
+            </p>
           </div>
-        )}
+        </CardContent>
+      </Card>
 
-        {step === 2 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="role">Your Role</Label>
-              <Input
-                id="role"
-                placeholder="e.g. Marketing Manager, Developer, etc."
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="industry">Industry</Label>
-              <Input
-                id="industry"
-                placeholder="e.g. Technology, Healthcare, etc."
-                value={formData.industry}
-                onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="interests">What are you interested in?</Label>
-              <Textarea
-                id="interests"
-                placeholder="Tell us what you're looking to achieve with AI"
-                value={formData.interests.join(", ")}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    interests: e.target.value.split(",").map((item) => item.trim()),
-                  })
-                }
-                className="min-h-[100px]"
-              />
-            </div>
-          </div>
-        )}
+      {/* Terms & Conditions Modal */}
+      <Dialog open={showTCModal} onOpenChange={setShowTCModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5" />
+              Terms & Conditions
+            </DialogTitle>
+            <DialogDescription>
+              Please review and accept our terms to continue with your AI consultation
+            </DialogDescription>
+          </DialogHeader>
 
-        {step === 3 && (
-          <div className="space-y-4">
-            <div className="bg-muted p-4 rounded-md space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm font-medium">Name:</span>
-                <span className="text-sm">{formData.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-medium">Email:</span>
-                <span className="text-sm">{formData.email}</span>
-              </div>
-              {formData.company && (
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Company:</span>
-                  <span className="text-sm">{formData.company}</span>
-                </div>
-              )}
-              {formData.role && (
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Role:</span>
-                  <span className="text-sm">{formData.role}</span>
-                </div>
-              )}
-              {formData.industry && (
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Industry:</span>
-                  <span className="text-sm">{formData.industry}</span>
-                </div>
-              )}
-            </div>
+          <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+            <div className="space-y-4 text-sm">
+              <h3 className="font-semibold">F.B Consulting AI Assistant Terms of Service</h3>
 
-            <div className="flex items-start space-x-2">
-              <Checkbox
-                id="terms"
-                checked={agreedToTerms}
-                onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
-                className={cn(errors.terms ? "border-destructive" : "")}
-              />
-              <div className="grid gap-1.5 leading-none">
-                <label
-                  htmlFor="terms"
-                  className={cn(
-                    "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
-                    errors.terms ? "text-destructive" : "",
-                  )}
-                >
-                  I agree to the Terms of Service and Privacy Policy
-                </label>
-                <p className="text-sm text-muted-foreground">
-                  By continuing, you agree to receive communications from F.B/c.
+              <div>
+                <h4 className="font-medium">1. Service Description</h4>
+                <p className="text-muted-foreground mt-1">
+                  F.B/c AI Assistant provides AI-powered business consultation, lead research, and automation
+                  recommendations. This is a demonstration of AI capabilities for potential consulting engagements.
                 </p>
-                {errors.terms && <p className="text-destructive text-sm">{errors.terms}</p>}
+              </div>
+
+              <div>
+                <h4 className="font-medium">2. Data Collection & Privacy</h4>
+                <p className="text-muted-foreground mt-1">
+                  We collect your name, email, and company information to provide personalized AI consultation. Your
+                  data is stored securely and used only for consultation purposes. We may research publicly available
+                  information about you and your company to provide relevant insights.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-medium">3. AI-Generated Content</h4>
+                <p className="text-muted-foreground mt-1">
+                  Our AI assistant provides recommendations based on available data and industry knowledge. While we
+                  strive for accuracy, all AI-generated insights should be verified and are not guaranteed to be
+                  error-free.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-medium">4. Consultation Purpose</h4>
+                <p className="text-muted-foreground mt-1">
+                  This AI interaction is designed to demonstrate our capabilities and identify potential consulting
+                  opportunities. No formal consulting relationship is established until a separate agreement is signed.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-medium">5. Contact & Follow-up</h4>
+                <p className="text-muted-foreground mt-1">
+                  By providing your contact information, you consent to follow-up communications about AI consulting
+                  services that may benefit your business.
+                </p>
               </div>
             </div>
+          </ScrollArea>
+
+          <div className="flex items-center space-x-2 mt-4">
+            <Checkbox
+              id="accept-tc"
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  handleTCAcceptance(true)
+                }
+              }}
+            />
+            <Label htmlFor="accept-tc" className="text-sm">
+              I have read and agree to the Terms & Conditions
+            </Label>
           </div>
-        )}
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        {step > 1 ? (
-          <Button variant="outline" onClick={() => setStep(step - 1)}>
-            Back
-          </Button>
-        ) : (
-          <div></div>
-        )}
-        <Button onClick={handleNext} className="gap-1">
-          {step < 3 ? (
-            <>
-              Next <ArrowRight className="w-4 h-4" />
-            </>
-          ) : (
-            <>
-              Start Consultation <Check className="w-4 h-4" />
-            </>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
+
+          <div className="flex gap-2 mt-4">
+            <Button variant="outline" onClick={() => handleTCAcceptance(false)} className="flex-1">
+              Decline
+            </Button>
+            <Button onClick={() => handleTCAcceptance(true)} className="flex-1 gap-2">
+              <Sparkles className="w-4 h-4" />
+              Accept & Continue
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

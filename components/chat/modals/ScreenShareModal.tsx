@@ -1,155 +1,299 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Monitor, X, Camera, Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import type React from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
+import { Loader, Monitor, Brain, Square, Play, Pause } from "lucide-react"
+import { useAnalysisHistory } from "@/hooks/use-analysis-history"
 
 interface ScreenShareModalProps {
   isOpen: boolean
   onClose: () => void
-  onStream: (stream: MediaStream) => void
   onAIAnalysis?: (analysis: string) => void
+  onStream: (stream: MediaStream) => void
   theme?: "light" | "dark"
 }
 
-export default function ScreenShareModal({
+export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
   isOpen,
   onClose,
-  onStream,
   onAIAnalysis,
-  theme = "light",
-}: ScreenShareModalProps) {
-  const [isSharing, setIsSharing] = useState(false)
-  const [isCapturing, setIsCapturing] = useState(false)
+  onStream,
+  theme = "dark",
+}) => {
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const { analysisHistory, addAnalysis, clearHistory } = useAnalysisHistory()
+  const [isAutoAnalyzing, setIsAutoAnalyzing] = useState(false)
   const [stream, setStream] = useState<MediaStream | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [isScreenSharing, setIsScreenSharing] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [currentAnalysis, setCurrentAnalysis] = useState("")
 
-  // Clean up when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      stopSharing()
-      setError(null)
-    }
-  }, [isOpen])
-
-  const startScreenShare = async () => {
+  // Start screen sharing
+  const startScreenShare = useCallback(async () => {
     try {
-      setError(null)
-
-      // Request screen sharing
       const mediaStream = await navigator.mediaDevices.getDisplayMedia({
-        video: {
-          cursor: "always",
-        },
+        video: true,
         audio: false,
       })
-
       setStream(mediaStream)
-      setIsSharing(true)
-
-      // Handle when user stops sharing via browser UI
-      mediaStream.getVideoTracks()[0].onended = () => {
-        stopSharing()
+      setIsScreenSharing(true)
+      if (onStream) {
+        onStream(mediaStream)
       }
-    } catch (err) {
-      console.error("Error sharing screen:", err)
-      setError("Could not share screen. Please try again.")
-    }
-  }
 
-  const stopSharing = () => {
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream
+      }
+
+      // Listen for screen share end
+      mediaStream.getVideoTracks()[0].addEventListener("ended", () => {
+        stopScreenShare()
+      })
+    } catch (error) {
+      console.error("Error starting screen share:", error)
+      onClose()
+    }
+  }, [onClose, onStream])
+
+  // Stop screen sharing
+  const stopScreenShare = useCallback(() => {
     if (stream) {
       stream.getTracks().forEach((track) => track.stop())
       setStream(null)
     }
-    setIsSharing(false)
-  }
+    setIsAutoAnalyzing(false)
+    setIsScreenSharing(false)
+    onClose()
+  }, [stream, onClose])
 
-  const captureScreen = () => {
-    if (stream) {
-      setIsCapturing(true)
+  const handleAnalysis = useCallback(
+    async (imageData: string) => {
+      if (!videoRef.current || !canvasRef.current || !stream) return
 
-      // Pass the stream to parent component
-      onStream(stream)
+      const video = videoRef.current
+      const canvas = canvasRef.current
+      const ctx = canvas.getContext("2d")
 
-      // Simulate AI analysis
-      if (onAIAnalysis) {
-        setTimeout(() => {
-          const mockAnalysis =
-            "This is a simulated AI analysis of the screen capture. In a real application, this would be the result of processing your screen through a vision model."
-          onAIAnalysis(mockAnalysis)
-          setIsCapturing(false)
-          onClose()
-        }, 2000)
-      } else {
-        setIsCapturing(false)
-        onClose()
+      if (!ctx) return
+
+      // Set canvas size to match video
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+
+      // Draw current frame to canvas
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      // Convert to base64
+      const base64Data = imageData.split(",")[1]
+
+      setIsAnalyzing(true)
+
+      try {
+        // Mock AI analysis
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+        const analysis =
+          "AI analysis of the screen content would appear here. It seems you are currently viewing a code editor."
+        setCurrentAnalysis(analysis)
+        addAnalysis(analysis)
+        if (onAIAnalysis) {
+          onAIAnalysis(analysis)
+        }
+      } catch (error) {
+        console.error("Screen analysis error:", error)
+      } finally {
+        setIsAnalyzing(false)
       }
+    },
+    [onAIAnalysis, addAnalysis, stream],
+  )
+
+  const analyzeCurrentFrame = useCallback(async () => {
+    if (!videoRef.current || !canvasRef.current || !stream) return
+
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const context = canvas.getContext("2d")
+    if (!context) return
+    context.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    const imageData = canvas.toDataURL("image/jpeg", 0.8)
+    await handleAnalysis(imageData)
+  }, [stream, handleAnalysis])
+
+  // Auto-analyze every 5 seconds when enabled
+  useEffect(() => {
+    if (!isAutoAnalyzing || !stream) return
+    const interval = setInterval(analyzeCurrentFrame, 5000)
+    return () => clearInterval(interval)
+  }, [isAutoAnalyzing, stream, analyzeCurrentFrame])
+
+  // Start screen share on mount if not already sharing
+  useEffect(() => {
+    if (isOpen && !isScreenSharing && !stream) {
+      startScreenShare()
     }
-  }
+  }, [isOpen, isScreenSharing, stream, startScreenShare])
+
+  useEffect(() => {
+    if (!isOpen) {
+      clearHistory()
+    }
+  }, [isOpen, clearHistory])
+
+  if (!isOpen) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Share Your Screen</DialogTitle>
-          <Button variant="ghost" size="icon" className="absolute right-4 top-4" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </DialogHeader>
-
-        <div className="flex flex-col items-center justify-center py-6">
-          {/* Screen share visualization */}
-          <div
-            className={cn(
-              "w-32 h-32 rounded-lg mb-6 flex items-center justify-center",
-              isSharing ? "bg-primary/20 animate-pulse" : "bg-muted",
-            )}
+    <div className="fixed inset-0 flex items-center justify-center z-50 transition-all duration-500 bg-black/50 backdrop-blur-sm">
+      <div className="relative p-8 rounded-2xl flex flex-col items-center justify-center w-full h-full">
+        {/* Header Controls */}
+        <div className="absolute top-8 right-8 flex items-center gap-4 z-30">
+          {/* Auto-analyze Toggle */}
+          <button
+            onClick={() => setIsAutoAnalyzing(!isAutoAnalyzing)}
+            className={`p-3 rounded-xl transition-all duration-300 shadow-lg group ${
+              isAutoAnalyzing
+                ? "bg-gradient-to-r from-green-500 to-green-600 text-white"
+                : "bg-gradient-to-r from-gray-500 to-gray-600 text-white hover:from-gray-600 hover:to-gray-700"
+            }`}
+            aria-label="Toggle auto-analysis"
           >
-            <Monitor className={cn("h-16 w-16", isSharing ? "text-primary" : "text-muted-foreground")} />
-          </div>
-
-          {/* Status text */}
-          <div className="text-center mb-6">
-            {isCapturing ? (
-              <p className="text-lg font-medium">Capturing your screen...</p>
-            ) : isSharing ? (
-              <p className="text-lg font-medium">Screen sharing active</p>
-            ) : error ? (
-              <p className="text-destructive">{error}</p>
+            {isAutoAnalyzing ? (
+              <Pause size={24} className="group-hover:scale-110 transition-transform" />
             ) : (
-              <p className="text-muted-foreground">Share your screen to get AI analysis</p>
+              <Play size={24} className="group-hover:scale-110 transition-transform" />
+            )}
+          </button>
+
+          {/* Manual Analysis Button */}
+          <button
+            onClick={analyzeCurrentFrame}
+            disabled={isAnalyzing || !stream}
+            className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 z-30 transition-all duration-300 shadow-lg group disabled:opacity-50"
+            aria-label="Analyze current screen"
+          >
+            {isAnalyzing ? (
+              <Loader size={24} className="animate-spin" />
+            ) : (
+              <Brain size={24} className="group-hover:scale-110 transition-transform" />
+            )}
+          </button>
+
+          {/* Stop Button */}
+          <button
+            onClick={stopScreenShare}
+            className="p-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 z-30 transition-all duration-300 shadow-lg group"
+            aria-label="Stop screen sharing"
+          >
+            <Square size={24} className="group-hover:rotate-90 transition-transform" />
+          </button>
+        </div>
+
+        <h2 className="text-3xl font-bold mb-6 text-white gradient-text">
+          {stream ? "AI-Powered Screen Analysis" : "Starting Screen Share..."}
+        </h2>
+
+        <div className="flex gap-6 w-full max-w-6xl h-[70vh]">
+          {/* Screen Share Display */}
+          <div className="relative flex-1 bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/20">
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-contain bg-black" />
+            <canvas ref={canvasRef} style={{ display: "none" }} />
+
+            {!stream && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                <div className="text-center">
+                  <div className="p-6 rounded-full bg-white/10 mb-4">
+                    <Loader size={48} className="animate-spin text-orange-500" />
+                  </div>
+                  <p className="text-lg text-white">Requesting screen access...</p>
+                  <p className="text-sm text-white opacity-70 mt-2">Please select a screen or window to share</p>
+                </div>
+              </div>
+            )}
+
+            {stream && (
+              <div className="absolute bottom-4 left-4 right-4 bg-black/50 backdrop-blur-sm rounded-xl p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                    <span className="text-sm font-medium text-white">SHARING</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Monitor size={16} className="text-white" />
+                    <span className="text-sm text-white">{isAutoAnalyzing ? "Auto-analyzing" : "Manual mode"}</span>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-3">
-            {!isSharing ? (
-              <Button onClick={startScreenShare} className="gap-2">
-                <Monitor className="h-4 w-4" />
-                Share Screen
-              </Button>
-            ) : isCapturing ? (
-              <Button disabled className="gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Processing...
-              </Button>
-            ) : (
-              <>
-                <Button onClick={stopSharing} variant="outline">
-                  Stop Sharing
-                </Button>
-                <Button onClick={captureScreen} className="gap-2">
-                  <Camera className="h-4 w-4" />
-                  Capture Screen
-                </Button>
-              </>
+          {/* AI Analysis Panel */}
+          <div className="w-80 bg-black/20 backdrop-blur-xl rounded-2xl p-4 border border-white/20">
+            <h3 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
+              <Brain size={20} />
+              Screen Analysis
+            </h3>
+
+            {/* Current Analysis */}
+            {currentAnalysis && (
+              <div className="mb-4 p-3 bg-white/10 rounded-lg">
+                <h4 className="text-sm font-semibold text-white mb-2">Current Analysis:</h4>
+                <p className="text-sm text-white opacity-90">{currentAnalysis}</p>
+              </div>
             )}
+
+            {/* Analysis History */}
+            {analysisHistory.length > 1 && (
+              <div>
+                <h4 className="text-sm font-semibold text-white mb-2">Previous Analysis:</h4>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {analysisHistory.slice(1).map((analysis, index) => (
+                    <div key={index} className="p-2 bg-white/5 rounded text-xs text-white opacity-70">
+                      {analysis.substring(0, 100)}...
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Controls */}
+            <div className="mt-4 pt-4 border-t border-white/20">
+              <div className="space-y-2">
+                <button
+                  onClick={() => setIsAutoAnalyzing(!isAutoAnalyzing)}
+                  className={`w-full p-2 rounded-lg text-sm transition-colors ${
+                    isAutoAnalyzing
+                      ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                      : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/30"
+                  }`}
+                >
+                  {isAutoAnalyzing ? "Stop Auto-Analysis" : "Start Auto-Analysis"}
+                </button>
+
+                <div className="flex items-center gap-2 text-sm text-white">
+                  {isAnalyzing ? (
+                    <>
+                      <Loader size={16} className="animate-spin" />
+                      <span>Analyzing screen...</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span>Ready for analysis</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+
+        <p className="mt-6 text-lg text-white opacity-80">AI is analyzing your screen share in real-time</p>
+      </div>
+    </div>
   )
 }
+
+export default ScreenShareModal

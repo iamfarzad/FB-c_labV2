@@ -4,27 +4,18 @@ import { useState, useEffect } from "react"
 
 const useMediaQuery = (query: string): boolean => {
   const [matches, setMatches] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    setIsMounted(true)
     const media = window.matchMedia(query)
-
-    // Set initial value
-    setMatches(media.matches)
-
-    // Define callback for media query changes
+    if (media.matches !== matches) {
+      setMatches(media.matches)
+    }
     const listener = () => setMatches(media.matches)
+    window.addEventListener("resize", listener)
+    return () => window.removeEventListener("resize", listener)
+  }, [matches, query])
 
-    // Add listener
-    media.addEventListener("change", listener)
-
-    // Clean up
-    return () => media.removeEventListener("change", listener)
-  }, [query])
-
-  // Return false during SSR to prevent hydration mismatch
-  return isMounted ? matches : false
+  return matches
 }
 
 export const useDevice = () => {

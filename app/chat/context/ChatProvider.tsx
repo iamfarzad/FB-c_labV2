@@ -1,13 +1,12 @@
 "use client"
-
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
 import type { ActivityItem } from "../types/chat"
 
 interface ChatContextType {
   activityLog: ActivityItem[]
-  addActivity: (activity: ActivityItem) => void
+  addActivity: (item: Omit<ActivityItem, "id" | "timestamp">) => string
+  updateActivity: (id: string, updates: Partial<Omit<ActivityItem, "id">>) => void
   clearActivities: () => void
-  updateActivity: (id: string, updates: Partial<ActivityItem>) => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -15,30 +14,32 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined)
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [activityLog, setActivityLog] = useState<ActivityItem[]>([])
 
-  const addActivity = useCallback((activity: ActivityItem) => {
-    setActivityLog((prev) => [
-      ...prev,
-      {
-        ...activity,
-        id: activity.id || `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        timestamp: activity.timestamp || new Date(),
-      },
-    ])
+  const addActivity = useCallback((item: Omit<ActivityItem, "id" | "timestamp">): string => {
+    const id = `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const newActivity: ActivityItem = {
+      ...item,
+      id,
+      timestamp: Date.now(),
+    }
+    setActivityLog((prev) => [newActivity, ...prev.slice(0, 99)]) // Keep last 100 activities
+    return id
+  }, [])
+
+  const updateActivity = useCallback((id: string, updates: Partial<Omit<ActivityItem, "id">>) => {
+    setActivityLog((prev) =>
+      prev.map((activity) => (activity.id === id ? { ...activity, ...updates, timestamp: Date.now() } : activity)),
+    )
   }, [])
 
   const clearActivities = useCallback(() => {
     setActivityLog([])
   }, [])
 
-  const updateActivity = useCallback((id: string, updates: Partial<ActivityItem>) => {
-    setActivityLog((prev) => prev.map((activity) => (activity.id === id ? { ...activity, ...updates } : activity)))
-  }, [])
-
-  const value: ChatContextType = {
+  const value = {
     activityLog,
     addActivity,
-    clearActivities,
     updateActivity,
+    clearActivities,
   }
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
