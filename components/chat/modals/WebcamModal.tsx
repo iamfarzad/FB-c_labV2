@@ -1,60 +1,55 @@
 "use client"
 
-import { useState, useRef, useCallback, useEffect } from "react"
+import { useState, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Camera, RotateCcw, Zap } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Camera, Square, RotateCcw, Send } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { activityLogger } from "@/lib/activity-logger"
 
 interface WebcamModalProps {
   isOpen: boolean
   onClose: () => void
-  onCapture: (imageData: string) => void
-  onAIAnalysis: (analysis: string) => void
+  onAnalysis: (analysis: string) => void
 }
 
-export function WebcamModal({ isOpen, onClose, onCapture, onAIAnalysis }: WebcamModalProps) {
+export function WebcamModal({ isOpen, onClose, onAnalysis }: WebcamModalProps) {
   const { toast } = useToast()
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isStreaming, setIsStreaming] = useState(false)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const streamRef = useRef<MediaStream | null>(null)
 
   const startCamera = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 640, height: 480 },
+        audio: false,
       })
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream
+        streamRef.current = stream
         setIsStreaming(true)
-        activityLogger.log({
-          type: "webcam",
-          title: "Webcam Started",
-          description: "Camera stream initiated",
-          status: "in_progress",
-        })
       }
     } catch (error) {
       console.error("Camera access error:", error)
       toast({
-        title: "Camera Access Denied",
-        description: "Please allow camera access to use this feature.",
+        title: "Camera Access Error",
+        description: "Unable to access camera. Please check permissions.",
         variant: "destructive",
       })
     }
   }, [toast])
 
   const stopCamera = useCallback(() => {
-    if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream
-      stream.getTracks().forEach((track) => track.stop())
-      videoRef.current.srcObject = null
-      setIsStreaming(false)
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
     }
+    setIsStreaming(false)
   }, [])
 
   const capturePhoto = useCallback(() => {
@@ -64,161 +59,130 @@ export function WebcamModal({ isOpen, onClose, onCapture, onAIAnalysis }: Webcam
     const video = videoRef.current
     const context = canvas.getContext("2d")
 
-    if (!context) return
+    if (context) {
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      context.drawImage(video, 0, 0)
 
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    context.drawImage(video, 0, 0)
+      const imageData = canvas.toDataURL("image/jpeg", 0.8)
+      setCapturedImage(imageData)
+      stopCamera()
+    }
+  }, [stopCamera])
 
-    const imageData = canvas.toDataURL("image/jpeg", 0.8)
-    setCapturedImage(imageData)
-
-    activityLogger.log({
-      type: "image_capture",
-      title: "Photo Captured",
-      description: "Webcam photo taken successfully",
-      status: "completed",
-    })
-
-    toast({
-      title: "Photo Captured",
-      description: "Image ready for analysis or chat",
-    })
-  }, [toast])
-
-  const analyzeWithAI = useCallback(async () => {
+  const analyzeImage = useCallback(async () => {
     if (!capturedImage) return
 
     setIsAnalyzing(true)
-    activityLogger.log({
-      type: "vision_analysis",
-      title: "AI Analysis Started",
-      description: "Analyzing captured image with Gemini Vision",
-      status: "in_progress",
-    })
-
     try {
       const response = await fetch("/api/analyze-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          imageData: capturedImage,
+          image: capturedImage,
           prompt:
-            "Analyze this webcam image. Describe what you see, identify any objects, people, or text, and provide insights about the context or setting.",
+            "Analyze this image for business insights, opportunities, or recommendations. Focus on practical applications and actionable advice.",
         }),
       })
 
-      if (!response.ok) {
-        throw new Error("Analysis failed")
+      const data = await response.json()
+
+      if (data.success) {
+        onAnalysis(data.analysis)
+        toast({
+          title: "Image Analyzed",
+          description: "AI analysis complete! Check the chat for insights.",
+        })
+        onClose()
+      } else {
+        throw new Error(data.error || "Analysis failed")
       }
-
-      const { analysis } = await response.json()
-
-      onAIAnalysis(analysis)
-      activityLogger.log({
-        type: "vision_analysis",
-        title: "AI Analysis Complete",
-        description: "Image analyzed successfully",
-        status: "completed",
-      })
-
-      toast({
-        title: "Analysis Complete",
-        description: "AI has analyzed your image",
-      })
-    } catch (error) {
+    } catch (error: any) {
       console.error("Analysis error:", error)
-      activityLogger.log({
-        type: "error",
-        title: "Analysis Failed",
-        description: "Failed to analyze image",
-        status: "failed",
-      })
       toast({
-        title: "Analysis Failed",
-        description: "Could not analyze the image. Please try again.",
+        title: "Analysis Error",
+        description: error.message || "Failed to analyze image",
         variant: "destructive",
       })
     } finally {
       setIsAnalyzing(false)
     }
-  }, [capturedImage, onAIAnalysis, toast])
+  }, [capturedImage, onAnalysis, onClose, toast])
 
-  const sendToChat = useCallback(() => {
-    if (capturedImage) {
-      onCapture(capturedImage)
-      onClose()
-    }
-  }, [capturedImage, onCapture, onClose])
-
-  const retakePhoto = useCallback(() => {
+  const resetCapture = useCallback(() => {
     setCapturedImage(null)
-  }, [])
+    startCamera()
+  }, [startCamera])
 
-  useEffect(() => {
-    if (isOpen) {
-      startCamera()
-    } else {
-      stopCamera()
-      setCapturedImage(null)
-    }
+  const handleClose = useCallback(() => {
+    stopCamera()
+    setCapturedImage(null)
+    onClose()
+  }, [stopCamera, onClose])
 
-    return () => stopCamera()
-  }, [isOpen, startCamera, stopCamera])
+  if (!isOpen) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Camera className="w-5 h-5" />
-            Webcam Capture
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          {!capturedImage ? (
-            <div className="relative">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full rounded-lg bg-black"
-                style={{ aspectRatio: "4/3" }}
-              />
-              <canvas ref={canvasRef} className="hidden" />
-
-              {isStreaming && (
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                  <Button onClick={capturePhoto} size="lg" className="rounded-full">
-                    <Camera className="w-5 h-5 mr-2" />
-                    Capture Photo
-                  </Button>
-                </div>
-              )}
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-2xl">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                Webcam Analysis
+              </CardTitle>
+              <CardDescription>Capture a photo for AI-powered business analysis</CardDescription>
             </div>
-          ) : (
-            <div className="space-y-4">
-              <img src={capturedImage || "/placeholder.svg"} alt="Captured" className="w-full rounded-lg" />
+            <Badge variant="secondary">Gemini Vision</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="relative bg-gray-100 rounded-lg overflow-hidden aspect-video">
+            {capturedImage ? (
+              <img src={capturedImage || "/placeholder.svg"} alt="Captured" className="w-full h-full object-cover" />
+            ) : (
+              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+            )}
+            <canvas ref={canvasRef} className="hidden" />
+          </div>
 
-              <div className="flex gap-2 justify-center">
-                <Button onClick={retakePhoto} variant="outline">
-                  <RotateCcw className="w-4 h-4 mr-2" />
+          <div className="flex gap-2 justify-center">
+            {!isStreaming && !capturedImage && (
+              <Button onClick={startCamera} className="flex items-center gap-2">
+                <Camera className="h-4 w-4" />
+                Start Camera
+              </Button>
+            )}
+
+            {isStreaming && (
+              <Button onClick={capturePhoto} className="flex items-center gap-2">
+                <Square className="h-4 w-4" />
+                Capture Photo
+              </Button>
+            )}
+
+            {capturedImage && (
+              <>
+                <Button onClick={resetCapture} variant="outline" className="flex items-center gap-2 bg-transparent">
+                  <RotateCcw className="h-4 w-4" />
                   Retake
                 </Button>
-
-                <Button onClick={analyzeWithAI} disabled={isAnalyzing} variant="secondary">
-                  <Zap className="w-4 h-4 mr-2" />
-                  {isAnalyzing ? "Analyzing..." : "AI Analysis"}
+                <Button onClick={analyzeImage} disabled={isAnalyzing} className="flex items-center gap-2">
+                  <Send className="h-4 w-4" />
+                  {isAnalyzing ? "Analyzing..." : "Analyze Image"}
                 </Button>
+              </>
+            )}
+          </div>
 
-                <Button onClick={sendToChat}>Send to Chat</Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={handleClose}>
+              Cancel
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

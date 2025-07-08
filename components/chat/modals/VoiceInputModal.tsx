@@ -1,221 +1,188 @@
 "use client"
 
-import type React from "react"
-import { useState, useEffect, useRef, useCallback } from "react"
-import { X, Send } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { useChatContext } from "@/app/chat/context/ChatProvider"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Mic, MicOff, Send, Volume2 } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import SpeechRecognition from "speech-recognition"
 
 interface VoiceInputModalProps {
   isOpen: boolean
   onClose: () => void
-  onTransferToChat: (fullTranscript: string) => void
+  onTranscript: (transcript: string) => void
 }
 
-type AIState = "idle" | "listening" | "processing" | "error"
+export function VoiceInputModal({ isOpen, onClose, onTranscript }: VoiceInputModalProps) {
+  const { toast } = useToast()
+  const [isListening, setIsListening] = useState(false)
+  const [transcript, setTranscript] = useState("")
+  const [interimTranscript, setInterimTranscript] = useState("")
+  const recognitionRef = useRef<any | null>(null)
 
-function AIOrb({ state, onClick }: { state: AIState; onClick: () => void }) {
-  const getOrbColor = () => {
-    switch (state) {
-      case "listening":
-        return "from-blue-400 to-blue-600"
-      case "processing":
-        return "from-yellow-400 to-orange-500"
-      case "error":
-        return "from-red-400 to-red-600"
-      default:
-        return "from-purple-400 to-indigo-600"
-    }
-  }
-
-  return (
-    <motion.div
-      className={cn("relative w-32 h-32 rounded-full bg-gradient-to-r shadow-2xl cursor-pointer", getOrbColor())}
-      animate={{ scale: state === "listening" ? [1, 1.1, 1] : 1 }}
-      transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={onClick}
-    >
-      <AnimatePresence>
-        {state === "listening" && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center"
-          >
-            <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="w-1 bg-white/80 rounded-full"
-                  animate={{ height: [8, Math.random() * 20 + 10, 8] }}
-                  transition={{
-                    duration: 0.5 + Math.random() * 0.5,
-                    repeat: Number.POSITIVE_INFINITY,
-                    repeatType: "reverse",
-                    delay: i * 0.1,
-                  }}
-                />
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  )
-}
-
-export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({ isOpen, onClose, onTransferToChat }) => {
-  const { addActivity } = useChatContext()
-  const [aiState, setAIState] = useState<AIState>("idle")
-  const [isRecording, setIsRecording] = useState(false)
-  const [currentTranscription, setCurrentTranscription] = useState("")
-  const recognitionRef = useRef<any>(null)
-
-  const processAndClose = useCallback(() => {
-    if (currentTranscription.trim()) {
-      onTransferToChat(currentTranscription.trim())
-      addActivity({
-        type: "voice_input",
-        title: "Voice Transcript Sent",
-        description: "Voice conversation transferred to chat.",
-        status: "completed",
-      })
-    }
-    setCurrentTranscription("")
-    setAIState("idle")
-    setIsRecording(false)
-    onClose()
-  }, [currentTranscription, onTransferToChat, addActivity, onClose])
-
-  const startRecording = useCallback(() => {
-    if (recognitionRef.current) {
-      setCurrentTranscription("")
-      recognitionRef.current.start()
-      setIsRecording(true)
-      setAIState("listening")
-      addActivity({ type: "voice_input", title: "Voice Recording Started", status: "in_progress" })
-    }
-  }, [addActivity])
-
-  const stopRecording = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop()
-      setIsRecording(false)
-      setAIState("processing")
-    }
-  }, [])
-
-  const handleOrbClick = useCallback(() => {
-    if (isRecording) {
-      stopRecording()
-    } else {
-      startRecording()
-    }
-  }, [isRecording, startRecording, stopRecording])
-
-  useEffect(() => {
-    if (!isOpen) return
-
-    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
+  const startListening = useCallback(() => {
     if (!SpeechRecognition) {
-      setAIState("error")
+      toast({
+        title: "Speech Recognition Not Supported",
+        description: "Your browser doesn't support speech recognition.",
+        variant: "destructive",
+      })
       return
     }
+
     const recognition = new SpeechRecognition()
+
     recognition.continuous = true
     recognition.interimResults = true
     recognition.lang = "en-US"
 
-    recognition.onresult = (event: any) => {
+    recognition.onstart = () => {
+      setIsListening(true)
+    }
+
+    recognition.onresult = (event) => {
       let finalTranscript = ""
       let interimTranscript = ""
+
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript
         if (event.results[i].isFinal) {
-          finalTranscript += transcript + " "
+          finalTranscript += transcript
         } else {
           interimTranscript += transcript
         }
       }
-      setCurrentTranscription(finalTranscript + interimTranscript)
-    }
-    recognition.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error)
-      setAIState("error")
-    }
-    recognition.onend = () => {
-      setIsRecording(false)
-      setAIState("idle")
-    }
-    recognitionRef.current = recognition
-    startRecording() // Start immediately on open
 
+      setTranscript((prev) => prev + finalTranscript)
+      setInterimTranscript(interimTranscript)
+    }
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error)
+      toast({
+        title: "Speech Recognition Error",
+        description: "There was an error with speech recognition. Please try again.",
+        variant: "destructive",
+      })
+      setIsListening(false)
+    }
+
+    recognition.onend = () => {
+      setIsListening(false)
+      setInterimTranscript("")
+    }
+
+    recognition.start()
+    recognitionRef.current = recognition
+  }, [toast])
+
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop()
+      recognitionRef.current = null
+    }
+    setIsListening(false)
+    setInterimTranscript("")
+  }, [])
+
+  const sendTranscript = useCallback(() => {
+    if (transcript.trim()) {
+      onTranscript(transcript.trim())
+      toast({
+        title: "Voice Input Sent",
+        description: "Your voice message has been processed.",
+      })
+      onClose()
+    }
+  }, [transcript, onTranscript, onClose, toast])
+
+  const clearTranscript = useCallback(() => {
+    setTranscript("")
+    setInterimTranscript("")
+  }, [])
+
+  const handleClose = useCallback(() => {
+    stopListening()
+    setTranscript("")
+    setInterimTranscript("")
+    onClose()
+  }, [stopListening, onClose])
+
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.stop()
       }
     }
-  }, [isOpen, startRecording])
+  }, [])
 
   if (!isOpen) return null
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-        onClick={processAndClose}
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="w-full h-full flex flex-col items-center justify-center p-8 relative"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={processAndClose}
-            className="absolute top-8 right-8 rounded-full bg-background/50"
-          >
-            <X className="w-5 h-5" />
-          </Button>
-          <div className="relative z-10 flex flex-col items-center justify-center space-y-12 w-full max-w-4xl">
-            <AIOrb state={aiState} onClick={handleOrbClick} />
-            <div className="w-full max-w-2xl mx-auto space-y-4 text-center">
-              <p className="text-lg text-white bg-black/20 backdrop-blur-sm rounded-lg p-4 min-h-[6rem]">
-                {currentTranscription || "Listening..."}
-                {isRecording && (
-                  <motion.span
-                    animate={{ opacity: [1, 0] }}
-                    transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY }}
-                    className="ml-1"
-                  >
-                    |
-                  </motion.span>
-                )}
-              </p>
-              <div className="text-sm text-white/70">
-                {isRecording ? "Tap orb to stop" : "Tap orb to start speaking"}
-              </div>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-lg">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Volume2 className="h-5 w-5" />
+                Voice Input
+              </CardTitle>
+              <CardDescription>Speak your message and it will be converted to text</CardDescription>
             </div>
-            <Button onClick={processAndClose} disabled={!currentTranscription.trim()} className="gap-2">
-              <Send className="w-4 h-4" />
-              Send to Chat
+            <Badge variant="secondary">Speech Recognition</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="min-h-[120px] p-4 border rounded-lg bg-gray-50">
+            <div className="text-sm text-gray-700">
+              {transcript && <span className="text-black">{transcript}</span>}
+              {interimTranscript && <span className="text-gray-500 italic">{interimTranscript}</span>}
+              {!transcript && !interimTranscript && (
+                <span className="text-gray-400">
+                  {isListening ? "Listening... Speak now" : "Click the microphone to start speaking"}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-center">
+            {!isListening ? (
+              <Button onClick={startListening} className="flex items-center gap-2" size="lg">
+                <Mic className="h-5 w-5" />
+                Start Recording
+              </Button>
+            ) : (
+              <Button onClick={stopListening} variant="destructive" className="flex items-center gap-2" size="lg">
+                <MicOff className="h-5 w-5" />
+                Stop Recording
+              </Button>
+            )}
+
+            {transcript && (
+              <Button onClick={clearTranscript} variant="outline" className="flex items-center gap-2 bg-transparent">
+                Clear
+              </Button>
+            )}
+          </div>
+
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button onClick={sendTranscript} disabled={!transcript.trim()} className="flex items-center gap-2">
+              <Send className="h-4 w-4" />
+              Send Message
             </Button>
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+
+          <div className="text-xs text-muted-foreground">
+            <p>Tip: Speak clearly and pause between sentences for better accuracy</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
-
-export default VoiceInputModal

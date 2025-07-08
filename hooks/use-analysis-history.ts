@@ -2,20 +2,44 @@
 
 import { useState, useCallback } from "react"
 
-export function useAnalysisHistory() {
-  const [analysisHistory, setAnalysisHistory] = useState<string[]>([])
+export interface AnalysisEntry {
+  id: string
+  type: "webcam" | "screen_share" | "video_to_app" | "voice_input"
+  timestamp: Date
+  input: string
+  analysis: string
+  metadata?: Record<string, any>
+}
 
-  const addAnalysis = useCallback((analysis: string) => {
-    setAnalysisHistory((prev) => [analysis, ...prev.slice(0, 9)]) // Keep last 10
+export function useAnalysisHistory() {
+  const [history, setHistory] = useState<AnalysisEntry[]>([])
+
+  const addEntry = useCallback((entry: Omit<AnalysisEntry, "id" | "timestamp">) => {
+    const newEntry: AnalysisEntry = {
+      ...entry,
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+    }
+
+    setHistory((prev) => [newEntry, ...prev])
+    return newEntry
   }, [])
 
   const clearHistory = useCallback(() => {
-    setAnalysisHistory([])
+    setHistory([])
   }, [])
 
+  const getEntriesByType = useCallback(
+    (type: AnalysisEntry["type"]) => {
+      return history.filter((entry) => entry.type === type)
+    },
+    [history],
+  )
+
   return {
-    analysisHistory,
-    addAnalysis,
+    history,
+    addEntry,
     clearHistory,
+    getEntriesByType,
   }
 }
