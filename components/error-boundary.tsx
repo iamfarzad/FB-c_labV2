@@ -13,7 +13,7 @@ interface ErrorBoundaryState {
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
-  fallback?: React.ComponentType<{ error?: Error; resetError: () => void }>
+  fallback?: React.ComponentType<{ error: Error; resetError: () => void }>
 }
 
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -23,12 +23,18 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error }
+    return {
+      hasError: true,
+      error,
+    }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("Error caught by boundary:", error, errorInfo)
-    this.setState({ error, errorInfo })
+    this.setState({
+      error,
+      errorInfo,
+    })
   }
 
   resetError = () => {
@@ -39,34 +45,37 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     if (this.state.hasError) {
       if (this.props.fallback) {
         const FallbackComponent = this.props.fallback
-        return <FallbackComponent error={this.state.error} resetError={this.resetError} />
+        return <FallbackComponent error={this.state.error!} resetError={this.resetError} />
       }
 
       return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-background">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-                <AlertTriangle className="h-6 w-6 text-destructive" />
+              <div className="w-12 h-12 mx-auto mb-4 bg-destructive/10 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-destructive" />
               </div>
               <CardTitle>Something went wrong</CardTitle>
               <CardDescription>
-                An unexpected error occurred. Please try refreshing the page or contact support if the problem persists.
+                An unexpected error occurred. This has been logged and we'll look into it.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {process.env.NODE_ENV === "development" && this.state.error && (
-                <div className="rounded-md bg-muted p-3">
-                  <p className="text-sm font-mono text-muted-foreground">{this.state.error.message}</p>
+                <div className="p-3 bg-muted rounded-md">
+                  <p className="text-sm font-mono text-destructive">{this.state.error.message}</p>
+                  {this.state.error.stack && (
+                    <pre className="text-xs mt-2 overflow-auto max-h-32">{this.state.error.stack}</pre>
+                  )}
                 </div>
               )}
               <div className="flex gap-2">
                 <Button onClick={this.resetError} className="flex-1">
-                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <RefreshCw className="w-4 h-4 mr-2" />
                   Try Again
                 </Button>
                 <Button variant="outline" onClick={() => window.location.reload()} className="flex-1">
-                  Refresh Page
+                  Reload Page
                 </Button>
               </div>
             </CardContent>

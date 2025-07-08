@@ -8,8 +8,6 @@ interface DeviceInfo {
   isDesktop: boolean
   screenWidth: number
   screenHeight: number
-  userAgent: string
-  isTouchDevice: boolean
 }
 
 export function useDevice(): DeviceInfo {
@@ -17,25 +15,18 @@ export function useDevice(): DeviceInfo {
     isMobile: false,
     isTablet: false,
     isDesktop: true,
-    screenWidth: 1920,
-    screenHeight: 1080,
-    userAgent: "",
-    isTouchDevice: false,
+    screenWidth: 1024,
+    screenHeight: 768,
   })
 
   useEffect(() => {
     const updateDeviceInfo = () => {
       const width = window.innerWidth
       const height = window.innerHeight
-      const userAgent = navigator.userAgent
 
-      // Breakpoints matching Tailwind CSS defaults
       const isMobile = width < 768
       const isTablet = width >= 768 && width < 1024
       const isDesktop = width >= 1024
-
-      // Check for touch capability
-      const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0
 
       setDeviceInfo({
         isMobile,
@@ -43,22 +34,17 @@ export function useDevice(): DeviceInfo {
         isDesktop,
         screenWidth: width,
         screenHeight: height,
-        userAgent,
-        isTouchDevice,
       })
     }
 
     // Initial check
     updateDeviceInfo()
 
-    // Listen for resize events
+    // Add event listener
     window.addEventListener("resize", updateDeviceInfo)
-    window.addEventListener("orientationchange", updateDeviceInfo)
 
-    return () => {
-      window.removeEventListener("resize", updateDeviceInfo)
-      window.removeEventListener("orientationchange", updateDeviceInfo)
-    }
+    // Cleanup
+    return () => window.removeEventListener("resize", updateDeviceInfo)
   }, [])
 
   return deviceInfo
