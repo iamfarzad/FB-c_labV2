@@ -518,7 +518,7 @@ export function ChatFooter({
           <span
             className={cn(
               // Hide detailed shortcuts on mobile
-              "mobile:hidden",
+              "mobile:hidden opacity-10",
               "tablet:inline",
               "desktop:inline",
             )}
