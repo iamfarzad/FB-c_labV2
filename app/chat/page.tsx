@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { useChat } from "ai/react"
+import { useChat } from "@/hooks/chat/useChat"
 import { ChatLayout } from "@/components/chat/ChatLayout"
 import { ChatHeader } from "@/components/chat/ChatHeader"
 import { ChatMain } from "@/components/chat/ChatMain"
@@ -12,6 +12,7 @@ import { LeadCaptureFlow } from "@/components/chat/LeadCaptureFlow"
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal"
 import { ScreenShareModal } from "@/components/chat/modals/ScreenShareModal"
 import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
+import { VoiceOutputModal } from "@/components/chat/modals/VoiceOutputModal"
 import { WebcamModal } from "@/components/chat/modals/WebcamModal"
 import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
 import type { LeadCaptureState } from "./types/lead-capture"
@@ -26,44 +27,61 @@ import type { Message } from "./types/chat"
 
 export default function ChatPage() {
   const [sessionId] = useState(() => uuidv4())
-  const { activityLog, addActivity, clearActivities } = useChatContext()
+  const { activityLog, addActivity } = useChatContext()
   const { toast } = useToast()
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
   const [showVoiceModal, setShowVoiceModal] = useState(false)
+  const [showVoiceOutputModal, setShowVoiceOutputModal] = useState(false)
+  const [voiceOutputData, setVoiceOutputData] = useState<{
+    textContent: string
+    audioData?: string
+    voiceStyle?: string
+  } | null>(null)
   const [showWebcamModal, setShowWebcamModal] = useState(false)
   const [showScreenShareModal, setShowScreenShareModal] = useState(false)
   const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
 
   const [leadCaptureState, setLeadCaptureState] = useState<LeadCaptureState>({
     stage: "initial",
+    hasName: false,
+    hasEmail: false,
+    hasAgreedToTC: false,
     leadData: { engagementType: "chat" },
   })
   const [showLeadCapture, setShowLeadCapture] = useState(false)
 
-  const { messages, setMessages, input, setInput, handleInputChange, handleSubmit, isLoading, error, append } = useChat(
-    {
-      api: "/api/chat",
-      id: sessionId,
-      body: {
-        leadContext: leadCaptureState.leadData,
-        sessionId: sessionId,
-      },
-      onFinish: (message) => {
-        activityLogger.log({
-          type: "ai_stream",
-          title: "AI Response Received",
-          description: `Full response generated.`,
-          status: "completed",
-        })
-      },
-      onError: (err) => {
-        toast({ title: "Chat Error", description: err.message, variant: "destructive" })
-        activityLogger.log({ type: "error", title: "Chat API Error", description: err.message, status: "failed" })
-      },
+  const { 
+    messages, 
+    input, 
+    setInput, 
+    handleInputChange, 
+    handleSubmit, 
+    isLoading, 
+    error, 
+    append, 
+    clearMessages,
+    sendMessage 
+  } = useChat({
+    data: {
+      leadContext: leadCaptureState.leadData,
+      sessionId: sessionId,
+      userId: "anonymous_user" // Could be enhanced with real user tracking
     },
-  )
+    onFinish: (message) => {
+      activityLogger.log({
+        type: "ai_stream",
+        title: "AI Response Received",
+        description: `Full response generated.`,
+        status: "completed",
+      })
+    },
+    onError: (err) => {
+      toast({ title: "Chat Error", description: err.message, variant: "destructive" })
+      activityLogger.log({ type: "error", title: "Chat API Error", description: err.message, status: "failed" })
+    },
+  })
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -94,15 +112,17 @@ export default function ChatPage() {
   }, [addActivity, sessionId])
 
   const handleNewChat = useCallback(() => {
-    setMessages([])
+    clearMessages()
     setLeadCaptureState({
       stage: "initial",
+      hasName: false,
+      hasEmail: false,
+      hasAgreedToTC: false,
       leadData: { engagementType: "chat" },
     })
     setShowLeadCapture(false)
-    clearActivities()
     toast({ title: "New Chat Started" })
-  }, [setMessages, clearActivities, toast])
+  }, [clearMessages, toast])
 
   const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -121,7 +141,13 @@ export default function ChatPage() {
   }
 
   const handleLeadCaptureComplete = (leadData: LeadCaptureState["leadData"]) => {
-    setLeadCaptureState({ stage: "consultation", leadData } as LeadCaptureState)
+    setLeadCaptureState({ 
+      stage: "consultation", 
+      hasName: true,
+      hasEmail: true,
+      hasAgreedToTC: true,
+      leadData 
+    } as LeadCaptureState)
     setShowLeadCapture(false)
     append({
       role: "assistant",
@@ -159,7 +185,7 @@ export default function ChatPage() {
     (transcript: string) => {
       if (!transcript.trim()) return
       append({ role: "user", content: transcript })
-      activityLogger.log({ type: "voice_input", title: "Voice Input Sent", status: "completed" })
+      activityLogger.log({ type: "voice_input", title: "Voice Input Sent", description: transcript, status: "completed" })
     },
     [append],
   )
@@ -171,7 +197,7 @@ export default function ChatPage() {
         content: "[Webcam image captured] Please analyze this image.",
         imageUrl: imageData,
       })
-      activityLogger.log({ type: "image_capture", title: "Webcam Photo Captured", status: "completed" })
+      activityLogger.log({ type: "image_capture", title: "Webcam Photo Captured", description: "Webcam image captured", status: "completed" })
     },
     [append],
   )
@@ -182,7 +208,7 @@ export default function ChatPage() {
         role: "assistant",
         content: `**Screen Analysis:**\n${analysis}`,
       })
-      activityLogger.log({ type: "vision_analysis", title: "Screen Analyzed", status: "completed" })
+      activityLogger.log({ type: "vision_analysis", title: "Screen Analyzed", description: "Screen content analyzed", status: "completed" })
     },
     [append],
   )
@@ -193,9 +219,23 @@ export default function ChatPage() {
         role: "assistant",
         content: `I have successfully generated a new learning app based on the video.`,
       })
-      activityLogger.log({ type: "tool_used", title: "Video-to-App Generated", status: "completed" })
+      activityLogger.log({ type: "tool_used", title: "Video-to-App Generated", description: "Learning app generated from video", status: "completed" })
     },
     [append],
+  )
+
+  const handleVoiceResponse = useCallback(
+    (textContent: string, voiceStyle: string = "neutral") => {
+      setVoiceOutputData({ textContent, voiceStyle })
+      setShowVoiceOutputModal(true)
+      activityLogger.log({ 
+        type: "voice_response", 
+        title: "Voice Response Triggered", 
+        description: `AI speaking: ${textContent.slice(0, 100)}...`, 
+        status: "in_progress" 
+      })
+    },
+    [],
   )
 
   const handleDownloadSummary = useCallback(() => {
@@ -224,6 +264,10 @@ export default function ChatPage() {
     onOpenScreenShare: () => setShowScreenShareModal(true),
   })
 
+  const handleActivityClick = useCallback((activity: any) => {
+    console.log("Activity clicked:", activity)
+  }, [])
+
   return (
     <ChatLayout>
       <div className="flex h-full">
@@ -232,9 +276,10 @@ export default function ChatPage() {
           isOpen={isSidebarOpen}
           onToggle={handleToggleSidebar}
           onNewChat={handleNewChat}
+          onActivityClick={handleActivityClick}
         />
         <div className="flex flex-col flex-1 h-full">
-          <ChatHeader onDownloadSummary={handleDownloadSummary} activities={activityLog} onNewChat={handleNewChat} />
+          <ChatHeader onDownloadSummary={handleDownloadSummary} activities={activityLog} onNewChat={handleNewChat} onActivityClick={handleActivityClick} />
           <div className="flex-1 overflow-hidden relative">
             {showLeadCapture && (
               <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -257,6 +302,7 @@ export default function ChatPage() {
               onFileUpload={handleFileUpload}
               onImageUpload={handleImageUpload}
               onVoiceTranscript={handleVoiceTranscript}
+              onVoiceResponse={handleVoiceResponse}
               inputRef={inputRef}
               showVoiceModal={showVoiceModal}
               setShowVoiceModal={setShowVoiceModal}
@@ -277,7 +323,7 @@ export default function ChatPage() {
           onClose={() => setShowScreenShareModal(false)}
           onAIAnalysis={handleScreenShareAnalysis}
           onStream={() =>
-            activityLogger.log({ type: "screen_share", title: "Screen Share Started", status: "in_progress" })
+            activityLogger.log({ type: "screen_share", title: "Screen Share Started", description: "Screen sharing session started", status: "in_progress" })
           }
         />
       )}
@@ -306,6 +352,19 @@ export default function ChatPage() {
           isOpen={showVideo2AppModal}
           onClose={() => setShowVideo2AppModal(false)}
           onAnalysisComplete={handleVideoAppResult}
+        />
+      )}
+      {showVoiceOutputModal && voiceOutputData && (
+        <VoiceOutputModal
+          isOpen={showVoiceOutputModal}
+          onClose={() => {
+            setShowVoiceOutputModal(false)
+            setVoiceOutputData(null)
+          }}
+          textContent={voiceOutputData.textContent}
+          audioData={voiceOutputData.audioData}
+          voiceStyle={voiceOutputData.voiceStyle}
+          autoPlay={true}
         />
       )}
     </ChatLayout>

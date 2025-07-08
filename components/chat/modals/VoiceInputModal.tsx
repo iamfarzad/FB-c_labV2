@@ -98,7 +98,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({ isOpen, onClos
       recognitionRef.current.start()
       setIsRecording(true)
       setAIState("listening")
-      addActivity({ type: "voice_input", title: "Voice Recording Started", status: "in_progress" })
+      addActivity({ type: "voice_input", title: "Voice Recording Started", description: "Started voice recording", status: "in_progress" })
     }
   }, [addActivity])
 
@@ -178,7 +178,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({ isOpen, onClos
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           className="w-full h-full flex flex-col items-center justify-center p-8 relative"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
           <Button
             variant="ghost"

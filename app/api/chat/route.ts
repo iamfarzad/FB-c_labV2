@@ -1,8 +1,14 @@
 import { GoogleGenerativeAI } from "@google/generative-ai"
-import { GoogleGenerativeAIStream, StreamingTextResponse, type Message } from "ai"
 import { getSupabase } from "@/lib/supabase/server"
 import { TokenCostCalculator } from "@/lib/token-cost-calculator"
 import type { NextRequest } from "next/server"
+
+// Define Message type locally since ai package exports are not available
+interface Message {
+  role: "user" | "assistant"
+  content: string
+  imageUrl?: string
+}
 
 export const dynamic = "force-dynamic"
 
@@ -18,8 +24,8 @@ const buildSystemPrompt = (leadContext: any): string => {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, data } = await req.json()
-    const { leadContext, sessionId, userId } = data
+    const { messages, data = {} } = await req.json()
+    const { leadContext = {}, sessionId = null, userId = null } = data
 
     if (!process.env.GEMINI_API_KEY) {
       throw new Error("GEMINI_API_KEY environment variable is not set")
@@ -31,54 +37,118 @@ export async function POST(req: NextRequest) {
     const systemPrompt = buildSystemPrompt(leadContext)
     const userMessages = (messages as Message[]).filter((m) => m.role === "user" || m.role === "assistant")
 
+    // Convert messages to Gemini format, handling multimodal content
+    const geminiContents = userMessages.map((message) => {
+      const parts: any[] = [{ text: message.content }]
+      
+      // Add image if present
+      if (message.imageUrl) {
+        // Convert base64 image to inline data
+        const base64Match = message.imageUrl.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/)
+        if (base64Match) {
+          parts.push({
+            inlineData: {
+              mimeType: `image/${base64Match[1]}`,
+              data: base64Match[2]
+            }
+          })
+        }
+      }
+      
+      return {
+        role: message.role === "assistant" ? "model" : "user",
+        parts
+      }
+    })
+
     const geminiPrompt = {
       system_instruction: {
         role: "system",
         parts: [{ text: systemPrompt }],
       },
-      contents: userMessages.map((message) => ({
-        role: message.role === "assistant" ? "model" : "user",
-        parts: [{ text: message.content }],
-      })),
+      contents: geminiContents,
     }
 
-    const geminiResponse = await genAI.getGenerativeModel({ model }).generateContentStream(geminiPrompt)
-
-    const stream = GoogleGenerativeAIStream(geminiResponse, {
-      onFinal: async (completion) => {
+    // Create a streaming response
+    const encoder = new TextEncoder()
+    
+    const stream = new ReadableStream({
+      async start(controller) {
         try {
-          const { usageMetadata } = await geminiResponse.response
-          if (usageMetadata) {
-            const { promptTokenCount, candidatesTokenCount, totalTokenCount } = usageMetadata
-            const cost = TokenCostCalculator.calculateCost("gemini", model, {
-              inputTokens: promptTokenCount,
-              outputTokens: candidatesTokenCount,
-              totalTokens: totalTokenCount,
-            })
-
-            const supabase = getSupabase()
-            await supabase.from("token_usage_logs").insert({
-              session_id: sessionId,
-              provider: "gemini",
-              model: model,
-              input_tokens: promptTokenCount,
-              output_tokens: candidatesTokenCount,
-              total_tokens: totalTokenCount,
-              input_cost: cost.inputCost,
-              output_cost: cost.outputCost,
-              total_cost: cost.totalCost,
-              request_type: "chat",
-              user_id: userId,
-              metadata: { final_response_length: completion.length },
-            })
+          const geminiResponse = await genAI.getGenerativeModel({ model }).generateContentStream(geminiPrompt)
+          
+          let fullResponse = ""
+          let tokenUsage: any = null
+          
+          // Stream the response
+          for await (const chunk of geminiResponse.stream) {
+            const chunkText = chunk.text()
+            if (chunkText) {
+              fullResponse += chunkText
+              
+              // Send chunk to client
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunkText })}\n\n`))
+            }
           }
-        } catch (dbError) {
-          console.error("Failed to log token usage on stream completion:", dbError)
+          
+          // Get final response for token usage
+          const finalResponse = await geminiResponse.response
+          tokenUsage = finalResponse.usageMetadata
+          
+          // Log token usage
+          if (tokenUsage) {
+            try {
+              const { promptTokenCount, candidatesTokenCount, totalTokenCount } = tokenUsage
+              const cost = TokenCostCalculator.calculateCost("gemini", model, {
+                inputTokens: promptTokenCount,
+                outputTokens: candidatesTokenCount,
+                totalTokens: totalTokenCount,
+              })
+
+              const supabase = getSupabase()
+              await supabase.from("token_usage_logs").insert({
+                session_id: sessionId,
+                provider: "gemini",
+                model: model,
+                input_tokens: promptTokenCount,
+                output_tokens: candidatesTokenCount,
+                total_tokens: totalTokenCount,
+                input_cost: cost.inputCost,
+                output_cost: cost.outputCost,
+                total_cost: cost.totalCost,
+                request_type: "chat",
+                user_id: userId,
+                metadata: { response_length: fullResponse.length },
+              })
+            } catch (dbError) {
+              console.error("Failed to log token usage:", dbError)
+            }
+          }
+          
+          // Send final event
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`))
+          controller.close()
+          
+        } catch (error) {
+          console.error("[Chat API Stream Error]", error)
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: errorMessage })}\n\n`))
+          controller.close()
         }
       },
     })
 
-    return new StreamingTextResponse(stream)
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    })
+    
   } catch (error: any) {
     console.error("[Chat API Error]", error)
     const status = error.status || 500
