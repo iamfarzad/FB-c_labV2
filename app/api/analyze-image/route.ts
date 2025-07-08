@@ -14,8 +14,10 @@ export async function POST(request: NextRequest) {
 
     const prompt =
       type === "webcam"
-        ? "Analyze this webcam image. Describe what you see, including people, objects, activities, and the environment. Be specific and helpful."
-        : "Analyze this screen capture. Describe what application or content is being shown, what the user might be working on, and any notable elements or activities visible."
+        ? "Analyze this webcam image. Describe what you see, including people, objects, activities, and the environment. Be specific and helpful for business consultation purposes."
+        : type === "screen"
+          ? "Analyze this screen capture. Describe what application or content is being shown, what the user might be working on, and any notable elements or activities visible. Provide business insights if relevant."
+          : "Analyze this image and provide detailed insights relevant to business automation and AI consultation."
 
     const result = await model.generateContent([
       prompt,

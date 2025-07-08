@@ -90,18 +90,18 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
       setIsAnalyzing(true)
 
       try {
-        // TODO: Replace with real Gemini API call
-        // const response = await fetch('/api/analyze-image', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ image: base64Data, type: 'screen' })
-        // })
-        // const { analysis } = await response.json()
+        // Real Gemini API call
+        const response = await fetch("/api/analyze-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64Data, type: "screen" }),
+        })
 
-        // Mock AI analysis - REPLACE THIS
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        const analysis =
-          "AI analysis of the screen content would appear here. It seems you are currently viewing a code editor."
+        if (!response.ok) {
+          throw new Error("Failed to analyze screen")
+        }
+
+        const { analysis } = await response.json()
 
         setCurrentAnalysis(analysis)
         addAnalysis(analysis)
@@ -110,6 +110,9 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
         }
       } catch (error) {
         console.error("Screen analysis error:", error)
+        const fallbackAnalysis = "Unable to analyze screen content at this time. Please try again."
+        setCurrentAnalysis(fallbackAnalysis)
+        addAnalysis(fallbackAnalysis)
       } finally {
         setIsAnalyzing(false)
       }
