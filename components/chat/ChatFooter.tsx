@@ -15,7 +15,7 @@ interface ChatFooterProps {
   onFileUpload: (file: File) => void
   onImageUpload: (imageData: string, fileName: string) => void
   onVoiceTranscript: (transcript: string) => void
-  inputRef: React.RefObject<HTMLTextAreaElement>
+  inputRef: React.RefObject<HTMLTextAreaElement | null>
   showVoiceModal: boolean
   setShowVoiceModal: (show: boolean) => void
   showWebcamModal: boolean

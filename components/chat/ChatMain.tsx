@@ -13,7 +13,7 @@ import type { Message } from "@/app/chat/types/chat"
 interface ChatMainProps {
   messages: Message[]
   isLoading: boolean
-  messagesEndRef: React.RefObject<HTMLDivElement>
+  messagesEndRef: React.RefObject<HTMLDivElement | null>
 }
 
 export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps) {

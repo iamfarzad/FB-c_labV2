@@ -25,6 +25,9 @@ import { activityLogger } from "@/lib/activity-logger"
 import { v4 as uuidv4 } from "uuid"
 import type { Message } from "./types/chat"
 
+// Disable static optimization for this page
+export const dynamic = 'force-dynamic'
+
 export default function ChatPage() {
   const [sessionId] = useState(() => uuidv4())
   const { activityLog, addActivity } = useChatContext()
