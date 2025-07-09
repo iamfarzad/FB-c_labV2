@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Mic, MicOff, Send, Volume2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import SpeechRecognition from "speech-recognition"
 
 interface VoiceInputModalProps {
   isOpen: boolean
@@ -22,7 +21,13 @@ export function VoiceInputModal({ isOpen, onClose, onTranscript }: VoiceInputMod
   const recognitionRef = useRef<any | null>(null)
 
   const startListening = useCallback(() => {
-    if (!SpeechRecognition) {
+    // Browser-native SpeechRecognition
+    const SpeechRecognitionAPI =
+      typeof window !== "undefined"
+        ? (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
+        : null
+
+    if (!SpeechRecognitionAPI) {
       toast({
         title: "Speech Recognition Not Supported",
         description: "Your browser doesn't support speech recognition.",
@@ -31,20 +36,16 @@ export function VoiceInputModal({ isOpen, onClose, onTranscript }: VoiceInputMod
       return
     }
 
-    const recognition = new SpeechRecognition()
-
+    const recognition = new SpeechRecognitionAPI()
     recognition.continuous = true
     recognition.interimResults = true
     recognition.lang = "en-US"
 
-    recognition.onstart = () => {
-      setIsListening(true)
-    }
+    recognition.onstart = () => setIsListening(true)
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: any) => {
       let finalTranscript = ""
       let interimTranscript = ""
-
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript
         if (event.results[i].isFinal) {
@@ -53,12 +54,11 @@ export function VoiceInputModal({ isOpen, onClose, onTranscript }: VoiceInputMod
           interimTranscript += transcript
         }
       }
-
       setTranscript((prev) => prev + finalTranscript)
       setInterimTranscript(interimTranscript)
     }
 
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: any) => {
       console.error("Speech recognition error:", event.error)
       toast({
         title: "Speech Recognition Error",
