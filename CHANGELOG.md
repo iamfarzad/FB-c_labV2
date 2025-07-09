@@ -410,3 +410,17 @@ const stream = new ReadableStream({
 ---
 
 *All changes maintain backward compatibility and follow established patterns.* 
+
+## [Latest Changes] - 2025-01-21
+
+### Fixed
+- **Lead Capture API**: Fixed timestamp handling in tcAcceptance object to prevent undefined property errors
+- **Image Analysis API**: Improved base64 image processing to properly extract MIME type and data for Gemini API
+- **Production Build**: Resolved deployment issues that were causing runtime errors
+- **API Reliability**: Enhanced error handling across key API endpoints
+
+### Technical Details
+- Applied critical fixes from v0-dev branch to main branch
+- Fixed `leadData.tcAcceptance.timestamp` undefined property access
+- Improved base64 image parsing for analyze-image endpoint
+- Enhanced error handling for production environments 

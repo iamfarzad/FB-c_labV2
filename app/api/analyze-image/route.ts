@@ -17,12 +17,16 @@ export async function POST(request: NextRequest) {
         ? "Analyze this webcam image. Describe what you see, including people, objects, activities, and the environment. Be specific and helpful."
         : "Analyze this screen capture. Describe what application or content is being shown, what the user might be working on, and any notable elements or activities visible."
 
+    // Convert base64 image to the format Gemini expects
+    const base64Data = image.includes(",") ? image.split(",")[1] : image
+    const mimeType = image.includes("data:") ? image.split(";")[0].split(":")[1] : "image/jpeg"
+
     const result = await model.generateContent([
       prompt,
       {
         inlineData: {
-          mimeType: "image/jpeg",
-          data: image,
+          mimeType: mimeType,
+          data: base64Data,
         },
       },
     ])

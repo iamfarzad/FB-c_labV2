@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         email: leadData.email,
         company_name: leadData.company,
         conversation_summary: `Initial engagement via ${leadData.engagementType}${leadData.initialQuery ? `: "${leadData.initialQuery}"` : ""}`,
-        consultant_brief: `New lead captured via ${leadData.engagementType}. TC accepted at ${new Date(leadData.tcAcceptance.timestamp).toISOString()}`,
+        consultant_brief: `New lead captured via ${leadData.engagementType}. TC accepted at ${leadData.tcAcceptance?.timestamp ? new Date(leadData.tcAcceptance.timestamp).toISOString() : new Date().toISOString()}`,
         lead_score: 50, // Default score for new leads
         ai_capabilities_shown: [leadData.engagementType],
         created_at: new Date().toISOString(),
