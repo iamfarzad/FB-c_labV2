@@ -42,16 +42,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to save lead data" }, { status: 500 })
     }
 
-    // Trigger AI research in background
-    fetch("/api/lead-research", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: leadData.name,
-        email: leadData.email,
-        company: leadData.company,
-      }),
-    }).catch(console.error) // Fire and forget
+    // Trigger AI research in background (only if in development or with full URL)
+    try {
+      const baseUrl = process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}` 
+        : process.env.NEXTAUTH_URL 
+        ? process.env.NEXTAUTH_URL 
+        : process.env.NODE_ENV === "development" 
+        ? "http://localhost:3000" 
+        : null
+
+      if (baseUrl) {
+        fetch(`${baseUrl}/api/lead-research`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: leadData.name,
+            email: leadData.email,
+            company: leadData.company,
+          }),
+        }).catch(console.error) // Fire and forget
+      }
+    } catch (error) {
+      console.log("Background research fetch skipped:", error)
+    }
 
     return NextResponse.json({
       success: true,

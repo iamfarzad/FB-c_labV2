@@ -11,12 +11,22 @@ const supabaseAnonKey =
 let supabaseInstance: ReturnType<typeof createClient> | null = null
 
 export const supabase = (() => {
+  if (typeof window === "undefined") {
+    // Server-side: create a new instance each time
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+      },
+    })
+  }
+  
+  // Client-side: use singleton
   if (!supabaseInstance) {
     supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
         storageKey: "fb-ai-auth",
-        storage: typeof window !== "undefined" ? window.localStorage : undefined,
+        storage: window.localStorage,
       },
       realtime: {
         params: {

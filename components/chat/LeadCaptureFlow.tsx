@@ -53,16 +53,27 @@ export function LeadCaptureFlow({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
+          name: formData.name,
+          email: formData.email,
+          company: formData.company,
           engagementType,
           initialQuery,
-          source: "chat_onboarding",
+          tcAcceptance: {
+            accepted: formData.agreedToTerms,
+            timestamp: Date.now(),
+            userAgent: navigator.userAgent
+          }
         }),
       })
 
       if (!response.ok) {
-        throw new Error("Failed to submit lead data")
+        const errorData = await response.text()
+        console.error('API Error Response:', errorData)
+        throw new Error(`Failed to submit lead data: ${response.status} ${response.statusText}`)
       }
+
+      const result = await response.json()
+      console.log('Lead capture success:', result)
 
       // Complete the flow
       onComplete({
@@ -79,10 +90,32 @@ export function LeadCaptureFlow({
       })
     } catch (error) {
       console.error("Lead capture error:", error)
+      
+      // If API fails, still allow the user to continue with the chat
+      // Store the data locally for later sync
+      const fallbackData = {
+        name: formData.name,
+        email: formData.email,
+        company: formData.company,
+        engagementType,
+        initialQuery,
+        timestamp: new Date().toISOString(),
+        fallback: true
+      }
+      localStorage.setItem('pendingLeadData', JSON.stringify(fallbackData))
+      
+      // Still complete the flow so user can continue
+      onComplete({
+        name: formData.name,
+        email: formData.email,
+        company: formData.company,
+        engagementType,
+        initialQuery,
+      })
+
       toast({
-        title: "Error",
-        description: "Failed to save your information. Please try again.",
-        variant: "destructive",
+        title: "Welcome!",
+        description: "Starting your consultation. Your information will be saved shortly.",
       })
     } finally {
       setIsSubmitting(false)

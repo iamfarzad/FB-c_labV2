@@ -83,17 +83,18 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
       setIsAnalyzing(true)
 
       try {
-        // TODO: Replace with real Gemini API call
-        // const response = await fetch('/api/analyze-image', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ image: base64Data, type: 'webcam' })
-        // })
-        // const { analysis } = await response.json()
+        // Real Gemini API call for webcam analysis
+        const response = await fetch('/api/analyze-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64Data, type: 'webcam' })
+        })
 
-        // Mock AI analysis - REPLACE THIS
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        const analysis = "AI analysis of the webcam feed would appear here. It seems to be a person in a room."
+        if (!response.ok) {
+          throw new Error(`Analysis failed: ${response.statusText}`)
+        }
+
+        const { analysis } = await response.json()
 
         setCurrentAnalysis(analysis)
         addAnalysis(analysis)
@@ -102,6 +103,12 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
         }
       } catch (error) {
         console.error("AI analysis error:", error)
+        const fallbackAnalysis = "Unable to analyze image at this time. Please try again."
+        setCurrentAnalysis(fallbackAnalysis)
+        addAnalysis(fallbackAnalysis)
+        if (onAIAnalysis) {
+          onAIAnalysis(fallbackAnalysis)
+        }
       } finally {
         setIsAnalyzing(false)
       }

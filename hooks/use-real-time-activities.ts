@@ -7,6 +7,7 @@ import type { ActivityItem } from "@/app/chat/types/chat"
 export function useRealTimeActivities() {
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [isConnected, setIsConnected] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   const addActivity = useCallback((activity: Omit<ActivityItem, "id" | "timestamp">) => {
     const newActivity: ActivityItem = {
@@ -25,8 +26,15 @@ export function useRealTimeActivities() {
     setActivities([])
   }, [])
 
+  // Track mount state for hydration safety
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Listen for real-time activities from Supabase
   useEffect(() => {
+    if (!mounted) return
+
     const channel = supabase.channel("ai-activity")
 
     channel
@@ -53,10 +61,12 @@ export function useRealTimeActivities() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [mounted])
 
   // Listen for browser events (for client-side activities)
   useEffect(() => {
+    if (!mounted || typeof window === "undefined") return
+
     const handleActivity = (event: CustomEvent) => {
       const activity = event.detail as ActivityItem
       setActivities((prev) => {
@@ -73,7 +83,7 @@ export function useRealTimeActivities() {
 
     window.addEventListener("ai-activity", handleActivity as EventListener)
     return () => window.removeEventListener("ai-activity", handleActivity as EventListener)
-  }, [])
+  }, [mounted])
 
   return {
     activities,
