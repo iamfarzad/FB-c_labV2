@@ -1,5 +1,7 @@
 "use client"
 
+import { cn } from "@/lib/utils"
+
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -74,59 +76,88 @@ export function ChatFooter({
   ]
 
   return (
-    <div className="border-t border-border bg-background/95 backdrop-blur-sm p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-end gap-2 relative">
-          <div className="flex-1 relative flex items-center">
-            {isMobile ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="mr-2 shrink-0">
-                    <MoreHorizontal className="w-5 h-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
+    <div className="shrink-0 border-t border-border bg-background/95 backdrop-blur-sm">
+      <div className="container max-w-4xl mx-auto p-4">
+        <div className="flex items-end gap-3 relative">
+          <div className="flex-1 relative">
+            <div className="relative flex items-center">
+              {/* Action buttons - Desktop */}
+              {!isMobile && (
+                <div className="absolute left-3 bottom-3 flex items-center gap-1 z-10">
                   {actions.map((action) => (
-                    <DropdownMenuItem key={action.id} onClick={action.action} className="gap-2">
-                      <action.icon className="w-4 h-4" />
-                      {action.title}
-                    </DropdownMenuItem>
+                    <Button
+                      key={action.id}
+                      variant="ghost"
+                      size="icon"
+                      onClick={action.action}
+                      title={action.title}
+                      className="h-8 w-8 hover:bg-muted"
+                    >
+                      <action.icon className="w-4 h-4 text-muted-foreground" />
+                    </Button>
                   ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <div className="absolute left-2 bottom-2 flex items-center gap-1">
-                {actions.map((action) => (
-                  <Button key={action.id} variant="ghost" size="icon" onClick={action.action} title={action.title}>
-                    <action.icon className="w-5 h-5 text-muted-foreground" />
-                  </Button>
-                ))}
-              </div>
-            )}
-            <Textarea
-              ref={inputRef}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                  e.currentTarget.closest("form")?.requestSubmit()
-                }
-              }}
-              placeholder="Type your message..."
-              className="resize-none border-2 focus:border-primary/50 transition-colors w-full pl-40 pr-4 py-3 min-h-[56px] max-h-[200px]"
-            />
+                </div>
+              )}
+
+              {/* Action buttons - Mobile */}
+              {isMobile && (
+                <div className="absolute left-3 bottom-3 z-10">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48">
+                      {actions.map((action) => (
+                        <DropdownMenuItem key={action.id} onClick={action.action} className="gap-2">
+                          <action.icon className="w-4 h-4" />
+                          {action.title}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
+
+              <Textarea
+                ref={inputRef}
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    e.currentTarget.closest("form")?.requestSubmit()
+                  }
+                }}
+                placeholder="Type your message..."
+                className={cn(
+                  "resize-none border-2 focus:border-primary/50 transition-colors w-full py-3 min-h-[56px] max-h-[200px]",
+                  isMobile ? "pl-12 pr-4" : "pl-44 pr-4",
+                )}
+                disabled={isLoading}
+              />
+            </div>
           </div>
+
           <Button type="submit" disabled={!input.trim() || isLoading} className="h-[56px] px-6 shrink-0">
             <Send className="w-5 h-5" />
           </Button>
         </div>
-        <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+
+        <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
           <span>Press F1 for shortcuts</span>
           <span>AI can make mistakes. Verify important information.</span>
         </div>
       </div>
-      <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+        accept="image/*,.pdf,.doc,.docx,.txt"
+      />
     </div>
   )
 }

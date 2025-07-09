@@ -1,82 +1,48 @@
-import { getSupabase } from "@/lib/supabase/server"
-
-export interface ActivityLog {
-  type: string
-  title: string
-  description?: string
-  status: "in_progress" | "completed" | "failed"
-  metadata?: Record<string, any>
-  timestamp?: string
-}
+import { supabase } from "@/lib/supabase/client"
+import type { ActivityItem } from "@/app/chat/types/chat"
 
 class ActivityLogger {
-  private supabase = getSupabase()
+  private sessionId: string | null = null
 
-  async log(activity: ActivityLog) {
-    try {
-      const { error } = await this.supabase.from("activity_logs").insert({
-        type: activity.type,
-        title: activity.title,
-        description: activity.description || null,
-        status: activity.status,
-        metadata: activity.metadata || null,
-        timestamp: activity.timestamp || new Date().toISOString(),
-      })
+  setSessionId(sessionId: string) {
+    this.sessionId = sessionId
+  }
 
-      if (error) {
-        console.error("Failed to log activity:", error)
-      }
+  async log(activity: Omit<ActivityItem, "id" | "timestamp">) {
+    const activityItem: ActivityItem = {
+      ...activity,
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+    }
 
-      // Also broadcast to real-time channel for live updates
-      await this.supabase.channel("activity_updates").send({
+    // Broadcast to real-time channel
+    if (this.sessionId) {
+      await supabase.channel(`activity-log-${this.sessionId}`).send({
         type: "broadcast",
-        event: "activity_logged",
-        payload: activity,
+        event: "activity-update",
+        payload: activityItem,
+      })
+    }
+
+    // Store in database for persistence
+    try {
+      await supabase.from("ai_interactions").insert({
+        session_id: this.sessionId || "unknown",
+        interaction_type: activity.type,
+        user_input: activity.title,
+        ai_response: activity.description,
+        metadata: {
+          status: activity.status,
+          duration: activity.duration,
+          details: activity.details,
+        },
+        created_at: new Date().toISOString(),
       })
     } catch (error) {
-      console.error("Activity logging error:", error)
+      console.error("Failed to log activity to database:", error)
     }
-  }
 
-  async getRecentActivities(limit = 50) {
-    try {
-      const { data, error } = await this.supabase
-        .from("activity_logs")
-        .select("*")
-        .order("timestamp", { ascending: false })
-        .limit(limit)
-
-      if (error) {
-        console.error("Failed to fetch activities:", error)
-        return []
-      }
-
-      return data || []
-    } catch (error) {
-      console.error("Failed to fetch activities:", error)
-      return []
-    }
-  }
-
-  async getActivitiesByType(type: string, limit = 20) {
-    try {
-      const { data, error } = await this.supabase
-        .from("activity_logs")
-        .select("*")
-        .eq("type", type)
-        .order("timestamp", { ascending: false })
-        .limit(limit)
-
-      if (error) {
-        console.error("Failed to fetch activities by type:", error)
-        return []
-      }
-
-      return data || []
-    } catch (error) {
-      console.error("Failed to fetch activities by type:", error)
-      return []
-    }
+    return activityItem
   }
 }
 

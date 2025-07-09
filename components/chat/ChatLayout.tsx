@@ -36,6 +36,8 @@ export const ChatLayout = ({ children, className }: ChatLayoutProps) => {
         "tablet:h-screen",
         // Desktop optimizations
         "desktop:h-screen",
+        // Remove any margin/padding that might cause layout issues
+        "m-0 p-0",
         className,
       )}
       data-mobile={isMobile}

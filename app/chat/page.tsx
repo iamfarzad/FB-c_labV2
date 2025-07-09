@@ -14,7 +14,7 @@ import { ScreenShareModal } from "@/components/chat/modals/ScreenShareModal"
 import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
 import { WebcamModal } from "@/components/chat/modals/WebcamModal"
 import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
-import type { LeadCaptureState } from "./types/lead-capture"
+import type { LeadCaptureData } from "./types/lead-capture"
 import { useChatContext } from "./context/ChatProvider"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import { supabase } from "@/lib/supabase/client"
@@ -36,7 +36,10 @@ export default function ChatPage() {
   const [showScreenShareModal, setShowScreenShareModal] = useState(false)
   const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
 
-  const [leadCaptureState, setLeadCaptureState] = useState<LeadCaptureState>({
+  const [leadCaptureState, setLeadCaptureState] = useState<{
+    stage: "initial" | "collecting_info" | "consultation"
+    leadData: Partial<LeadCaptureData>
+  }>({
     stage: "initial",
     leadData: { engagementType: "chat" },
   })
@@ -120,12 +123,12 @@ export default function ChatPage() {
     }
   }
 
-  const handleLeadCaptureComplete = (leadData: LeadCaptureState["leadData"]) => {
-    setLeadCaptureState({ stage: "consultation", leadData } as LeadCaptureState)
+  const handleLeadCaptureComplete = (leadData: LeadCaptureData) => {
+    setLeadCaptureState({ stage: "consultation", leadData })
     setShowLeadCapture(false)
     append({
       role: "assistant",
-      content: `Hello ${leadData.name}! 👋 Thanks for providing your details. I'm now ready to assist. How can I help with your AI automation goals today?`,
+      content: `Hello ${leadData.name}! 👋 Thanks for providing your details. I'm now ready to assist with your AI automation goals. How can I help you today?`,
     })
     toast({ title: "Welcome!", description: `Starting consultation for ${leadData.name}.` })
   }
@@ -232,23 +235,26 @@ export default function ChatPage() {
           isOpen={isSidebarOpen}
           onToggle={handleToggleSidebar}
           onNewChat={handleNewChat}
+          onActivityClick={(activity) => {
+            // Handle activity click
+          }}
         />
-        <div className="flex flex-col flex-1 h-full">
-          <ChatHeader onDownloadSummary={handleDownloadSummary} activities={activityLog} onNewChat={handleNewChat} />
+
+        <div className="flex flex-col flex-1 h-full min-w-0">
+          <ChatHeader
+            onDownloadSummary={handleDownloadSummary}
+            activities={activityLog}
+            onNewChat={handleNewChat}
+            onActivityClick={(activity) => {
+              // Handle activity click
+            }}
+          />
+
           <div className="flex-1 overflow-hidden relative">
-            {showLeadCapture && (
-              <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <LeadCaptureFlow
-                  isVisible={showLeadCapture}
-                  onComplete={handleLeadCaptureComplete}
-                  engagementType={leadCaptureState.leadData.engagementType}
-                  initialQuery={leadCaptureState.leadData.initialQuery}
-                />
-              </div>
-            )}
             <ChatMain messages={messages as Message[]} isLoading={isLoading} messagesEndRef={messagesEndRef} />
           </div>
-          <form onSubmit={handleSendMessage} className="shrink-0">
+
+          <form onSubmit={handleSendMessage}>
             <ChatFooter
               input={input}
               setInput={setInput}
@@ -269,6 +275,16 @@ export default function ChatPage() {
           </form>
         </div>
       </div>
+
+      {/* Modals */}
+      <LeadCaptureFlow
+        isVisible={showLeadCapture}
+        onComplete={handleLeadCaptureComplete}
+        onClose={() => setShowLeadCapture(false)}
+        engagementType={leadCaptureState.leadData.engagementType}
+        initialQuery={leadCaptureState.leadData.initialQuery}
+      />
+
       <KeyboardShortcutsModal isOpen={showKeyboardShortcuts} onClose={() => setShowKeyboardShortcuts(false)} />
 
       {showScreenShareModal && (
@@ -281,6 +297,7 @@ export default function ChatPage() {
           }
         />
       )}
+
       {showVoiceModal && (
         <VoiceInputModal
           isOpen={showVoiceModal}
@@ -288,6 +305,7 @@ export default function ChatPage() {
           onTransferToChat={handleVoiceTranscript}
         />
       )}
+
       {showWebcamModal && (
         <WebcamModal
           isOpen={showWebcamModal}
@@ -301,6 +319,7 @@ export default function ChatPage() {
           }
         />
       )}
+
       {showVideo2AppModal && (
         <Video2AppModal
           isOpen={showVideo2AppModal}

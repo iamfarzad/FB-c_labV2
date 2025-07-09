@@ -5,7 +5,8 @@ export interface LeadCaptureData {
   role?: string
   interests?: string
   challenges?: string
-  sessionSummary?: string
+  engagementType?: string
+  initialQuery?: string
   timestamp: string
   tcAcceptance: {
     accepted: boolean
@@ -14,9 +15,7 @@ export interface LeadCaptureData {
   }
 }
 
-export interface LeadCaptureResponse {
-  success: boolean
-  leadId?: string
-  message?: string
-  error?: string
+export interface LeadCaptureState {
+  stage: "initial" | "collecting_info" | "consultation"
+  leadData: Partial<LeadCaptureData>
 }
