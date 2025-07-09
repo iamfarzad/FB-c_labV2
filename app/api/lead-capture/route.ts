@@ -21,25 +21,42 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabase()
 
-    // Save lead with TC acceptance
+    // Prepare data for lead_summaries table (matching actual schema)
+    const leadRecord = {
+      name: leadData.name,
+      email: leadData.email,
+      company_name: leadData.company || null,
+      conversation_summary: `Initial engagement via ${leadData.engagementType}${leadData.initialQuery ? `: "${leadData.initialQuery}"` : ""}`,
+      consultant_brief: `New lead captured via ${leadData.engagementType}. TC accepted at ${leadData.tcAcceptance?.timestamp ? new Date(leadData.tcAcceptance.timestamp).toISOString() : new Date().toISOString()}`,
+      lead_score: 50,
+      ai_capabilities_shown: [leadData.engagementType]
+      // Don't include created_at - it has DEFAULT NOW()
+    }
+
+    // Save lead with better error handling
     const { data, error } = await supabase
       .from("lead_summaries")
-      .insert({
-        name: leadData.name,
-        email: leadData.email,
-        company_name: leadData.company,
-        conversation_summary: `Initial engagement via ${leadData.engagementType}${leadData.initialQuery ? `: "${leadData.initialQuery}"` : ""}`,
-        consultant_brief: `New lead captured via ${leadData.engagementType}. TC accepted at ${leadData.tcAcceptance?.timestamp ? new Date(leadData.tcAcceptance.timestamp).toISOString() : new Date().toISOString()}`,
-        lead_score: 50, // Default score for new leads
-        ai_capabilities_shown: [leadData.engagementType],
-        created_at: new Date().toISOString(),
-      })
+      .insert(leadRecord)
       .select()
       .single()
 
     if (error) {
       console.error("Supabase error:", error)
-      return NextResponse.json({ error: "Failed to save lead data" }, { status: 500 })
+      console.error("Error details:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      })
+      
+      // More specific error handling
+      if (error.code === '42501') {
+        throw new Error("Database permission error - RLS policy issue")
+      } else if (error.code === '23505') {
+        throw new Error("Email already exists")
+      } else {
+        throw new Error(`Database error: ${error.message}`)
+      }
     }
 
     // Trigger AI research in background (only if in development or with full URL)
@@ -61,7 +78,9 @@ export async function POST(req: NextRequest) {
             email: leadData.email,
             company: leadData.company,
           }),
-        }).catch(console.error) // Fire and forget
+        }).catch(error => {
+          console.log("Background research fetch failed:", error.message)
+        })
       }
     } catch (error) {
       console.log("Background research fetch skipped:", error)
@@ -74,6 +93,9 @@ export async function POST(req: NextRequest) {
     })
   } catch (error: any) {
     console.error("Lead capture error:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ 
+      error: error.message || "Failed to process lead capture",
+      details: error.details || null
+    }, { status: 500 })
   }
 }

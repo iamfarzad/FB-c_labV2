@@ -1,5 +1,14 @@
 import { supabase } from "@/lib/supabase/client"
+import { getSupabase } from "@/lib/supabase/server"
 import type { ActivityItem } from "@/app/chat/types/chat"
+
+interface ServerActivityData {
+  type: string
+  title: string
+  description?: string
+  status?: "pending" | "in_progress" | "completed" | "failed"
+  metadata?: Record<string, any>
+}
 
 class ActivityLogger {
   private channel: any = null
@@ -46,13 +55,65 @@ class ActivityLogger {
 
     return id
   }
+
+  // Server-side activity logging with database persistence
+  async logToDatabase(activityData: ServerActivityData): Promise<string> {
+    try {
+      const serverSupabase = getSupabase()
+      
+      const { data, error } = await serverSupabase
+        .from("activities")
+        .insert({
+          type: activityData.type,
+          title: activityData.title,
+          description: activityData.description || null,
+          status: activityData.status || "completed",
+          metadata: activityData.metadata || {}
+        })
+        .select("id")
+        .single()
+
+      if (error) {
+        console.error("Failed to log activity to database:", error)
+        // Don't throw error, just log it
+        return `fallback_${Date.now()}`
+      }
+
+      return data.id
+    } catch (error) {
+      console.error("Activity logging error:", error)
+      return `fallback_${Date.now()}`
+    }
+  }
 }
 
 export const activityLogger = new ActivityLogger()
 
-// A simple server-side logging function if needed, though client-side is primary for this setup
-export async function logActivity(activityData: Omit<ActivityItem, "id" | "timestamp">) {
-  // This is a placeholder for potential server-side logging if required.
-  // For this architecture, we rely on the client-side logger instance.
-  console.log(`[Server Activity]: ${activityData.title}`)
+// Server-side logging function for API routes
+export async function logActivity(activityData: ServerActivityData): Promise<string> {
+  try {
+    const serverSupabase = getSupabase()
+    
+    const { data, error } = await serverSupabase
+      .from("activities")
+      .insert({
+        type: activityData.type,
+        title: activityData.title,
+        description: activityData.description || null,
+        status: activityData.status || "completed",
+        metadata: activityData.metadata || {}
+      })
+      .select("id")
+      .single()
+
+    if (error) {
+      console.error("Failed to log activity to database:", error)
+      return `fallback_${Date.now()}`
+    }
+
+    return data.id
+  } catch (error) {
+    console.error("Activity logging error:", error)
+    return `fallback_${Date.now()}`
+  }
 }
