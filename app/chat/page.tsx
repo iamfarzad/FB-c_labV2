@@ -15,7 +15,6 @@ import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
 import { VoiceOutputModal } from "@/components/chat/modals/VoiceOutputModal"
 import { WebcamModal } from "@/components/chat/modals/WebcamModal"
 import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
-import { LiveVoiceModal } from "@/components/chat/modals/LiveVoiceModal"
 import type { LeadCaptureState } from "./types/lead-capture"
 import { useChatContext } from "./context/ChatProvider"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
@@ -45,7 +44,6 @@ export default function ChatPage() {
   const [showWebcamModal, setShowWebcamModal] = useState(false)
   const [showScreenShareModal, setShowScreenShareModal] = useState(false)
   const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
-  const [showLiveVoiceModal, setShowLiveVoiceModal] = useState(false)
 
   const [leadCaptureState, setLeadCaptureState] = useState<LeadCaptureState>({
     stage: "initial",
@@ -314,7 +312,6 @@ export default function ChatPage() {
               showScreenShareModal={showScreenShareModal}
               setShowScreenShareModal={setShowScreenShareModal}
               setShowVideo2AppModal={setShowVideo2AppModal}
-              setShowLiveVoiceModal={setShowLiveVoiceModal}
             />
           </form>
         </div>
@@ -336,6 +333,10 @@ export default function ChatPage() {
           isOpen={showVoiceModal}
           onClose={() => setShowVoiceModal(false)}
           onTransferToChat={handleVoiceTranscript}
+          leadContext={{
+            name: leadCaptureState.leadData.name,
+            company: leadCaptureState.leadData.company
+          }}
         />
       )}
       {showWebcamModal && (
@@ -370,16 +371,7 @@ export default function ChatPage() {
           autoPlay={true}
         />
       )}
-      {showLiveVoiceModal && (
-        <LiveVoiceModal
-          isOpen={showLiveVoiceModal}
-          onClose={() => setShowLiveVoiceModal(false)}
-          leadContext={{
-            name: leadCaptureState.leadData.name,
-            company: leadCaptureState.leadData.company
-          }}
-        />
-      )}
+
     </ChatLayout>
   )
 }

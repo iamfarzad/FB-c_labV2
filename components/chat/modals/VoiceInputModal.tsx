@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
-import { X, Send, Mic, MicOff, Pause, Play, RotateCcw, Volume2 } from "lucide-react"
+import { X, Send, Mic, MicOff, Pause, Play, RotateCcw, Volume2, Radio, Bot } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,7 +16,15 @@ interface VoiceInputModalProps {
   isOpen: boolean
   onClose: () => void
   onTransferToChat: (fullTranscript: string) => void
+  leadContext?: {
+    name?: string
+    company?: string
+    role?: string
+    interests?: string
+  }
 }
+
+type VoiceMode = "input" | "conversation"
 
 type RecordingState = "idle" | "listening" | "paused" | "processing" | "error"
 
@@ -170,16 +178,21 @@ function VoiceRecordingOrb({
 export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({ 
   isOpen, 
   onClose, 
-  onTransferToChat 
+  onTransferToChat,
+  leadContext 
 }) => {
   const { addActivity } = useChatContext()
   const { toast } = useToast()
   
+  const [voiceMode, setVoiceMode] = useState<VoiceMode>("input")
   const [recordingState, setRecordingState] = useState<RecordingState>("idle")
   const [currentTranscription, setCurrentTranscription] = useState("")
   const [finalTranscript, setFinalTranscript] = useState("")
   const [recordingTime, setRecordingTime] = useState(0)
   const [isSupported, setIsSupported] = useState(true)
+  const [isLiveConnected, setIsLiveConnected] = useState(false)
+  const [conversationMessages, setConversationMessages] = useState<Array<{id: string, role: 'user' | 'assistant', content: string, timestamp: Date}>>([])
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
   
   const recognitionRef = useRef<any>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -354,24 +367,150 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     setRecordingState("idle")
   }, [])
 
+  // Handle live conversation
+  const handleLiveConversation = useCallback(async (userMessage: string) => {
+    if (!userMessage.trim()) return
+
+    // Add user message to conversation
+    const userMsg = {
+      id: `user_${Date.now()}`,
+      role: 'user' as const,
+      content: userMessage.trim(),
+      timestamp: new Date()
+    }
+    setConversationMessages(prev => [...prev, userMsg])
+
+    try {
+      // Get AI response using existing chat API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [
+            { role: 'user', content: userMessage }
+          ],
+          data: {
+            leadContext,
+            sessionId: `voice_session_${Date.now()}`
+          }
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let aiResponse = ''
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n')
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6))
+                if (data.content) {
+                  aiResponse += data.content
+                }
+                if (data.done) {
+                  break
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      }
+
+      if (aiResponse) {
+        // Add AI response to conversation
+        const aiMsg = {
+          id: `assistant_${Date.now()}`,
+          role: 'assistant' as const,
+          content: aiResponse,
+          timestamp: new Date()
+        }
+        setConversationMessages(prev => [...prev, aiMsg])
+
+        // Generate voice response using existing TTS API
+        try {
+          const ttsResponse = await fetch('/api/gemini-live', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              prompt: aiResponse,
+              enableTTS: true,
+              voiceStyle: 'neutral'
+            })
+          })
+
+          if (ttsResponse.ok) {
+            const ttsData = await ttsResponse.json()
+            if (ttsData.success && ttsData.audioData) {
+              // Play the audio response
+              if (currentAudio) {
+                currentAudio.pause()
+              }
+              
+              const audio = new Audio(ttsData.audioData)
+              setCurrentAudio(audio)
+              audio.play().catch(console.error)
+            }
+          }
+        } catch (ttsError) {
+          console.error('TTS Error:', ttsError)
+          // Continue without voice - the text response is still shown
+        }
+      }
+    } catch (error) {
+      console.error('Live conversation error:', error)
+      toast({
+        title: "Conversation Error",
+        description: "Failed to get AI response. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }, [leadContext, currentAudio, toast])
+
   const handleSendToChat = useCallback(() => {
     const fullTranscript = (finalTranscript + currentTranscription).trim()
     if (fullTranscript) {
-      onTransferToChat(fullTranscript)
-      addActivity({
-        type: "voice_input",
-        title: "Voice Message Sent",
-        description: `Sent voice message: "${fullTranscript.slice(0, 50)}${fullTranscript.length > 50 ? '...' : ''}"`,
-        status: "completed"
-      })
-      
-      toast({
-        title: "Voice Message Sent",
-        description: "Your voice message has been sent to the chat."
-      })
+      if (voiceMode === "conversation") {
+        // Handle as live conversation
+        handleLiveConversation(fullTranscript)
+        setFinalTranscript("")
+        setCurrentTranscription("")
+      } else {
+        // Handle as regular voice input
+        onTransferToChat(fullTranscript)
+        addActivity({
+          type: "voice_input",
+          title: "Voice Message Sent",
+          description: `Sent voice message: "${fullTranscript.slice(0, 50)}${fullTranscript.length > 50 ? '...' : ''}"`,
+          status: "completed"
+        })
+        
+        toast({
+          title: "Voice Message Sent",
+          description: "Your voice message has been sent to the chat."
+        })
+        handleClose()
+      }
     }
-    handleClose()
-  }, [finalTranscript, currentTranscription, onTransferToChat, addActivity, toast])
+  }, [finalTranscript, currentTranscription, voiceMode, handleLiveConversation, onTransferToChat, addActivity, toast])
 
   const handleClose = useCallback(() => {
     if (recognitionRef.current) {
@@ -429,6 +568,34 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             <X className="w-5 h-5" />
           </Button>
 
+          {/* Mode switcher */}
+          <div className="absolute top-6 left-6 flex gap-2">
+            <Button
+              variant={voiceMode === "input" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setVoiceMode("input")}
+              className={cn(
+                "bg-white/10 border-white/20 text-white hover:bg-white/20",
+                voiceMode === "input" && "bg-white/20"
+              )}
+            >
+              <Mic className="w-4 h-4 mr-2" />
+              Voice Input
+            </Button>
+            <Button
+              variant={voiceMode === "conversation" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setVoiceMode("conversation")}
+              className={cn(
+                "bg-white/10 border-white/20 text-white hover:bg-white/20",
+                voiceMode === "conversation" && "bg-white/20"
+              )}
+            >
+              <Radio className="w-4 h-4 mr-2" />
+              Live Chat
+            </Button>
+          </div>
+
           {/* Main content */}
           <div className="flex flex-col items-center space-y-8 w-full">
             {/* Voice Recording Orb */}
@@ -441,7 +608,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             {/* Status and Info */}
             <div className="text-center space-y-3">
               <h2 className="text-3xl font-bold text-white">
-                Voice Input
+                {voiceMode === "conversation" ? "Live Voice Chat" : "Voice Input"}
               </h2>
               
               <div className="flex items-center justify-center gap-4 text-white/70">
@@ -476,16 +643,19 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
               </p>
             </div>
 
-            {/* Transcript Display */}
+            {/* Transcript/Conversation Display */}
             <Card className="w-full max-w-2xl bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader className="pb-3">
                 <CardTitle className="text-white text-lg flex items-center justify-between">
-                  Transcript
-                  {fullTranscript && (
+                  {voiceMode === "conversation" ? "Conversation" : "Transcript"}
+                  {(fullTranscript || conversationMessages.length > 0) && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={clearTranscript}
+                      onClick={() => {
+                        clearTranscript()
+                        setConversationMessages([])
+                      }}
                       className="text-white/70 hover:text-white hover:bg-white/10"
                     >
                       <RotateCcw className="w-4 h-4 mr-2" />
@@ -495,37 +665,101 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="min-h-[120px] max-h-[200px] overflow-y-auto">
-                  {fullTranscript ? (
-                    <div className="space-y-2">
-                      {finalTranscript && (
-                        <p className="text-white/90 leading-relaxed">
-                          {finalTranscript}
-                        </p>
+                <div className="min-h-[120px] max-h-[300px] overflow-y-auto space-y-2">
+                  {voiceMode === "conversation" ? (
+                    // Conversation mode - show messages
+                    <div className="space-y-3">
+                      {conversationMessages.map((msg) => (
+                        <div key={msg.id} className={cn(
+                          "flex items-start gap-3 p-3 rounded-lg",
+                          msg.role === "user" ? "bg-blue-500/20 text-blue-100" : "bg-green-500/20 text-green-100"
+                        )}>
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                            {msg.role === "user" ? (
+                              <Mic className="w-3 h-3" />
+                            ) : (
+                              <Bot className="w-3 h-3" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-white/90 mb-1">
+                              {msg.role === "user" ? "You" : "AI Assistant"}
+                            </div>
+                            <div className="text-sm text-white/80 leading-relaxed">
+                              {msg.content}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Current transcription for conversation mode */}
+                      {(finalTranscript || currentTranscription) && (
+                        <div className="p-3 rounded-lg bg-blue-500/20 text-blue-100">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Mic className="w-4 h-4" />
+                            <span className="text-sm font-medium">You (speaking...)</span>
+                          </div>
+                          <div className="text-sm text-white/80">
+                            {finalTranscript && (
+                              <span className="text-white/90">{finalTranscript}</span>
+                            )}
+                            {currentTranscription && (
+                              <span className="text-white/60 italic">
+                                {currentTranscription}
+                                {recordingState === "listening" && (
+                                  <motion.span
+                                    animate={{ opacity: [1, 0] }}
+                                    transition={{ duration: 1, repeat: Infinity }}
+                                    className="ml-1"
+                                  >
+                                    |
+                                  </motion.span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       )}
-                      {currentTranscription && (
-                        <p className="text-white/60 leading-relaxed italic">
-                          {currentTranscription}
-                          {recordingState === "listening" && (
-                            <motion.span
-                              animate={{ opacity: [1, 0] }}
-                              transition={{ duration: 1, repeat: Infinity }}
-                              className="ml-1"
-                            >
-                              |
-                            </motion.span>
-                          )}
-                        </p>
+                      
+                      {conversationMessages.length === 0 && !fullTranscript && (
+                        <div className="flex items-center justify-center h-full text-white/50">
+                          Start a conversation by speaking...
+                        </div>
                       )}
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-white/50">
-                      {recordingState === "error" ? (
-                        "Voice recognition error occurred"
-                      ) : (
-                        "Your speech will appear here..."
-                      )}
-                    </div>
+                    // Input mode - show transcript
+                    fullTranscript ? (
+                      <div className="space-y-2">
+                        {finalTranscript && (
+                          <p className="text-white/90 leading-relaxed">
+                            {finalTranscript}
+                          </p>
+                        )}
+                        {currentTranscription && (
+                          <p className="text-white/60 leading-relaxed italic">
+                            {currentTranscription}
+                            {recordingState === "listening" && (
+                              <motion.span
+                                animate={{ opacity: [1, 0] }}
+                                transition={{ duration: 1, repeat: Infinity }}
+                                className="ml-1"
+                              >
+                                |
+                              </motion.span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-white/50">
+                        {recordingState === "error" ? (
+                          "Voice recognition error occurred"
+                        ) : (
+                          "Your speech will appear here..."
+                        )}
+                      </div>
+                    )
                   )}
                 </div>
               </CardContent>
@@ -558,7 +792,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
                     className="bg-emerald-600 hover:bg-emerald-700 text-white"
                   >
                     <Send className="w-4 h-4 mr-2" />
-                    Send to Chat
+                    {voiceMode === "conversation" ? "Send Message" : "Send to Chat"}
                   </Button>
                 </>
               )}
