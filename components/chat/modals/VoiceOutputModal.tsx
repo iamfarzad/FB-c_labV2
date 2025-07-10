@@ -1,14 +1,16 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useCallback } from "react"
-import { X, Volume2, VolumeX, Play, Pause, SkipForward } from "lucide-react"
+import { useState, useEffect, useCallback, useRef } from "react"
+import { X, Volume2, VolumeX, Play, Pause, SkipForward, Download, RefreshCw } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { useChatContext } from "@/app/chat/context/ChatProvider"
-import { useAudioPlayer } from "@/hooks/useAudioPlayer"
+import { useToast } from "@/components/ui/use-toast"
 
 interface VoiceOutputModalProps {
   isOpen: boolean
@@ -20,73 +22,99 @@ interface VoiceOutputModalProps {
   autoPlay?: boolean
 }
 
-type VoiceState = "idle" | "loading" | "speaking" | "paused" | "error"
+type VoiceState = "idle" | "loading" | "speaking" | "paused" | "error" | "generating"
 
+// Improved Voice Orb Component
 function VoiceOrb({ 
   state, 
   onClick, 
-  progress 
+  progress,
+  size = "large" 
 }: { 
   state: VoiceState
   onClick: () => void
-  progress: number 
+  progress: number
+  size?: "small" | "large"
 }) {
+  const orbSize = size === "large" ? "w-32 h-32" : "w-16 h-16"
+  const iconSize = size === "large" ? "w-8 h-8" : "w-4 h-4"
+  
   const getOrbColor = () => {
     switch (state) {
       case "speaking":
-        return "from-green-400 to-green-600"
+        return "from-emerald-400 via-emerald-500 to-emerald-600"
       case "loading":
-        return "from-orange-400 to-orange-500"
+      case "generating":
+        return "from-amber-400 via-amber-500 to-amber-600"
       case "paused":
-        return "from-blue-400 to-blue-600"
+        return "from-blue-400 via-blue-500 to-blue-600"
       case "error":
-        return "from-red-400 to-red-600"
+        return "from-red-400 via-red-500 to-red-600"
       default:
-        return "from-purple-400 to-indigo-600"
+        return "from-purple-400 via-purple-500 to-purple-600"
     }
   }
 
   return (
     <div className="relative">
+      {/* Outer glow ring */}
+      <div className={cn(
+        "absolute inset-0 rounded-full opacity-20 blur-xl",
+        orbSize,
+        `bg-gradient-to-r ${getOrbColor()}`
+      )} />
+      
       {/* Progress Ring */}
-      <svg className="absolute inset-0 w-32 h-32 -rotate-90" viewBox="0 0 100 100">
+      <svg className={cn("absolute inset-0 -rotate-90", orbSize)} viewBox="0 0 100 100">
         <circle
           cx="50"
           cy="50"
           r="45"
-          stroke="rgba(255,255,255,0.2)"
-          strokeWidth="2"
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth="1"
           fill="none"
         />
         <circle
           cx="50"
           cy="50"
           r="45"
-          stroke="rgba(255,255,255,0.8)"
+          stroke="rgba(255,255,255,0.6)"
           strokeWidth="2"
           fill="none"
           strokeDasharray={`${2 * Math.PI * 45}`}
           strokeDashoffset={`${2 * Math.PI * 45 * (1 - progress)}`}
-          className="transition-all duration-300"
+          className="transition-all duration-500 ease-out"
         />
       </svg>
 
       <motion.div
-        className={cn("relative w-32 h-32 rounded-full bg-gradient-to-r shadow-2xl cursor-pointer", getOrbColor())}
+        className={cn(
+          "relative rounded-full bg-gradient-to-r shadow-2xl cursor-pointer backdrop-blur-sm",
+          orbSize,
+          getOrbColor()
+        )}
         animate={{ 
           scale: state === "speaking" ? [1, 1.05, 1] : 1,
-          rotate: state === "loading" ? 360 : 0
+          rotate: state === "loading" || state === "generating" ? 360 : 0
         }}
         transition={{ 
-          scale: { duration: 1, repeat: state === "speaking" ? Infinity : 0, ease: "easeInOut" },
-          rotate: { duration: 2, repeat: state === "loading" ? Infinity : 0, ease: "linear" }
+          scale: { 
+            duration: 1.2, 
+            repeat: state === "speaking" ? Infinity : 0, 
+            ease: "easeInOut" 
+          },
+          rotate: { 
+            duration: 2, 
+            repeat: state === "loading" || state === "generating" ? Infinity : 0, 
+            ease: "linear" 
+          }
         }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={onClick}
       >
         <div className="absolute inset-0 flex items-center justify-center">
-          {state === "speaking" && (
+          {(state === "speaking") && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -96,10 +124,10 @@ function VoiceOrb({
               {[...Array(5)].map((_, i) => (
                 <motion.div
                   key={i}
-                  className="w-1 bg-white/80 rounded-full"
-                  animate={{ height: [8, Math.random() * 20 + 10, 8] }}
+                  className="w-1 bg-white/90 rounded-full"
+                  animate={{ height: [8, Math.random() * 24 + 12, 8] }}
                   transition={{
-                    duration: 0.5 + Math.random() * 0.5,
+                    duration: 0.6 + Math.random() * 0.4,
                     repeat: Number.POSITIVE_INFINITY,
                     repeatType: "reverse",
                     delay: i * 0.1,
@@ -109,13 +137,16 @@ function VoiceOrb({
             </motion.div>
           )}
           {state === "paused" && (
-            <Play className="w-8 h-8 text-white/80" />
+            <Play className={cn(iconSize, "text-white/90")} />
           )}
-          {state === "idle" && (
-            <Volume2 className="w-8 h-8 text-white/80" />
+          {(state === "idle") && (
+            <Volume2 className={cn(iconSize, "text-white/90")} />
           )}
           {state === "error" && (
-            <VolumeX className="w-8 h-8 text-white/80" />
+            <VolumeX className={cn(iconSize, "text-white/90")} />
+          )}
+          {(state === "loading" || state === "generating") && (
+            <RefreshCw className={cn(iconSize, "text-white/90 animate-spin")} />
           )}
         </div>
       </motion.div>
@@ -133,134 +164,258 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
   autoPlay = true
 }) => {
   const { addActivity } = useChatContext()
+  const { toast } = useToast()
   const [voiceState, setVoiceState] = useState<VoiceState>("idle")
   const [showTranscript, setShowTranscript] = useState(true)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [volume, setVolume] = useState(0.8)
+  const [isClientTTS, setIsClientTTS] = useState(false)
+  
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const synthRef = useRef<SpeechSynthesisUtterance | null>(null)
 
-  const { state: audioState, controls: audioControls } = useAudioPlayer({
-    autoPlay: false,
-    volume: 0.8,
-    onPlay: () => {
-      setVoiceState("speaking")
-      addActivity({
-        type: "voice_response",
-        title: "AI Voice Response",
-        description: "AI is speaking response",
-        status: "in_progress"
-      })
-    },
-    onPause: () => {
-      setVoiceState("paused")
-    },
-    onEnd: () => {
+  // Initialize audio element
+  useEffect(() => {
+    const audio = new Audio()
+    audio.volume = volume
+    audio.preload = 'metadata'
+    
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime)
+    const handleDurationChange = () => setDuration(audio.duration)
+    const handlePlay = () => setVoiceState("speaking")
+    const handlePause = () => setVoiceState("paused")
+    const handleEnded = () => {
       setVoiceState("idle")
-      addActivity({
-        type: "voice_response",
-        title: "AI Voice Complete",
-        description: "AI finished speaking",
-        status: "completed"
-      })
-    },
-    onError: (error) => {
-      setVoiceState("error")
-      addActivity({
-        type: "error",
-        title: "Voice Playback Error",
-        description: error,
-        status: "failed"
-      })
+      setCurrentTime(0)
     }
-  })
-
-  // Calculate progress
-  const progress = audioState.duration > 0 ? audioState.currentTime / audioState.duration : 0
+    const handleError = () => setVoiceState("error")
+    
+    audio.addEventListener('timeupdate', handleTimeUpdate)
+    audio.addEventListener('loadedmetadata', handleDurationChange)
+    audio.addEventListener('play', handlePlay)
+    audio.addEventListener('pause', handlePause)
+    audio.addEventListener('ended', handleEnded)
+    audio.addEventListener('error', handleError)
+    
+    audioRef.current = audio
+    
+    return () => {
+      audio.pause()
+      audio.src = ''
+      audio.removeEventListener('timeupdate', handleTimeUpdate)
+      audio.removeEventListener('loadedmetadata', handleDurationChange)
+      audio.removeEventListener('play', handlePlay)
+      audio.removeEventListener('pause', handlePause)
+      audio.removeEventListener('ended', handleEnded)
+      audio.removeEventListener('error', handleError)
+    }
+  }, [volume])
 
   // Load audio when modal opens
   useEffect(() => {
     if (!isOpen) return
 
     const loadAudio = async () => {
-      setVoiceState("loading")
+      setVoiceState("generating")
       
       try {
         if (audioChunks && audioChunks.length > 0) {
-          // Play streaming audio chunks
-          await audioControls.playStreamingAudio(audioChunks)
+          // Handle streaming audio chunks
+          const fullAudioData = audioChunks.join('')
+          await loadAudioData(fullAudioData)
         } else if (audioData) {
-          // Play single audio data
-          await audioControls.playAudioData(audioData)
+          // Check if it's client TTS instructions
+          try {
+            const parsed = JSON.parse(audioData)
+            if (parsed.type === 'client_tts') {
+              setIsClientTTS(true)
+              await generateClientTTS(parsed.text, parsed.voiceStyle)
+              return
+            }
+          } catch {
+            // Not JSON, treat as regular audio data
+          }
+          
+          await loadAudioData(audioData)
         } else {
           // Generate audio from text using TTS API
-          const response = await fetch('/api/gemini-live', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              prompt: textContent,
-              enableTTS: true,
-              voiceStyle: voiceStyle,
-              streamAudio: false
-            })
-          })
-
-          if (!response.ok) {
-            throw new Error('Failed to generate audio')
-          }
-
-          const data = await response.json()
-          if (data.success && data.audioData) {
-            await audioControls.playAudioData(data.audioData)
-          } else {
-            throw new Error('No audio data received')
-          }
+          await generateServerTTS(textContent)
         }
 
         if (autoPlay) {
           setTimeout(() => {
-            audioControls.play()
-          }, 500) // Small delay for better UX
+            playAudio()
+          }, 500)
         } else {
           setVoiceState("idle")
         }
       } catch (error) {
         console.error('Failed to load audio:', error)
         setVoiceState("error")
+        toast({
+          title: "Audio Error",
+          description: "Failed to generate or load audio. Please try again.",
+          variant: "destructive"
+        })
       }
     }
 
     loadAudio()
-  }, [isOpen, textContent, audioData, audioChunks, voiceStyle, autoPlay, audioControls])
+  }, [isOpen, textContent, audioData, audioChunks, voiceStyle, autoPlay])
 
-  // Update voice state based on audio state
-  useEffect(() => {
-    if (audioState.isLoading && voiceState !== "loading") {
-      setVoiceState("loading")
-    } else if (audioState.isPlaying && voiceState !== "speaking") {
-      setVoiceState("speaking")
-    } else if (audioState.isPaused && voiceState !== "paused") {
-      setVoiceState("paused")
-    } else if (audioState.error && voiceState !== "error") {
-      setVoiceState("error")
+  const loadAudioData = async (data: string) => {
+    if (!audioRef.current) return
+    
+    const audioUrl = data.startsWith('data:') ? data : `data:audio/mp3;base64,${data}`
+    audioRef.current.src = audioUrl
+    setIsClientTTS(false)
+  }
+
+  const generateServerTTS = async (text: string) => {
+    const response = await fetch('/api/gemini-live', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: text,
+        enableTTS: true,
+        voiceStyle: voiceStyle,
+        streamAudio: false
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to generate audio')
     }
-  }, [audioState, voiceState])
+
+    const data = await response.json()
+    if (data.success && data.audioData) {
+      // Check if it's client TTS instructions
+      try {
+        const parsed = JSON.parse(data.audioData)
+        if (parsed.type === 'client_tts') {
+          setIsClientTTS(true)
+          await generateClientTTS(parsed.text, parsed.voiceStyle)
+          return
+        }
+      } catch {
+        // Not JSON, treat as regular audio data
+      }
+      
+      await loadAudioData(data.audioData)
+    } else {
+      throw new Error('No audio data received')
+    }
+  }
+
+  const generateClientTTS = async (text: string, voice: string) => {
+    return new Promise<void>((resolve, reject) => {
+      if (!('speechSynthesis' in window)) {
+        reject(new Error('Speech synthesis not supported'))
+        return
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text)
+      
+      // Configure voice
+      const voices = speechSynthesis.getVoices()
+      const selectedVoice = voices.find(v => 
+        v.name.toLowerCase().includes(voice.toLowerCase()) ||
+        (voice === 'neutral' && v.default)
+      ) || voices[0]
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice
+      }
+      
+      utterance.rate = 0.9
+      utterance.pitch = 1
+      utterance.volume = volume
+      
+      utterance.onstart = () => {
+        setVoiceState("speaking")
+        setCurrentTime(0)
+        setDuration(text.length / 10) // Rough estimation
+      }
+      
+      utterance.onend = () => {
+        setVoiceState("idle")
+        setCurrentTime(0)
+        resolve()
+      }
+      
+      utterance.onerror = (error) => {
+        setVoiceState("error")
+        reject(new Error(`Speech synthesis failed: ${error.error}`))
+      }
+      
+      synthRef.current = utterance
+      speechSynthesis.speak(utterance)
+    })
+  }
+
+  const playAudio = () => {
+    if (isClientTTS) {
+      if (synthRef.current) {
+        speechSynthesis.speak(synthRef.current)
+      } else {
+        generateClientTTS(textContent, voiceStyle)
+      }
+    } else if (audioRef.current) {
+      audioRef.current.play()
+    }
+  }
+
+  const pauseAudio = () => {
+    if (isClientTTS) {
+      speechSynthesis.pause()
+      setVoiceState("paused")
+    } else if (audioRef.current) {
+      audioRef.current.pause()
+    }
+  }
 
   const handleOrbClick = useCallback(() => {
-    if (audioState.isPlaying) {
-      audioControls.pause()
+    if (voiceState === "speaking") {
+      pauseAudio()
     } else {
-      audioControls.play()
+      playAudio()
     }
-  }, [audioState.isPlaying, audioControls])
+  }, [voiceState, isClientTTS])
 
   const handleClose = useCallback(() => {
-    audioControls.stop()
+    if (isClientTTS) {
+      speechSynthesis.cancel()
+    } else if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
     setVoiceState("idle")
     onClose()
-  }, [audioControls, onClose])
+  }, [isClientTTS, onClose])
+
+  const handleVolumeChange = (value: number[]) => {
+    const newVolume = value[0] / 100
+    setVolume(newVolume)
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume
+    }
+  }
+
+  const handleSeek = (value: number[]) => {
+    if (audioRef.current && !isClientTTS) {
+      const newTime = (value[0] / 100) * duration
+      audioRef.current.currentTime = newTime
+    }
+  }
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
+
+  const progress = duration > 0 ? currentTime / duration : 0
 
   if (!isOpen) return null
 
@@ -270,121 +425,159 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-md"
         onClick={handleClose}
       >
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="w-full h-full flex flex-col items-center justify-center p-8 relative"
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          className="w-full h-full flex flex-col items-center justify-center p-6 relative max-w-4xl mx-auto"
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
+          {/* Close button */}
           <Button
             variant="ghost"
             size="icon"
             onClick={handleClose}
-            className="absolute top-8 right-8 rounded-full bg-background/50"
+            className="absolute top-6 right-6 rounded-full bg-white/10 hover:bg-white/20 text-white border-0"
           >
             <X className="w-5 h-5" />
           </Button>
 
-          <div className="relative z-10 flex flex-col items-center justify-center space-y-8 w-full max-w-4xl">
+          {/* Main content */}
+          <div className="flex flex-col items-center space-y-8 w-full">
             {/* Voice Orb */}
-            <VoiceOrb 
-              state={voiceState} 
-              onClick={handleOrbClick}
-              progress={progress}
-            />
+            <div className="relative">
+              <VoiceOrb 
+                state={voiceState} 
+                onClick={handleOrbClick}
+                progress={progress}
+                size="large"
+              />
+            </div>
 
-            {/* Voice Status */}
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold text-white">
-                {voiceState === "loading" && "Generating voice..."}
+            {/* Status and Info */}
+            <div className="text-center space-y-3">
+              <h2 className="text-3xl font-bold text-white">
+                {voiceState === "generating" && "Generating voice..."}
+                {voiceState === "loading" && "Loading audio..."}
                 {voiceState === "speaking" && "AI is speaking"}
                 {voiceState === "paused" && "Paused"}
                 {voiceState === "idle" && "Ready to play"}
-                {voiceState === "error" && "Audio error"}
+                {voiceState === "error" && "Audio error occurred"}
               </h2>
-              <p className="text-sm text-white/70">
-                Voice: {voiceStyle} • {formatTime(audioState.currentTime)} / {formatTime(audioState.duration)}
-              </p>
+              
+              <div className="flex items-center justify-center gap-4 text-white/70">
+                <Badge variant="outline" className="bg-white/10 text-white border-white/20">
+                  {isClientTTS ? "Browser TTS" : "Server TTS"}
+                </Badge>
+                <Badge variant="outline" className="bg-white/10 text-white border-white/20">
+                  Voice: {voiceStyle}
+                </Badge>
+                <span className="text-sm">
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </span>
+              </div>
             </div>
 
-            {/* Audio Controls */}
-            <div className="w-full max-w-md space-y-4">
-              {/* Progress Bar */}
-              <div className="space-y-2">
-                <Slider
-                  value={[progress * 100]}
-                  onValueChange={(value) => {
-                    const newTime = (value[0] / 100) * audioState.duration
-                    audioControls.seek(newTime)
-                  }}
-                  max={100}
-                  step={0.1}
-                  className="w-full"
-                />
-              </div>
+            {/* Controls */}
+            <Card className="w-full max-w-lg bg-white/10 backdrop-blur-sm border-white/20">
+              <CardContent className="p-6 space-y-4">
+                {/* Progress Bar */}
+                {!isClientTTS && (
+                  <div className="space-y-2">
+                    <Slider
+                      value={[progress * 100]}
+                      onValueChange={handleSeek}
+                      max={100}
+                      step={0.1}
+                      className="w-full"
+                    />
+                  </div>
+                )}
 
-              {/* Control Buttons */}
-              <div className="flex items-center justify-center gap-4">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => audioControls.seek(Math.max(0, audioState.currentTime - 10))}
-                  disabled={!audioState.duration}
-                  className="rounded-full"
-                >
-                  <SkipForward className="w-4 h-4 rotate-180" />
-                </Button>
-
-                <Button
-                  size="lg"
-                  onClick={handleOrbClick}
-                  disabled={voiceState === "loading" || voiceState === "error"}
-                  className="rounded-full w-16 h-16"
-                >
-                  {audioState.isPlaying ? (
-                    <Pause className="w-6 h-6" />
-                  ) : (
-                    <Play className="w-6 h-6" />
+                {/* Control Buttons */}
+                <div className="flex items-center justify-center gap-4">
+                  {!isClientTTS && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => audioRef.current && (audioRef.current.currentTime = Math.max(0, currentTime - 10))}
+                      disabled={!duration}
+                      className="rounded-full bg-white/10 hover:bg-white/20 text-white border-white/20"
+                    >
+                      <SkipForward className="w-4 h-4 rotate-180" />
+                    </Button>
                   )}
-                </Button>
 
+                  <Button
+                    size="lg"
+                    onClick={handleOrbClick}
+                    disabled={voiceState === "loading" || voiceState === "generating" || voiceState === "error"}
+                    className="rounded-full w-16 h-16 bg-white/20 hover:bg-white/30 text-white"
+                  >
+                    {voiceState === "speaking" ? (
+                      <Pause className="w-6 h-6" />
+                    ) : (
+                      <Play className="w-6 h-6" />
+                    )}
+                  </Button>
+
+                  {!isClientTTS && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => audioRef.current && (audioRef.current.currentTime = Math.min(duration, currentTime + 10))}
+                      disabled={!duration}
+                      className="rounded-full bg-white/10 hover:bg-white/20 text-white border-white/20"
+                    >
+                      <SkipForward className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+
+                {/* Volume Control */}
+                <div className="flex items-center gap-3">
+                  <VolumeX className="w-4 h-4 text-white/70" />
+                  <Slider
+                    value={[volume * 100]}
+                    onValueChange={handleVolumeChange}
+                    max={100}
+                    step={1}
+                    className="flex-1"
+                  />
+                  <Volume2 className="w-4 h-4 text-white/70" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowTranscript(!showTranscript)}
+                className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+              >
+                {showTranscript ? "Hide" : "Show"} Transcript
+              </Button>
+              
+              {!isClientTTS && audioData && (
                 <Button
                   variant="outline"
-                  size="icon"
-                  onClick={() => audioControls.seek(Math.min(audioState.duration, audioState.currentTime + 10))}
-                  disabled={!audioState.duration}
-                  className="rounded-full"
+                  onClick={() => {
+                    const link = document.createElement('a')
+                    link.href = audioData
+                    link.download = `voice_response_${Date.now()}.mp3`
+                    link.click()
+                  }}
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/20"
                 >
-                  <SkipForward className="w-4 h-4" />
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
                 </Button>
-              </div>
-
-              {/* Volume Control */}
-              <div className="flex items-center gap-3">
-                <VolumeX className="w-4 h-4 text-white/70" />
-                <Slider
-                  value={[audioState.volume * 100]}
-                  onValueChange={(value) => audioControls.setVolume(value[0] / 100)}
-                  max={100}
-                  step={1}
-                  className="flex-1"
-                />
-                <Volume2 className="w-4 h-4 text-white/70" />
-              </div>
+              )}
             </div>
-
-            {/* Transcript Toggle */}
-            <Button
-              variant="outline"
-              onClick={() => setShowTranscript(!showTranscript)}
-              className="text-sm"
-            >
-              {showTranscript ? "Hide" : "Show"} Transcript
-            </Button>
 
             {/* Transcript */}
             {showTranscript && (
@@ -394,19 +587,41 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
                 exit={{ opacity: 0, height: 0 }}
                 className="w-full max-w-2xl mx-auto"
               >
-                <div className="bg-black/20 backdrop-blur-sm rounded-lg p-4 max-h-32 overflow-y-auto">
-                  <p className="text-sm text-white/90 leading-relaxed">
-                    {textContent}
-                  </p>
-                </div>
+                <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+                  <CardContent className="p-4">
+                    <div className="max-h-32 overflow-y-auto">
+                      <p className="text-sm text-white/90 leading-relaxed">
+                        {textContent}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             )}
 
             {/* Error Message */}
             {voiceState === "error" && (
-              <div className="text-center text-red-400 text-sm">
-                Failed to load or play audio. Please try again.
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center"
+              >
+                <Card className="bg-red-500/20 border-red-500/30">
+                  <CardContent className="p-4">
+                    <p className="text-red-200 text-sm">
+                      Failed to load or play audio. The system will fall back to browser speech synthesis.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => generateClientTTS(textContent, voiceStyle)}
+                      className="mt-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 border-red-500/30"
+                    >
+                      Try Browser TTS
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
             )}
           </div>
         </motion.div>
