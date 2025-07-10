@@ -177,8 +177,8 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
   }
 
   return (
-    <ScrollArea className="flex-1 p-4">
-      <div className="max-w-3xl mx-auto space-y-6">
+    <ScrollArea className="h-full w-full">
+      <div className="max-w-3xl mx-auto space-y-6 p-4 min-h-full">
         {messages.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
@@ -335,7 +335,7 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
           </div>
         )}
 
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-px" />
       </div>
     </ScrollArea>
   )

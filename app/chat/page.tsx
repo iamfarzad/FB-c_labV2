@@ -15,6 +15,7 @@ import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
 import { VoiceOutputModal } from "@/components/chat/modals/VoiceOutputModal"
 import { WebcamModal } from "@/components/chat/modals/WebcamModal"
 import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
+import { LiveVoiceModal } from "@/components/chat/modals/LiveVoiceModal"
 import type { LeadCaptureState } from "./types/lead-capture"
 import { useChatContext } from "./context/ChatProvider"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
@@ -39,12 +40,12 @@ export default function ChatPage() {
   const [showVoiceOutputModal, setShowVoiceOutputModal] = useState(false)
   const [voiceOutputData, setVoiceOutputData] = useState<{
     textContent: string
-    audioData?: string
     voiceStyle?: string
   } | null>(null)
   const [showWebcamModal, setShowWebcamModal] = useState(false)
   const [showScreenShareModal, setShowScreenShareModal] = useState(false)
   const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
+  const [showLiveVoiceModal, setShowLiveVoiceModal] = useState(false)
 
   const [leadCaptureState, setLeadCaptureState] = useState<LeadCaptureState>({
     stage: "initial",
@@ -283,7 +284,7 @@ export default function ChatPage() {
         />
         <div className="flex flex-col flex-1 h-full">
           <ChatHeader onDownloadSummary={handleDownloadSummary} activities={activityLog} onNewChat={handleNewChat} onActivityClick={handleActivityClick} />
-          <div className="flex-1 overflow-hidden relative">
+          <div className="flex-1 relative min-h-0">
             {showLeadCapture && (
               <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                 <LeadCaptureFlow
@@ -305,7 +306,6 @@ export default function ChatPage() {
               onFileUpload={handleFileUpload}
               onImageUpload={handleImageUpload}
               onVoiceTranscript={handleVoiceTranscript}
-              onVoiceResponse={handleVoiceResponse}
               inputRef={inputRef}
               showVoiceModal={showVoiceModal}
               setShowVoiceModal={setShowVoiceModal}
@@ -314,6 +314,7 @@ export default function ChatPage() {
               showScreenShareModal={showScreenShareModal}
               setShowScreenShareModal={setShowScreenShareModal}
               setShowVideo2AppModal={setShowVideo2AppModal}
+              setShowLiveVoiceModal={setShowLiveVoiceModal}
             />
           </form>
         </div>
@@ -365,9 +366,18 @@ export default function ChatPage() {
             setVoiceOutputData(null)
           }}
           textContent={voiceOutputData.textContent}
-          audioData={voiceOutputData.audioData}
           voiceStyle={voiceOutputData.voiceStyle}
           autoPlay={true}
+        />
+      )}
+      {showLiveVoiceModal && (
+        <LiveVoiceModal
+          isOpen={showLiveVoiceModal}
+          onClose={() => setShowLiveVoiceModal(false)}
+          leadContext={{
+            name: leadCaptureState.leadData.name,
+            company: leadCaptureState.leadData.company
+          }}
         />
       )}
     </ChatLayout>

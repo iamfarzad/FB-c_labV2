@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Send, Camera, Monitor, Mic, Paperclip, Youtube, MoreHorizontal } from "lucide-react"
+import { Send, Camera, Monitor, Mic, Paperclip, Youtube, MoreHorizontal, Radio } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface ChatFooterProps {
@@ -23,6 +23,7 @@ interface ChatFooterProps {
   showScreenShareModal: boolean
   setShowScreenShareModal: (show: boolean) => void
   setShowVideo2AppModal: (show: boolean) => void
+  setShowLiveVoiceModal: (show: boolean) => void
 }
 
 export function ChatFooter({
@@ -36,6 +37,7 @@ export function ChatFooter({
   setShowWebcamModal,
   setShowScreenShareModal,
   setShowVideo2AppModal,
+  setShowLiveVoiceModal,
 }: ChatFooterProps) {
   const [isMobile, setIsMobile] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -67,6 +69,7 @@ export function ChatFooter({
 
   const actions = [
     { id: "voice", icon: Mic, action: () => setShowVoiceModal(true), title: "Voice Input" },
+    { id: "live-voice", icon: Radio, action: () => setShowLiveVoiceModal(true), title: "Live Voice Chat" },
     { id: "camera", icon: Camera, action: () => setShowWebcamModal(true), title: "Webcam Capture" },
     { id: "screen", icon: Monitor, action: () => setShowScreenShareModal(true), title: "Screen Share" },
     { id: "upload", icon: Paperclip, action: () => fileInputRef.current?.click(), title: "Upload File" },

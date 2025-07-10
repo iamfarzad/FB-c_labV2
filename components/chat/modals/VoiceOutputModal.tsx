@@ -2,12 +2,9 @@
 
 import type React from "react"
 import { useState, useEffect, useCallback, useRef } from "react"
-import { X, Volume2, VolumeX, Play, Pause, SkipForward, Download, RefreshCw } from "lucide-react"
+import { X, Volume2, VolumeX, Play, Pause } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { useChatContext } from "@/app/chat/context/ChatProvider"
 import { useToast } from "@/components/ui/use-toast"
@@ -16,141 +13,98 @@ interface VoiceOutputModalProps {
   isOpen: boolean
   onClose: () => void
   textContent: string
-  audioData?: string
-  audioChunks?: string[]
   voiceStyle?: string
   autoPlay?: boolean
 }
 
-type VoiceState = "idle" | "loading" | "speaking" | "paused" | "error" | "generating"
+type VoiceState = "idle" | "generating" | "speaking" | "paused" | "error"
 
-// Improved Voice Orb Component
+// Simplified Voice Orb - Just the essentials
 function VoiceOrb({ 
   state, 
-  onClick, 
-  progress,
-  size = "large" 
+  onClick 
 }: { 
   state: VoiceState
   onClick: () => void
-  progress: number
-  size?: "small" | "large"
 }) {
-  const orbSize = size === "large" ? "w-32 h-32" : "w-16 h-16"
-  const iconSize = size === "large" ? "w-8 h-8" : "w-4 h-4"
-  
   const getOrbColor = () => {
     switch (state) {
       case "speaking":
-        return "from-emerald-400 via-emerald-500 to-emerald-600"
-      case "loading":
+        return "from-green-400 to-green-600"
       case "generating":
-        return "from-amber-400 via-amber-500 to-amber-600"
+        return "from-blue-400 to-blue-600"
       case "paused":
-        return "from-blue-400 via-blue-500 to-blue-600"
+        return "from-yellow-400 to-yellow-600"
       case "error":
-        return "from-red-400 via-red-500 to-red-600"
+        return "from-red-400 to-red-600"
       default:
-        return "from-purple-400 via-purple-500 to-purple-600"
+        return "from-purple-400 to-purple-600"
+    }
+  }
+
+  const getIcon = () => {
+    switch (state) {
+      case "speaking":
+        return <Pause className="w-8 h-8 text-white" />
+      case "paused":
+      case "idle":
+        return <Play className="w-8 h-8 text-white" />
+      case "error":
+        return <VolumeX className="w-8 h-8 text-white" />
+      case "generating":
+        return <Volume2 className="w-8 h-8 text-white" />
     }
   }
 
   return (
-    <div className="relative">
-      {/* Outer glow ring */}
-      <div className={cn(
-        "absolute inset-0 rounded-full opacity-20 blur-xl",
-        orbSize,
-        `bg-gradient-to-r ${getOrbColor()}`
-      )} />
-      
-      {/* Progress Ring */}
-      <svg className={cn("absolute inset-0 -rotate-90", orbSize)} viewBox="0 0 100 100">
-        <circle
-          cx="50"
-          cy="50"
-          r="45"
-          stroke="rgba(255,255,255,0.1)"
-          strokeWidth="1"
-          fill="none"
-        />
-        <circle
-          cx="50"
-          cy="50"
-          r="45"
-          stroke="rgba(255,255,255,0.6)"
-          strokeWidth="2"
-          fill="none"
-          strokeDasharray={`${2 * Math.PI * 45}`}
-          strokeDashoffset={`${2 * Math.PI * 45 * (1 - progress)}`}
-          className="transition-all duration-500 ease-out"
-        />
-      </svg>
-
-      <motion.div
-        className={cn(
-          "relative rounded-full bg-gradient-to-r shadow-2xl cursor-pointer backdrop-blur-sm",
-          orbSize,
-          getOrbColor()
+    <motion.div
+      className={cn(
+        "relative w-24 h-24 rounded-full bg-gradient-to-r shadow-2xl cursor-pointer",
+        getOrbColor()
+      )}
+      animate={{ 
+        scale: state === "speaking" ? [1, 1.05, 1] : 1,
+        rotate: state === "generating" ? 360 : 0
+      }}
+      transition={{ 
+        scale: { 
+          duration: 1, 
+          repeat: state === "speaking" ? Infinity : 0, 
+          ease: "easeInOut" 
+        },
+        rotate: { 
+          duration: 2, 
+          repeat: state === "generating" ? Infinity : 0, 
+          ease: "linear" 
+        }
+      }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onClick}
+    >
+      <div className="absolute inset-0 flex items-center justify-center">
+        {state === "speaking" && (
+          <motion.div
+            className="flex items-center gap-1"
+          >
+            {[...Array(3)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="w-1 bg-white rounded-full"
+                animate={{ height: [6, Math.random() * 16 + 8, 6] }}
+                transition={{
+                  duration: 0.5 + Math.random() * 0.3,
+                  repeat: Number.POSITIVE_INFINITY,
+                  repeatType: "reverse",
+                  delay: i * 0.1,
+                }}
+              />
+            ))}
+          </motion.div>
         )}
-        animate={{ 
-          scale: state === "speaking" ? [1, 1.05, 1] : 1,
-          rotate: state === "loading" || state === "generating" ? 360 : 0
-        }}
-        transition={{ 
-          scale: { 
-            duration: 1.2, 
-            repeat: state === "speaking" ? Infinity : 0, 
-            ease: "easeInOut" 
-          },
-          rotate: { 
-            duration: 2, 
-            repeat: state === "loading" || state === "generating" ? Infinity : 0, 
-            ease: "linear" 
-          }
-        }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onClick}
-      >
-        <div className="absolute inset-0 flex items-center justify-center">
-          {(state === "speaking") && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center gap-1"
-            >
-              {[...Array(5)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="w-1 bg-white/90 rounded-full"
-                  animate={{ height: [8, Math.random() * 24 + 12, 8] }}
-                  transition={{
-                    duration: 0.6 + Math.random() * 0.4,
-                    repeat: Number.POSITIVE_INFINITY,
-                    repeatType: "reverse",
-                    delay: i * 0.1,
-                  }}
-                />
-              ))}
-            </motion.div>
-          )}
-          {state === "paused" && (
-            <Play className={cn(iconSize, "text-white/90")} />
-          )}
-          {(state === "idle") && (
-            <Volume2 className={cn(iconSize, "text-white/90")} />
-          )}
-          {state === "error" && (
-            <VolumeX className={cn(iconSize, "text-white/90")} />
-          )}
-          {(state === "loading" || state === "generating") && (
-            <RefreshCw className={cn(iconSize, "text-white/90 animate-spin")} />
-          )}
-        </div>
-      </motion.div>
-    </div>
+        {state !== "speaking" && getIcon()}
+      </div>
+    </motion.div>
   )
 }
 
@@ -158,264 +112,161 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
   isOpen, 
   onClose, 
   textContent,
-  audioData,
-  audioChunks,
   voiceStyle = "neutral",
   autoPlay = true
 }) => {
   const { addActivity } = useChatContext()
   const { toast } = useToast()
   const [voiceState, setVoiceState] = useState<VoiceState>("idle")
-  const [showTranscript, setShowTranscript] = useState(true)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [volume, setVolume] = useState(0.8)
-  const [isClientTTS, setIsClientTTS] = useState(false)
-  
-  const audioRef = useRef<HTMLAudioElement | null>(null)
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null)
 
-  // Initialize audio element
-  useEffect(() => {
-    const audio = new Audio()
-    audio.volume = volume
-    audio.preload = 'metadata'
-    
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime)
-    const handleDurationChange = () => setDuration(audio.duration)
-    const handlePlay = () => setVoiceState("speaking")
-    const handlePause = () => setVoiceState("paused")
-    const handleEnded = () => {
-      setVoiceState("idle")
-      setCurrentTime(0)
+  // Simple TTS using browser's Speech Synthesis API
+  const generateAndPlayTTS = useCallback(async () => {
+    if (!('speechSynthesis' in window)) {
+      setVoiceState("error")
+      toast({
+        title: "Speech Not Supported",
+        description: "Your browser doesn't support text-to-speech.",
+        variant: "destructive"
+      })
+      return
     }
-    const handleError = () => setVoiceState("error")
-    
-    audio.addEventListener('timeupdate', handleTimeUpdate)
-    audio.addEventListener('loadedmetadata', handleDurationChange)
-    audio.addEventListener('play', handlePlay)
-    audio.addEventListener('pause', handlePause)
-    audio.addEventListener('ended', handleEnded)
-    audio.addEventListener('error', handleError)
-    
-    audioRef.current = audio
-    
-    return () => {
-      audio.pause()
-      audio.src = ''
-      audio.removeEventListener('timeupdate', handleTimeUpdate)
-      audio.removeEventListener('loadedmetadata', handleDurationChange)
-      audio.removeEventListener('play', handlePlay)
-      audio.removeEventListener('pause', handlePause)
-      audio.removeEventListener('ended', handleEnded)
-      audio.removeEventListener('error', handleError)
-    }
-  }, [volume])
 
-  // Load audio when modal opens
-  useEffect(() => {
-    if (!isOpen) return
+    setVoiceState("generating")
 
-    const loadAudio = async () => {
-      setVoiceState("generating")
+    try {
+      // Stop any existing speech
+      speechSynthesis.cancel()
+
+      const utterance = new SpeechSynthesisUtterance(textContent)
       
-      try {
-        if (audioChunks && audioChunks.length > 0) {
-          // Handle streaming audio chunks
-          const fullAudioData = audioChunks.join('')
-          await loadAudioData(fullAudioData)
-        } else if (audioData) {
-          // Check if it's client TTS instructions
-          try {
-            const parsed = JSON.parse(audioData)
-            if (parsed.type === 'client_tts') {
-              setIsClientTTS(true)
-              await generateClientTTS(parsed.text, parsed.voiceStyle)
-              return
-            }
-          } catch {
-            // Not JSON, treat as regular audio data
+      // Wait for voices to load if they haven't already
+      const getVoices = () => {
+        return new Promise<SpeechSynthesisVoice[]>((resolve) => {
+          const voices = speechSynthesis.getVoices()
+          if (voices.length > 0) {
+            resolve(voices)
+          } else {
+            speechSynthesis.addEventListener('voiceschanged', () => {
+              resolve(speechSynthesis.getVoices())
+            }, { once: true })
           }
-          
-          await loadAudioData(audioData)
-        } else {
-          // Generate audio from text using TTS API
-          await generateServerTTS(textContent)
-        }
-
-        if (autoPlay) {
-          setTimeout(() => {
-            playAudio()
-          }, 500)
-        } else {
-          setVoiceState("idle")
-        }
-      } catch (error) {
-        console.error('Failed to load audio:', error)
-        setVoiceState("error")
-        toast({
-          title: "Audio Error",
-          description: "Failed to generate or load audio. Please try again.",
-          variant: "destructive"
         })
       }
-    }
 
-    loadAudio()
-  }, [isOpen, textContent, audioData, audioChunks, voiceStyle, autoPlay])
-
-  const loadAudioData = async (data: string) => {
-    if (!audioRef.current) return
-    
-    const audioUrl = data.startsWith('data:') ? data : `data:audio/mp3;base64,${data}`
-    audioRef.current.src = audioUrl
-    setIsClientTTS(false)
-  }
-
-  const generateServerTTS = async (text: string) => {
-    const response = await fetch('/api/gemini-live', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt: text,
-        enableTTS: true,
-        voiceStyle: voiceStyle,
-        streamAudio: false
-      })
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to generate audio')
-    }
-
-    const data = await response.json()
-    if (data.success && data.audioData) {
-      // Check if it's client TTS instructions
-      try {
-        const parsed = JSON.parse(data.audioData)
-        if (parsed.type === 'client_tts') {
-          setIsClientTTS(true)
-          await generateClientTTS(parsed.text, parsed.voiceStyle)
-          return
-        }
-      } catch {
-        // Not JSON, treat as regular audio data
+      const voices = await getVoices()
+      
+      // Select voice based on style
+      let selectedVoice = voices.find(v => v.default) || voices[0]
+      
+      if (voiceStyle === "neutral") {
+        selectedVoice = voices.find(v => 
+          v.name.toLowerCase().includes('samantha') || 
+          v.name.toLowerCase().includes('karen') ||
+          v.name.toLowerCase().includes('daniel')
+        ) || selectedVoice
       }
       
-      await loadAudioData(data.audioData)
-    } else {
-      throw new Error('No audio data received')
-    }
-  }
-
-  const generateClientTTS = async (text: string, voice: string) => {
-    return new Promise<void>((resolve, reject) => {
-      if (!('speechSynthesis' in window)) {
-        reject(new Error('Speech synthesis not supported'))
-        return
-      }
-
-      const utterance = new SpeechSynthesisUtterance(text)
-      
-      // Configure voice
-      const voices = speechSynthesis.getVoices()
-      const selectedVoice = voices.find(v => 
-        v.name.toLowerCase().includes(voice.toLowerCase()) ||
-        (voice === 'neutral' && v.default)
-      ) || voices[0]
-      
-      if (selectedVoice) {
-        utterance.voice = selectedVoice
-      }
-      
+      utterance.voice = selectedVoice
       utterance.rate = 0.9
       utterance.pitch = 1
-      utterance.volume = volume
-      
+      utterance.volume = 0.8
+
       utterance.onstart = () => {
         setVoiceState("speaking")
-        setCurrentTime(0)
-        setDuration(text.length / 10) // Rough estimation
+        addActivity({
+          type: "voice_response",
+          title: "AI Speaking",
+          description: "Converting text to speech",
+          status: "in_progress"
+        })
       }
       
       utterance.onend = () => {
         setVoiceState("idle")
-        setCurrentTime(0)
-        resolve()
+        addActivity({
+          type: "voice_response",
+          title: "Speech Complete",
+          description: "Finished speaking response",
+          status: "completed"
+        })
       }
       
       utterance.onerror = (error) => {
         setVoiceState("error")
-        reject(new Error(`Speech synthesis failed: ${error.error}`))
+        console.error('TTS Error:', error)
+        toast({
+          title: "Speech Error",
+          description: "Failed to generate speech. Please try again.",
+          variant: "destructive"
+        })
       }
       
       synthRef.current = utterance
       speechSynthesis.speak(utterance)
-    })
-  }
-
-  const playAudio = () => {
-    if (isClientTTS) {
-      if (synthRef.current) {
-        speechSynthesis.speak(synthRef.current)
-      } else {
-        generateClientTTS(textContent, voiceStyle)
-      }
-    } else if (audioRef.current) {
-      audioRef.current.play()
+      
+    } catch (error) {
+      setVoiceState("error")
+      console.error('TTS generation failed:', error)
+      toast({
+        title: "Speech Error",
+        description: "Failed to generate speech. Please try again.",
+        variant: "destructive"
+      })
     }
-  }
+  }, [textContent, voiceStyle, addActivity, toast])
 
-  const pauseAudio = () => {
-    if (isClientTTS) {
-      speechSynthesis.pause()
-      setVoiceState("paused")
-    } else if (audioRef.current) {
-      audioRef.current.pause()
-    }
-  }
-
+  // Handle orb click - play/pause toggle
   const handleOrbClick = useCallback(() => {
     if (voiceState === "speaking") {
-      pauseAudio()
+      speechSynthesis.pause()
+      setVoiceState("paused")
+    } else if (voiceState === "paused") {
+      speechSynthesis.resume()
+      setVoiceState("speaking")
     } else {
-      playAudio()
+      generateAndPlayTTS()
     }
-  }, [voiceState, isClientTTS])
+  }, [voiceState, generateAndPlayTTS])
 
+  // Handle close
   const handleClose = useCallback(() => {
-    if (isClientTTS) {
-      speechSynthesis.cancel()
-    } else if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
-    }
+    speechSynthesis.cancel()
     setVoiceState("idle")
     onClose()
-  }, [isClientTTS, onClose])
+  }, [onClose])
 
-  const handleVolumeChange = (value: number[]) => {
-    const newVolume = value[0] / 100
-    setVolume(newVolume)
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume
+  // Auto-play when modal opens
+  useEffect(() => {
+    if (isOpen && autoPlay && textContent) {
+      // Small delay to let modal appear
+      setTimeout(() => {
+        generateAndPlayTTS()
+      }, 500)
+    }
+  }, [isOpen, autoPlay, textContent, generateAndPlayTTS])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      speechSynthesis.cancel()
+    }
+  }, [])
+
+  const getStatusText = () => {
+    switch (voiceState) {
+      case "generating":
+        return "Preparing speech..."
+      case "speaking":
+        return "AI is speaking"
+      case "paused":
+        return "Speech paused"
+      case "error":
+        return "Speech error occurred"
+      default:
+        return "Ready to speak"
     }
   }
-
-  const handleSeek = (value: number[]) => {
-    if (audioRef.current && !isClientTTS) {
-      const newTime = (value[0] / 100) * duration
-      audioRef.current.currentTime = newTime
-    }
-  }
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
-
-  const progress = duration > 0 ? currentTime / duration : 0
 
   if (!isOpen) return null
 
@@ -425,14 +276,14 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-md"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
         onClick={handleClose}
       >
         <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="w-full h-full flex flex-col items-center justify-center p-6 relative max-w-4xl mx-auto"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          className="flex flex-col items-center justify-center p-8 relative"
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
           {/* Close button */}
@@ -440,189 +291,36 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
             variant="ghost"
             size="icon"
             onClick={handleClose}
-            className="absolute top-6 right-6 rounded-full bg-white/10 hover:bg-white/20 text-white border-0"
+            className="absolute -top-12 right-0 rounded-full bg-white/10 hover:bg-white/20 text-white"
           >
             <X className="w-5 h-5" />
           </Button>
 
-          {/* Main content */}
-          <div className="flex flex-col items-center space-y-8 w-full">
-            {/* Voice Orb */}
-            <div className="relative">
-              <VoiceOrb 
-                state={voiceState} 
-                onClick={handleOrbClick}
-                progress={progress}
-                size="large"
-              />
-            </div>
+          {/* Voice Orb */}
+          <VoiceOrb 
+            state={voiceState} 
+            onClick={handleOrbClick}
+          />
 
-            {/* Status and Info */}
-            <div className="text-center space-y-3">
-              <h2 className="text-3xl font-bold text-white">
-                {voiceState === "generating" && "Generating voice..."}
-                {voiceState === "loading" && "Loading audio..."}
-                {voiceState === "speaking" && "AI is speaking"}
-                {voiceState === "paused" && "Paused"}
-                {voiceState === "idle" && "Ready to play"}
-                {voiceState === "error" && "Audio error occurred"}
-              </h2>
-              
-              <div className="flex items-center justify-center gap-4 text-white/70">
-                <Badge variant="outline" className="bg-white/10 text-white border-white/20">
-                  {isClientTTS ? "Browser TTS" : "Server TTS"}
-                </Badge>
-                <Badge variant="outline" className="bg-white/10 text-white border-white/20">
-                  Voice: {voiceStyle}
-                </Badge>
-                <span className="text-sm">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </span>
-              </div>
-            </div>
+          {/* Simple Status */}
+          <div className="mt-6 text-center">
+            <h3 className="text-xl font-semibold text-white mb-2">
+              {getStatusText()}
+            </h3>
+            <p className="text-sm text-white/70 max-w-md">
+              {voiceState === "idle" && "Tap to hear AI response"}
+              {voiceState === "generating" && "Converting text to speech..."}
+              {voiceState === "speaking" && "Tap to pause"}
+              {voiceState === "paused" && "Tap to resume"}
+              {voiceState === "error" && "Tap to try again"}
+            </p>
+          </div>
 
-            {/* Controls */}
-            <Card className="w-full max-w-lg bg-white/10 backdrop-blur-sm border-white/20">
-              <CardContent className="p-6 space-y-4">
-                {/* Progress Bar */}
-                {!isClientTTS && (
-                  <div className="space-y-2">
-                    <Slider
-                      value={[progress * 100]}
-                      onValueChange={handleSeek}
-                      max={100}
-                      step={0.1}
-                      className="w-full"
-                    />
-                  </div>
-                )}
-
-                {/* Control Buttons */}
-                <div className="flex items-center justify-center gap-4">
-                  {!isClientTTS && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => audioRef.current && (audioRef.current.currentTime = Math.max(0, currentTime - 10))}
-                      disabled={!duration}
-                      className="rounded-full bg-white/10 hover:bg-white/20 text-white border-white/20"
-                    >
-                      <SkipForward className="w-4 h-4 rotate-180" />
-                    </Button>
-                  )}
-
-                  <Button
-                    size="lg"
-                    onClick={handleOrbClick}
-                    disabled={voiceState === "loading" || voiceState === "generating" || voiceState === "error"}
-                    className="rounded-full w-16 h-16 bg-white/20 hover:bg-white/30 text-white"
-                  >
-                    {voiceState === "speaking" ? (
-                      <Pause className="w-6 h-6" />
-                    ) : (
-                      <Play className="w-6 h-6" />
-                    )}
-                  </Button>
-
-                  {!isClientTTS && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => audioRef.current && (audioRef.current.currentTime = Math.min(duration, currentTime + 10))}
-                      disabled={!duration}
-                      className="rounded-full bg-white/10 hover:bg-white/20 text-white border-white/20"
-                    >
-                      <SkipForward className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-
-                {/* Volume Control */}
-                <div className="flex items-center gap-3">
-                  <VolumeX className="w-4 h-4 text-white/70" />
-                  <Slider
-                    value={[volume * 100]}
-                    onValueChange={handleVolumeChange}
-                    max={100}
-                    step={1}
-                    className="flex-1"
-                  />
-                  <Volume2 className="w-4 h-4 text-white/70" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowTranscript(!showTranscript)}
-                className="bg-white/10 hover:bg-white/20 text-white border-white/20"
-              >
-                {showTranscript ? "Hide" : "Show"} Transcript
-              </Button>
-              
-              {!isClientTTS && audioData && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    const link = document.createElement('a')
-                    link.href = audioData
-                    link.download = `voice_response_${Date.now()}.mp3`
-                    link.click()
-                  }}
-                  className="bg-white/10 hover:bg-white/20 text-white border-white/20"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
-              )}
-            </div>
-
-            {/* Transcript */}
-            {showTranscript && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="w-full max-w-2xl mx-auto"
-              >
-                <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-                  <CardContent className="p-4">
-                    <div className="max-h-32 overflow-y-auto">
-                      <p className="text-sm text-white/90 leading-relaxed">
-                        {textContent}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {/* Error Message */}
-            {voiceState === "error" && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center"
-              >
-                <Card className="bg-red-500/20 border-red-500/30">
-                  <CardContent className="p-4">
-                    <p className="text-red-200 text-sm">
-                      Failed to load or play audio. The system will fall back to browser speech synthesis.
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => generateClientTTS(textContent, voiceStyle)}
-                      className="mt-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 border-red-500/30"
-                    >
-                      Try Browser TTS
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
+          {/* Show text content in small print for reference */}
+          <div className="mt-4 max-w-md max-h-20 overflow-y-auto bg-black/20 rounded p-3">
+            <p className="text-xs text-white/60 leading-relaxed">
+              {textContent}
+            </p>
           </div>
         </motion.div>
       </motion.div>
