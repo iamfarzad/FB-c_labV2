@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       user_id: request.headers.get('x-user-id') || null
     })
     if (logError) console.error('Failed to log upload:', logError)
-
+    
     return NextResponse.json({
       success: true,
       url: fileUrl,

@@ -61,17 +61,17 @@ export function ChatFooter({
     try {
       // Simulate progress (or use real if API supports)
       const interval = setInterval(() => setUploadProgress(p => Math.min(p + 10, 100)), 200)
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader()
-        reader.onload = (loadEvent) => {
-          if (loadEvent.target?.result) {
-            onImageUpload(loadEvent.target.result as string, file.name)
-          }
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader()
+      reader.onload = (loadEvent) => {
+        if (loadEvent.target?.result) {
+          onImageUpload(loadEvent.target.result as string, file.name)
         }
-        reader.readAsDataURL(file)
-      } else {
-        onFileUpload(file)
       }
+      reader.readAsDataURL(file)
+    } else {
+      onFileUpload(file)
+    }
       clearInterval(interval)
       setUploadProgress(100)
       toast({ title: 'Upload successful', description: file.name })
