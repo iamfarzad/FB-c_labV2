@@ -515,3 +515,20 @@ const stream = new ReadableStream({
 - Removed unused dependencies and fixed import issues
 - Updated analysis history system with advanced deduplication
 - Implemented proper TypeScript types for all modal components 
+
+## [1.2.0] - 2025-01-XX
+
+### Fixed
+- **🚨 Critical: Fixed Broken Live API Session Management**
+  - **Re-architected to WebSocket Server**: Replaced the non-functional, stateless HTTP-based Live API (`/api/gemini-live-conversation`) with a new, stateful WebSocket server (`server/live-server.ts`).
+  - **Solved Session Leaks**: The new architecture ensures Gemini Live sessions are reliably created on client connection and destroyed on disconnection, completely resolving the massive resource leak issue.
+  - **Stateful Connection**: Eliminated the "Controller is closed" errors by maintaining a persistent, stateful connection for the entire duration of the conversation.
+  - **Reliable Turn Management**: Correctly handles `turnComplete` and conversation flow within a stable session.
+  - **Dependencies**: Re-introduced `ws` for the WebSocket server and added `concurrently` to run the server alongside the Next.js app during development.
+
+- **Simplified Client-Side Logic**:
+  - Refactored `lib/gemini-live-service.ts` to use the WebSocket client instead of the unreliable `EventSource`/`fetch` combination.
+  - Maintained the existing public interface, requiring only minimal changes in the `LiveVoiceModal.tsx` component.
+
+### Removed
+- **Obsolete API Route**: The fundamentally broken `/api/gemini-live-conversation/route.ts` is now deprecated and will be removed. The new WebSocket server completely replaces its functionality. 

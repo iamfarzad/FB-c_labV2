@@ -128,7 +128,10 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
     const canvas = canvasRef.current
     
     // Ensure video is ready
-    if (video.videoWidth === 0 || video.videoHeight === 0) return
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      toast({ title: 'Video Not Ready', description: 'Waiting for video stream...', variant: 'default' })
+      return
+    }
 
     setIsAnalyzing(true)
     setScreenState("analyzing")
@@ -247,6 +250,9 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
     return () => {
       if (autoAnalysisInterval.current) {
         clearInterval(autoAnalysisInterval.current)
+      }
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop())
       }
     }
   }, [])

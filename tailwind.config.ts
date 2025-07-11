@@ -58,9 +58,6 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        "orange-accent": "hsl(var(--color-orange-accent))",
-        gunmetal: "hsl(var(--color-gunmetal))",
-        "light-silver": "hsl(var(--color-light-silver))",
       },
       borderRadius: {
         lg: "var(--radius)",

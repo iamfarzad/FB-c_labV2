@@ -55,7 +55,7 @@ export default function AboutPage() {
             </p>
           </div>
           <div className="flex justify-center">
-            <Avatar className="w-48 h-48 border-4 border-orange-accent shadow-lg">
+            <Avatar className="w-48 h-48 border-4 border-border shadow-lg">
               <AvatarImage src="/placeholder.svg?width=200&height=200" alt="Farzad Bayat" />
               <AvatarFallback>FB</AvatarFallback>
             </Avatar>
@@ -67,7 +67,7 @@ export default function AboutPage() {
         <h2 className="text-center text-2xl font-bold tracking-tight text-primary sm:text-3xl">Core Values</h2>
         <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {coreValues.map((value) => (
-            <Card key={value.text}>
+            <Card key={value.text} className="neu-card transition-all flex flex-col items-center justify-center p-8 text-center">
               <CardContent className="p-6 text-center">
                 <value.icon className="mx-auto h-10 w-10 text-orange-accent" />
                 <p className="mt-4 font-medium">{value.text}</p>

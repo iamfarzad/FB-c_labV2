@@ -20,8 +20,27 @@ import {
   MessageSquare,
   Activity
 } from 'lucide-react'
-import { geminiLiveService, type LiveMessage, type LiveAudioChunk } from '@/lib/gemini-live-service'
+import { geminiLiveService, type LiveAudioChunk } from '@/lib/gemini-live-service'
 import { cn } from '@/lib/utils'
+
+// Type definitions for Web Speech API for cross-browser compatibility
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: (event: any) => void; // Using any for broader compatibility
+  onerror: (event: any) => void;
+  onend: () => void;
+  start: () => void;
+  stop: () => void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: { new(): SpeechRecognition };
+    webkitSpeechRecognition: { new(): SpeechRecognition };
+  }
+}
 
 interface LiveVoiceModalProps {
   isOpen: boolean
@@ -64,7 +83,7 @@ export function LiveVoiceModal({ isOpen, onClose, leadContext }: LiveVoiceModalP
 
   // Initialize speech recognition
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
+    if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
       const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition
       recognitionRef.current = new SpeechRecognition()
       
@@ -110,7 +129,7 @@ export function LiveVoiceModal({ isOpen, onClose, leadContext }: LiveVoiceModalP
 
   // Setup Live service event handlers
   useEffect(() => {
-    geminiLiveService.onConnected(() => {
+    geminiLiveService.onConnected((connectionId) => {
       setIsConnected(true)
       setIsConnecting(false)
       setError(null)
@@ -129,12 +148,12 @@ export function LiveVoiceModal({ isOpen, onClose, leadContext }: LiveVoiceModalP
       setIsConnected(false)
     })
 
-    geminiLiveService.onMessage((message: LiveMessage) => {
-      if (message.type === 'text' && message.content) {
+    geminiLiveService.onMessage((message) => {
+      if (message.type === 'text' && message.payload.content) {
         const newMessage: ConversationMessage = {
           id: `assistant_${Date.now()}`,
           type: 'assistant',
-          content: message.content,
+          content: message.payload.content,
           timestamp: new Date(),
           hasAudio: false
         }
@@ -157,20 +176,54 @@ export function LiveVoiceModal({ isOpen, onClose, leadContext }: LiveVoiceModalP
     })
 
     return () => {
-      // Cleanup on unmount
-      if (isConnected) {
-        handleDisconnect()
+      // Always cleanup on unmount
+      if (recognitionRef.current && isListening) {
+        recognitionRef.current.stop()
+      }
+      if (geminiLiveService.getStatus().isConnected) {
+        geminiLiveService.disconnect()
       }
     }
-  }, [])
+  }, []) // Empty dependency array for mount/unmount only
+
+  // Improve audio playback: Queue and play sequentially
+  const audioQueue = useRef<LiveAudioChunk[]>([])
+  const isPlaying = useRef(false)
+
+  useEffect(() => {
+    if (audioChunks.length > 0 && !isMuted) {
+      audioQueue.current = [...audioChunks]
+      playNextAudio()
+    }
+  }, [audioChunks, isMuted])
+
+  const playNextAudio = () => {
+    if (audioQueue.current.length === 0 || isPlaying.current) return
+    isPlaying.current = true
+    const chunk = audioQueue.current.shift()!
+    const audio = new Audio(chunk.audioData)
+    audio.onended = () => {
+      isPlaying.current = false
+      playNextAudio()
+    }
+    audio.play().catch(e => {
+      console.error("Audio play error:", e)
+      isPlaying.current = false
+      playNextAudio()
+    })
+  }
 
   // Start Live conversation
   const handleStartConversation = async () => {
+    if (!process.env.NEXT_PUBLIC_GEMINI_API_KEY) { // Check env in client? Better in service, but alert here
+      setError('Gemini API key not configured. Contact admin.')
+      return
+    }
     setIsConnecting(true)
     setError(null)
     
     try {
-      await geminiLiveService.startConversation({
+      await geminiLiveService.connect({
         message: "Hello! I'd like to start a live voice conversation to discuss AI consulting opportunities.",
         leadContext
       })

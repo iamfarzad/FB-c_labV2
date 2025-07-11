@@ -18,8 +18,8 @@ export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-background transition-all">
+      <div className="neu-card transition-all container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -35,7 +35,7 @@ export function AdminDashboard() {
         <EmailTestPanel />
 
         {/* Main Dashboard Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 transition-all">
           <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
@@ -184,7 +184,7 @@ export function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="leads">
-            <LeadsList />
+            <LeadsList searchTerm="" period="last_30_days" />
           </TabsContent>
 
           <TabsContent value="meetings">
@@ -200,11 +200,11 @@ export function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="analytics">
-            <InteractionAnalytics />
+            <InteractionAnalytics period="last_30_days" />
           </TabsContent>
 
           <TabsContent value="ai-performance">
-            <AIPerformanceMetrics />
+            <AIPerformanceMetrics period="last_30_days" />
           </TabsContent>
 
           <TabsContent value="activity">

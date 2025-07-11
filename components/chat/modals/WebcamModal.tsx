@@ -129,7 +129,10 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
       const video = videoRef.current
       const canvas = canvasRef.current
       
-      if (video.videoWidth === 0 || video.videoHeight === 0) return
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        toast({ title: 'Camera Not Ready', description: 'Waiting for video stream...', variant: 'default' })
+        return
+      }
 
       // Set canvas size to match video
       canvas.width = video.videoWidth
@@ -255,7 +258,7 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
   useEffect(() => {
     return () => {
       if (stream) {
-        stream.getTracks().forEach((track) => track.stop())
+        stream.getTracks().forEach(track => track.stop())
       }
     }
   }, [stream])

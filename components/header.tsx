@@ -20,13 +20,13 @@ export default function Header() {
   const pathname = usePathname()
 
   const NavLinks = ({ className }: { className?: string }) => (
-    <nav className={cn("flex items-center gap-6", className)}>
+    <nav className={cn("flex items-center gap-6 text-sm", className)}>
       {navLinks.map(({ href, label }) => (
         <Link
           key={href}
           href={href}
           className={cn(
-            "text-sm font-medium transition-colors hover:text-primary font-mono",
+            "transition-all hover:text-foreground",
             pathname === href ? "text-primary" : "text-muted-foreground",
           )}
         >
@@ -40,7 +40,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 glass-header">
       <div className="container flex h-16 items-center">
         <Link href="/" className="flex items-center gap-2">
-          <Bot className="h-6 w-6 text-orange-accent" />
+          <Bot className="h-6 w-6 text-primary" />
           <span className="font-bold uppercase font-display tracking-wider">F.B</span>
         </Link>
         <div className="hidden md:flex ml-10">

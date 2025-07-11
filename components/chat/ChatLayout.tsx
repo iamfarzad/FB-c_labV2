@@ -28,8 +28,8 @@ export const ChatLayout = ({ children, className }: ChatLayoutProps) => {
   return (
     <div
       className={cn(
-        "flex h-screen w-full flex-col bg-background",
-        "relative overflow-hidden",
+        "flex min-h-screen w-full flex-col bg-background",
+        "relative overflow-hidden transition-all",
         // Mobile optimizations
         "mobile:h-[100dvh] mobile:overflow-hidden",
         // Tablet optimizations

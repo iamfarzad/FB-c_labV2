@@ -45,10 +45,10 @@ export default function ConsultingPage() {
 
       <PageShell>
         <div className="grid md:grid-cols-2 gap-8 items-start">
-          <Card className="h-full border-2 border-orange-accent/50 bg-orange-accent/5">
+          <Card className="neu-card transition-all">
             <CardHeader className="text-center">
-              <div className="mx-auto w-fit p-3 bg-orange-accent/10 rounded-md mb-2">
-                <Zap className="h-8 w-8 text-orange-accent" />
+              <div className="mx-auto w-fit p-3 bg-primary/10 rounded-md mb-2">
+                <Zap className="h-8 w-8 text-primary" />
               </div>
               <CardTitle className="text-2xl">AI Consulting</CardTitle>
               <CardDescription>
@@ -69,7 +69,7 @@ export default function ConsultingPage() {
               </Button>
             </CardContent>
           </Card>
-          <Card className="h-full">
+          <Card className="neu-card transition-all">
             <CardHeader className="text-center">
               <div className="mx-auto w-fit p-3 bg-primary/10 rounded-md mb-2">
                 <Cpu className="h-8 w-8 text-primary" />

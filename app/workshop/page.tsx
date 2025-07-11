@@ -1,7 +1,7 @@
 import { PageHeader, PageShell } from "@/components/page-shell"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { CheckCircle } from "lucide-react"
+import { CheckCircle, Book } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 const workshopFeatures = [
@@ -14,7 +14,7 @@ const workshopFeatures = [
 export default function WorkshopPage() {
   return (
     <>
-      <PageShell>
+      <PageShell className="min-h-screen">
         <PageHeader
           title="Hands-On AI Workshops for Your Team"
           subtitle="Coming Soon – Get notified when the full workshop schedule is live."
@@ -26,10 +26,13 @@ export default function WorkshopPage() {
         </div>
       </PageShell>
 
-      <PageShell>
+      <PageShell className="min-h-screen">
         <div className="grid md:grid-cols-2 gap-10 items-center">
-          <Card className="h-full">
+          <Card className="h-full neu-card transition-all">
             <CardHeader>
+              <div className="p-3 bg-primary/10 rounded-md">
+                <Book className="h-6 w-6 text-primary" />
+              </div>
               <CardTitle className="text-2xl">What to Expect</CardTitle>
               <CardDescription>
                 These workshops are built from real-world experience—not theory. Every session is designed to give your
@@ -47,7 +50,7 @@ export default function WorkshopPage() {
               </ul>
             </CardContent>
           </Card>
-          <Card className="h-full bg-secondary">
+          <Card className="h-full bg-secondary neu-card transition-all">
             <CardHeader>
               <CardTitle className="text-2xl">Details</CardTitle>
             </CardHeader>

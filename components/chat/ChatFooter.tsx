@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Send, Camera, Monitor, Mic, Paperclip, Youtube, MoreHorizontal, Radio } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useToast } from '@/hooks/use-toast'
 
 interface ChatFooterProps {
   input: string
@@ -41,6 +42,9 @@ export function ChatFooter({
 }: ChatFooterProps) {
   const [isMobile, setIsMobile] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { toast } = useToast()
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [isUploading, setIsUploading] = useState(false)
 
   useEffect(() => {
     const checkDevice = () => setIsMobile(window.innerWidth < 768)
@@ -53,18 +57,31 @@ export function ChatFooter({
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (file.type.startsWith("image/")) {
-      const reader = new FileReader()
-      reader.onload = (loadEvent) => {
-        if (loadEvent.target?.result) {
-          onImageUpload(loadEvent.target.result as string, file.name)
+    setIsUploading(true)
+    try {
+      // Simulate progress (or use real if API supports)
+      const interval = setInterval(() => setUploadProgress(p => Math.min(p + 10, 100)), 200)
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader()
+        reader.onload = (loadEvent) => {
+          if (loadEvent.target?.result) {
+            onImageUpload(loadEvent.target.result as string, file.name)
+          }
         }
+        reader.readAsDataURL(file)
+      } else {
+        onFileUpload(file)
       }
-      reader.readAsDataURL(file)
-    } else {
-      onFileUpload(file)
+      clearInterval(interval)
+      setUploadProgress(100)
+      toast({ title: 'Upload successful', description: file.name })
+    } catch (e: any) {
+      toast({ title: 'Upload failed', description: e.message, variant: 'destructive' })
+    } finally {
+      setIsUploading(false)
+      setUploadProgress(0)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
-    if (e.target) e.target.value = ""
   }
 
   const actions = [
@@ -119,6 +136,7 @@ export function ChatFooter({
               placeholder="Type your message..."
               className="resize-none border-2 focus:border-primary/50 transition-colors w-full pl-40 pr-4 py-3 min-h-[56px] max-h-[200px]"
             />
+            {isUploading && <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-200 p-2 rounded-md text-sm text-gray-800">Uploading: {uploadProgress}%</div>}
           </div>
           <Button type="submit" disabled={!input.trim() || isLoading} className="h-[56px] px-6 shrink-0">
             <Send className="w-5 h-5" />

@@ -37,7 +37,7 @@ export default function HomePage() {
               <Button
                 asChild
                 size="lg"
-                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30 transition-all duration-300"
+                className="transition-all hover:bg-primary/90 text-foreground shadow-lg hover:shadow-xl"
               >
                 <Link href="/contact">Book a Free Consultation</Link>
               </Button>
@@ -45,7 +45,7 @@ export default function HomePage() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="border-border/50 bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-all duration-300"
+                className="border-border bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-all"
               >
                 <Link href="/chat">
                   Try My AI Assistant <Bot className="ml-2 h-4 w-4" />
@@ -95,10 +95,10 @@ export default function HomePage() {
             </p>
           </div>
           <div className="grid gap-6">
-            <Card>
+            <Card className="neu-card transition-all">
               <CardHeader className="flex flex-row items-center gap-4">
-                <div className="p-3 bg-orange-accent/10 rounded-md">
-                  <Zap className="h-6 w-6 text-orange-accent" />
+                <div className="p-3 bg-primary/10 rounded-md">
+                  <Zap className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle>AI Consulting</CardTitle>
               </CardHeader>

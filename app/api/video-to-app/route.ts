@@ -28,13 +28,21 @@ async function generateText(options: {
   try {
     if (prompt.includes("pedagogist and product designer")) {
       // This is a spec generation request - use multimodal model
-      const result = await model.generateContent([
+      let result = await model.generateContent([
         {
           text: prompt,
         },
         // Add video URL context if provided
         ...(videoUrl ? [{ text: `Video URL: ${videoUrl}` }] : []),
       ])
+
+      if (videoUrl) {
+        const videoPart = { inlineData: { data: await fetchVideoBase64(videoUrl), mimeType: 'video/mp4' } } // Implement fetchVideoBase64 to get base64
+        // Or if Gemini supports URL directly, but safer to fetch
+        result = await model.generateContent([prompt, videoPart])
+      } else {
+        result = await model.generateContent(prompt)
+      }
 
       const response = await result.response
       return response.text()
@@ -50,11 +58,18 @@ async function generateText(options: {
   }
 }
 
+async function fetchVideoBase64(url: string): Promise<string> {
+  const res = await fetch(url)
+  const buffer = await res.arrayBuffer()
+  return Buffer.from(buffer).toString('base64')
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { action, videoUrl, spec } = await request.json()
 
     if (action === "generateSpec") {
+      if (!videoUrl) throw new Error('Video URL required for spec')
       // Use multimodal model for video analysis
       const specResponse = await generateText({
         modelName: "gemini-2.5-flash", // Supports video, audio, image, text

@@ -221,9 +221,9 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
 
                 <Card
                   className={cn(
-                    "p-4 relative",
+                    "neu-card scale-hover transition-all p-4 relative",
                     message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted/50",
-                    message.role === "assistant" && "shadow-sm hover:shadow-md transition-shadow"
+                    message.role === "assistant" && "shadow-sm hover:shadow-md"
                   )}
                 >
                   {message.imageUrl && (
