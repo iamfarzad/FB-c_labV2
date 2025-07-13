@@ -153,10 +153,6 @@ export default function ChatPage() {
       leadData 
     } as LeadCaptureState)
     setShowLeadCapture(false)
-    append({
-      role: "assistant",
-      content: `Hello ${leadData.name}! 👋 Thanks for providing your details. I'm now ready to assist. How can I help with your AI automation goals today?`,
-    })
     toast({ title: "Welcome!", description: `Starting consultation for ${leadData.name}.` })
   }
 
