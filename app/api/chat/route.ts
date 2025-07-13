@@ -34,34 +34,43 @@ export async function POST(req: NextRequest) {
     const model = 'gemini-1.5-flash';
     const systemPrompt = buildSystemPrompt(leadContext);
 
-    const contents = messages.map((message: Message) => {
-      const parts: any[] = [{ text: message.content }];
-      if (message.imageUrl) {
-        const base64Match = message.imageUrl.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/);
-        if (base64Match) {
-          parts.push({
-            inlineData: {
-              mimeType: `image/${base64Match[1]}`,
-              data: base64Match[2],
-            },
-          });
-        }
-      }
-      return {
-        role: message.role === 'assistant' ? 'model' : 'user',
-        parts,
-      };
-    });
+    // Enable Google Search grounding and URL context
+    const tools = [{ googleSearchRetrieval: {} }];
+    const generationConfig = {
+      responseMimeType: 'text/plain',
+    };
+    console.log('[Live AI Activity] Gemini config/tools:', { tools, generationConfig });
 
-    const geminiPrompt = {
-      system_instruction: {
+    const contents = [
+      {
         role: 'system',
         parts: [{ text: systemPrompt }],
       },
-      contents: contents,
-    };
+      ...messages.map((message: Message) => {
+        const parts: any[] = [{ text: message.content }];
+        if (message.imageUrl) {
+          const base64Match = message.imageUrl.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/);
+          if (base64Match) {
+            parts.push({
+              inlineData: {
+                mimeType: `image/${base64Match[1]}`,
+                data: base64Match[2],
+              },
+            });
+          }
+        }
+        return {
+          role: message.role === 'assistant' ? 'model' : 'user',
+          parts,
+        };
+      }),
+    ];
 
-    const geminiResponse = await genAI.getGenerativeModel({ model }).generateContentStream(geminiPrompt);
+    const geminiResponse = await genAI.getGenerativeModel({ model }).generateContentStream({
+      contents,
+      tools,
+      generationConfig,
+    });
 
     const stream = new ReadableStream({
       async start(controller) {
