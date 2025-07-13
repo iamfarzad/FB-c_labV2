@@ -5,4 +5,4 @@ export class UnifiedAIService {
   // This can be expanded later once core functionality is stable.
 }
 
-export const unifiedAIService = new UnifiedAIService(); 
+export const unifiedAIService = new UnifiedAIService();
