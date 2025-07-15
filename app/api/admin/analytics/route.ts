@@ -18,11 +18,11 @@ export async function GET(request: NextRequest) {
 
     // Process engagement types
     const engagementTypes = [
-      { name: "chat", value: 0, color: "#8884d8" },
-      { name: "voice", value: 0, color: "#82ca9d" },
-      { name: "webcam", value: 0, color: "#ffc658" },
-      { name: "screen_share", value: 0, color: "#ff7300" },
-      { name: "image", value: 0, color: "#00ff00" },
+      { name: "chat", value: 0, color: "hsl(22 100% 51%)" },
+      { name: "voice", value: 0, color: "hsl(142 76% 36%)" },
+      { name: "webcam", value: 0, color: "hsl(38 92% 50%)" },
+      { name: "screen_share", value: 0, color: "hsl(0 84% 60%)" },
+      { name: "image", value: 0, color: "hsl(210 100% 50%)" },
     ]
 
     leads?.forEach((lead) => {

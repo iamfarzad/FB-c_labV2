@@ -1,92 +1,145 @@
-# FB/c Lab Platform
+# FB-c_labV2
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/iamfarzads-projects/v0-fb-c-ai-clone)
-[![Main Branch](https://img.shields.io/badge/Main%20Branch-Stable-brightgreen)](https://github.com/iamfarzad/FB-c_labV2/tree/main)
-[![WebApp Branch](https://img.shields.io/badge/WebApp-Development-yellow)](https://github.com/iamfarzad/FB-c_labV2/tree/feature/webapp-clean)
-[![AI Chat Branch](https://img.shields.io/badge/AI%20Chat-Development-blue)](https://github.com/iamfarzad/FB-c_labV2/tree/feature/ai-chat-utils)
+A comprehensive AI consulting platform with interactive chat, voice capabilities, and educational content generation.
 
-## Project Structure
+## Design System
 
-### Main Branches
+This project uses a comprehensive design system with canonical design tokens. All components must use these tokens instead of hard-coded values.
 
-1. **`main`** - Production-ready code
-   - Always stable and tested
-   - Only merged from feature branches after review
-   - Deployed to production
+### Key Files
+- `DESIGN.md` - Complete design system documentation
+- `app/globals.css` - CSS custom properties and design tokens
+- `tailwind.config.ts` - Tailwind configuration with design tokens
 
-2. **`feature/webapp-clean`** - Web Application
-   - Contains all web app features **except** AI chat
-   - Focus on UI/UX, pages, and web app functionality
-   - See [WebApp README](README-WEBAPP.md) for details
+### Design Tokens
+- **Colors**: HSL-based semantic color system
+- **Typography**: Consistent font families and sizes
+- **Spacing**: Tailwind spacing scale
+- **Border Radius**: Consistent border radius values
+- **Shadows**: Standardized shadow system
 
-3. **`feature/ai-chat-utils`** - AI Chat Functionality
-   - Complete AI chat implementation
-   - Voice and text chat features
-   - API integrations
-   - See [AI Chat README](README-AI-CHAT.md) for details
+### Linting Rules
+The project enforces design token usage through:
 
-## Development Workflow
+- **ESLint**: Prevents hard-coded hex colors and arbitrary values
+- **Stylelint**: Enforces HSL colors and design token usage in CSS
 
-1. **Create a feature branch** from the appropriate base branch:
-   \`\`\`bash
-   # For web app features
-   git checkout -b feature/my-webapp-feature feature/webapp-clean
+### Available Scripts
+```bash
+# Run all linting
+pnpm lint:all
 
-   # For AI chat features
-   git checkout -b feature/my-chat-feature feature/ai-chat-utils
-   \`\`\`
+# Run ESLint only
+pnpm lint
 
-2. **Make your changes**
+# Run Stylelint only
+pnpm lint:style
+```
 
-3. **Test thoroughly**
-   - Run unit tests
-   - Test in development environment
-   - Verify no regressions
+## Features
 
-4. **Create a Pull Request** to the appropriate branch
-   - Web app features → `feature/webapp-clean`
-   - AI chat features → `feature/ai-chat-utils`
+- **AI Chat Interface**: Interactive chat with multiple AI models
+- **Voice Integration**: Real-time voice input and output
+- **Video Analysis**: Upload and analyze video content
+- **Educational Content**: Generate interactive learning experiences
+- **Lead Management**: Capture and manage potential clients
+- **Admin Dashboard**: Analytics and performance monitoring
+- **Meeting Scheduler**: Automated meeting booking system
 
-5. **After review and approval**, merge to the feature branch
+## Tech Stack
 
-6. **When ready for production**, create a PR from the feature branch to `main`
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS, Radix UI, Shadcn UI
+- **AI**: Google Gemini, OpenAI GPT
+- **Database**: Supabase
+- **Email**: Resend
+- **Charts**: Recharts
+- **Real-time**: WebSockets
 
 ## Getting Started
 
-### Prerequisites
-- Node.js 18+
-- pnpm
-- Git
-
-### Installation
-
-\`\`\`bash
-# Clone the repository
-git clone https://github.com/iamfarzad/FB-c_labV2.git
-cd FB-c_labV2
-
-# Install dependencies
+1. Install dependencies:
+```bash
 pnpm install
+```
 
-# Copy environment variables
+2. Set up environment variables:
+```bash
 cp .env.example .env.local
-# Edit .env.local with your API keys
-\`\`\`
+```
 
-### Running the Application
-
-\`\`\`bash
-# For web app development
-git checkout feature/webapp-clean
+3. Run the development server:
+```bash
 pnpm dev
+```
 
-# For AI chat development
-git checkout feature/ai-chat-utils
-pnpm dev
-\`\`\`
+4. Run linting to ensure design token compliance:
+```bash
+pnpm lint:all
+```
 
-## Deployment
+## Project Structure
 
-Main branch is automatically deployed to Vercel:
+```
+├── app/                    # Next.js app directory
+│   ├── api/               # API routes
+│   ├── chat/              # Chat interface
+│   └── globals.css        # Global styles and design tokens
+├── components/            # React components
+│   ├── admin/            # Admin dashboard components
+│   ├── chat/             # Chat interface components
+│   └── ui/               # Reusable UI components
+├── lib/                  # Utility functions and services
+├── hooks/                # Custom React hooks
+├── DESIGN.md             # Design system documentation
+├── tailwind.config.ts    # Tailwind configuration
+└── package.json          # Dependencies and scripts
+```
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/iamfarzads-projects/v0-fb-c-ai-clone)
+## Design Token Usage
+
+### Colors
+```tsx
+// ✅ Correct - Using design tokens
+<div className="bg-primary text-primary-foreground">
+<div className="bg-accent text-accent-foreground">
+<div className="border border-border">
+
+// ❌ Incorrect - Hard-coded values
+<div className="bg-[#ff0000]">
+<div style={{ color: '#333' }}>
+```
+
+### Spacing
+```tsx
+// ✅ Correct - Using Tailwind spacing scale
+<div className="p-4 m-2">
+<div className="w-full h-64">
+
+// ❌ Incorrect - Arbitrary values
+<div className="p-[16px]">
+<div className="w-[100%]">
+```
+
+### Typography
+```tsx
+// ✅ Correct - Using design tokens
+<h1 className="text-2xl font-bold">
+<p className="text-muted-foreground">
+
+// ❌ Incorrect - Hard-coded values
+<h1 className="text-[24px]">
+<p style={{ fontSize: '14px' }}>
+```
+
+## Contributing
+
+1. Follow the design system guidelines in `DESIGN.md`
+2. Use design tokens instead of hard-coded values
+3. Run linting before committing: `pnpm lint:all`
+4. Ensure components work in both light and dark modes
+5. Test accessibility and keyboard navigation
+
+## License
+
+MIT License

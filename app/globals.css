@@ -31,6 +31,17 @@
     --glass-bg: rgba(255, 255, 255, 0.5);
     --glass-border: rgba(0, 0, 0, 0.1);
     --radius: 0.75rem;
+    
+    /* Chart Colors */
+    --chart-primary: var(--color-orange-accent);
+    --chart-secondary: var(--muted-foreground);
+    --chart-success: 142 76% 36%;
+    --chart-warning: 38 92% 50%;
+    --chart-error: 0 84% 60%;
+    
+    /* Destructive Colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
   }
 
   .dark {
@@ -53,6 +64,17 @@
     --popover-foreground: var(--card-foreground);
     --glass-bg: rgba(26, 26, 26, 0.5);
     --glass-border: rgba(255, 255, 255, 0.1);
+    
+    /* Chart Colors - Dark Mode */
+    --chart-primary: var(--color-orange-accent);
+    --chart-secondary: var(--muted-foreground);
+    --chart-success: 142 76% 36%;
+    --chart-warning: 38 92% 50%;
+    --chart-error: 0 84% 60%;
+    
+    /* Destructive Colors - Dark Mode */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: var(--color-gunmetal);
   }
 
   body {

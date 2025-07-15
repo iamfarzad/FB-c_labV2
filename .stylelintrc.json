@@ -1,0 +1,78 @@
+{
+  "extends": [
+    "stylelint-config-standard"
+  ],
+  "rules": {
+    "color-no-hex": true,
+    "color-named": "never",
+    "declaration-property-value-allowed-list": {
+      "color": [
+        "/^hsl\\(/",
+        "/^var\\(--/",
+        "transparent",
+        "currentColor",
+        "inherit",
+        "initial",
+        "unset"
+      ],
+      "background-color": [
+        "/^hsl\\(/",
+        "/^var\\(--/",
+        "transparent",
+        "currentColor",
+        "inherit",
+        "initial",
+        "unset"
+      ],
+      "border-color": [
+        "/^hsl\\(/",
+        "/^var\\(--/",
+        "transparent",
+        "currentColor",
+        "inherit",
+        "initial",
+        "unset"
+      ]
+    },
+    "declaration-property-unit-allowed-list": {
+      "width": ["px", "rem", "em", "%", "vw", "vh"],
+      "height": ["px", "rem", "em", "%", "vw", "vh"],
+      "font-size": ["rem", "em", "px"],
+      "line-height": ["rem", "em", "px", "unitless"],
+      "margin": ["rem", "em", "px", "%"],
+      "padding": ["rem", "em", "px", "%"]
+    },
+    "max-nesting-depth": 3,
+    "selector-max-compound-selectors": 4,
+    "selector-max-specificity": "0,4,0",
+    "declaration-block-no-duplicate-properties": true,
+    "declaration-block-no-redundant-longhand-properties": true,
+    "declaration-no-important": true,
+    "declaration-block-single-line-max-declarations": 1,
+    "declaration-colon-newline-after": "always-multi-line",
+    "declaration-colon-space-after": "always-single-line",
+    "declaration-colon-space-before": "never",
+    "declaration-empty-line-before": "never",
+    "declaration-block-trailing-semicolon": "always",
+    "block-closing-brace-empty-line-before": "never",
+    "block-closing-brace-newline-after": "always",
+    "block-closing-brace-newline-before": "always-multi-line",
+    "block-closing-brace-space-before": "always-single-line",
+    "block-opening-brace-newline-after": "always-multi-line",
+    "block-opening-brace-space-after": "always-single-line",
+    "block-opening-brace-space-before": "always",
+    "indentation": 2,
+    "linebreaks": "unix",
+    "max-empty-lines": 1,
+    "no-eol-whitespace": true,
+    "no-missing-end-of-source-newline": true,
+    "no-trailing-whitespace": true,
+    "string-quotes": "single"
+  },
+  "ignoreFiles": [
+    "node_modules/**/*",
+    "dist/**/*",
+    "build/**/*",
+    ".next/**/*"
+  ]
+}
