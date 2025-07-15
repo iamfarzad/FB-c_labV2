@@ -76,7 +76,7 @@ function VoiceRecordingOrb({
           cx="50"
           cy="50"
           r="45"
-          stroke="rgba(255,255,255,0.1)"
+          stroke="hsl(0 0% 100% / 0.1)"
           strokeWidth="1"
           fill="none"
         />
@@ -85,7 +85,7 @@ function VoiceRecordingOrb({
             cx="50"
             cy="50"
             r="45"
-            stroke="rgba(239, 68, 68, 0.8)"
+            stroke="hsl(0 84% 60% / 0.8)"
             strokeWidth="2"
             fill="none"
             strokeDasharray={`${2 * Math.PI * 45}`}
@@ -105,8 +105,8 @@ function VoiceRecordingOrb({
         animate={{ 
           scale: state === "listening" ? [1, 1.02, 1] : 1,
           boxShadow: state === "listening" 
-            ? ["0 0 0 0 rgba(239, 68, 68, 0.4)", "0 0 0 20px rgba(239, 68, 68, 0)", "0 0 0 0 rgba(239, 68, 68, 0.4)"]
-            : "0 10px 25px rgba(0, 0, 0, 0.3)"
+            ? ["0 0 0 0 hsl(0 84% 60% / 0.4)", "0 0 0 20px hsl(0 84% 60% / 0)", "0 0 0 0 hsl(0 84% 60% / 0.4)"]
+            : "0 10px 25px hsl(0 0% 0% / 0.3)"
         }}
         transition={{ 
           scale: { duration: 1.5, repeat: state === "listening" ? Infinity : 0, ease: "easeInOut" },

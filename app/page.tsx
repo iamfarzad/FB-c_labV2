@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 export default function HomePage() {
   return (
     <>
-      <div className="relative w-full h-[calc(100vh-4rem)] overflow-hidden">
+      <div className="relative w-full min-h-screen overflow-hidden">
         {/* Animated Grid Background */}
         <AnimatedGridPattern
           numSquares={30}
@@ -19,7 +19,7 @@ export default function HomePage() {
           repeatDelay={1}
           className={cn(
             "[mask-image:radial-gradient(500px_circle_at_center,white,transparent)]",
-            "inset-x-0 inset-y-[-30%] h-[200%] skew-y-12 fill-orange-accent/20 stroke-orange-accent/20",
+            "inset-x-0 inset-y-0 h-full skew-y-12 fill-orange-accent/20 stroke-orange-accent/20",
           )}
         />
 
