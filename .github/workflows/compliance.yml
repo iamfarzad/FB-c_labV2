@@ -1,0 +1,95 @@
+name: Frontend Compliance Tests
+on: [push, pull_request]
+
+jobs:
+  compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run linting
+        run: pnpm lint:all
+
+      - name: Run type checking
+        run: pnpm test:types
+
+      - name: Run unit tests
+        run: pnpm test
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+
+      - name: Test for hard-coded colors
+        run: ./scripts/test-colors.sh
+
+      - name: Check bundle size
+        run: pnpm test:bundle
+
+      - name: Security audit
+        run: pnpm test:security
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            coverage/
+            playwright-report/
+            lighthouse-report.json
+            pa11y-report.json
+            stylelint-report.json
+
+  performance:
+    runs-on: ubuntu-latest
+    needs: compliance
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Start application
+        run: pnpm start &
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Wait for application to start
+        run: sleep 30
+
+      - name: Run Lighthouse audit
+        run: pnpm test:performance
+
+      - name: Run accessibility audit
+        run: pnpm test:accessibility
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: |
+            lighthouse-report.json
+            pa11y-report.json
