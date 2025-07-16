@@ -1,23 +1,20 @@
 import { getSupabase } from "@/lib/supabase/server"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
-
-interface LeadCaptureData {
-  name: string
-  email: string
-  company?: string
-  engagementType: "chat" | "voice" | "screen_share" | "webcam"
-  initialQuery?: string
-  tcAcceptance: {
-    accepted: boolean
-    timestamp: number
-    userAgent?: string
-  }
-}
+import { validateInput, LeadCaptureSchema } from "@/lib/validation-schemas"
+import { rateLimitMiddleware } from "@/lib/rate-limiter"
+import { logActivity } from "@/lib/activity-logger"
 
 export async function POST(req: NextRequest) {
   try {
-    const leadData: LeadCaptureData = await req.json()
+    // Check rate limit
+    const rateLimitResponse = await rateLimitMiddleware(req)
+    if (rateLimitResponse) {
+      return rateLimitResponse
+    }
+
+    // Validate input
+    const leadData = validateInput(LeadCaptureSchema, await req.json())
 
     const supabase = getSupabase()
 
@@ -58,6 +55,22 @@ export async function POST(req: NextRequest) {
         throw new Error(`Database error: ${error.message}`)
       }
     }
+
+    // Log successful lead capture
+    await logActivity({
+      type: 'lead_captured',
+      title: 'Lead Captured',
+      description: `New lead captured via ${leadData.engagementType}`,
+      status: 'completed',
+      metadata: {
+        email: leadData.email,
+        name: leadData.name,
+        company: leadData.company,
+        engagementType: leadData.engagementType,
+        leadId: data.id,
+        timestamp: new Date().toISOString()
+      }
+    })
 
     // Trigger AI research in background (only if in development or with full URL)
     try {
