@@ -1,9 +1,15 @@
 import { getSupabase } from "@/lib/supabase/server"
 import { TokenCostCalculator } from "@/lib/token-cost-calculator"
 import type { NextRequest } from "next/server"
+import { adminAuthMiddleware } from "@/lib/auth"
 import { NextResponse } from "next/server"
 
 export async function GET(req: NextRequest) {
+  // Check admin authentication
+  const authResult = await adminAuthMiddleware(req);
+  if (authResult) {
+    return authResult;
+  }
   try {
     const { searchParams } = new URL(req.url)
     const timeframe = searchParams.get("timeframe") || "24h"
@@ -101,6 +107,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // Check admin authentication
+  const authResult = await adminAuthMiddleware(req);
+  if (authResult) {
+    return authResult;
+  }
   try {
     const usageData = await req.json()
 

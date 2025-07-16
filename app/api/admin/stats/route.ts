@@ -1,8 +1,14 @@
 import { getSupabase } from "@/lib/supabase/server"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
+import { adminAuthMiddleware } from "@/lib/auth"
 
 export async function GET(req: NextRequest) {
+  // Check admin authentication
+  const authResult = await adminAuthMiddleware(req);
+  if (authResult) {
+    return authResult;
+  }
   try {
     const { searchParams } = new URL(req.url)
     const period = searchParams.get("period") || "7d"

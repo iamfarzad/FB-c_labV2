@@ -1,6 +1,7 @@
 import { getSupabase } from "@/lib/supabase/server"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
+import { leadCaptureSchema, validateRequest, sanitizeString, sanitizeEmail } from "@/lib/validation"
 
 interface LeadCaptureData {
   name: string
@@ -17,7 +18,29 @@ interface LeadCaptureData {
 
 export async function POST(req: NextRequest) {
   try {
-    const leadData: LeadCaptureData = await req.json()
+    const rawData = await req.json()
+    
+    // Validate input data
+    const validation = validateRequest(leadCaptureSchema, rawData)
+    if (!validation.success) {
+      return NextResponse.json({
+        error: 'Validation failed',
+        details: validation.errors
+      }, { status: 400 })
+    }
+    
+    // Sanitize the validated data
+    const leadData: LeadCaptureData = {
+      name: sanitizeString(validation.data.name),
+      email: sanitizeEmail(validation.data.email),
+      company: validation.data.company_name ? sanitizeString(validation.data.company_name) : undefined,
+      engagementType: "chat", // Default for now
+      initialQuery: validation.data.message ? sanitizeString(validation.data.message) : undefined,
+      tcAcceptance: {
+        accepted: true,
+        timestamp: Date.now()
+      }
+    }
 
     const supabase = getSupabase()
 

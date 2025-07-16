@@ -1,8 +1,14 @@
 import { getSupabase } from "@/lib/supabase/server"
 import type { NextRequest } from "next/server"
+import { adminAuthMiddleware } from "@/lib/auth"
 import { NextResponse } from "next/server"
 
 export async function GET(req: NextRequest) {
+  // Check admin authentication
+  const authResult = await adminAuthMiddleware(req);
+  if (authResult) {
+    return authResult;
+  }
   try {
     const supabase = getSupabase()
 
@@ -21,6 +27,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // Check admin authentication
+  const authResult = await adminAuthMiddleware(req);
+  if (authResult) {
+    return authResult;
+  }
   try {
     const campaignData = await req.json()
 

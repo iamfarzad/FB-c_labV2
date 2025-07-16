@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getSupabase } from '@/lib/supabase/server';
 import { TokenCostCalculator } from '@/lib/token-cost-calculator';
 import type { NextRequest } from 'next/server';
+import { chatRequestSchema, validateRequest } from '@/lib/validation';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -22,12 +23,19 @@ const buildSystemPrompt = (leadContext: any): string => {
 };
 
 export async function POST(req: NextRequest) {
-  if (!process.env.GEMINI_API_KEY) {
-    return new Response(JSON.stringify({ error: 'GEMINI_API_KEY is missing on the server!' }), { status: 500 });
-  }
-
   try {
-    const { messages, data = {} } = await req.json();
+    const rawData = await req.json()
+    
+    // Validate input data first
+    const validation = validateRequest(chatRequestSchema, rawData);
+    if (!validation.success) {
+      return new Response(JSON.stringify({
+        error: 'Validation failed',
+        details: validation.errors
+      }), { status: 400 });
+    }
+    
+    const { messages, data = {} } = validation.data;
     const { leadContext = {}, sessionId = null, userId = null } = data;
     
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
