@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react'
+import '@testing-library/jest-dom'
 
 describe('ARIA Compliance', () => {
   test('Button has proper ARIA attributes', () => {

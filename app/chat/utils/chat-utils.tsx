@@ -10,12 +10,12 @@ export const getActivityColor = (type: ActivityItem["type"]): string => {
   switch (type) {
     case "error":
       return "text-red-500"
-    case "complete":
-    case "video_complete":
+    case "ai_request":
+    case "ai_stream":
       return "text-green-500"
-    case "analyzing":
-    case "processing":
-    case "generating":
+    case "tool_used":
+    case "user_action":
+    case "stream_chunk":
       return "text-blue-500"
     default:
       return "text-muted-foreground"
