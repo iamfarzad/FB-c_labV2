@@ -10,7 +10,20 @@
     "lint": "next lint",
     "lint:style": "stylelint \"**/*.{css,scss}\"",
     "lint:all": "pnpm lint && pnpm lint:style",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:security": "vitest test/security",
+    "test:compliance": "vitest test/compliance",
+    "test:performance": "vitest test/performance",
+    "test:scalability": "vitest test/scalability",
+    "test:observability": "vitest test/observability",
+    "test:cicd": "vitest test/cicd",
+    "test:disaster-recovery": "vitest test/disaster-recovery",
+    "test:api-versioning": "vitest test/api-versioning",
+    "test:network": "vitest test/network",
+    "test:all": "vitest run",
+    "test:coverage": "vitest --coverage"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
@@ -89,6 +102,11 @@
     "stylelint-config-standard": "^36.0.0",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "supertest": "^6.3.0",
+    "artillery": "^2.0.0",
+    "playwright": "^1.40.0"
   }
 }
