@@ -51,7 +51,7 @@ export async function POST() {
     }
 
     console.log("📤 Sending lead follow-up email...")
-    const leadEmailSent = await EmailService.sendLeadFollowUp(testLeadData)
+    const leadEmailSent = await EmailService.sendLeadWelcomeEmail(testLeadData)
 
     // Test meeting confirmation email
     const testMeetingData = {

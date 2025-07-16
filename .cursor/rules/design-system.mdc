@@ -1,0 +1,29 @@
+---
+alwaysApply: true
+---
+# Frontend Design System & Style Guide
+
+All UI and frontend code must strictly follow the canonical design system and style guide as defined in [frontend_design.md](mdc:frontend_design.md).
+
+**Key requirements:**
+- Use only design tokens for color, spacing, typography, border radius, and shadows as defined in [frontend_design.md](mdc:frontend_design.md) and [DESIGN.md](mdc:DESIGN.md).
+- Reference all color and font variables via CSS custom properties or Tailwind config. No hard-coded hex/rgb values or inline font-family in components.
+- Use Tailwind's spacing and border radius scale mapped to tokens.
+- Follow the accessibility, responsive, and ARIA guidelines in [frontend_design.md](mdc:frontend_design.md).
+- All interactive elements must have visible focus states using the accent color.
+- Use only approved component patterns (e.g., .btn-primary, .card-minimal, etc.) and avoid arbitrary values in Tailwind classes.
+- All changes to design tokens or style rules require UI owner approval as per [DESIGN.md](mdc:DESIGN.md).
+
+**References:**
+- [frontend_design.md](mdc:frontend_design.md) (canonical design system)
+- [DESIGN.md](mdc:DESIGN.md) (token source, change policy)
+- [Tailwind CSS Docs](https://tailwindcss.com/docs)
+- [Shadcn UI](https://ui.shadcn.com/)
+
+**Violations:**
+- No inline styles for color, font, or spacing
+- No hard-coded hex/rgb values in components
+- No arbitrary values in Tailwind classes (e.g., `text-[#ff5b04]`)
+- No direct font-family in component files
+
+All PRs must pass style lint and visual regression tests. For any questions, consult the design system documentation or UI owner.

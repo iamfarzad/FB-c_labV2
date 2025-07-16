@@ -1,0 +1,91 @@
+068ddfb | 2025-07-08 | v0 | fix: enhance chat and activity side panel
+084afba | 2025-06-20 | Farzad | Merge branch 'refactor/chat-api-and-utils' into integration/full-merge
+0e95457 | 2025-06-16 | google-labs-jules[bot] | refactor: Comment out settings button in chat header
+10aafb7 | 2025-06-20 | Farzad | Merge branch 'refactor/unify-design-system' into integration/full-merge
+180d0a2 | 2025-06-19 | google-labs-jules[bot] | Refactor: Unify design system and improve consistency
+2350cc5 | 2025-07-13 | Farzad | fix(chat): remove unsupported thinkingBudget from generationConfig (Gemini API compatibility) and clean up chat onboarding logic
+254a995 | 2025-06-23 | Farzad | 🚀 Upgrade all AI functions to Gemini 2.5 Flash for real-time performance
+2651e01 | 2025-06-27 | Farzad | 🚀 Complete AI Unification: Migrate to UnifiedAIService Architecture
+2b0bf09 | 2025-06-18 | google-labs-jules[bot] | Refactor capability handlers for @google/genai SDK and acknowledge live session feature
+2cc766c | 2025-07-08 | v0 | feat: document AI architecture and logic
+2e600b1 | 2025-06-18 | Farzad | Merge branch 'feature/ai-showcase-core-refactor' with resolved conflicts
+2e7f9ec | 2025-06-20 | Farzad | Merge branch 'feat/new-sidebar-video-tool-page'
+33753c5 | 2025-07-03 | Farzad | fix: Correct dynamic imports for Live API modals
+3479fe4 | 2025-06-18 | Farzad | feat: implement conversational state machine for chat
+3829cad | 2025-07-08 | v0 | feat: complete chat interface with interactive components
+38bc1da | 2025-06-11 | Farzad | feat: update AI models and enhance chat functionality
+38bddc3 | 2025-06-23 | Farzad | Refactor chat components and add toast notifications
+392eb12 | 2025-07-08 | v0 | feat: implement Live AI Activity feature
+3bc92f5 | 2025-07-13 | Farzad | fix(chat): enable Gemini Google Search grounding, remove invalid config, and ensure streaming chat works
+3f91be3 | 2025-06-18 | google-labs-jules[bot] | I've updated the @google/genai SDK and started refactoring the capability handlers.
+439d52d | 2025-06-09 | v0 | Initialized repository for project Fb/c AI Clone
+455083f | 2025-07-08 | v0 | feat: add missing named exports for TokenCostAnalytics and activityLogger
+4824dff | 2025-06-10 | google-labs-jules[bot] | I've refactored the chat API and utilities, improved configuration, and added tests.
+4885793 | 2025-07-03 | Farzad | fix: Prevent modals from rendering unless explicitly opened
+49bf507 | 2025-07-08 | v0 | feat: integrate Gemini APIs in multimodal components
+4cc90f8 | 2025-06-13 | google-labs-jules[bot] | feat: Implement new sidebar, video tool page, and activity feed
+4eec693 | 2025-06-18 | Farzad | Merge main into feat/new-sidebar-video-tool-page
+529b6cd | 2025-06-17 | Farzad | refactor: simplify video learning modal to redirect to dedicated page - Remove inline content generation complexity - Update modal to redirect to /video-learning-tool page - Clean up unused state variables and functions - Simplify UI to focus on URL input and redirection - Remove unused imports and interfaces
+52a50aa | 2025-07-11 | Farzad | feat: stabilize codebase and fix multiple AI features
+5704109 | 2025-06-18 | google-labs-jules[bot] | feat: Implement Video to Learning App workflow
+5c33808 | 2025-06-18 | Farzad | Merge branch 'feature/ai-showcase-core-refactor' into main
+5d28aba | 2025-06-18 | Farzad | feat: save work-in-progress on AI showcase and proxy
+63d6097 | 2025-06-20 | Farzad | fix: update Tailwind opacity class syntax in globals.css
+63ff2ac | 2025-06-16 | google-labs-jules[bot] | feat: Implement chat transcript download
+65fb19c | 2025-06-17 | Farzad | feat: complete integration of all advanced features from all branches - Enhanced Sidebar with Motion Animations using Framer Motion - Real-time Activity Tracking with 10+ activity types and progress indicators - Advanced Chat with voice, camera, YouTube processing, and summarization - Complete UI Components integration (Progress, Tooltips, Badges, ScrollArea) - Theme toggle, settings integration, and enhanced error handling - All features from feat/new-sidebar-video-tool-page, jules_wip, and refactor/chat-api-and-utils successfully integrated
+66cd5dd | 2025-07-03 | Farzad | fix: Remove missing font preloads to prevent 404 errors
+6ea4b9c | 2025-07-08 | v0 | feat: document AI functions logic and architecture
+7070edc | 2025-06-20 | Farzad | feat: Create clean, functional chat API route
+729e85c | 2025-07-03 | v0 | fix: resolve API integration issues in chat interface
+7977c12 | 2025-06-09 | v0 | sync main changes into FB-c_labV2 project
+7ad7aeb | 2025-07-03 | Farzad | feat: Add Webcam and Screen Share modals with Gemini Live API
+7d453bc | 2025-06-17 | Farzad | feat: complete enhanced chat interface with voice, camera, video learning, and side panel - Add comprehensive voice input with speech recognition - Implement camera capture and image upload functionality - Add video learning modal with AI-generated educational content - Include side panel with chat analytics and export features - Fix server/client module errors and JSON parsing issues - Enhance error handling and debug logging throughout - Update API routes to support multimodal AI interactions
+7ec7cc2 | 2025-07-13 | Farzad | fix: resolve syntax errors and stabilize AI service
+7efc59e | 2025-06-18 | google-labs-jules[bot] | feat: Implement Video to Learning App workflow
+82bd90c | 2025-07-08 | v0 | revert chat feature to stable state
+8367b2c | 2025-06-27 | Farzad | feat: Add Video2App modal button integration
+83fccf7 | 2025-07-08 | v0 | feat: fully integrate core chat engine with Vercel AI SDK
+84c2ce6 | 2025-06-30 | Farzad | Complete AI functionality implementation - Replace all mocked functions with real Gemini API
+887479b | 2025-06-20 | Farzad | feat: Integrate new chat UI and backend foundation
+8e28f6f | 2025-07-03 | Farzad | fix: Add missing 'use client' directive to LoadingContainer
+9282507 | 2025-06-17 | Farzad | docs: merge AI chat utilities and documentation
+945df12 | 2025-06-21 | Farzad | Complete video learning tool implementation
+946ff4a | 2025-06-17 | Farzad | feat: integrate new features from branches - Add video learning tool page with YouTube integration - Add new UI components (progress, tooltip, badge, scroll-area, separator, switch) - Implement improved Gemini API with official SDK - Add comprehensive AI showcase API with voice generation - Include ContentContainer and ExampleGallery components - Add YouTube utilities for video processing - Install ElevenLabs SDK for voice capabilities
+973fd2e | 2025-06-10 | Farzad | fix: update Gemini API to use @google/generative-ai SDK and improve error handling
+98e94b8 | 2025-06-27 | Farzad | feat: Complete Video2App integration with chat
+9b5890d | 2025-07-08 | v0 | feat: overhaul chat functionality with Vercel AI SDK
+9db2d06 | 2025-07-08 | v0 | feat: fully integrate advanced AI features with new chat foundation
+9e43f0a | 2025-07-08 | v0 | fix: revert TimelineActivityLog to original design
+9f633a8 | 2025-07-10 | Farzad | 🎉 Major UI/UX Overhaul: Complete Multimodal AI Features Enhancement
+a242e21 | 2025-06-16 | google-labs-jules[bot] | fix: Apply global theming to Video to Learning App page
+a76e7c3 | 2025-06-20 | Farzad | Fix: repair broken FormatSection component
+a7752ba | 2025-07-08 | v0 | feat: stabilize chat feature with comprehensive data flow overhaul
+a7a62c6 | 2025-07-08 | v0 | fix: resolve ChatProvider context error
+b0e3df3 | 2025-07-08 | v0 | feat: document AI functions logic and architecture
+b34334d | 2025-06-19 | Farzad | refactor: fix TypeScript errors and improve chat page
+b3eb55e | 2025-06-18 | Farzad | Implement clean AI Showcase with conversational interface
+b6f11f7 | 2025-07-08 | v0 | fix: restore full chat functionality
+bcb5bfc | 2025-07-08 | v0 | fix: correct initial message block in chat component
+bdfcdf2 | 2025-06-20 | Farzad | feat: add sidebar with video learning integration
+c5a4e7e | 2025-06-18 | google-labs-jules[bot] | feat: Refine sidebar activity, header buttons, and desktop sidebar
+c8a15a2 | 2025-06-18 | Farzad | Merge branch 'feat/new-sidebar-video-tool-page' into main
+caa415c | 2025-06-18 | Farzad | Merge branch 'feat/new-sidebar-video-tool-page' into main
+cab87ca | 2025-06-18 | Farzad | Merge feature/ai-showcase-core-refactor: Add AI showcase with conversational engine
+ce66762 | 2025-06-18 | Farzad | Merge branch 'feature/ai-showcase-core-refactor' into main
+cf728d7 | 2025-06-18 | Farzad | Update dependencies and API integration for AI showcase refactor
+d0c1899 | 2025-06-11 | Farzad | docs: add AI chat utils readme with guidelines
+d24ffcd | 2025-06-17 | Farzad | feat: add download transcript functionality to chat header - Add download button with transcript export feature - Include proper timestamp and sender formatting - Integrate with existing chat interface - Prepare for advanced sidebar features
+d523dfe | 2025-07-08 | v0 | feat: sync main changes and update documentation
+d57aff5 | 2025-07-03 | Farzad | feat: Add Voice Input Modal with real-time Gemini Live API support
+d77d1b4 | 2025-06-13 | google-labs-jules[bot] | feat: Enhance sidebar AI Activity and re-introduce chat summarization
+dc20bd9 | 2025-07-08 | v0 | fix: resolve chat component crash with missing timestamp
+dd5ef3e | 2025-06-21 | Farzad | Fix video learning tool: restore original working implementation with real Gemini analysis, fix CSS issues, add missing dependencies
+df0e591 | 2025-07-08 | v0 | feat: document AI functions logic and architecture
+df98809 | 2025-07-03 | Farzad | feat: Integrate Gemini Live API modals into chat interface
+dfb2e7e | 2025-06-30 | Farzad | RESTORE: Full Chat Page Design
+e242db9 | 2025-06-20 | google-labs-jules[bot] | I've refactored the AI backend into a modular structure under `api/ai-service/`.
+e78ae51 | 2025-06-11 | Farzad | docs: update main README with branch structure and workflow
+e7ca843 | 2025-06-09 | Farzad | feat: complete design system overhaul with technical geometric aesthetic - Replace Inter with Rajdhani + Space Mono fonts for technical feel - Transform from minimalist to geometric design (sharp corners, technical spacing) - Preserve orange brand colors with glassmorphism - Add WarpBackground component with orange beam animations - Improve text readability (70% to 90% opacity) - Enhance glassmorphism for liquid glass effect - Move WarpBackground from global to hero section only - Update grid colors for proper theme contrast - Optimize typography with technical letter spacing
+f9c60c4 | 2025-06-09 | v0 | feat: add dynamic data renderer for chat interface
+fc3cf67 | 2025-07-11 | Farzad | fix: restore chat API route to stable state and fix all tests
+fe161e3 | 2025-07-03 | v0 | feat: sync main changes to FB-c_labV2

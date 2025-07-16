@@ -1,0 +1,14 @@
+---
+alwaysApply: true
+---
+# Backend Architecture Reference
+
+For all backend-related tasks, design, and code changes, always follow the architecture, conventions, and best practices described in [backend_architecture.md](mdc:backend_architecture.md).
+
+- This includes API design, data models, error handling, security, scalability, and deployment.
+- Any deviation from the documented architecture must be justified and documented.
+- Use [backend_architecture.md](mdc:backend_architecture.md) as the single source of truth for backend system structure and policies.
+description:
+globs:
+alwaysApply: false
+---

@@ -1,4 +1,6 @@
-# FB/c Lab Platform
+# F.B/c AI
+
+**Design System:** See [DESIGN.md](./DESIGN.md) for the canonical style guide and design token rules. All UI work must follow this guide.
 
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/iamfarzads-projects/v0-fb-c-ai-clone)
 [![Main Branch](https://img.shields.io/badge/Main%20Branch-Stable-brightgreen)](https://github.com/iamfarzad/FB-c_labV2/tree/main)
