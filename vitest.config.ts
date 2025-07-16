@@ -11,12 +11,10 @@ export default defineConfig({
     hookTimeout: 10000,
     globals: true,
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      thresholds: {
-        global: { branches: 80, functions: 80, lines: 80, statements: 80 },
-      },
-      exclude: [
+      provider: 'c8',
+      reporter:    ['text','json','html'],
+      thresholds:  { global: { branches:80, functions:80, lines:80, statements:80 } },
+      exclude:     [
         'node_modules/',
         'test/',
         '**/*.d.ts',
@@ -25,7 +23,7 @@ export default defineConfig({
         '**/.next/**',
         '**/dist/**',
       ],
-    },
+    }
   },
   resolve: {
     alias: {
