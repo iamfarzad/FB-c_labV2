@@ -63,8 +63,8 @@ global.testUtils = {
   }
 };
 
-// Mock fetch for testing
-global.fetch = jest.fn();
+// Don't mock fetch - use real fetch for integration tests
+// global.fetch = jest.fn();
 
 // Clean up after each test
 afterEach(async () => {
