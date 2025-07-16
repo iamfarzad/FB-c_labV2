@@ -1,7 +1,9 @@
 import { z } from 'zod'
 
 // Base schemas
-export const EmailSchema = z.string().email('Invalid email format')
+export const EmailSchema = z.string()
+  .email('Invalid email format')
+  .max(254, 'Email address too long') // RFC 5321 limit
 export const NameSchema = z.string().min(1, 'Name is required').max(100, 'Name too long')
 export const CompanySchema = z.string().max(200, 'Company name too long').optional()
 
@@ -56,14 +58,14 @@ export const LeadResearchSchema = z.object({
   name: NameSchema,
   email: EmailSchema,
   company: CompanySchema,
-  linkedinUrl: z.string().url('Invalid LinkedIn URL').optional()
+  linkedinUrl: z.string().url('Invalid LinkedIn URL').max(500, 'LinkedIn URL too long').optional()
 })
 
 // Video to app validation
 export const VideoToAppSchema = z.object({
   action: z.enum(['generateSpec', 'generateCode']),
-  videoUrl: z.string().url('Invalid video URL').optional(),
-  spec: z.string().optional()
+  videoUrl: z.string().url('Invalid video URL').max(1000, 'Video URL too long').optional(),
+  spec: z.string().max(10000, 'Specification too long').optional()
 })
 
 // Educational content validation
@@ -82,11 +84,11 @@ export const EducationalInteractionSchema = z.object({
 })
 
 export const VideoLearningContextSchema = z.object({
-  videoUrl: z.string().url('Invalid video URL'),
-  videoTitle: z.string().optional(),
-  generatedSpec: z.string().min(1, 'Generated spec required'),
-  learningObjectives: z.array(z.string()).min(1, 'At least one learning objective required'),
-  keyTopics: z.array(z.string()).min(1, 'At least one key topic required'),
+  videoUrl: z.string().url('Invalid video URL').max(1000, 'Video URL too long'),
+  videoTitle: z.string().max(200, 'Video title too long').optional(),
+  generatedSpec: z.string().min(1, 'Generated spec required').max(10000, 'Generated spec too long'),
+  learningObjectives: z.array(z.string().max(500, 'Learning objective too long')).min(1, 'At least one learning objective required'),
+  keyTopics: z.array(z.string().max(200, 'Key topic too long')).min(1, 'At least one key topic required'),
   difficultyLevel: z.enum(['beginner', 'intermediate', 'advanced'])
 })
 
@@ -104,7 +106,7 @@ export const MeetingBookingSchema = z.object({
   company: CompanySchema,
   preferredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
   preferredTime: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format'),
-  timeZone: z.string().default('UTC'),
+  timeZone: z.string().max(50, 'Timezone too long').default('UTC'),
   message: z.string().max(1000, 'Message too long').optional()
 })
 
