@@ -41,13 +41,13 @@ export class EmailService {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Welcome to F.B/c</title>
           <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: hsl(0 0% 10%); }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: hsl(203 23% 18%); }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, hsl(22 100% 51%) 0%, hsl(22 100% 45%) 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .header { background: linear-gradient(135deg, hsl(21 100% 51%) 0%, hsl(21 100% 45%) 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
             .content { background: white; padding: 30px; border: 1px solid hsl(0 0% 85%); }
-            .footer { background: hsl(0 0% 96%); padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 14px; color: hsl(0 0% 40%); }
-            .btn { display: inline-block; background: hsl(22 100% 51%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-            .highlight { background: hsl(0 0% 96%); padding: 15px; border-left: 4px solid hsl(22 100% 51%); margin: 20px 0; }
+            .footer { background: hsl(108 13% 85%); padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 14px; color: hsl(0 0% 40%); }
+            .btn { display: inline-block; background: hsl(21 100% 51%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .highlight { background: hsl(108 13% 85%); padding: 15px; border-left: 4px solid hsl(21 100% 51%); margin: 20px 0; }
           </style>
         </head>
         <body>
@@ -116,11 +116,11 @@ export class EmailService {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Meeting Confirmed - F.B/c</title>
           <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: hsl(0 0% 10%); }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: hsl(203 23% 18%); }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(142 76% 30%) 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
             .content { background: white; padding: 30px; border: 1px solid hsl(0 0% 85%); }
-            .footer { background: hsl(0 0% 96%); padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 14px; color: hsl(0 0% 40%); }
+            .footer { background: hsl(108 13% 85%); padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 14px; color: hsl(0 0% 40%); }
             .meeting-details { background: hsl(142 76% 96%); padding: 20px; border-radius: 8px; margin: 20px 0; }
             .btn { display: inline-block; background: hsl(142 76% 36%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 10px 5px; }
             .btn-secondary { background: hsl(0 0% 40%); }
@@ -199,11 +199,11 @@ export class EmailService {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>${campaign.subject}</title>
           <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: hsl(0 0% 10%); }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: hsl(203 23% 18%); }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, hsl(22 100% 51%) 0%, hsl(22 100% 45%) 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .header { background: linear-gradient(135deg, hsl(21 100% 51%) 0%, hsl(21 100% 45%) 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
             .content { background: white; padding: 30px; border: 1px solid hsl(0 0% 85%); }
-            .footer { background: hsl(0 0% 96%); padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 14px; color: hsl(0 0% 40%); }
+            .footer { background: hsl(108 13% 85%); padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 14px; color: hsl(0 0% 40%); }
           </style>
         </head>
         <body>

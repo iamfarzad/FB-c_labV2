@@ -135,7 +135,7 @@ export function InteractionAnalytics({ period }: InteractionAnalyticsProps) {
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Line type="monotone" dataKey="interactions" stroke="hsl(22 100% 51%)" strokeWidth={2} />
+                <Line type="monotone" dataKey="interactions" stroke="hsl(21 100% 51%)" strokeWidth={2} />
                 <Line type="monotone" dataKey="leads" stroke="hsl(142 76% 36%)" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
@@ -158,7 +158,7 @@ export function InteractionAnalytics({ period }: InteractionAnalyticsProps) {
                   labelLine={false}
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   outerRadius={80}
-                  fill="hsl(22 100% 51%)"
+                  fill="hsl(21 100% 51%)"
                   dataKey="value"
                 >
                   {analytics.engagementTypes.map((entry, index) => (
@@ -184,7 +184,7 @@ export function InteractionAnalytics({ period }: InteractionAnalyticsProps) {
                 <XAxis dataKey="capability" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="usage" fill="hsl(22 100% 51%)" />
+                <Bar dataKey="usage" fill="hsl(21 100% 51%)" />
                 <Bar dataKey="conversion" fill="hsl(142 76% 36%)" />
               </BarChart>
             </ResponsiveContainer>
@@ -204,7 +204,7 @@ export function InteractionAnalytics({ period }: InteractionAnalyticsProps) {
                 <XAxis dataKey="hour" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="interactions" fill="hsl(22 100% 51%)" />
+                <Bar dataKey="interactions" fill="hsl(21 100% 51%)" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

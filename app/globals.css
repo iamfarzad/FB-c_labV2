@@ -5,12 +5,12 @@
 @layer base {
   :root {
     --font-sans: "Inter", sans-serif;
-    --color-orange-accent: 22 100% 51%;
-    --color-gunmetal: 0 0% 10%;
-    --color-light-silver: 0 0% 96%;
-    --color-gunmetal-lighter: 0 0% 16%;
-    --color-light-silver-darker: 0 0% 88%;
-    --color-orange-accent-hover: 22 100% 45%;
+    --color-orange-accent: 21 100% 51%;
+    --color-gunmetal: 203 23% 18%;
+    --color-light-silver: 108 13% 85%;
+    --color-gunmetal-lighter: 203 23% 24%;
+    --color-light-silver-darker: 108 13% 78%;
+    --color-orange-accent-hover: 21 100% 45%;
     --background: 0 0% 98%;
     --foreground: var(--color-gunmetal);
     --primary: var(--color-gunmetal);

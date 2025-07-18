@@ -65,6 +65,9 @@ const config = {
           warning: "hsl(var(--chart-warning))",
           error: "hsl(var(--chart-error))",
         },
+        "orange-accent": "hsl(var(--color-orange-accent))",
+        "gunmetal": "hsl(var(--color-gunmetal))",
+        "light-silver": "hsl(var(--color-light-silver))",
       },
       borderRadius: {
         lg: "var(--radius)",

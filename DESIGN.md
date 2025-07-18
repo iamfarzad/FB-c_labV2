@@ -6,10 +6,10 @@ This document defines the canonical design tokens and guidelines for the FB-c_la
 ## Color System
 
 ### Primary Colors
-- **Orange Accent**: `hsl(22 100% 51%)` - Primary brand color
-- **Orange Accent Hover**: `hsl(22 100% 45%)` - Hover state for orange accent
-- **Gunmetal**: `hsl(0 0% 10%)` - Primary dark color
-- **Light Silver**: `hsl(0 0% 96%)` - Primary light color
+- **Orange Accent**: `hsl(21 100% 51%)` - Primary brand color (#FF5B04)
+- **Orange Accent Hover**: `hsl(21 100% 45%)` - Hover state for orange accent
+- **Gunmetal**: `hsl(203 23% 18%)` - Primary dark color (#233038)
+- **Light Silver**: `hsl(108 13% 85%)` - Primary light color (#D3DBDD)
 
 ### Semantic Colors
 - **Background**: `hsl(var(--background))` - Main background
@@ -23,7 +23,7 @@ This document defines the canonical design tokens and guidelines for the FB-c_la
 - **Popover**: `hsl(var(--popover))` - Popover backgrounds
 
 ### Chart Colors
-- **Chart Primary**: `hsl(22 100% 51%)` (orange-accent)
+- **Chart Primary**: `hsl(21 100% 51%)` (orange-accent)
 - **Chart Secondary**: `hsl(0 0% 60%)` (muted-foreground)
 - **Chart Success**: `hsl(142 76% 36%)` (green-600)
 - **Chart Warning**: `hsl(38 92% 50%)` (yellow-500)
