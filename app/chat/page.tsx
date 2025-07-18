@@ -238,17 +238,87 @@ export default function ChatPage() {
     [],
   )
 
-  const handleDownloadSummary = useCallback(() => {
-    const summary = messages.map((m) => `${m.role.toUpperCase()}: ${m.content}`).join("\n\n")
-    const blob = new Blob([summary], { type: "text/plain" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `chat_summary_${sessionId}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
-    toast({ title: "Summary Exported" })
-  }, [messages, sessionId, toast])
+  const handleDownloadSummary = useCallback(async () => {
+    try {
+      const response = await fetch('/api/export-summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId: sessionId,
+          leadEmail: leadCaptureState.leadData.email
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Check if response is PDF (binary) or JSON (fallback)
+      const contentType = response.headers.get('content-type');
+      
+      if (contentType?.includes('application/pdf')) {
+        // Handle PDF response
+        const pdfBlob = await response.blob();
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `FB-c_Summary_${leadCaptureState.leadData.name?.replace(/\s+/g, '_') || 'user'}_${new Date().toISOString().split('T')[0]}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        toast({ 
+          title: "PDF Summary Exported", 
+          description: "Professional PDF summary has been generated and downloaded successfully." 
+        });
+        
+        // Log the export activity
+        activityLogger.log({
+          type: "tool_used",
+          title: "PDF Summary Exported",
+          description: `Generated professional PDF summary for ${leadCaptureState.leadData.name || 'user'}`,
+          status: "completed"
+        });
+      } else {
+        // Handle JSON response (fallback to markdown)
+        const data = await response.json();
+        
+        if (data.success && data.content) {
+          // Create and download the markdown file
+          const blob = new Blob([data.content], { type: 'text/markdown' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = data.filename || `FB-c_Summary_${sessionId}.md`;
+          a.click();
+          URL.revokeObjectURL(url);
+          
+          toast({ 
+            title: "Summary Exported", 
+            description: data.error || "Summary has been generated and downloaded successfully." 
+          });
+          
+          // Log the export activity
+          activityLogger.log({
+            type: "tool_used",
+            title: "Summary Exported",
+            description: `Generated summary for ${leadCaptureState.leadData.name || 'user'}`,
+            status: "completed"
+          });
+        } else {
+          throw new Error(data.error || 'Failed to generate summary');
+        }
+      }
+    } catch (error) {
+      console.error('Export summary error:', error);
+      toast({ 
+        title: "Export Failed", 
+        description: error instanceof Error ? error.message : 'Failed to export summary',
+        variant: "destructive"
+      });
+    }
+  }, [messages, sessionId, toast, leadCaptureState.leadData])
 
   const handleFocusInput = useCallback(() => inputRef.current?.focus(), [])
   const handleToggleSidebar = useCallback(() => setIsSidebarOpen((v) => !v), [])

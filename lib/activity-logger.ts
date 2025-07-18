@@ -74,7 +74,7 @@ class ActivityLogger {
         .single()
 
       if (error) {
-        console.error("Failed to log activity to database:", error)
+        console.error("Failed to log activity to database:", error.message || error)
         // Don't throw error, just log it
         return `fallback_${Date.now()}`
       }
@@ -107,7 +107,7 @@ export async function logActivity(activityData: ServerActivityData): Promise<str
       .single()
 
     if (error) {
-      console.error("Failed to log activity to database:", error)
+      console.error("Failed to log activity to database:", error.message || error)
       return `fallback_${Date.now()}`
     }
 

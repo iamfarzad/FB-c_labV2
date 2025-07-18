@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai"
 import { getSupabase } from "@/lib/supabase/server"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
+import { logActivity } from '@/lib/activity-logger';
 
 interface LeadResearchRequest {
   name: string
@@ -17,6 +18,15 @@ export async function POST(req: NextRequest) {
     if (!name || !email) {
       return NextResponse.json({ error: "Name and email are required" }, { status: 400 })
     }
+
+    // Log research start
+    await logActivity({
+      type: "search",
+      title: "AI Research in Progress",
+      description: `Searching for ${name}'s business background`,
+      status: "in_progress",
+      metadata: { name, email, company }
+    })
 
     const ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY!,
@@ -86,6 +96,20 @@ Focus on finding actionable insights for AI consulting opportunities.
             }
           }
 
+          // Log research completion
+          await logActivity({
+            type: "search",
+            title: "Lead Research Completed",
+            description: `Completed research for ${name}`,
+            status: "completed",
+            metadata: { 
+              name, 
+              email, 
+              company,
+              researchLength: fullResearch.length 
+            }
+          })
+
           // Save to Supabase when complete
           const supabase = getSupabase()
           await supabase.from("lead_summaries").insert({
@@ -110,6 +134,16 @@ Focus on finding actionable insights for AI consulting opportunities.
           controller.close()
         } catch (error) {
           console.error("Research streaming error:", error)
+          
+          // Log research error
+          await logActivity({
+            type: "error",
+            title: "Lead Research Failed",
+            description: `Research failed for ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            status: "failed",
+            metadata: { name, email, company, error: error instanceof Error ? error.message : 'Unknown error' }
+          })
+          
           controller.error(error)
         }
       },
@@ -124,6 +158,16 @@ Focus on finding actionable insights for AI consulting opportunities.
     })
   } catch (error: any) {
     console.error("Lead research error:", error)
+    
+    // Log research error
+    await logActivity({
+      type: "error",
+      title: "Lead Research Failed",
+      description: `Research failed: ${error.message}`,
+      status: "failed",
+      metadata: { error: error.message }
+    })
+    
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

@@ -1,7 +1,13 @@
 import { getSupabase } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
+import { adminAuthMiddleware } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
+  // Check admin authentication
+  const authResult = await adminAuthMiddleware(request);
+  if (authResult) {
+    return authResult;
+  }
   try {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get("type") || "leads"

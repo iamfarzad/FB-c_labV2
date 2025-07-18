@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { GoogleGenAI } from "@google/genai"
 import { getSupabase } from "@/lib/supabase/server"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
@@ -39,15 +39,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Initialize Gemini AI
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      generationConfig: {
-        temperature: 0.7,
-        topP: 0.8,
-        topK: 40,
-        maxOutputTokens: 2048,
-      },
+    const genAI = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY!,
     })
 
     // Convert conversation history to the correct format
@@ -58,7 +51,21 @@ export async function POST(req: NextRequest) {
         }))
       : []
 
-    const chat = model.startChat({ history })
+    const config = {
+      responseMimeType: "text/plain",
+    };
+
+    const response = await genAI.models.generateContentStream({
+      model: "gemini-2.5-flash",
+      config,
+      contents: [
+        ...history,
+        {
+          role: "user",
+          parts: [{ text: trimmedPrompt }],
+        },
+      ],
+    });
     const supabase = getSupabase()
 
     if (enableStreaming) {
@@ -89,12 +96,11 @@ export async function POST(req: NextRequest) {
               },
             })
 
-            const result = await chat.sendMessageStream(trimmedPrompt)
             let fullText = ""
             let chunkCount = 0
 
-            for await (const chunk of result.stream) {
-              const text = chunk.text()
+            for await (const chunk of response) {
+              const text = chunk.text
               if (text) {
                 fullText += text
                 chunkCount++
@@ -193,16 +199,20 @@ export async function POST(req: NextRequest) {
       })
     } else {
       // Standard response
-      const result = await chat.sendMessage(trimmedPrompt)
-      const response = result.response
-      const text = response.text()
+      let fullText = ""
+      for await (const chunk of response) {
+        const text = chunk.text
+        if (text) {
+          fullText += text
+        }
+      }
 
       const channel = supabase.channel(`ai-standard-${sessionId || "default"}`)
 
       const aiResponsePayload = {
         id: `msg-${Date.now()}`,
         role: "assistant",
-        content: text,
+        content: fullText,
         timestamp: new Date().toISOString(),
         sources: [],
         audioData: null,
@@ -216,8 +226,8 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        content: text,
-        length: text.length,
+        content: fullText,
+        length: fullText.length,
         model: "gemini-2.5-flash",
       })
     }

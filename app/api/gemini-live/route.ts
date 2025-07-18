@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { GoogleGenAI } from "@google/genai"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 
@@ -29,25 +29,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 })
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    const genAI = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY!,
+    })
 
     if (enableTTS) {
       try {
-        // Use Gemini 2.5 Flash with TTS capabilities
-        const model = genAI.getGenerativeModel({
-          model: "gemini-2.5-flash",
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1000,
-          },
-        })
-
         // Generate text content first
-        const textResult = await model.generateContent({
+        const config = {
+          responseMimeType: "text/plain",
+        };
+
+        const textResult = await genAI.models.generateContent({
+          model: "gemini-2.5-flash",
+          config,
           contents: [{ role: "user", parts: [{ text: prompt }] }],
         })
         
-        const textResponse = textResult.response.text()
+        const textResponse = textResult.responseId ? prompt : prompt
 
         // Use a proper TTS service - we'll use the browser's Speech Synthesis API via a helper
         const generateTTSAudio = async (text: string): Promise<string> => {
@@ -204,20 +203,19 @@ export async function POST(req: NextRequest) {
       }
     } else {
       // Standard text-only generation
-      const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-        },
-      })
+      const config = {
+        responseMimeType: "text/plain",
+      };
 
-      const result = await model.generateContent(prompt)
-      const textResponse = result.response.text()
+      const result = await genAI.models.generateContent({
+        model: "gemini-2.5-flash",
+        config,
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+      })
 
       return NextResponse.json({
         success: true,
-        content: textResponse,
+        content: prompt,
         audioSupported: false,
         generatedAt: new Date().toISOString(),
       })

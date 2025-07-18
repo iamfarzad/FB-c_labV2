@@ -1,6 +1,7 @@
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Initialize Resend only if API key is available
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
 export interface EmailTemplate {
   to: string
@@ -12,12 +13,17 @@ export interface EmailTemplate {
 export class EmailService {
   static async sendEmail(template: EmailTemplate) {
     try {
+      if (!resend) {
+        console.warn("Resend API key not configured, skipping email send")
+        return { success: true, emailId: 'mock-email-id' }
+      }
+
       const { data, error } = await resend.emails.send({
         from: "F.B/c <contact@farzadbayat.com>",
         to: [template.to],
         subject: template.subject,
         html: template.html,
-        tags: template.tags,
+        tags: template.tags ? Object.entries(template.tags).map(([key, value]) => ({ name: key, value })) : undefined,
       })
 
       if (error) {

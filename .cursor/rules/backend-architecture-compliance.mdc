@@ -1,0 +1,210 @@
+# Backend Architecture Compliance Rules
+
+**⚠️ ENFORCEMENT NOTICE: All rules in this document are mandatory. Our CI/CD pipelines and code reviews will automatically reject any code that deviates. Any violation must be fixed before merge.**
+
+## 🔒 Security Rules (MANDATORY)
+
+### Authentication & Authorization
+- **Rule S1.1**: All API endpoints MUST implement proper authentication
+- **Rule S1.2**: Use JWT tokens with secure expiration times (max 24 hours)
+- **Rule S1.3**: Implement role-based access control (RBAC) for admin endpoints
+- **Rule S1.4**: Validate all user inputs and sanitize data
+- **Rule S1.5**: Use HTTPS for all communications
+- **Rule S1.6**: Implement rate limiting on all endpoints
+- **Rule S1.7**: Store sensitive data encrypted at rest
+
+### API Security
+- **Rule S2.1**: Validate webhook signatures for all external integrations
+- **Rule S2.2**: Implement CORS policies with specific origins
+- **Rule S2.3**: Use environment variables for all secrets and API keys
+- **Rule S2.4**: Implement request size limits
+- **Rule S2.5**: Log all authentication attempts and failures
+
+### Data Security
+- **Rule S3.1**: Encrypt PII data in transit and at rest
+- **Rule S3.2**: Implement data retention policies
+- **Rule S3.3**: Use prepared statements to prevent SQL injection
+- **Rule S3.4**: Implement audit logging for data access
+
+## 📊 Performance Rules (MANDATORY)
+
+### Response Times
+- **Rule P1.1**: API endpoints MUST respond within 2 seconds
+- **Rule P1.2**: Database queries MUST complete within 500ms
+- **Rule P1.3**: File uploads MUST complete within 30 seconds
+- **Rule P1.4**: Implement connection pooling
+
+### Caching
+- **Rule P2.1**: Cache frequently accessed data
+- **Rule P2.2**: Implement cache invalidation strategies
+- **Rule P2.3**: Use CDN for static assets
+- **Rule P2.4**: Cache database query results
+
+## 🔍 Observability Rules (MANDATORY)
+
+### Logging
+- **Rule O2.1**: Use structured logging (JSON format)
+- **Rule O2.2**: Include correlation IDs in all logs
+- **Rule O2.3**: Log at appropriate levels (info, warn, error)
+- **Rule O2.4**: Implement log aggregation
+
+### Monitoring
+- **Rule O1.1**: Monitor all API endpoints
+- **Rule O1.2**: Track error rates and response times
+- **Rule O1.3**: Monitor database performance
+- **Rule O1.4**: Implement health checks
+
+## 🏗️ Code Architecture Rules (MANDATORY)
+
+### API Design
+- **Rule AV2.1**: Use RESTful principles
+- **Rule AV2.2**: Implement consistent error handling
+- **Rule AV2.3**: Use standard HTTP status codes
+- **Rule AV2.4**: Provide comprehensive documentation
+
+### Modular Design
+- **Rule MD1.1**: Break large functions into focused modules
+- **Rule MD1.2**: Separate concerns (auth, validation, business logic)
+- **Rule MD1.3**: Use dependency injection where appropriate
+- **Rule MD1.4**: Implement proper error boundaries
+
+## 🧪 Testing Rules (MANDATORY)
+
+### Code Coverage
+- **Rule T1.1**: Maintain 80% code coverage minimum
+- **Rule T1.2**: Test all business logic
+- **Rule T1.3**: Mock external dependencies
+- **Rule T1.4**: Test error conditions
+
+### Integration Testing
+- **Rule T2.1**: Test API endpoints
+- **Rule T2.2**: Test database operations
+- **Rule T2.3**: Test external integrations
+- **Rule T2.4**: Test authentication flows
+
+## 🔧 Implementation Standards
+
+### Error Handling Pattern
+```typescript
+// MANDATORY: Use this pattern for all API endpoints
+export async function POST(req: NextRequest) {
+  const startTime = Date.now();
+  const correlationId = logActivity('info', 'Request started');
+  
+  try {
+    // 1. Rate limiting check
+    if (!checkRateLimit(ip, 20, 60000)) {
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429 });
+    }
+
+    // 2. Authentication check
+    const auth = await authenticateRequest(req);
+    if (!auth.success) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401 });
+    }
+
+    // 3. Input validation
+    const validation = validateRequest(schema, data);
+    if (!validation.success) {
+      return new Response(JSON.stringify({ error: 'Validation failed' }), { status: 400 });
+    }
+
+    // 4. Business logic
+    const result = await processRequest(validation.data);
+
+    // 5. Success response with correlation ID
+    return new Response(JSON.stringify(result), {
+      headers: { 'X-Correlation-ID': correlationId }
+    });
+  } catch (error) {
+    logActivity('error', 'API error', { correlationId, error: error.message });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+  }
+}
+```
+
+### Logging Pattern
+```typescript
+// MANDATORY: Use structured logging
+function logActivity(level: 'info' | 'error' | 'warn', message: string, metadata: any = {}) {
+  const correlationId = Math.random().toString(36).substring(7);
+  console.log(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    level,
+    message,
+    correlationId,
+    ...metadata
+  }));
+  return correlationId;
+}
+```
+
+### Rate Limiting Pattern
+```typescript
+// MANDATORY: Implement rate limiting (use Redis in production)
+function checkRateLimit(identifier: string, limit: number = 20, windowMs: number = 60000): boolean {
+  // Implementation must be distributed (Redis) for production
+  // In-memory Map is only acceptable for development
+}
+```
+
+## 🚫 Prohibited Patterns
+
+### Security Violations
+- ❌ Hardcoded secrets or API keys
+- ❌ No input validation
+- ❌ No authentication on API endpoints
+- ❌ No rate limiting
+- ❌ No error handling
+- ❌ No logging
+
+### Performance Violations
+- ❌ Synchronous database operations in API routes
+- ❌ No connection pooling
+- ❌ No caching strategies
+- ❌ Large monolithic functions (>100 lines)
+- ❌ No timeout handling
+
+### Code Quality Violations
+- ❌ No TypeScript types
+- ❌ No error boundaries
+- ❌ No input sanitization
+- ❌ No structured logging
+- ❌ No correlation IDs
+
+## 📋 Compliance Checklist
+
+Before any API endpoint can be merged, verify:
+
+- [ ] Authentication implemented (Rule S1.1)
+- [ ] Rate limiting implemented (Rule S1.6)
+- [ ] Input validation and sanitization (Rule S1.4)
+- [ ] Structured logging with correlation IDs (Rule O2.1, O2.2)
+- [ ] Proper error handling with HTTP status codes (Rule AV2.2, AV2.3)
+- [ ] Environment variables for secrets (Rule S2.3)
+- [ ] Response time under 2 seconds (Rule P1.1)
+- [ ] Modular code structure (Rule MD1.1, MD1.2)
+- [ ] Tests written with 80% coverage (Rule T1.1)
+
+## 🔄 Review Process
+
+1. **Automated Checks**: CI/CD will validate all rules
+2. **Manual Review**: Code reviewers must verify compliance
+3. **Security Scan**: Automated security scanning required
+4. **Performance Test**: Load testing for critical endpoints
+5. **Documentation**: All changes must be documented in [CHANGELOG.md](mdc:CHANGELOG.md)
+
+## 📚 Reference Documents
+
+- [backend_architecture.md](mdc:backend_architecture.md) - Detailed architecture specifications
+- [CHANGELOG.md](mdc:CHANGELOG.md) - Change tracking and compliance updates
+- [package.json](mdc:package.json) - Dependency management and scripts
+
+**⚠️ REMINDER: These rules are MANDATORY and will be enforced automatically. Non-compliant code will be rejected.**
+---
+description: "Apply to all backend source files"
+globs:
+  - "app/api/**"
+  - "lib/**"
+alwaysApply: true
+---

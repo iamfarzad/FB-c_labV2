@@ -2,7 +2,7 @@
  * Educational AI service for generating learning content
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { GoogleGenAI } from "@google/genai"
 import { EDUCATIONAL_APP_DEFINITIONS, getEducationalSystemPrompt } from "./education-constants"
 
 export interface EducationalInteractionData {
@@ -38,7 +38,9 @@ const getGeminiClient = () => {
     throw new Error("GEMINI_API_KEY environment variable is not set")
   }
 
-  return new GoogleGenerativeAI(apiKey)
+  return new GoogleGenAI({
+    apiKey: apiKey,
+  })
 }
 
 export async function* streamEducationalContent(
@@ -59,14 +61,9 @@ export async function* streamEducationalContent(
       return
     }
 
-    const model = genAI.getGenerativeModel({
-      model: modelName,
-      generationConfig: {
-        temperature: 0.7,
-        topP: 0.8,
-        topK: 40,
-      },
-    })
+    const config = {
+      responseMimeType: "text/plain",
+    };
 
     const systemPrompt = getEducationalSystemPrompt(
       `Video: ${videoContext.videoTitle || videoContext.videoUrl}
@@ -150,12 +147,16 @@ Video Learning Context:
 
 Generate educational HTML content that builds on this context and interaction history:`
 
-    const result = await model.generateContentStream(fullPrompt)
+    const result = await genAI.models.generateContentStream({
+      model: modelName,
+      config,
+      contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
+    });
 
-    for await (const chunk of result.stream) {
-      const text = chunk.text()
+    for await (const chunk of result) {
+      const text = chunk.text;
       if (text) {
-        yield text
+        yield text;
       }
     }
   } catch (error) {

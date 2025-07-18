@@ -92,3 +92,15 @@ pnpm dev
 Main branch is automatically deployed to Vercel:
 
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/iamfarzads-projects/v0-fb-c-ai-clone)
+
+LIVE_SERVER_PORT=3001 GEMINI_API_KEY=your_key_here ts-node server/live-server.ts
+
+## Local Development Only
+
+If you want to test Gemini Live AI features locally, you can run the custom WebSocket server:
+
+```
+LIVE_SERVER_PORT=3001 GEMINI_API_KEY=your_key_here ts-node server/live-server.ts
+```
+
+**Note:** This is for local development/testing only. In production (including Vercel), all real-time features are handled by Supabase. You do NOT need to run `server/live-server.ts` in production.

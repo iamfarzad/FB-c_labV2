@@ -19,6 +19,8 @@
     --secondary-foreground: var(--color-gunmetal);
     --accent: var(--color-orange-accent);
     --accent-foreground: var(--color-light-silver);
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
     --muted: var(--color-light-silver-darker);
     --muted-foreground: 0 0% 40%;
     --border: 0 0% 85%;
@@ -42,6 +44,8 @@
     --secondary-foreground: var(--color-light-silver);
     --accent: var(--color-orange-accent);
     --accent-foreground: var(--color-gunmetal);
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
     --muted: var(--color-gunmetal-lighter);
     --muted-foreground: 0 0% 60%;
     --border: 0 0% 18%;

@@ -16,7 +16,7 @@ Based on our entire conversation, here's your comprehensive documentation with a
 ### **Technology Stack**
 
 □ **Frontend**: TypeScript/JavaScript with Google Gemini integration
-□ **AI Model**: `gemini-2.0-flash-live-001` (production-ready)
+□ **AI Model**: `gemini-2.5-flash` (production-ready)
 □ **Backend**: Node.js/Express or Python/Flask
 □ **Database**: SQLite (simple) or PostgreSQL (scalable)
 □ **CRM**: HubSpot, Pipedrive, or custom solution
@@ -24,6 +24,7 @@ Based on our entire conversation, here's your comprehensive documentation with a
 □ **Scheduling**: Calendly integration
 
 ## **2. Conversational Flow Implementation**
+#### 2.1 Flow Structure Checklist (High-Level)
 
 ### **Flow Structure Checklist**
 
@@ -35,6 +36,7 @@ Based on our entire conversation, here's your comprehensive documentation with a
 □ **Stage 6**: Summary generation and delivery
 □ **Stage 7**: Consultation booking offer
 
+#### 2.2 Detailed Implementation Examples
 ### **Updated System Instruction (Replace Current)**
 
 ```typescript

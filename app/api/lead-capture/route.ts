@@ -1,6 +1,8 @@
 import { getSupabase } from "@/lib/supabase/server"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
+import { leadCaptureSchema, validateRequest, sanitizeString, sanitizeEmail } from "@/lib/validation"
+import { logActivity } from "@/lib/activity-logger"
 
 interface LeadCaptureData {
   name: string
@@ -17,7 +19,44 @@ interface LeadCaptureData {
 
 export async function POST(req: NextRequest) {
   try {
-    const leadData: LeadCaptureData = await req.json()
+    const rawData = await req.json()
+    
+    // Validate input data
+    const validation = validateRequest(leadCaptureSchema, rawData)
+    if (!validation.success) {
+      return NextResponse.json({
+        error: 'Validation failed',
+        details: validation.errors
+      }, { status: 400 })
+    }
+    
+    // Sanitize the validated data
+    const leadData: LeadCaptureData = {
+      name: sanitizeString(validation.data.name),
+      email: sanitizeEmail(validation.data.email),
+      company: validation.data.company_name ? sanitizeString(validation.data.company_name) : undefined,
+      engagementType: "chat", // Default for now
+      initialQuery: validation.data.message ? sanitizeString(validation.data.message) : undefined,
+      tcAcceptance: {
+        accepted: true,
+        timestamp: Date.now()
+      }
+    }
+
+    // Log lead capture activity
+    await logActivity({
+      type: "lead_capture",
+      title: "New Lead Captured",
+      description: `${leadData.name} (${leadData.email}) engaged via ${leadData.engagementType}`,
+      status: "completed",
+      metadata: {
+        name: leadData.name,
+        email: leadData.email,
+        company: leadData.company,
+        engagementType: leadData.engagementType,
+        initialQuery: leadData.initialQuery
+      }
+    })
 
     const supabase = getSupabase()
 
@@ -59,6 +98,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Log lead research start
+    await logActivity({
+      type: "search",
+      title: "Lead Research Started",
+      description: `Researching ${leadData.name} for business insights`,
+      status: "in_progress",
+      metadata: {
+        name: leadData.name,
+        email: leadData.email,
+        company: leadData.company
+      }
+    })
+
     // Trigger AI research in background (only if in development or with full URL)
     try {
       const baseUrl = process.env.VERCEL_URL 
@@ -80,6 +132,14 @@ export async function POST(req: NextRequest) {
           }),
         }).catch(error => {
           console.log("Background research fetch failed:", error.message)
+          // Log research failure
+          logActivity({
+            type: "error",
+            title: "Lead Research Failed",
+            description: `Failed to research ${leadData.name}: ${error.message}`,
+            status: "failed",
+            metadata: { name: leadData.name, error: error.message }
+          })
         })
       }
     } catch (error) {
