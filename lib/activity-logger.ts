@@ -74,8 +74,21 @@ class ActivityLogger {
         .single()
 
       if (error) {
+        // Check if it's a missing table error
+        if (error.message && error.message.includes('relation "public.activities" does not exist')) {
+          console.warn("⚠️ Activities table missing - logging to console only")
+          console.log("[Activity Logged]:", {
+            type: activityData.type,
+            title: activityData.title,
+            description: activityData.description,
+            status: activityData.status,
+            metadata: activityData.metadata,
+            timestamp: new Date().toISOString()
+          })
+          return `console_fallback_${Date.now()}`
+        }
+        
         console.error("Failed to log activity to database:", error.message || error)
-        // Don't throw error, just log it
         return `fallback_${Date.now()}`
       }
 
@@ -107,6 +120,20 @@ export async function logActivity(activityData: ServerActivityData): Promise<str
       .single()
 
     if (error) {
+      // Check if it's a missing table error
+      if (error.message && error.message.includes('relation "public.activities" does not exist')) {
+        console.warn("⚠️ Activities table missing - logging to console only")
+        console.log("[Activity Logged]:", {
+          type: activityData.type,
+          title: activityData.title,
+          description: activityData.description,
+          status: activityData.status,
+          metadata: activityData.metadata,
+          timestamp: new Date().toISOString()
+        })
+        return `console_fallback_${Date.now()}`
+      }
+      
       console.error("Failed to log activity to database:", error.message || error)
       return `fallback_${Date.now()}`
     }

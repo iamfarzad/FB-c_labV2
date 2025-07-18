@@ -1,3 +1,7 @@
+---
+description: "Apply to all backend source files"
+alwaysApply: false
+---
 # Backend Architecture Compliance Rules
 
 **⚠️ ENFORCEMENT NOTICE: All rules in this document are mandatory. Our CI/CD pipelines and code reviews will automatically reject any code that deviates. Any violation must be fixed before merge.**
