@@ -163,8 +163,8 @@ export function AIPerformanceMetrics({ period }: AIPerformanceMetricsProps) {
                 <XAxis dataKey="timestamp" />
                 <YAxis />
                 <Tooltip />
-                <Line type="monotone" dataKey="avgTime" stroke="#8884d8" strokeWidth={2} name="Average" />
-                <Line type="monotone" dataKey="p95Time" stroke="#82ca9d" strokeWidth={2} name="P95" />
+                <Line type="monotone" dataKey="avgTime" stroke="hsl(21 100% 51%)" strokeWidth={2} name="Average" />
+                <Line type="monotone" dataKey="p95Time" stroke="hsl(142 76% 36%)" strokeWidth={2} name="P95" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -183,8 +183,8 @@ export function AIPerformanceMetrics({ period }: AIPerformanceMetricsProps) {
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Area type="monotone" dataKey="tokens" stackId="1" stroke="#8884d8" fill="#8884d8" />
-                <Area type="monotone" dataKey="cost" stackId="2" stroke="#82ca9d" fill="#82ca9d" />
+                <Area type="monotone" dataKey="tokens" stackId="1" stroke="hsl(21 100% 51%)" fill="hsl(21 100% 51%)" />
+                <Area type="monotone" dataKey="cost" stackId="2" stroke="hsl(142 76% 36%)" fill="hsl(142 76% 36%)" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>

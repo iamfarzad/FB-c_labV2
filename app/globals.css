@@ -5,12 +5,12 @@
 @layer base {
   :root {
     --font-sans: "Inter", sans-serif;
-    --color-orange-accent: 22 100% 51%;
-    --color-gunmetal: 0 0% 10%;
-    --color-light-silver: 0 0% 96%;
-    --color-gunmetal-lighter: 0 0% 16%;
-    --color-light-silver-darker: 0 0% 88%;
-    --color-orange-accent-hover: 22 100% 45%;
+    --color-orange-accent: 21 100% 51%;
+    --color-gunmetal: 203 23% 18%;
+    --color-light-silver: 108 13% 85%;
+    --color-gunmetal-lighter: 203 23% 24%;
+    --color-light-silver-darker: 108 13% 78%;
+    --color-orange-accent-hover: 21 100% 45%;
     --background: 0 0% 98%;
     --foreground: var(--color-gunmetal);
     --primary: var(--color-gunmetal);
@@ -33,6 +33,17 @@
     --glass-bg: rgba(255, 255, 255, 0.5);
     --glass-border: rgba(0, 0, 0, 0.1);
     --radius: 0.75rem;
+    
+    /* Chart Colors */
+    --chart-primary: var(--color-orange-accent);
+    --chart-secondary: var(--muted-foreground);
+    --chart-success: 142 76% 36%;
+    --chart-warning: 38 92% 50%;
+    --chart-error: 0 84% 60%;
+    
+    /* Destructive Colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
   }
 
   .dark {
@@ -57,6 +68,17 @@
     --popover-foreground: var(--card-foreground);
     --glass-bg: rgba(26, 26, 26, 0.5);
     --glass-border: rgba(255, 255, 255, 0.1);
+    
+    /* Chart Colors - Dark Mode */
+    --chart-primary: var(--color-orange-accent);
+    --chart-secondary: var(--muted-foreground);
+    --chart-success: 142 76% 36%;
+    --chart-warning: 38 92% 50%;
+    --chart-error: 0 84% 60%;
+    
+    /* Destructive Colors - Dark Mode */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: var(--color-gunmetal);
   }
 
   body {

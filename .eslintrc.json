@@ -1,0 +1,41 @@
+{
+  "extends": [
+    "next/core-web-vitals",
+    "next/typescript"
+  ],
+  "rules": {
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "Literal[value=/^#[0-9a-fA-F]{3,6}$/]",
+        "message": "Use design tokens instead of hard-coded hex colors. See DESIGN.md for available tokens."
+      },
+      {
+        "selector": "Literal[value=/^rgb\\(|rgba\\(/]",
+        "message": "Use design tokens instead of hard-coded RGB colors. See DESIGN.md for available tokens."
+      }
+    ],
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "console",
+        "property": "log",
+        "message": "Use console.error, console.warn, or console.info instead of console.log"
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.tsx", "**/*.ts"],
+      "rules": {
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "TemplateLiteral[quasis.0.value.raw=/text-\\[|bg-\\[|border-\\[|p-\\[|m-\\[|w-\\[|h-\\[|font-\\[/]",
+            "message": "Use Tailwind design tokens instead of arbitrary values. See DESIGN.md for available tokens."
+          }
+        ]
+      }
+    }
+  ]
+}

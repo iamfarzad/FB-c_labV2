@@ -135,8 +135,8 @@ export function InteractionAnalytics({ period }: InteractionAnalyticsProps) {
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Line type="monotone" dataKey="interactions" stroke="#8884d8" strokeWidth={2} />
-                <Line type="monotone" dataKey="leads" stroke="#82ca9d" strokeWidth={2} />
+                <Line type="monotone" dataKey="interactions" stroke="hsl(21 100% 51%)" strokeWidth={2} />
+                <Line type="monotone" dataKey="leads" stroke="hsl(142 76% 36%)" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -158,7 +158,7 @@ export function InteractionAnalytics({ period }: InteractionAnalyticsProps) {
                   labelLine={false}
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="hsl(21 100% 51%)"
                   dataKey="value"
                 >
                   {analytics.engagementTypes.map((entry, index) => (
@@ -184,8 +184,8 @@ export function InteractionAnalytics({ period }: InteractionAnalyticsProps) {
                 <XAxis dataKey="capability" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="usage" fill="#8884d8" />
-                <Bar dataKey="conversion" fill="#82ca9d" />
+                <Bar dataKey="usage" fill="hsl(21 100% 51%)" />
+                <Bar dataKey="conversion" fill="hsl(142 76% 36%)" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -204,7 +204,7 @@ export function InteractionAnalytics({ period }: InteractionAnalyticsProps) {
                 <XAxis dataKey="hour" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="interactions" fill="#8884d8" />
+                <Bar dataKey="interactions" fill="hsl(21 100% 51%)" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
