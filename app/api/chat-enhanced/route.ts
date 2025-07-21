@@ -181,24 +181,17 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Authentication check (bypass in development)
+    // Authentication check (allow anonymous access for public chat)
     let auth: { success: boolean; userId?: string; error?: string };
     
-    if (process.env.NODE_ENV === 'development') {
-      auth = { success: true, userId: 'dev-user', error: undefined };
-      logActivity('info', 'Development mode - authentication bypassed', { ip, correlationId });
+    // Try authentication first, but allow anonymous access if it fails
+    auth = await authenticateRequest(req);
+    if (!auth.success) {
+      // Allow anonymous access for public chat functionality
+      auth = { success: true, userId: `anon-${Date.now()}-${Math.random().toString(36).substring(7)}`, error: undefined };
+      logActivity('info', 'Anonymous user accessing chat', { ip, correlationId, userId: auth.userId });
     } else {
-      auth = await authenticateRequest(req);
-      if (!auth.success) {
-        logActivity('warn', 'Authentication failed', { ip, correlationId, error: auth.error });
-        return new Response(JSON.stringify({
-          error: 'Authentication required',
-          details: auth.error
-        }), { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
+      logActivity('info', 'Authenticated user accessing chat', { ip, correlationId, userId: auth.userId });
     }
 
     // Input validation
