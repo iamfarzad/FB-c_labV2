@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Loader2, User, Bot, ImageIcon, Copy, Check, Brain, AlertTriangle, Info, CheckCircle, Clock, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import type { Message } from "@/app/chat/types/chat"
 
@@ -176,10 +176,18 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
     }
   }
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
   return (
-    <ScrollArea className="h-full w-full">
-      <div className="max-w-3xl mx-auto space-y-6 p-4 min-h-full">
-        {messages.length === 0 && !isLoading && (
+    <div className="flex-1 overflow-hidden" data-testid="chat-main">
+      <ScrollArea className="h-full w-full">
+        <div className="max-w-3xl mx-auto space-y-6 p-4" data-testid="messages-container">
+          {messages.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
               <Bot className="w-8 h-8 text-primary" />
@@ -335,8 +343,13 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
           </div>
         )}
 
-        <div ref={messagesEndRef} className="h-px" />
-      </div>
-    </ScrollArea>
+        <div ref={el => {
+          if (el && messagesEndRef) {
+            (messagesEndRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+          }
+        }} className="h-0 w-0" />
+        </div>
+      </ScrollArea>
+    </div>
   )
 }

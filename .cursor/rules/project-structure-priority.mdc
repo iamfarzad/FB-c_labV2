@@ -1,5 +1,205 @@
 ---
-description:
+description: "Project Structure & Priority Guidelines"
+alwaysApply: true
 globs:
-alwaysApply: false
+  - "**/*"
 ---
+
+
+# Project Structure & Priority Guidelines
+
+## 🎯 **MANDATORY: Always Analyze Project Structure First**
+
+**BEFORE making any changes, you MUST:**
+1. **Read [file-tree.md](mdc:file-tree.md) completely** - Understand the current architecture
+2. **Check [backend_architecture.md](mdc:backend_architecture.md)** - Verify compliance with backend rules
+3. **Review [CHANGELOG.md](mdc:CHANGELOG.md)** - Understand recent changes and current state
+4. **Analyze existing patterns** - Follow established conventions
+
+## 🏗️ **Project Architecture Overview**
+
+### **Core Structure**
+```
+FB-c_labV2/
+├── app/                    # Next.js App Router
+│   ├── api/               # API Routes (RESTful endpoints)
+│   ├── chat/              # Main chat interface
+│   └── globals.css        # Global styles
+├── components/            # React components
+│   ├── chat/             # Chat-specific components
+│   ├── ui/               # Shadcn UI components
+│   └── providers/        # Context providers
+├── lib/                  # Core libraries and services
+│   ├── supabase/         # Database client
+│   ├── unified-ai-service.ts  # Main AI service
+│   └── validation.ts     # Input validation
+├── hooks/                # Custom React hooks
+├── tests/                # Test suite
+└── scripts/              # Utility scripts
+```
+
+## 🚫 **Prevention Rules**
+
+### **Duplicate Code Prevention**
+- **Check existing implementations** before creating new components
+- **Search for similar functionality** in `lib/` and `components/`
+- **Use existing patterns** from similar components
+- **Avoid reinventing** already solved problems
+
+### **API Route Prevention**
+- **Single AI endpoint**: Use `/api/ai` for all AI operations
+- **No duplicate routes**: Check existing API routes before creating new ones
+- **Follow RESTful patterns**: Use proper HTTP methods and status codes
+- **Consistent error handling**: Use standardized error responses
+
+### **Technology Stack Enforcement**
+- **AI Model**: Gemini 2.5 Flash (primary) / Gemini 1.5 Flash (fallback)
+- **Database**: Supabase with PostgreSQL
+- **Frontend**: Next.js 14+ with App Router
+- **UI**: Shadcn UI + Tailwind CSS
+- **State**: React hooks + Context API
+- **Testing**: Jest + Playwright
+
+## 🔍 **Error Prevention Checklist**
+
+### **Before Any Code Change:**
+- [ ] **Architecture compliance** - Follows backend_architecture.md rules
+- [ ] **No duplicate functionality** - Checked existing implementations
+- [ ] **Proper error handling** - Try/catch blocks and user feedback
+- [ ] **Type safety** - TypeScript types defined
+- [ ] **Testing strategy** - Unit/integration tests planned
+- [ ] **Performance impact** - No unnecessary re-renders or API calls
+- [ ] **Security considerations** - Input validation and sanitization
+- [ ] **Documentation** - Code comments and changelog updates
+
+### **Before API Changes:**
+- [ ] **Authentication** - JWT token validation implemented
+- [ ] **Rate limiting** - 20 requests/minute per IP
+- [ ] **Input validation** - Zod schemas for all inputs
+- [ ] **Error responses** - Consistent error format
+- [ ] **Logging** - Structured logging with correlation IDs
+- [ ] **CORS** - Proper origin restrictions
+- [ ] **Environment variables** - No hardcoded secrets
+
+### **Before UI Changes:**
+- [ ] **Design system compliance** - Follows frontend_design.md
+- [ ] **Responsive design** - Mobile-first approach
+- [ ] **Accessibility** - ARIA labels and keyboard navigation
+- [ ] **Performance** - Lazy loading and code splitting
+- [ ] **State management** - Proper React patterns
+- [ ] **Error boundaries** - Graceful error handling
+
+## 📋 **Priority Guidelines**
+
+### **High Priority (Fix Immediately)**
+1. **Security vulnerabilities** - Authentication, authorization, data protection
+2. **Critical bugs** - System crashes, data loss, major functionality broken
+3. **Performance issues** - Response times > 2 seconds, memory leaks
+4. **Compliance violations** - Backend architecture rules, security standards
+
+### **Medium Priority (Plan and Implement)**
+1. **Feature enhancements** - New functionality, improved UX
+2. **Code quality** - Refactoring, technical debt reduction
+3. **Testing improvements** - Coverage gaps, new test scenarios
+4. **Documentation** - API docs, user guides, code comments
+
+### **Low Priority (Nice to Have)**
+1. **UI polish** - Minor styling improvements, animations
+2. **Performance optimization** - Micro-optimizations, caching
+3. **Developer experience** - Tooling improvements, development workflows
+
+## 🔧 **Development Workflow**
+
+### **1. Analysis Phase**
+- Read relevant documentation
+- Understand current implementation
+- Identify potential conflicts
+- Plan testing strategy
+
+### **2. Implementation Phase**
+- Follow established patterns
+- Write tests first (TDD)
+- Implement error handling
+- Add proper logging
+
+### **3. Validation Phase**
+- Run all tests
+- Check performance impact
+- Verify security compliance
+- Update documentation
+
+### **4. Integration Phase**
+- Create feature branch
+- Submit PR with clear description
+- Ensure CI passes
+- Get code review approval
+
+## 📚 **Reference Documentation**
+
+### **Core Architecture**
+- [backend_architecture.md](mdc:backend_architecture.md) - Backend design principles
+- [frontend_design.md](mdc:frontend_design.md) - Frontend design system
+- [DESIGN.md](mdc:DESIGN.md) - Design tokens and guidelines
+- [CHANGELOG.md](mdc:CHANGELOG.md) - Recent changes and current state
+
+### **API Documentation**
+- [app/api/](mdc:app/api/) - All API routes
+- [lib/unified-ai-service.ts](mdc:lib/unified-ai-service.ts) - Main AI service
+- [lib/validation.ts](mdc:lib/validation.ts) - Input validation schemas
+
+### **Component Library**
+- [components/ui/](mdc:components/ui/) - Shadcn UI components
+- [components/chat/](mdc:components/chat/) - Chat-specific components
+- [hooks/](mdc:hooks/) - Custom React hooks
+
+### **Testing & Quality**
+- [tests/](mdc:tests/) - Test suite
+- [scripts/](mdc:scripts/) - Utility scripts
+- [jest.config.cjs](mdc:jest.config.cjs) - Jest configuration
+- [playwright.config.ts](mdc:playwright.config.ts) - E2E test configuration
+
+## ⚠️ **Common Pitfalls to Avoid**
+
+### **Architecture Violations**
+- ❌ Creating duplicate API routes instead of using `/api/ai`
+- ❌ Bypassing authentication or validation
+- ❌ Hardcoding configuration values
+- ❌ Ignoring error handling requirements
+
+### **Code Quality Issues**
+- ❌ Copy-pasting code instead of creating reusable components
+- ❌ Not following TypeScript best practices
+- ❌ Missing proper error boundaries
+- ❌ Ignoring performance implications
+
+### **Testing Gaps**
+- ❌ Not writing tests for new features
+- ❌ Ignoring existing test patterns
+- ❌ Not testing error conditions
+- ❌ Missing integration tests for API changes
+
+### **Documentation Neglect**
+- ❌ Not updating CHANGELOG.md
+- ❌ Missing code comments
+- ❌ Not documenting breaking changes
+- ❌ Ignoring API documentation updates
+
+## 🎯 **Success Criteria**
+
+A successful change should:
+- ✅ **Follow established patterns** and conventions
+- ✅ **Maintain system stability** and performance
+- ✅ **Include proper testing** and error handling
+- ✅ **Update documentation** and changelog
+- ✅ **Pass all CI checks** and code reviews
+- ✅ **Improve user experience** or system reliability
+
+---
+
+**Remember**: Quality over speed. Every change should make the system better, not just different.
+
+alwaysApply: true
+globs:
+  - "**/*"
+---
+

@@ -1,8 +1,9 @@
-import { getSupabase } from "@/lib/supabase/server"
+import { LeadManagementService } from "@/lib/lead-management"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 import { leadCaptureSchema, validateRequest, sanitizeString, sanitizeEmail } from "@/lib/validation"
 import { logActivity } from "@/lib/activity-logger"
+import { GroundedSearchService } from "@/lib/grounded-search-service"
 
 interface LeadCaptureData {
   name: string
@@ -58,44 +59,53 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    const supabase = getSupabase()
+    // Use the new LeadManagementService
+    const leadManagementService = new LeadManagementService()
 
-    // Prepare data for lead_summaries table (matching actual schema)
+    // Prepare data for lead_summaries table
     const leadRecord = {
       name: leadData.name,
       email: leadData.email,
-      company_name: leadData.company || null,
+      company_name: leadData.company || undefined,
       conversation_summary: `Initial engagement via ${leadData.engagementType}${leadData.initialQuery ? `: "${leadData.initialQuery}"` : ""}`,
       consultant_brief: `New lead captured via ${leadData.engagementType}. TC accepted at ${leadData.tcAcceptance?.timestamp ? new Date(leadData.tcAcceptance.timestamp).toISOString() : new Date().toISOString()}`,
       lead_score: 50,
       ai_capabilities_shown: [leadData.engagementType]
-      // Don't include created_at - it has DEFAULT NOW()
     }
 
-    // Save lead with better error handling
-    const { data, error } = await supabase
-      .from("lead_summaries")
-      .insert(leadRecord)
-      .select()
-      .single()
+    // Save lead using the service
+    const data = await leadManagementService.createLeadSummary(leadRecord)
 
-    if (error) {
-      console.error("Supabase error:", error)
-      console.error("Error details:", {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint
-      })
+    // ✅ NEW: Perform grounded search for the lead
+    let searchResults: Array<{ url: string; title?: string; snippet?: string; source: string }> = []
+    try {
+      const groundedSearchService = new GroundedSearchService()
       
-      // More specific error handling
-      if (error.code === '42501') {
-        throw new Error("Database permission error - RLS policy issue")
-      } else if (error.code === '23505') {
-        throw new Error("Email already exists")
-      } else {
-        throw new Error(`Database error: ${error.message}`)
-      }
+      searchResults = await groundedSearchService.searchLead({
+        name: leadData.name,
+        email: leadData.email,
+        company: leadData.company,
+        sources: ['linkedin.com', 'google.com'],
+        leadId: data.id
+      })
+
+      console.log(`Found ${searchResults.length} search results for ${leadData.name}`)
+
+    } catch (searchError) {
+      console.error('Grounded search failed:', searchError)
+      // Don't fail the entire request if search fails
+      await logActivity({
+        type: "error",
+        title: "Grounded Search Failed",
+        description: `Search failed for ${leadData.name}: ${searchError instanceof Error ? searchError.message : 'Unknown error'}`,
+        status: "failed",
+        metadata: { 
+          name: leadData.name, 
+          email: leadData.email, 
+          company: leadData.company,
+          error: searchError instanceof Error ? searchError.message : 'Unknown error'
+        }
+      })
     }
 
     // Log lead research start
@@ -107,7 +117,8 @@ export async function POST(req: NextRequest) {
       metadata: {
         name: leadData.name,
         email: leadData.email,
-        company: leadData.company
+        company: leadData.company,
+        searchResultsCount: searchResults.length
       }
     })
 
@@ -150,6 +161,8 @@ export async function POST(req: NextRequest) {
       success: true,
       leadId: data.id,
       message: "Lead captured successfully",
+      searchResults: searchResults.length,
+      searchResultsData: searchResults // Include actual search results
     })
   } catch (error: any) {
     console.error("Lead capture error:", error)

@@ -1,3 +1,12 @@
+---
+description: "Missing Files & Functions Analysis via Git History"
+alwaysApply: true
+globs:
+  - "**/*"
+---
+
+
+
 # Missing Files & Functions Analysis via Git History
 
 **⚠️ CRITICAL: Always analyze git commit history before assuming files/functions are missing**

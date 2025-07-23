@@ -1,4 +1,4 @@
-import { getSupabase } from "@/lib/supabase/server"
+import { supabaseService } from "@/lib/supabase/client"
 import { type NextRequest, NextResponse } from "next/server"
 import { adminAuthMiddleware } from "@/lib/auth"
 
@@ -12,15 +12,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const period = searchParams.get("period") || "7d"
 
-    const supabase = getSupabase()
-
     // Calculate date range
     const now = new Date()
     const daysBack = period === "1d" ? 1 : period === "7d" ? 7 : period === "30d" ? 30 : 90
     const startDate = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000)
 
     // Get leads data
-    const { data: leads } = await supabase.from("lead_summaries").select("*").gte("created_at", startDate.toISOString())
+    const { data: leads } = await supabaseService.from("lead_summaries").select("*").gte("created_at", startDate.toISOString())
 
     // Process engagement types
     const engagementTypes = [
@@ -31,7 +29,7 @@ export async function GET(request: NextRequest) {
       { name: "image", value: 0, color: "hsl(210 100% 50%)" },
     ]
 
-    leads?.forEach((lead) => {
+    leads?.forEach((lead: any) => {
       if (lead.ai_capabilities_shown && Array.isArray(lead.ai_capabilities_shown)) {
         lead.ai_capabilities_shown.forEach((capability: string) => {
           const type = engagementTypes.find((t) => capability.toLowerCase().includes(t.name))
@@ -53,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     // Process AI capabilities
     const capabilitiesMap = new Map()
-    leads?.forEach((lead) => {
+    leads?.forEach((lead: any) => {
       if (lead.ai_capabilities_shown && Array.isArray(lead.ai_capabilities_shown)) {
         lead.ai_capabilities_shown.forEach((cap: string) => {
           capabilitiesMap.set(cap, (capabilitiesMap.get(cap) || 0) + 1)

@@ -1,5 +1,8 @@
 ---
+description: "Backend Architecture Reference"
 alwaysApply: true
+globs:
+  - "**/*"
 ---
 # Backend Architecture Reference
 

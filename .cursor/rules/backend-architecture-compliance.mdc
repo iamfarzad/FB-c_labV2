@@ -1,6 +1,8 @@
 ---
-description: "Apply to all backend source files"
-alwaysApply: false
+description: "Backend Architecture Compliance Rules"
+alwaysApply: true
+globs:
+  - "**/*"
 ---
 # Backend Architecture Compliance Rules
 

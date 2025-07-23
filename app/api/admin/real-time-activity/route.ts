@@ -1,4 +1,4 @@
-import { getSupabase } from "@/lib/supabase/server"
+import { supabaseService } from "@/lib/supabase/client"
 import { type NextRequest, NextResponse } from "next/server"
 import { adminAuthMiddleware } from "@/lib/auth"
 
@@ -9,12 +9,10 @@ export async function GET(request: NextRequest) {
     return authResult;
   }
   try {
-    const supabase = getSupabase()
-
     // Get recent activities from the last 24 hours
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
-    const { data: recentLeads } = await supabase
+    const { data: recentLeads } = await supabaseService
       .from("lead_summaries")
       .select("*")
       .gte("created_at", twentyFourHoursAgo.toISOString())
@@ -23,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     // Transform leads into activity items
     const activities =
-      recentLeads?.map((lead) => ({
+      recentLeads?.map((lead: any) => ({
         id: lead.id,
         type: "lead_captured",
         title: "New Lead Captured",

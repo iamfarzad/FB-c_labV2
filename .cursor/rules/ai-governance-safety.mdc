@@ -1,0 +1,266 @@
+# AI Governance & Safety Rule
+
+## 🚨 **MANDATORY AI SAFETY REQUIREMENTS**
+
+**ALL AI-related code changes MUST comply with these safety and governance rules:**
+
+## 1. **Cost & Token Budget Enforcement**
+
+### **Token Usage Requirements**
+- **Every AI call MUST include token estimation** before execution
+- **Input + Output token calculation** required for all Gemini API calls
+- **Per-request budget limit**: Maximum 500 tokens per single request
+- **Cost tracking**: Log all token usage with cost estimates
+- **Budget alerts**: Warn when approaching token limits
+
+### **Implementation Pattern**
+```typescript
+// REQUIRED: Token estimation before AI calls
+const estimatedTokens = await countTokens(inputText);
+if (estimatedTokens > 500) {
+  throw new Error(`Token limit exceeded: ${estimatedTokens} > 500`);
+}
+
+// REQUIRED: Cost tracking
+const cost = calculateTokenCost(estimatedTokens);
+logActivity('info', 'AI call cost', { tokens: estimatedTokens, cost });
+```
+
+### **Reference Files**
+- [lib/token-cost-calculator.ts](mdc:lib/token-cost-calculator.ts) - Token calculation utilities
+- [lib/activity-logger.ts](mdc:lib/activity-logger.ts) - Cost tracking integration
+
+## 2. **Idempotent API Calls & Rate Limiting**
+
+### **Network Call Requirements**
+- **Debounce/throttle**: All AI API calls must include rate limiting
+- **Duplicate prevention**: Check for identical requests within 5-second window
+- **Caching**: Implement response caching for repeated queries
+- **Request deduplication**: Prevent duplicate calls with same parameters
+
+### **Implementation Pattern**
+```typescript
+// REQUIRED: Rate limiting and deduplication
+const requestKey = generateRequestKey(params);
+if (isDuplicateRequest(requestKey, 5000)) {
+  return getCachedResponse(requestKey);
+}
+
+// REQUIRED: Debounced API calls
+const debouncedCall = debounce(async (params) => {
+  return await makeAICall(params);
+}, 1000);
+```
+
+### **Rate Limiting Rules**
+- **Maximum 20 requests/minute** per IP address
+- **5-second cooldown** between identical requests
+- **Exponential backoff** for failed requests
+- **Request queuing** for high-frequency scenarios
+
+## 3. **Minimal Change Scope**
+
+### **PR Size Limits**
+- **Maximum 50 lines changed** per single PR
+- **Maximum 3 files touched** per PR without breaking into separate PRs
+- **Single responsibility**: Each PR must address one specific issue
+- **Atomic changes**: Changes must be logically independent
+
+### **Change Validation**
+```typescript
+// REQUIRED: Change scope validation
+const changedLines = getChangedLines();
+const changedFiles = getChangedFiles();
+
+if (changedLines > 50) {
+  throw new Error('PR exceeds 50-line limit. Break into smaller PRs.');
+}
+
+if (changedFiles.length > 3) {
+  throw new Error('PR touches too many files. Consider separate PRs.');
+}
+```
+
+### **Large Change Handling**
+- **Feature flags**: Use feature flags for large changes
+- **Incremental rollout**: Deploy changes in small increments
+- **A/B testing**: Test changes on subset of users first
+- **Rollback plan**: Always have rollback strategy
+
+## 4. **Dependency Approval**
+
+### **New Package Requirements**
+- **Explicit approval**: All new npm packages require "approve-dependency" tag
+- **Security assessment**: Vulnerability scan for new dependencies
+- **Justification required**: Clear reason for adding dependency
+- **Alternative evaluation**: Consider existing solutions first
+
+### **Approval Process**
+```markdown
+## Dependency Approval Required
+
+**Package**: `@new-package/name`
+**Version**: `1.2.3`
+**Justification**: Brief explanation of why this package is needed
+**Security Assessment**: [npm audit] results
+**Alternatives Considered**: List of evaluated alternatives
+**Impact**: Performance and bundle size impact
+```
+
+### **Dependency Rules**
+- **No duplicate functionality**: Don't add packages for existing capabilities
+- **Bundle size impact**: Consider impact on application size
+- **Maintenance burden**: Evaluate long-term maintenance requirements
+- **License compliance**: Ensure license compatibility
+
+## 5. **Environment Variable Safety**
+
+### **Secret Management**
+- **NO hardcoded secrets**: All credentials must use `process.env`
+- **Environment validation**: Validate required environment variables
+- **Secret rotation**: Support for rotating API keys
+- **Local development**: Use `.env.local` for development secrets
+
+### **Implementation Pattern**
+```typescript
+// REQUIRED: Environment variable validation
+const requiredEnvVars = [
+  'GEMINI_API_KEY',
+  'SUPABASE_URL',
+  'SUPABASE_ANON_KEY'
+];
+
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    throw new Error(`Missing required environment variable: ${envVar}`);
+  }
+}
+
+// REQUIRED: No hardcoded values
+const apiKey = process.env.GEMINI_API_KEY; // ✅ Correct
+const apiKey = 'sk-1234567890abcdef'; // ❌ Forbidden
+```
+
+### **Security Checklist**
+- [ ] No API keys in code
+- [ ] No database URLs in code
+- [ ] No authentication tokens in code
+- [ ] Environment variables validated at startup
+- [ ] Secrets properly encrypted in production
+
+## 6. **Strict Error Handling**
+
+### **Promise & Async Requirements**
+- **Every await MUST have try/catch**: No unhandled promise rejections
+- **Error logging**: All errors must be logged with context
+- **Error boundaries**: Maintain existing error boundaries
+- **Graceful degradation**: System must continue working on errors
+
+### **Implementation Pattern**
+```typescript
+// REQUIRED: Try/catch for all async operations
+try {
+  const result = await makeAICall(params);
+  return result;
+} catch (error) {
+  logActivity('error', 'AI call failed', { 
+    error: error.message, 
+    params,
+    timestamp: new Date().toISOString()
+  });
+  throw new Error(`AI call failed: ${error.message}`);
+}
+
+// REQUIRED: Promise error handling
+makeAICall(params)
+  .then(result => handleSuccess(result))
+  .catch(error => {
+    logActivity('error', 'AI call failed', { error: error.message });
+    handleError(error);
+  });
+```
+
+### **Error Handling Rules**
+- **No silent failures**: All errors must be logged
+- **User feedback**: Provide clear error messages to users
+- **Retry logic**: Implement exponential backoff for transient errors
+- **Circuit breaker**: Prevent cascade failures
+
+## 7. **UI Change Review**
+
+### **CSS & Layout Requirements**
+- **Component-specific changes**: All CSS changes must target specific components
+- **Scope isolation**: Changes must not affect unrelated components
+- **Documentation**: Code comments required for all style changes
+- **Testing**: Visual regression tests for UI changes
+
+### **Implementation Pattern**
+```css
+/* REQUIRED: Component-specific CSS with comments */
+.chat-message-input {
+  /* Component: ChatMessageInput - Enhanced focus state */
+  border-color: var(--accent-color);
+  transition: border-color 0.2s ease;
+}
+
+/* REQUIRED: Scoped changes only */
+.chat-message-input:focus {
+  /* Component: ChatMessageInput - Focus enhancement */
+  border-color: var(--accent-color-focus);
+  box-shadow: 0 0 0 2px var(--accent-color-focus-alpha);
+}
+```
+
+### **UI Change Rules**
+- **No global style changes**: Avoid modifying global CSS
+- **Component isolation**: Changes must be scoped to single component
+- **Design system compliance**: Follow established design tokens
+- **Responsive consideration**: Test changes on all screen sizes
+
+## 🔍 **Validation Checklist**
+
+Before approving any AI-related change, verify:
+
+- [ ] **Token estimation** included and under 500 limit
+- [ ] **Rate limiting** implemented for API calls
+- [ ] **Change scope** under 50 lines and 3 files
+- [ ] **Dependencies** approved with security assessment
+- [ ] **Environment variables** used for all secrets
+- [ ] **Error handling** implemented for all async operations
+- [ ] **UI changes** scoped to specific components
+- [ ] **Cost tracking** implemented and logged
+- [ ] **Duplicate prevention** in place
+- [ ] **Rollback plan** documented
+
+## 🚫 **Rejection Criteria**
+
+**REJECT** any AI-related proposal that:
+
+- ❌ Exceeds 500 token budget without justification
+- ❌ Lacks rate limiting or duplicate prevention
+- ❌ Changes more than 50 lines or 3 files
+- ❌ Adds dependencies without approval
+- ❌ Contains hardcoded secrets or credentials
+- ❌ Missing error handling for async operations
+- ❌ Makes global UI changes without component scope
+- ❌ No cost tracking or usage monitoring
+- ❌ No rollback strategy for changes
+
+## 📊 **Monitoring & Compliance**
+
+### **Required Metrics**
+- **Token usage per request**: Track and alert on high usage
+- **API call frequency**: Monitor rate limiting effectiveness
+- **Error rates**: Track and alert on error patterns
+- **Cost per user**: Monitor cost efficiency
+- **Performance impact**: Track response times
+
+### **Compliance Reporting**
+- **Weekly cost reports**: Token usage and cost analysis
+- **Error rate monitoring**: Track and resolve error patterns
+- **Security audits**: Regular dependency and secret audits
+- **Performance reviews**: Monitor system performance impact
+
+---
+
+**Remember**: AI safety and governance are non-negotiable. Every change must prioritize security, cost control, and system stability.

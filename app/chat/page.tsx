@@ -15,7 +15,7 @@ import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
 import { VoiceOutputModal } from "@/components/chat/modals/VoiceOutputModal"
 import { WebcamModal } from "@/components/chat/modals/WebcamModal"
 import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
-import { LiveVoiceModal } from "@/components/chat/modals/LiveVoiceModal"
+
 import type { LeadCaptureState } from "./types/lead-capture"
 import { useChatContext } from "./context/ChatProvider"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
@@ -45,7 +45,7 @@ export default function ChatPage() {
   const [showWebcamModal, setShowWebcamModal] = useState(false)
   const [showScreenShareModal, setShowScreenShareModal] = useState(false)
   const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
-  const [showLiveVoiceModal, setShowLiveVoiceModal] = useState(false)
+
 
   const [leadCaptureState, setLeadCaptureState] = useState<LeadCaptureState>({
     stage: "initial",
@@ -89,6 +89,8 @@ export default function ChatPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const lastSubmitTimeRef = useRef<number>(0)
+  const SUBMIT_COOLDOWN = 2000 // 2 seconds between submissions
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   useEffect(scrollToBottom, [messages])
@@ -130,6 +132,23 @@ export default function ChatPage() {
 
   const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    
+    // 🚫 RATE LIMITING: Prevent rapid successive submissions
+    const now = Date.now()
+    if (now - lastSubmitTimeRef.current < SUBMIT_COOLDOWN) {
+      console.log('🚫 Rate limited: Skipping rapid submission', {
+        timeSinceLastSubmit: now - lastSubmitTimeRef.current,
+        input: input.substring(0, 50)
+      })
+      toast({
+        title: "Please wait",
+        description: "You're sending messages too quickly. Please wait a moment.",
+        variant: "destructive"
+      })
+      return
+    }
+    lastSubmitTimeRef.current = now
+    
     if (leadCaptureState.stage === "collecting_info") {
       toast({
         title: "Please complete the form first",
@@ -139,6 +158,12 @@ export default function ChatPage() {
       return
     }
     if (input.trim()) {
+      console.log('📤 Submitting message:', {
+        contentLength: input.length,
+        sessionId,
+        timestamp: new Date().toISOString()
+      })
+      
       handleSubmit(e)
       activityLogger.log({ type: "user_action", title: "User Message Sent", description: input, status: "completed" })
     }
@@ -363,11 +388,12 @@ export default function ChatPage() {
             )}
             <ChatMain messages={messages as Message[]} isLoading={isLoading} messagesEndRef={messagesEndRef} />
           </div>
-          <form onSubmit={handleSendMessage} className="shrink-0">
+          <div className="shrink-0">
             <ChatFooter
               input={input}
               setInput={setInput}
               handleInputChange={handleInputChange}
+              handleSubmit={handleSendMessage}
               isLoading={isLoading}
               onFileUpload={handleFileUpload}
               onImageUpload={handleImageUpload}
@@ -380,9 +406,8 @@ export default function ChatPage() {
               showScreenShareModal={showScreenShareModal}
               setShowScreenShareModal={setShowScreenShareModal}
               setShowVideo2AppModal={setShowVideo2AppModal}
-              setShowLiveVoiceModal={setShowLiveVoiceModal}
             />
-          </form>
+          </div>
         </div>
       </div>
       <KeyboardShortcutsModal isOpen={showKeyboardShortcuts} onClose={() => setShowKeyboardShortcuts(false)} />
@@ -402,6 +427,10 @@ export default function ChatPage() {
           isOpen={showVoiceModal}
           onClose={() => setShowVoiceModal(false)}
           onTransferToChat={handleVoiceTranscript}
+          onVoiceResponse={(responseData) => {
+            setVoiceOutputData(responseData)
+            setShowVoiceOutputModal(true)
+          }}
           leadContext={{
             name: leadCaptureState.leadData.name,
             company: leadCaptureState.leadData.company
@@ -440,16 +469,7 @@ export default function ChatPage() {
           autoPlay={true}
         />
       )}
-      {showLiveVoiceModal && (
-        <LiveVoiceModal
-          isOpen={showLiveVoiceModal}
-          onClose={() => setShowLiveVoiceModal(false)}
-          leadContext={{
-            name: leadCaptureState.leadData.name,
-            company: leadCaptureState.leadData.company
-          }}
-        />
-      )}
+
 
       </ChatLayout>
     )

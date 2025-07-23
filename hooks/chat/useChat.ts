@@ -28,6 +28,18 @@ interface UseChatProps {
   onError?: (error: Error) => void
 }
 
+// Debounce utility function
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null
+  return (...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(() => func(...args), wait)
+  }
+}
+
 export function useChat({ 
   initialMessages = [],
   data = {},
@@ -39,6 +51,8 @@ export function useChat({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const lastCallTimeRef = useRef<number>(0)
+  const DEBOUNCE_DELAY = 1000 // 1 second debounce
 
   const addMessage = useCallback((message: Omit<Message, 'id' | 'timestamp'>) => {
     const newMessage: Message = {
@@ -63,6 +77,17 @@ export function useChat({
 
   const sendMessage = useCallback(async (content: string, imageUrl?: string) => {
     if (!content.trim()) return
+
+    // 🚫 RATE LIMITING: Prevent rapid successive calls
+    const now = Date.now()
+    if (now - lastCallTimeRef.current < DEBOUNCE_DELAY) {
+      console.log('🚫 Rate limited: Skipping rapid call', {
+        timeSinceLastCall: now - lastCallTimeRef.current,
+        content: content.substring(0, 50)
+      })
+      return
+    }
+    lastCallTimeRef.current = now
 
     // Add user message
     const userMessage = addMessage({
@@ -89,6 +114,12 @@ export function useChat({
 
       // Create new abort controller
       abortControllerRef.current = new AbortController()
+
+      console.log('📤 Sending message:', {
+        contentLength: content.length,
+        sessionId: data.sessionId,
+        timestamp: new Date().toISOString()
+      })
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -151,6 +182,11 @@ export function useChat({
                   timestamp: new Date()
                 }
                 
+                console.log('✅ Message completed:', {
+                  responseLength: assistantContent.length,
+                  timestamp: new Date().toISOString()
+                })
+                
                 if (onFinish) {
                   onFinish(finalMessage)
                 }
@@ -173,6 +209,11 @@ export function useChat({
       const errorObj = err instanceof Error ? err : new Error('Failed to send message')
       setError(errorObj)
       
+      console.error('❌ Message error:', {
+        error: errorObj.message,
+        timestamp: new Date().toISOString()
+      })
+      
       // Update assistant message with error
       updateMessage(assistantMessage.id, {
         content: 'Sorry, I encountered an error processing your message. Please try again.',
@@ -188,6 +229,12 @@ export function useChat({
       abortControllerRef.current = null
     }
   }, [messages, addMessage, updateMessage, data, onFinish, onError])
+
+  // Debounced version of sendMessage
+  const debouncedSendMessage = useCallback(
+    debounce(sendMessage, DEBOUNCE_DELAY),
+    [sendMessage]
+  )
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
@@ -240,6 +287,7 @@ export function useChat({
     
     // Actions
     sendMessage,
+    debouncedSendMessage, // Add debounced version
     handleSubmit,
     handleInputChange,
     append,

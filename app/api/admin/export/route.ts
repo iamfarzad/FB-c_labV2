@@ -1,4 +1,4 @@
-import { getSupabase } from "@/lib/supabase/server"
+import { supabaseService } from "@/lib/supabase/client"
 import { type NextRequest, NextResponse } from "next/server"
 import { adminAuthMiddleware } from "@/lib/auth"
 
@@ -13,15 +13,13 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get("type") || "leads"
     const period = searchParams.get("period") || "7d"
 
-    const supabase = getSupabase()
-
     // Calculate date range
     const now = new Date()
     const daysBack = period === "1d" ? 1 : period === "7d" ? 7 : period === "30d" ? 30 : 90
     const startDate = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000)
 
     if (type === "leads") {
-      const { data: leads } = await supabase
+      const { data: leads } = await supabaseService
         .from("lead_summaries")
         .select("*")
         .gte("created_at", startDate.toISOString())
@@ -32,7 +30,7 @@ export async function GET(request: NextRequest) {
       const csvRows =
         leads
           ?.map(
-            (lead) =>
+            (lead: any) =>
               `"${lead.name}","${lead.email}","${lead.company_name || ""}",${lead.lead_score},"${lead.created_at}","${lead.consultant_brief?.replace(/"/g, '""') || ""}","${(lead.ai_capabilities_shown || []).join("; ")}"`,
           )
           .join("\n") || ""

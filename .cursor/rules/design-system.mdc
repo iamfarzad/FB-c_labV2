@@ -1,6 +1,10 @@
 ---
+description: "Frontend Design System & Style Guide"
 alwaysApply: true
+globs:
+  - "**/*"
 ---
+
 # Frontend Design System & Style Guide
 
 All UI and frontend code must strictly follow the canonical design system and style guide as defined in [frontend_design.md](mdc:frontend_design.md).

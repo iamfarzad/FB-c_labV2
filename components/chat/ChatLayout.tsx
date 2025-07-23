@@ -27,8 +27,9 @@ export const ChatLayout = ({ children, className }: ChatLayoutProps) => {
 
   return (
     <div
+      data-testid="chat-layout"
       className={cn(
-        "flex min-h-screen w-full flex-col bg-background",
+        "flex flex-col h-screen w-full bg-background",
         "relative overflow-hidden transition-all",
         // Mobile optimizations
         "mobile:h-[100dvh] mobile:overflow-hidden",
@@ -40,8 +41,19 @@ export const ChatLayout = ({ children, className }: ChatLayoutProps) => {
       )}
       data-mobile={isMobile}
       data-tablet={isTablet}
+      style={{
+        // Ensure the layout doesn't shift when scrolling on mobile
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'contain',
+        // Prevent layout shift by reserving space for scrollbar
+        scrollbarGutter: 'stable',
+        // Prevent layout from expanding with content
+        maxHeight: '100vh',
+      }}
     >
-      {children}
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        {children}
+      </div>
     </div>
   )
 }

@@ -4,28 +4,79 @@ import { NextResponse } from "next/server"
 
 export const dynamic = "force-dynamic"
 
-// Audio format configuration
+// Audio format configuration for Gemini TTS (WAV output)
 const AUDIO_CONFIG = {
   sampleRate: 24000,
   channels: 1,
-  format: 'mp3' as const,
+  format: 'wav' as const,
 }
 
+// In-memory cache for duplicate prevention (use Redis in production)
+const recentCalls = new Map<string, number>()
+const DUPLICATE_THRESHOLD = 1000 // 1 second
+
 export async function POST(req: NextRequest) {
+  const startTime = Date.now()
+  const callId = Math.random().toString(36).substring(7)
+  
   try {
     const { 
       prompt, 
       enableTTS = false, 
-      voiceStyle = "neutral",
-      voiceName = "Kore",
-      streamAudio = false 
+      streamAudio = false, 
+      voiceName = 'Puck',
+      multiSpeakerMode = false,
+      languageCode = 'en-US'
     } = await req.json()
 
+    // 🟠 LOGGING: Track all API calls
+    console.log("🟠 Gemini API Called:", {
+      callId,
+      prompt: (prompt || '').substring(0, 100) + ((prompt || '').length > 100 ? "..." : ""),
+      enableTTS,
+      streamAudio,
+      voiceName,
+      multiSpeakerMode,
+      timestamp: new Date().toISOString(),
+      userAgent: (req.headers.get('user-agent') || '').substring(0, 50)
+    })
+
+    // 🚫 DUPLICATE PREVENTION
+    const promptHash = `${prompt?.substring(0, 50) || ''}_${enableTTS}_${voiceName}`
+    const lastCallTime = recentCalls.get(promptHash)
+    const now = Date.now()
+    
+    if (lastCallTime && (now - lastCallTime) < DUPLICATE_THRESHOLD) {
+      console.log("🚫 Duplicate call prevented:", {
+        callId,
+        promptHash,
+        timeSinceLastCall: now - lastCallTime
+      })
+      return NextResponse.json({ 
+        error: "Duplicate call skipped",
+        callId,
+        retryAfter: Math.ceil((DUPLICATE_THRESHOLD - (now - lastCallTime)) / 1000)
+      }, { status: 429 })
+    }
+    
+    // Update recent calls
+    recentCalls.set(promptHash, now)
+    
+    // Clean up old entries (keep last 100)
+    if (recentCalls.size > 100) {
+      const oldestKey = recentCalls.keys().next().value
+      if (oldestKey) {
+        recentCalls.delete(oldestKey)
+      }
+    }
+
     if (!prompt) {
+      console.log("❌ Missing prompt:", { callId })
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 })
     }
 
     if (!process.env.GEMINI_API_KEY) {
+      console.log("❌ Missing API key:", { callId })
       return NextResponse.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 })
     }
 
@@ -35,6 +86,8 @@ export async function POST(req: NextRequest) {
 
     if (enableTTS) {
       try {
+        console.log("🎤 TTS Generation started:", { callId, promptLength: (prompt || '').length })
+        
         // Generate text content first
         const config = {
           responseMimeType: "text/plain",
@@ -43,90 +96,108 @@ export async function POST(req: NextRequest) {
         const textResult = await genAI.models.generateContent({
           model: "gemini-2.5-flash",
           config,
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          contents: [{ role: "user", parts: [{ text: prompt! }] }],
         })
         
         const textResponse = textResult.responseId ? prompt : prompt
 
-        // Use a proper TTS service - we'll use the browser's Speech Synthesis API via a helper
-        const generateTTSAudio = async (text: string): Promise<string> => {
+        console.log("✅ Text generation completed:", { callId, responseLength: textResponse.length })
+
+        // Use Gemini TTS with proper configuration (from official docs)
+        const generateTTSAudio = async (text: string, voiceName: string = 'Puck', multiSpeakerMode: boolean = false, languageCode: string = 'en-US'): Promise<string> => {
           try {
-            // For server-side TTS, we'll use a more robust approach
-            // Since we can't use browser APIs on the server, we'll return instructions
-            // for the client to handle TTS, or use an external TTS service
+            console.log("🔊 TTS Audio generation:", { callId, voiceName, textLength: text.length })
             
-            // Option 1: Use Google Cloud Text-to-Speech (if available)
-            if (process.env.GOOGLE_CLOUD_TTS_API_KEY) {
-              const response = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${process.env.GOOGLE_CLOUD_TTS_API_KEY}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  input: { text },
-                  voice: {
-                    languageCode: 'en-US',
-                    name: voiceName === 'Kore' ? 'en-US-Standard-A' : 'en-US-Standard-B',
-                    ssmlGender: 'FEMALE'
-                  },
-                  audioConfig: {
-                    audioEncoding: 'MP3',
-                    sampleRateHertz: AUDIO_CONFIG.sampleRate
+            // Determine if this is multi-speaker content
+            const hasMultipleSpeakers = multiSpeakerMode && text.includes(':') && text.split(':').length > 2;
+            
+            let speechConfig;
+            
+            if (hasMultipleSpeakers) {
+              // Extract speaker names from text (e.g., "Joe: Hello\nJane: Hi there")
+              const speakerMatches = text.match(/^([^:]+):/gm);
+              const speakers = speakerMatches ? [...new Set(speakerMatches.map(s => s.replace(':', '').trim()))] : [];
+              
+              if (speakers.length >= 2) {
+                // Multi-speaker configuration
+                speechConfig = {
+                  multiSpeakerVoiceConfig: {
+                    speakerVoiceConfigs: speakers.slice(0, 2).map((speaker, index) => ({
+                      speaker: speaker,
+                      voiceConfig: {
+                        prebuiltVoiceConfig: {
+                          voiceName: index === 0 ? voiceName : 'Kore' // First speaker gets requested voice, second gets Kore
+                        }
+                      }
+                    }))
                   }
-                })
-              })
-              
-              if (response.ok) {
-                const data = await response.json()
-                return `data:audio/mp3;base64,${data.audioContent}`
+                };
+              } else {
+                // Fallback to single speaker if speaker detection fails
+                speechConfig = {
+                  voiceConfig: {
+                    prebuiltVoiceConfig: {
+                      voiceName: voiceName
+                    }
+                  }
+                };
               }
+            } else {
+              // Single speaker configuration
+              speechConfig = {
+                voiceConfig: {
+                  prebuiltVoiceConfig: {
+                    voiceName: voiceName
+                  }
+                }
+              };
             }
-            
-            // Option 2: Use OpenAI TTS (if available)
-            if (process.env.OPENAI_API_KEY) {
-              const response = await fetch('https://api.openai.com/v1/audio/speech', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  model: 'tts-1',
-                  input: text,
-                  voice: voiceStyle === 'neutral' ? 'alloy' : 'nova',
-                  response_format: 'mp3'
-                })
-              })
-              
-              if (response.ok) {
-                const audioBuffer = await response.arrayBuffer()
-                const base64 = Buffer.from(audioBuffer).toString('base64')
-                return `data:audio/mp3;base64,${base64}`
+
+            // Use the correct model from the documentation with proper contents format
+            const ttsResponse = await genAI.models.generateContent({
+              model: "gemini-2.5-flash-preview-tts",
+              contents: [{ role: "user", parts: [{ text }] }], // ✅ Correct format per docs
+              config: {
+                responseModalities: ["AUDIO"],
+                speechConfig: {
+                  ...speechConfig,
+                  languageCode: languageCode // ✅ Language support
+                }
               }
-            }
+            });
+
+            // Extract audio data from response
+            const audioData = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
             
-            // Option 3: Return text for client-side TTS
-            return JSON.stringify({
-              type: 'client_tts',
-              text: text,
-              voiceStyle: voiceStyle,
-              voiceName: voiceName
-            })
+            if (audioData) {
+              console.log("✅ TTS Audio generated successfully:", { callId, audioDataLength: audioData.length })
+              // Convert to base64 data URL for browser playback
+              return `data:audio/wav;base64,${audioData}`;
+            } else {
+              throw new Error('No audio data received from Gemini TTS');
+            }
             
           } catch (error) {
-            console.error('TTS generation failed:', error)
-            // Fallback to client-side TTS
+            console.error('❌ Gemini TTS generation failed:', { callId, error: error instanceof Error ? error.message : 'Unknown error' })
+            
+            // Fallback: Use client-side TTS with requested voice characteristics
             return JSON.stringify({
               type: 'client_tts',
               text: text,
-              voiceStyle: voiceStyle,
-              voiceName: voiceName
+              voiceName: voiceName,
+              voiceStyle: voiceName.toLowerCase(),
+              instructions: 'Use a bright, engaging voice for business communication'
             })
           }
         }
 
-        const audioData = await generateTTSAudio(textResponse)
+        const audioData = await generateTTSAudio(textResponse, voiceName, multiSpeakerMode, languageCode)
+
+        console.log("🎵 TTS processing completed:", { 
+          callId, 
+          responseTime: Date.now() - startTime,
+          audioDataLength: audioData.length 
+        })
 
         if (streamAudio) {
           // Return streaming response for real-time audio playback
@@ -180,29 +251,63 @@ export async function POST(req: NextRequest) {
               "Content-Type": "text/plain; charset=utf-8",
               "Cache-Control": "no-cache",
               "Connection": "keep-alive",
+              "X-Call-ID": callId,
+              "X-Response-Time": `${Date.now() - startTime}ms`
             },
           })
         } else {
-          // Return complete audio response
-          return NextResponse.json({
-            success: true,
-            textContent: textResponse,
-            audioData: audioData,
-            audioConfig: AUDIO_CONFIG,
-            voiceStyle: voiceStyle,
-            voiceName: voiceName,
-            generatedAt: new Date().toISOString(),
-          })
+          // ✅ NEW: Return raw audio data for direct playback
+          if (audioData.startsWith('data:audio/wav;base64,')) {
+            // Convert base64 to raw audio buffer
+            const base64Data = audioData.replace('data:audio/wav;base64,', '')
+            const binaryString = atob(base64Data)
+            const bytes = new Uint8Array(binaryString.length)
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i)
+            }
+            
+            console.log("🎵 Returning raw audio data:", { 
+              callId, 
+              audioSize: bytes.length,
+              responseTime: Date.now() - startTime
+            })
+            
+            return new Response(bytes, {
+              headers: {
+                "Content-Type": "audio/wav",
+                "Content-Length": bytes.length.toString(),
+                "X-Call-ID": callId,
+                "X-Response-Time": `${Date.now() - startTime}ms`,
+                "Cache-Control": "no-cache"
+              },
+            })
+          } else {
+            // Fallback to JSON response for client-side TTS
+            return NextResponse.json({
+              success: true,
+              textContent: textResponse,
+              audioData: audioData,
+              audioConfig: AUDIO_CONFIG,
+              voiceName: 'Puck',
+              voiceStyle: 'puck',
+              generatedAt: new Date().toISOString(),
+              callId,
+              responseTime: Date.now() - startTime
+            })
+          }
         }
       } catch (error) {
-        console.error("Gemini TTS generation error:", error)
+        console.error("❌ Gemini TTS generation error:", { callId, error: error instanceof Error ? error.message : 'Unknown error' })
         return NextResponse.json({ 
           error: "Failed to generate audio response",
-          details: error instanceof Error ? error.message : "Unknown error"
+          details: error instanceof Error ? error.message : "Unknown error",
+          callId
         }, { status: 500 })
       }
     } else {
       // Standard text-only generation
+      console.log("📝 Text-only generation:", { callId, promptLength: (prompt || '').length })
+      
       const config = {
         responseMimeType: "text/plain",
       };
@@ -210,7 +315,12 @@ export async function POST(req: NextRequest) {
       const result = await genAI.models.generateContent({
         model: "gemini-2.5-flash",
         config,
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        contents: [{ role: "user", parts: [{ text: prompt! }] }],
+      })
+
+      console.log("✅ Text generation completed:", { 
+        callId, 
+        responseTime: Date.now() - startTime 
       })
 
       return NextResponse.json({
@@ -218,13 +328,20 @@ export async function POST(req: NextRequest) {
         content: prompt,
         audioSupported: false,
         generatedAt: new Date().toISOString(),
+        callId,
+        responseTime: Date.now() - startTime
       })
     }
   } catch (error: any) {
-    console.error("Gemini Live API error:", error)
+    console.error("❌ Gemini Live API error:", { 
+      callId, 
+      error: error.message,
+      responseTime: Date.now() - startTime
+    })
     return NextResponse.json({ 
       error: "API request failed",
-      details: error.message 
+      details: error.message,
+      callId
     }, { status: 500 })
   }
 }

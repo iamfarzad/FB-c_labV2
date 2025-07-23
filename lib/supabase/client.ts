@@ -1,42 +1,185 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClient } from '@supabase/supabase-js'
+import { Database } from '../database.types'
 
-// IMPORTANT: These values are hardcoded for v0 preview demonstration ONLY.
-// In a real application, always use environment variables (e.g., process.env.NEXT_PUBLIC_SUPABASE_URL)
-// configured in your Vercel project settings for security and flexibility.
-const supabaseUrl = "https://ksmxqswuzrmdgckwxkvn.supabase.co"
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzbXhxc3d1enJtZGdja3d4a3ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3ODUyNjIsImV4cCI6MjA1NzM2MTI2Mn0.YKz7fKPbl7pbvEMN08lFOPm1SSg59R4lu8tzV8Kkz2E"
+// Validate environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-// Create a singleton instance to prevent multiple clients
-let supabaseInstance: ReturnType<typeof createClient> | null = null
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing required Supabase environment variables:', {
+    url: !!supabaseUrl,
+    anonKey: !!supabaseAnonKey
+  })
+}
 
-export const supabase = (() => {
-  if (typeof window === "undefined") {
-    // Server-side: create a new instance each time
-    return createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-      },
-    })
+// Improved Supabase Client Setup with TypeScript types and error handling
+export const supabase = createClient<Database>(
+  supabaseUrl || '', 
+  supabaseAnonKey || '',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    }
+  }
+)
+
+// Service Role Client for API operations (bypasses RLS)
+export const supabaseService = createClient<Database>(
+  supabaseUrl || '',
+  supabaseServiceKey || '',
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
+
+// Type-safe Lead Creation Function
+export async function createLeadSummary(
+  leadData: Database['public']['Tables']['lead_summaries']['Insert']
+) {
+  // Get current authenticated user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError) {
+    console.error('Auth error:', userError)
+    // Don't throw error, just log it and continue
+  }
+
+  if (!user) {
+    console.warn('No authenticated user found, using service role for lead creation')
+  }
+
+  // Automatically set user_id if not provided
+  const finalLeadData = {
+    ...leadData,
+    user_id: leadData.user_id || user?.id || null
+  }
+
+  // Use service role client for API operations (bypasses RLS)
+  const { data, error } = await supabaseService
+    .from('lead_summaries')
+    .insert(finalLeadData)
+    .select()
+    .single()
+  
+  if (error) {
+    console.error('Lead creation error:', error)
+    throw error
   }
   
-  // Client-side: use singleton
-  if (!supabaseInstance) {
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        storageKey: "fb-ai-auth",
-        storage: window.localStorage,
-      },
-      realtime: {
-        params: {
-          eventsPerSecond: 10,
-        },
-      },
-    })
-  }
-  return supabaseInstance
-})()
+  return data
+}
 
-// Export a function to get the client (for consistency)
-export const getSupabaseClient = () => supabase
+// Comprehensive Error Handling
+export function handleSupabaseError(error: any) {
+  const errorMap: Record<string, string> = {
+    'PGRST116': 'Permission denied. Check user authentication.',
+    'PGRST000': 'Database operation failed',
+    '23505': 'Unique constraint violation',
+    '23503': 'Foreign key constraint violation',
+    '42501': 'Row-level security policy violation',
+    '42P01': 'Table does not exist'
+  }
+
+  const errorMessage = errorMap[error.code] || 'Unexpected database error'
+  
+  console.error({
+    message: errorMessage,
+    code: error.code,
+    details: error.message,
+    context: error
+  })
+
+  return {
+    message: errorMessage,
+    code: error.code,
+    details: error.message
+  }
+}
+
+// Type-safe search results creation
+export async function createSearchResults(
+  leadId: string,
+  results: Array<{ url: string; title?: string; snippet?: string; source: string }>
+) {
+  if (results.length === 0) {
+    console.log('No search results to store')
+    return []
+  }
+
+  const searchRecords = results.map(result => ({
+    lead_id: leadId,
+    source: result.source,
+    url: result.url,
+    title: result.title || '',
+    snippet: result.snippet || '',
+    raw: result
+  }))
+
+  const { data, error } = await supabaseService
+    .from('lead_search_results')
+    .insert(searchRecords)
+    .select()
+
+  if (error) {
+    console.error('Failed to store search results:', error)
+    throw error
+  }
+
+  console.log(`Stored ${results.length} search results for lead ${leadId}`)
+  return data || []
+}
+
+// Get search results for a lead
+export async function getSearchResults(leadId: string) {
+  const { data, error } = await supabaseService
+    .from('lead_search_results')
+    .select('*')
+    .eq('lead_id', leadId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Failed to fetch search results:', error)
+    throw error
+  }
+
+  return data || []
+}
+
+// Get leads for the current user
+export async function getUserLeads() {
+  const { data, error } = await supabase
+    .from('lead_summaries')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Get user leads error:', error)
+    throw error
+  }
+
+  return data || []
+}
+
+// Get a specific lead by ID
+export async function getLeadById(id: string) {
+  const { data, error } = await supabaseService
+    .from('lead_summaries')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null // Lead not found
+    }
+    console.error('Get lead error:', error)
+    throw error
+  }
+
+  return data
+}

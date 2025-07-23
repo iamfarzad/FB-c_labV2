@@ -1,14 +1,10 @@
 ---
-description: "AI API Patterns & Chat Implementation Standards - Specific rules for AI integration and chat functionality"
-globs:
-  - "app/api/**/*.ts"
-  - "lib/**/*.ts"
+description: "AI API Patterns & Chat Implementation Standards"
 alwaysApply: true
+globs:
+  - "**/*"
 ---
----
-globs: app/api/**/*.ts,lib/**/*.ts
-description: AI API Patterns and Chat Implementation Standards - Specific rules for AI integration and chat functionality
----
+
 
 # AI API Patterns & Chat Implementation Standards
 

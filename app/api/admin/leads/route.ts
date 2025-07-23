@@ -1,4 +1,4 @@
-import { getSupabase } from "@/lib/supabase/server"
+import { supabaseService } from "@/lib/supabase/client"
 import { type NextRequest, NextResponse } from "next/server"
 import { adminAuthMiddleware } from "@/lib/auth"
 
@@ -13,14 +13,12 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || ""
     const period = searchParams.get("period") || "7d"
 
-    const supabase = getSupabase()
-
     // Calculate date range
     const now = new Date()
     const daysBack = period === "1d" ? 1 : period === "7d" ? 7 : period === "30d" ? 30 : 90
     const startDate = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000)
 
-    let query = supabase
+    let query = supabaseService
       .from("lead_summaries")
       .select("*")
       .gte("created_at", startDate.toISOString())
@@ -40,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     // Add mock status and engagement_type for demo
     const enrichedLeads =
-      leads?.map((lead) => ({
+      leads?.map((lead: any) => ({
         ...lead,
         status: ["new", "contacted", "qualified", "converted"][Math.floor(Math.random() * 4)],
         engagement_type: lead.ai_capabilities_shown?.[0] || "chat",

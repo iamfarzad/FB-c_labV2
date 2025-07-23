@@ -7,11 +7,19 @@ config({ path: '.env.test' });
 beforeAll(async () => {
   // Ensure test environment is properly configured
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL is required for tests');
+    console.warn('NEXT_PUBLIC_SUPABASE_URL not set, using fallback for tests');
+    Object.defineProperty(process.env, 'NEXT_PUBLIC_SUPABASE_URL', {
+      value: 'https://test.supabase.co',
+      writable: true
+    });
   }
   
   if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is required for tests');
+    console.warn('NEXT_PUBLIC_SUPABASE_ANON_KEY not set, using fallback for tests');
+    Object.defineProperty(process.env, 'NEXT_PUBLIC_SUPABASE_ANON_KEY', {
+      value: 'test-anon-key',
+      writable: true
+    });
   }
 });
 

@@ -41,8 +41,6 @@ const nextConfig = {
 
     return config
   },
-  // External packages for server components
-  serverExternalPackages: ['@supabase/supabase-js'],
   // Environment variables that should be available at build time
   env: {
     CUSTOM_BUILD_TIME: new Date().toISOString(),

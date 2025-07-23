@@ -8,6 +8,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react"
 interface ErrorBoundaryState {
   hasError: boolean
   error?: Error
+  errorInfo?: React.ErrorInfo
 }
 
 interface ErrorBoundaryProps {
@@ -26,7 +27,14 @@ export class ClientErrorBoundary extends React.Component<ErrorBoundaryProps, Err
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Client Error Boundary caught an error:", error, errorInfo)
+    console.error("Client Error Boundary caught an error:", {
+      error: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      errorInfo
+    })
+    
+    this.setState({ errorInfo })
   }
 
   render() {
@@ -36,7 +44,7 @@ export class ClientErrorBoundary extends React.Component<ErrorBoundaryProps, Err
         return (
           <FallbackComponent 
             error={this.state.error} 
-            resetError={() => this.setState({ hasError: false, error: undefined })}
+            resetError={() => this.setState({ hasError: false, error: undefined, errorInfo: undefined })}
           />
         )
       }
@@ -54,12 +62,19 @@ export class ClientErrorBoundary extends React.Component<ErrorBoundaryProps, Err
           </CardHeader>
           <CardContent className="space-y-4">
             {process.env.NODE_ENV === "development" && this.state.error && (
-              <pre className="text-xs bg-muted p-2 rounded overflow-auto">
-                {this.state.error.message}
-              </pre>
+              <div className="space-y-2">
+                <pre className="text-xs bg-muted p-2 rounded overflow-auto">
+                  <strong>Error:</strong> {this.state.error.message}
+                </pre>
+                {this.state.errorInfo && (
+                  <pre className="text-xs bg-muted p-2 rounded overflow-auto">
+                    <strong>Component Stack:</strong> {this.state.errorInfo.componentStack}
+                  </pre>
+                )}
+              </div>
             )}
             <Button 
-              onClick={() => this.setState({ hasError: false, error: undefined })}
+              onClick={() => this.setState({ hasError: false, error: undefined, errorInfo: undefined })}
               className="w-full"
               variant="outline"
             >

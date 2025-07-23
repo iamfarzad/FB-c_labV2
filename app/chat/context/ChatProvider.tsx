@@ -15,21 +15,39 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const { activities, addActivity, updateActivity, clearActivities, isConnected } = useRealTimeActivities()
+  try {
+    const { activities, addActivity, updateActivity, clearActivities, isConnected } = useRealTimeActivities()
 
-  return (
-    <ChatContext.Provider
-      value={{
-        activityLog: activities,
-        addActivity,
-        updateActivity,
-        clearActivities,
-        isConnected,
-      }}
-    >
-      {children}
-    </ChatContext.Provider>
-  )
+    return (
+      <ChatContext.Provider
+        value={{
+          activityLog: activities,
+          addActivity,
+          updateActivity,
+          clearActivities,
+          isConnected,
+        }}
+      >
+        {children}
+      </ChatContext.Provider>
+    )
+  } catch (error) {
+    console.error('Error initializing ChatProvider:', error)
+    // Fallback provider with empty functions
+    return (
+      <ChatContext.Provider
+        value={{
+          activityLog: [],
+          addActivity: () => {},
+          updateActivity: () => {},
+          clearActivities: () => {},
+          isConnected: false,
+        }}
+      >
+        {children}
+      </ChatContext.Provider>
+    )
+  }
 }
 
 export function useChatContext() {

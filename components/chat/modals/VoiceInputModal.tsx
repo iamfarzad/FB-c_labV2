@@ -16,6 +16,7 @@ interface VoiceInputModalProps {
   isOpen: boolean
   onClose: () => void
   onTransferToChat: (fullTranscript: string) => void
+  onVoiceResponse?: (responseData: { textContent: string; voiceStyle: string }) => void
   leadContext?: {
     name?: string
     company?: string
@@ -179,6 +180,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   isOpen, 
   onClose, 
   onTransferToChat,
+  onVoiceResponse,
   leadContext 
 }) => {
   const { addActivity } = useChatContext()
@@ -217,7 +219,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     }
   }, [recordingState])
 
-  // Initialize speech recognition
+  // Initialize speech recognition - FIXED: Remove recordingState dependency
   useEffect(() => {
     if (!isOpen) return
 
@@ -290,6 +292,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     }
 
     recognition.onend = () => {
+      // Only reset to idle if we're not in a paused state
       if (recordingState === "listening") {
         setRecordingState("idle")
       }
@@ -304,7 +307,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
         recognitionRef.current = null
       }
     }
-  }, [isOpen, toast, addActivity, recordingState])
+  }, [isOpen, toast, addActivity]) // REMOVED: recordingState dependency
 
   const startRecording = useCallback(() => {
     if (recognitionRef.current && isSupported) {
@@ -381,6 +384,9 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     setConversationMessages(prev => [...prev, userMsg])
 
     try {
+      // Use a consistent session ID to prevent duplicate calls
+      const voiceSessionId = `voice_session_${leadContext?.name || 'user'}_${Date.now()}`
+      
       // Get AI response using existing chat API
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -393,7 +399,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
           ],
           data: {
             leadContext,
-            sessionId: `voice_session_${Date.now()}`
+            sessionId: voiceSessionId
           }
         })
       })
@@ -443,36 +449,26 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
         }
         setConversationMessages(prev => [...prev, aiMsg])
 
-        // Generate voice response using existing TTS API
+        // ✅ NEW: Use Gemini TTS instead of browser TTS
         try {
-          const ttsResponse = await fetch('/api/gemini-live', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              prompt: aiResponse,
-              enableTTS: true,
-              voiceStyle: 'neutral'
-            })
+          await playGeminiTTS(aiResponse)
+          
+          // Add activity for voice response
+          addActivity({
+            type: "voice_response",
+            title: "AI Voice Response",
+            description: "F.B/c AI is speaking back",
+            status: "completed"
           })
-
-          if (ttsResponse.ok) {
-            const ttsData = await ttsResponse.json()
-            if (ttsData.success && ttsData.audioData) {
-              // Play the audio response
-              if (currentAudio) {
-                currentAudio.pause()
-              }
-              
-              const audio = new Audio(ttsData.audioData)
-              setCurrentAudio(audio)
-              audio.play().catch(console.error)
-            }
-          }
         } catch (ttsError) {
-          console.error('TTS Error:', ttsError)
-          // Continue without voice - the text response is still shown
+          console.error('Gemini TTS Error:', ttsError)
+          // Fallback to browser TTS if Gemini TTS fails
+          if (onVoiceResponse) {
+            onVoiceResponse({
+              textContent: aiResponse,
+              voiceStyle: 'puck'
+            })
+          }
         }
       }
     } catch (error) {
@@ -483,7 +479,93 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
         variant: "destructive"
       })
     }
-  }, [leadContext, currentAudio, toast])
+  }, [leadContext, onVoiceResponse, addActivity, toast])
+
+  // ✅ NEW: Gemini TTS function
+  const playGeminiTTS = async (text: string) => {
+    console.log('🎤 Playing Gemini TTS:', { textLength: text.length })
+    
+    const res = await fetch('/api/gemini-live', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: text,
+        enableTTS: true,
+        voiceName: 'Puck',
+        streamAudio: false
+      })
+    })
+    
+    if (!res.ok) {
+      throw new Error(`TTS fetch failed: ${res.status}`)
+    }
+    
+    // ✅ NEW: Handle raw audio response
+    const contentType = res.headers.get('content-type')
+    
+    if (contentType?.includes('audio/wav')) {
+      // Raw audio response - create blob directly
+      const audioBlob = await res.blob()
+      const url = URL.createObjectURL(audioBlob)
+      const audio = new Audio(url)
+      
+      // Clean up the current audio if playing
+      if (currentAudio) {
+        currentAudio.pause()
+        URL.revokeObjectURL(currentAudio.src)
+      }
+      
+      setCurrentAudio(audio)
+      
+      await audio.play()
+      
+      // Clean up URL after playing
+      audio.onended = () => {
+        URL.revokeObjectURL(url)
+        setCurrentAudio(null)
+      }
+      
+      console.log('✅ Gemini TTS raw audio played successfully')
+    } else {
+      // JSON response (fallback)
+      const ttsData = await res.json()
+      
+      if (ttsData.success && ttsData.audioData) {
+        // Convert base64 audio data to blob
+        const base64Data = ttsData.audioData.replace('data:audio/wav;base64,', '')
+        const binaryString = atob(base64Data)
+        const bytes = new Uint8Array(binaryString.length)
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i)
+        }
+        const blob = new Blob([bytes], { type: 'audio/wav' })
+        
+        // Play the audio
+        const url = URL.createObjectURL(blob)
+        const audio = new Audio(url)
+        
+        // Clean up the current audio if playing
+        if (currentAudio) {
+          currentAudio.pause()
+          URL.revokeObjectURL(currentAudio.src)
+        }
+        
+        setCurrentAudio(audio)
+        
+        await audio.play()
+        
+        // Clean up URL after playing
+        audio.onended = () => {
+          URL.revokeObjectURL(url)
+          setCurrentAudio(null)
+        }
+        
+        console.log('✅ Gemini TTS JSON audio played successfully')
+      } else {
+        throw new Error('No audio data received from Gemini TTS')
+      }
+    }
+  }
 
   const handleSendToChat = useCallback(() => {
     const fullTranscript = (finalTranscript + currentTranscription).trim()

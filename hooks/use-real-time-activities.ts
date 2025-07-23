@@ -35,31 +35,44 @@ export function useRealTimeActivities() {
   useEffect(() => {
     if (!mounted) return
 
-    const channel = supabase.channel("ai-activity")
+    // Check if supabase is properly initialized
+    if (!supabase || typeof supabase.channel !== 'function') {
+      console.warn('Supabase client not properly initialized, skipping real-time subscription')
+      return
+    }
 
-    channel
-      .on("broadcast", { event: "activity-update" }, ({ payload }) => {
-        const activity = payload as ActivityItem
-        setActivities((prev) => {
-          // Check if activity already exists (update) or is new
-          const existingIndex = prev.findIndex((a) => a.id === activity.id)
-          if (existingIndex >= 0) {
-            // Update existing
-            const updated = [...prev]
-            updated[existingIndex] = activity
-            return updated
-          } else {
-            // Add new
-            return [activity, ...prev.slice(0, 49)]
-          }
+    try {
+      const channel = supabase.channel("ai-activity")
+
+      channel
+        .on("broadcast", { event: "activity-update" }, ({ payload }) => {
+          const activity = payload as ActivityItem
+          setActivities((prev) => {
+            // Check if activity already exists (update) or is new
+            const existingIndex = prev.findIndex((a) => a.id === activity.id)
+            if (existingIndex >= 0) {
+              // Update existing
+              const updated = [...prev]
+              updated[existingIndex] = activity
+              return updated
+            } else {
+              // Add new
+              return [activity, ...prev.slice(0, 49)]
+            }
+          })
         })
-      })
-      .subscribe((status) => {
-        setIsConnected(status === "SUBSCRIBED")
-      })
+        .subscribe((status) => {
+          setIsConnected(status === "SUBSCRIBED")
+        })
 
-    return () => {
-      supabase.removeChannel(channel)
+      return () => {
+        if (supabase && typeof supabase.removeChannel === 'function') {
+          supabase.removeChannel(channel)
+        }
+      }
+    } catch (error) {
+      console.error('Error setting up Supabase real-time subscription:', error)
+      setIsConnected(false)
     }
   }, [mounted])
 

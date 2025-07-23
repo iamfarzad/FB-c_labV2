@@ -115,114 +115,166 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
   voiceStyle = "neutral",
   autoPlay = true
 }) => {
+  const [voiceState, setVoiceState] = useState<VoiceState>("idle")
   const { addActivity } = useChatContext()
   const { toast } = useToast()
-  const [voiceState, setVoiceState] = useState<VoiceState>("idle")
-  const synthRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // Simple TTS using browser's Speech Synthesis API
-  const generateAndPlayTTS = useCallback(async () => {
-    if (!('speechSynthesis' in window)) {
-      setVoiceState("error")
-      toast({
-        title: "Speech Not Supported",
-        description: "Your browser doesn't support text-to-speech.",
-        variant: "destructive"
+  // ✅ NEW: Gemini TTS function
+  const playGeminiTTS = async (text: string) => {
+    console.log('🎤 Playing Gemini TTS:', { textLength: text.length })
+    
+    const res = await fetch('/api/gemini-live', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: text,
+        enableTTS: true,
+        voiceName: 'Puck',
+        streamAudio: false
       })
-      return
+    })
+    
+    if (!res.ok) {
+      throw new Error(`TTS fetch failed: ${res.status}`)
     }
-
-    setVoiceState("generating")
-
-    try {
-      // Stop any existing speech
-      speechSynthesis.cancel()
-
-      const utterance = new SpeechSynthesisUtterance(textContent)
+    
+    // ✅ NEW: Handle raw audio response
+    const contentType = res.headers.get('content-type')
+    
+    if (contentType?.includes('audio/wav')) {
+      // Raw audio response - create blob directly
+      const audioBlob = await res.blob()
+      const url = URL.createObjectURL(audioBlob)
+      const audio = new Audio(url)
+      audioRef.current = audio
       
-      // Wait for voices to load if they haven't already
-      const getVoices = () => {
-        return new Promise<SpeechSynthesisVoice[]>((resolve) => {
-          const voices = speechSynthesis.getVoices()
-          if (voices.length > 0) {
-            resolve(voices)
-          } else {
-            speechSynthesis.addEventListener('voiceschanged', () => {
-              resolve(speechSynthesis.getVoices())
-            }, { once: true })
-          }
-        })
-      }
-
-      const voices = await getVoices()
-      
-      // Select voice based on style
-      let selectedVoice = voices.find(v => v.default) || voices[0]
-      
-      if (voiceStyle === "neutral") {
-        selectedVoice = voices.find(v => 
-          v.name.toLowerCase().includes('samantha') || 
-          v.name.toLowerCase().includes('karen') ||
-          v.name.toLowerCase().includes('daniel')
-        ) || selectedVoice
-      }
-      
-      utterance.voice = selectedVoice
-      utterance.rate = 0.9
-      utterance.pitch = 1
-      utterance.volume = 0.8
-
-      utterance.onstart = () => {
+      // Set up audio event handlers
+      audio.onplay = () => {
         setVoiceState("speaking")
         addActivity({
           type: "voice_response",
           title: "AI Speaking",
-          description: "Converting text to speech",
+          description: "Playing Gemini TTS audio",
           status: "in_progress"
         })
       }
       
-      utterance.onend = () => {
+      audio.onended = () => {
         setVoiceState("idle")
         addActivity({
           type: "voice_response",
           title: "Speech Complete",
-          description: "Finished speaking response",
+          description: "Finished playing Gemini TTS",
           status: "completed"
         })
+        URL.revokeObjectURL(url)
+        audioRef.current = null
       }
       
-      utterance.onerror = (error) => {
+      audio.onerror = (error) => {
         setVoiceState("error")
-        console.error('TTS Error:', error)
+        console.error('Gemini TTS Error:', error)
         toast({
           title: "Speech Error",
-          description: "Failed to generate speech. Please try again.",
+          description: "Failed to play Gemini TTS audio. Please try again.",
           variant: "destructive"
         })
+        URL.revokeObjectURL(url)
+        audioRef.current = null
       }
       
-      synthRef.current = utterance
-      speechSynthesis.speak(utterance)
+      await audio.play()
+      console.log('✅ Gemini TTS raw audio played successfully')
+    } else {
+      // JSON response (fallback)
+      const ttsData = await res.json()
+      
+      if (ttsData.success && ttsData.audioData) {
+        // Convert base64 audio data to blob
+        const base64Data = ttsData.audioData.replace('data:audio/wav;base64,', '')
+        const binaryString = atob(base64Data)
+        const bytes = new Uint8Array(binaryString.length)
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i)
+        }
+        const blob = new Blob([bytes], { type: 'audio/wav' })
+        
+        // Play the audio
+        const url = URL.createObjectURL(blob)
+        const audio = new Audio(url)
+        audioRef.current = audio
+        
+        // Set up audio event handlers
+        audio.onplay = () => {
+          setVoiceState("speaking")
+          addActivity({
+            type: "voice_response",
+            title: "AI Speaking",
+            description: "Playing Gemini TTS audio",
+            status: "in_progress"
+          })
+        }
+        
+        audio.onended = () => {
+          setVoiceState("idle")
+          addActivity({
+            type: "voice_response",
+            title: "Speech Complete",
+            description: "Finished playing Gemini TTS",
+            status: "completed"
+          })
+          URL.revokeObjectURL(url)
+          audioRef.current = null
+        }
+        
+        audio.onerror = (error) => {
+          setVoiceState("error")
+          console.error('Gemini TTS Error:', error)
+          toast({
+            title: "Speech Error",
+            description: "Failed to play Gemini TTS audio. Please try again.",
+            variant: "destructive"
+          })
+          URL.revokeObjectURL(url)
+          audioRef.current = null
+        }
+        
+        await audio.play()
+        console.log('✅ Gemini TTS JSON audio played successfully')
+      } else {
+        throw new Error('No audio data received from Gemini TTS')
+      }
+    }
+  }
+
+  // Generate and play TTS using Gemini
+  const generateAndPlayTTS = useCallback(async () => {
+    if (!textContent.trim()) return
+    
+    try {
+      setVoiceState("generating")
+      
+      await playGeminiTTS(textContent)
       
     } catch (error) {
       setVoiceState("error")
-      console.error('TTS generation failed:', error)
+      console.error('Gemini TTS generation failed:', error)
       toast({
         title: "Speech Error",
-        description: "Failed to generate speech. Please try again.",
+        description: "Failed to generate Gemini TTS. Please try again.",
         variant: "destructive"
       })
     }
-  }, [textContent, voiceStyle, addActivity, toast])
+  }, [textContent, addActivity, toast])
 
   // Handle orb click - play/pause toggle
   const handleOrbClick = useCallback(() => {
-    if (voiceState === "speaking") {
-      speechSynthesis.pause()
+    if (voiceState === "speaking" && audioRef.current) {
+      audioRef.current.pause()
       setVoiceState("paused")
-    } else if (voiceState === "paused") {
-      speechSynthesis.resume()
+    } else if (voiceState === "paused" && audioRef.current) {
+      audioRef.current.play()
       setVoiceState("speaking")
     } else {
       generateAndPlayTTS()
@@ -231,7 +283,10 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
 
   // Handle close
   const handleClose = useCallback(() => {
-    speechSynthesis.cancel()
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
     setVoiceState("idle")
     onClose()
   }, [onClose])
@@ -249,7 +304,10 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      speechSynthesis.cancel()
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
     }
   }, [])
 
