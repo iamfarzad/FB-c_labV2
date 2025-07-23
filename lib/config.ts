@@ -12,6 +12,13 @@ export const config = {
     gemini: {
       apiKey: process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY,
       model: "gemini-2.5-flash",
+      // Model variants for different use cases
+      models: {
+        default: "gemini-2.5-flash",          // Current cost-effective model
+        fastResponse: "gemini-2.5-flash-lite", // For latency-sensitive operations
+        analysis: "gemini-1.5-flash",         // For image analysis
+        research: "gemini-2.5-flash",         // For deep research tasks
+      }
     },
     openai: {
       apiKey: process.env.OPENAI_API_KEY,
