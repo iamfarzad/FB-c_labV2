@@ -428,12 +428,15 @@ async function chatHandler(req: NextRequest) {
       });
     }
 
-    // Authentication check (bypass in development)
+    // Authentication check (bypass in development or demo mode)
     let auth: { success: boolean; userId?: string; error?: string };
     
     if (process.env.NODE_ENV === 'development') {
       auth = { success: true, userId: 'dev-user', error: undefined };
       logConsoleActivity('info', 'Development mode - authentication bypassed', { ip, correlationId });
+    } else if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+      auth = { success: true, userId: 'demo' };
+      logConsoleActivity('info', 'Demo mode – authentication bypassed', { ip, correlationId });
     } else {
       auth = await authenticateRequest(req);
       if (!auth.success) {

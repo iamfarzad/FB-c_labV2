@@ -30,9 +30,9 @@ async function generateText(options: {
       ];
 
       if (videoUrl) {
-        const videoPart = { inlineData: { data: await fetchVideoBase64(videoUrl), mimeType: 'video/mp4' } };
+        const videoData = await fetchVideoBase64(videoUrl);
         contents = [
-          { role: "user", parts: [{ text: prompt }, videoPart] },
+          { role: "user", parts: [{ text: prompt }, { inlineData: { data: videoData, mimeType: 'video/mp4' } }] },
         ];
       }
 
@@ -42,7 +42,7 @@ async function generateText(options: {
         contents,
       });
 
-      return "Spec generated successfully"; // Placeholder since response structure is different
+      return result.candidates?.[0]?.content?.parts?.[0]?.text || 'Spec generation failed';
     } else {
       // This is a code generation request
       const result = await genAI.models.generateContent({
@@ -51,7 +51,7 @@ async function generateText(options: {
         contents: [{ role: "user", parts: [{ text: prompt }] }],
       });
 
-      return "Code generated successfully"; // Placeholder since response structure is different
+      return result.candidates?.[0]?.content?.parts?.[0]?.text || 'Code generation failed';
     }
   } catch (error) {
     console.error("Gemini API error:", error)

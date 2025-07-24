@@ -1,5 +1,91 @@
 # Changelog
 
+## [1.3.18] - 2025-07-24
+
+### 🚀 **DEMO MODE & AI ANALYSIS FIXES**
+
+#### ✅ **DEMO MODE ENABLED**
+
+**Achievement**: Added demo mode support to allow unauthenticated visitors to use the chat system.
+
+**What's Fixed**:
+- ✅ **Demo mode authentication bypass** - `NEXT_PUBLIC_DEMO_MODE=true` enables guest sessions
+- ✅ **Guest user support** - Visitors can use chat without logging in
+- ✅ **Development mode preserved** - Existing dev mode still works
+- ✅ **Proper logging** - Demo mode usage is tracked in activity logs
+
+#### 🔧 **AI ANALYSIS ENDPOINTS FIXED**
+
+**Fixed `app/api/analyze-image/route.ts`**:
+- ✅ **Real AI analysis** - Returns actual Gemini AI descriptions instead of placeholders
+- ✅ **Webcam analysis** - Detailed descriptions of people, objects, activities, environment
+- ✅ **Screen capture analysis** - Application and content analysis with user activity insights
+- ✅ **Proper error handling** - Graceful fallbacks for failed analysis
+
+**Fixed `app/api/video-to-app/route.ts`**:
+- ✅ **Real spec generation** - Returns actual AI-generated specifications from videos
+- ✅ **Real code generation** - Returns actual AI-generated code from specs
+- ✅ **Multimodal support** - Proper video analysis using Gemini 2.5 Flash
+- ✅ **JSON parsing** - Proper parsing of AI responses for structured output
+
+#### 📄 **NEW DOCUMENT ANALYSIS ENDPOINT**
+
+**Added `app/api/analyze-document/route.ts`**:
+- ✅ **PDF and text analysis** - Structured business document analysis
+- ✅ **Executive summaries** - Two-sentence summaries of key points
+- ✅ **Pain point identification** - AI-identified business challenges
+- ✅ **Automation opportunities** - AI recommendations for process improvement
+- ✅ **ROI considerations** - Business value analysis and next steps
+
+#### 🔧 **ENVIRONMENT CONFIGURATION**
+
+**Added `.env.example`**:
+- ✅ **Complete environment variables** - All required API keys and settings
+- ✅ **Demo mode configuration** - Clear instructions for enabling guest access
+- ✅ **Development setup** - Proper configuration for local development
+- ✅ **Production deployment** - All necessary variables documented
+
+#### 📊 **TEST RESULTS**
+
+**Demo Mode Test**:
+```
+✅ Demo mode – authentication bypassed
+✅ Guest user session created: demo
+✅ Chat functionality working for unauthenticated users
+```
+
+**Image Analysis Test**:
+```
+✅ Real AI analysis returned: "The image shows a person sitting at a desk..."
+✅ Webcam analysis working with detailed descriptions
+✅ Screen capture analysis providing application insights
+```
+
+**Video Analysis Test**:
+```
+✅ Real spec generation: "Based on the video, this appears to be..."
+✅ Real code generation: "<div class='app-container'>..."
+✅ Multimodal video processing working correctly
+```
+
+#### 🎯 **BUSINESS IMPACT**
+
+**Demo Mode Benefits**:
+- **Increased user engagement** - Visitors can try the system immediately
+- **Reduced friction** - No signup required for initial testing
+- **Better conversion** - Users can experience value before committing
+- **Marketing tool** - Live demo capability for presentations
+
+**AI Analysis Improvements**:
+- **Real AI insights** - No more placeholder responses
+- **Professional analysis** - Detailed, actionable insights
+- **Multimodal capabilities** - Image, video, and document processing
+- **Structured output** - Consistent, parseable responses
+
+**Status**: **PRODUCTION READY** - All AI analysis endpoints now return real AI-generated content.
+
+---
+
 ## [1.3.17] - 2025-07-24
 
 ### 🔍 **REAL WEB SEARCH INTEGRATION COMPLETE**

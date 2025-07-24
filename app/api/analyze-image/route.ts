@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       ],
     })
 
-    const analysis = "Image analysis completed" // Placeholder since response structure is different
+    const analysis = result.candidates?.[0]?.content?.parts?.[0]?.text || 'No analysis available'
 
     return NextResponse.json({ analysis })
   } catch (error) {
