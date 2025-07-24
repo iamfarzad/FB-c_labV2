@@ -8,6 +8,10 @@ ALTER TABLE lead_search_results DISABLE ROW LEVEL SECURITY;
 -- 2. Drop ALL existing policies to ensure clean slate
 DROP POLICY IF EXISTS "users manage own leads" ON lead_summaries;
 DROP POLICY IF EXISTS "service_role full access" ON lead_summaries;
+DROP POLICY IF EXISTS "Allow public read access" ON lead_summaries;
+DROP POLICY IF EXISTS "Allow authenticated insert" ON lead_summaries;
+DROP POLICY IF EXISTS "Allow user update" ON lead_summaries;
+DROP POLICY IF EXISTS "Allow service_role access" ON lead_summaries;
 DROP POLICY IF EXISTS "users read own lead search results" ON lead_search_results;
 DROP POLICY IF EXISTS "users insert own lead search results" ON lead_search_results;
 DROP POLICY IF EXISTS "service_role full access" ON lead_search_results;

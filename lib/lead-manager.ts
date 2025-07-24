@@ -1,6 +1,6 @@
 import { getSupabase } from '@/lib/supabase/server'
 import { EmailService } from '@/lib/email-service'
-import { logActivity } from '@/lib/activity-logger'
+import { logServerActivity } from '@/lib/server-activity-logger'
 
 export interface LeadData {
   id?: string
@@ -552,7 +552,7 @@ F.B/c AI Strategy`
       email.sent = true
       email.sentDate = new Date()
       
-      await logActivity({
+      await logServerActivity({
         type: 'email_sent',
         title: 'Follow-up Email Sent',
         description: `Sent ${email.subject} to ${lead.name}`,

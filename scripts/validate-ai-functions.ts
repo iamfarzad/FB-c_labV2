@@ -299,34 +299,34 @@ class AIFunctionValidator {
     }
   }
 
-  // Test 5: Activity Logger
-  async testActivityLogger(): Promise<TestResult> {
-    console.log('\n📊 Testing Activity Logger...');
+  // Test 5: Real-time Activities System
+  async testRealTimeActivities(): Promise<TestResult> {
+    console.log('\n📊 Testing Real-time Activities System...');
     
     try {
-      // Test if activity-logger can be imported
-      const activityLoggerPath = join(process.cwd(), 'lib', 'activity-logger.ts');
-      const activityLoggerContent = await readFile(activityLoggerPath, 'utf-8');
+      // Test if useRealTimeActivities can be imported
+      const realTimeActivitiesPath = join(process.cwd(), 'hooks', 'use-real-time-activities.ts');
+      const realTimeActivitiesContent = await readFile(realTimeActivitiesPath, 'utf-8');
       
-      const hasSupabaseImport = activityLoggerContent.includes('supabase');
-      const hasChannelLogic = activityLoggerContent.includes('channel');
-      const hasLogMethod = activityLoggerContent.includes('log(');
+      const hasSupabaseImport = realTimeActivitiesContent.includes('supabase');
+      const hasChannelLogic = realTimeActivitiesContent.includes('channel');
+      const hasAddActivityMethod = realTimeActivitiesContent.includes('addActivity');
 
       return {
-        name: 'Activity Logger',
-        passed: hasSupabaseImport && hasChannelLogic && hasLogMethod,
+        name: 'Real-time Activities System',
+        passed: hasSupabaseImport && hasChannelLogic && hasAddActivityMethod,
         details: {
           hasSupabaseImport,
           hasChannelLogic,
-          hasLogMethod,
+          hasAddActivityMethod,
           note: 'Static analysis only. Real-time functionality requires manual testing.'
         },
-        error: (!hasSupabaseImport || !hasChannelLogic || !hasLogMethod) ? 
-               'Activity logger missing required functionality' : undefined
+        error: (!hasSupabaseImport || !hasChannelLogic || !hasAddActivityMethod) ? 
+               'Real-time activities system missing required functionality' : undefined
       };
     } catch (error) {
       return {
-        name: 'Activity Logger',
+        name: 'Real-time Activities System',
         passed: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
@@ -402,7 +402,7 @@ class AIFunctionValidator {
         this.testStreamingResponse(),
         this.testVideoToAppGenerator(),
         this.testTokenUsageLogging(),
-        this.testActivityLogger(),
+        this.testRealTimeActivities(),
         this.testMultimodalInputs(),
       ];
 

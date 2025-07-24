@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai"
 import { getSupabase } from "@/lib/supabase/server"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
-import { logActivity } from '@/lib/activity-logger';
+import { logServerActivity } from '@/lib/server-activity-logger';
 
 interface LeadResearchRequest {
   name: string
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Log research start
-    await logActivity({
+    await logServerActivity({
       type: "search",
       title: "AI Research in Progress",
       description: `Searching for ${name}'s business background`,
@@ -97,7 +97,7 @@ Focus on finding actionable insights for AI consulting opportunities.
           }
 
           // Log research completion
-          await logActivity({
+          await logServerActivity({
             type: "search",
             title: "Lead Research Completed",
             description: `Completed research for ${name}`,
@@ -136,7 +136,7 @@ Focus on finding actionable insights for AI consulting opportunities.
           console.error("Research streaming error:", error)
           
           // Log research error
-          await logActivity({
+          await logServerActivity({
             type: "error",
             title: "Lead Research Failed",
             description: `Research failed for ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -160,7 +160,7 @@ Focus on finding actionable insights for AI consulting opportunities.
     console.error("Lead research error:", error)
     
     // Log research error
-    await logActivity({
+    await logServerActivity({
       type: "error",
       title: "Lead Research Failed",
       description: `Research failed: ${error.message}`,

@@ -1,0 +1,28 @@
+---
+description: "Pre-Deletion Analysis Requirement"
+alwaysApply: true
+globs:
+  - "**/*"
+---
+
+# Pre-Deletion Analysis Requirement
+
+**When deleting or refactoring any file**, Cursor AI must:
+
+1. **Show where each deleted symbol is used**  
+   - Run a dependency scan (e.g. `grep -R 'filename' .`) and list all import sites.
+2. **Map old functionality to new code**  
+   - For every deleted function/class, include a code snippet of its replacement or migration in the new file.
+3. **Include a summary table**  
+   - A 2-column markdown table: Deleted File → Kept/Replaced In.
+4. **Run CI checks**  
+   - Simulate an import/build step to prove no missing-module errors.
+5. **Require sign-off**  
+   - Only allow the deletion if all usages are covered and tests still pass.
+
+**Rejection criteria:**  
+- Any deletion without the above analysis block.  
+- Any missing mapping for a deleted symbol.  
+- Any build-or-import failures after the change.
+
+With this in place, Cursor AI can no longer nuke files without first showing you exactly how it's preserving or replacing their behavior. That should stop the "rules → chaos" cycle.

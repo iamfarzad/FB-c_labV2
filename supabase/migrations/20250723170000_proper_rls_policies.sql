@@ -5,7 +5,16 @@
 ALTER TABLE lead_summaries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lead_search_results ENABLE ROW LEVEL SECURITY;
 
--- 2. Create service role policies (allows service role to bypass RLS)
+-- 2. Drop existing policies first to avoid conflicts
+DROP POLICY IF EXISTS "service_role full access" ON lead_summaries;
+DROP POLICY IF EXISTS "users manage own leads" ON lead_summaries;
+DROP POLICY IF EXISTS "service_role full access" ON lead_search_results;
+DROP POLICY IF EXISTS "users read own lead search results" ON lead_search_results;
+DROP POLICY IF EXISTS "users insert own lead search results" ON lead_search_results;
+DROP POLICY IF EXISTS "users update own lead search results" ON lead_search_results;
+DROP POLICY IF EXISTS "users delete own lead search results" ON lead_search_results;
+
+-- 3. Create service role policies (allows service role to bypass RLS)
 CREATE POLICY "service_role full access" 
   ON lead_summaries FOR ALL 
   USING (auth.role() = 'service_role') 
@@ -16,13 +25,13 @@ CREATE POLICY "service_role full access"
   USING (auth.role() = 'service_role') 
   WITH CHECK (auth.role() = 'service_role');
 
--- 3. Create user policies for lead_summaries
+-- 4. Create user policies for lead_summaries
 CREATE POLICY "users manage own leads"
   ON lead_summaries FOR ALL 
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
--- 4. Create user policies for lead_search_results
+-- 5. Create user policies for lead_search_results
 CREATE POLICY "users read own lead search results" 
   ON lead_search_results FOR SELECT 
   USING (
@@ -45,7 +54,7 @@ CREATE POLICY "users insert own lead search results"
     )
   );
 
--- 5. Create update and delete policies for lead_search_results
+-- 6. Create update and delete policies for lead_search_results
 CREATE POLICY "users update own lead search results"
   ON lead_search_results FOR UPDATE
   USING (
@@ -76,7 +85,7 @@ CREATE POLICY "users delete own lead search results"
     )
   );
 
--- 6. Verify policies are created
+-- 7. Verify policies are created
 SELECT 
   schemaname,
   tablename,
@@ -90,6 +99,6 @@ FROM pg_policies
 WHERE tablename IN ('lead_summaries', 'lead_search_results')
 ORDER BY tablename, policyname;
 
--- 7. Test policy enforcement (optional - run this to verify)
+-- 8. Test policy enforcement (optional - run this to verify)
 -- This should return 0 rows if policies are working correctly
 -- SELECT COUNT(*) FROM lead_summaries WHERE user_id IS NULL; 

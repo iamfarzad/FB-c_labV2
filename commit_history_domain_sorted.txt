@@ -1,3 +1,4 @@
+8f6e18d | 2025-07-23 | Farzad | 🎯 MAJOR: Complete Cursor Rules System & AI Governance Implementation
 068ddfb | 2025-07-08 | v0 | fix: enhance chat and activity side panel
 084afba | 2025-06-20 | Farzad | Merge branch 'refactor/chat-api-and-utils' into integration/full-merge
 0e95457 | 2025-06-16 | google-labs-jules[bot] | refactor: Comment out settings button in chat header

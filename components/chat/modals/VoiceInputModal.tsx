@@ -462,13 +462,8 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
           })
         } catch (ttsError) {
           console.error('Gemini TTS Error:', ttsError)
-          // Fallback to browser TTS if Gemini TTS fails
-          if (onVoiceResponse) {
-            onVoiceResponse({
-              textContent: aiResponse,
-              voiceStyle: 'puck'
-            })
-          }
+          // In live conversation mode, we don't call onVoiceResponse to avoid duplicate TTS calls
+          // The TTS is handled directly by playGeminiTTS above
         }
       }
     } catch (error) {
@@ -496,6 +491,11 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
       })
     })
     
+    if (res.status === 429) {
+      console.warn('🎤 TTS rate limited, skipping duplicate call')
+      return // Gracefully handle rate limiting
+    }
+    
     if (!res.ok) {
       throw new Error(`TTS fetch failed: ${res.status}`)
     }
@@ -517,13 +517,42 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
       
       setCurrentAudio(audio)
       
-      await audio.play()
+      // Add event listeners for debugging
+      audio.addEventListener('loadeddata', () => {
+        console.log('🔊 Audio loaded successfully, duration:', audio.duration)
+      })
+      
+      audio.addEventListener('play', () => {
+        console.log('🔊 Audio playback started')
+      })
+      
+      audio.addEventListener('error', (e) => {
+        console.error('🔊 Audio playback error:', e)
+      })
+      
+      try {
+        await audio.play()
+        console.log('✅ Gemini TTS raw audio play() called successfully')
+      } catch (playError) {
+        console.error('❌ Audio play() failed:', playError)
+        // Try to show a toast to the user
+        toast({
+          title: "Audio Playback Issue",
+          description: "Click anywhere in the window to enable audio playback",
+          variant: "destructive"
+        })
+      }
       
       // Clean up URL after playing
       audio.onended = () => {
+        console.log('🔊 Audio playback ended')
         URL.revokeObjectURL(url)
         setCurrentAudio(null)
       }
+      
+      // Ensure volume is set
+      audio.volume = 1.0
+      console.log('🔊 Audio volume set to:', audio.volume)
       
       console.log('✅ Gemini TTS raw audio played successfully')
     } else {

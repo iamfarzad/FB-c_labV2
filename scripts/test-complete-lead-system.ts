@@ -2,7 +2,7 @@
 
 import { ConversationStateManager } from '../lib/conversation-state-manager';
 import { LeadManager } from '../lib/lead-manager';
-import { logActivity } from '../lib/activity-logger';
+import { logServerActivity } from '../lib/server-activity-logger';
 
 async function testCompleteLeadGenerationSystem() {
   console.log('🚀 Testing Complete Lead Generation System\n');

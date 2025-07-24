@@ -6,36 +6,64 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
+// Check if we're in a browser environment and have the required variables
+const isClient = typeof window !== 'undefined'
+const hasRequiredVars = supabaseUrl && supabaseAnonKey
+
+if (!hasRequiredVars) {
   console.error('Missing required Supabase environment variables:', {
     url: !!supabaseUrl,
-    anonKey: !!supabaseAnonKey
+    anonKey: !!supabaseAnonKey,
+    isClient
   })
 }
 
-// Improved Supabase Client Setup with TypeScript types and error handling
-export const supabase = createClient<Database>(
-  supabaseUrl || '', 
-  supabaseAnonKey || '',
-  {
+// Create a safe Supabase client that handles missing environment variables
+function createSafeSupabaseClient() {
+  if (!hasRequiredVars) {
+    // Return a mock client for development/testing
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Using mock Supabase client due to missing environment variables')
+      return {
+        auth: {
+          getUser: async () => ({ data: { user: null }, error: null }),
+          signIn: async () => ({ data: { user: null }, error: null }),
+          signOut: async () => ({ error: null }),
+        },
+        channel: () => ({
+          on: () => ({ subscribe: () => {} }),
+          subscribe: () => {},
+        }),
+        removeChannel: () => {},
+        from: () => ({
+          select: () => ({ eq: () => ({ single: () => ({ data: null, error: null }) }) }),
+          insert: () => ({ select: () => ({ single: () => ({ data: null, error: null }) }) }),
+        }),
+      } as any
+    }
+    throw new Error('Supabase environment variables are required')
+  }
+
+  return createClient<Database>(supabaseUrl!, supabaseAnonKey!, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
     }
-  }
-)
+  })
+}
+
+// Improved Supabase Client Setup with TypeScript types and error handling
+export const supabase = createSafeSupabaseClient()
 
 // Service Role Client for API operations (bypasses RLS)
-export const supabaseService = createClient<Database>(
-  supabaseUrl || '',
-  supabaseServiceKey || '',
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
+export const supabaseService = hasRequiredVars && supabaseServiceKey 
+  ? createClient<Database>(supabaseUrl!, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+  : supabase // Fallback to regular client if service key is missing
 
 // Type-safe Lead Creation Function
 export async function createLeadSummary(

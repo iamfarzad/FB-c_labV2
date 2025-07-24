@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   Database,
   Zap,
+  CheckCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ActivityItem } from "@/app/chat/types/chat"
@@ -48,8 +49,11 @@ export function ActivityIcon({ type, className }: ActivityIconProps) {
       case "search":
         return <Search className={cn("text-red-500", className)} />
       case "link":
+      case "web_scrape":
         return <Link className={cn("text-cyan-500", className)} />
       case "ai_thinking":
+      case "analyze":
+      case "generate":
         return <Brain className={cn("text-violet-500", className)} />
       case "vision_analysis":
         return <Eye className={cn("text-teal-500", className)} />
@@ -57,6 +61,8 @@ export function ActivityIcon({ type, className }: ActivityIconProps) {
         return <AlertTriangle className={cn("text-red-600", className)} />
       case "database":
         return <Database className={cn("text-gray-500", className)} />
+      case "complete":
+        return <CheckCircle className={cn("text-green-600", className)} />
       default:
         return <Zap className={cn("text-gray-400", className)} />
     }

@@ -20,7 +20,10 @@ CREATE INDEX IF NOT EXISTS idx_lead_search_results_created_at ON lead_search_res
 -- Enable RLS
 ALTER TABLE lead_search_results ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
+-- RLS Policies - Drop existing policies first to avoid conflicts
+DROP POLICY IF EXISTS "service_role full access" ON lead_search_results;
+DROP POLICY IF EXISTS "auth read own" ON lead_search_results;
+
 -- Allow service_role to insert/read/update/delete
 CREATE POLICY "service_role full access" 
   ON lead_search_results FOR ALL 
@@ -50,7 +53,7 @@ BEGIN
     END IF;
 END $$;
 
--- Create trigger for updated_at
+-- Create trigger for updated_at - Drop existing trigger first
 DROP TRIGGER IF EXISTS update_lead_search_results_updated_at ON lead_search_results;
 CREATE TRIGGER update_lead_search_results_updated_at
     BEFORE UPDATE ON lead_search_results

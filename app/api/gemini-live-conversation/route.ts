@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 import { supabaseService } from "@/lib/supabase/client"
-import { logActivity } from "@/lib/activity-logger"
+import { logServerActivity } from "@/lib/server-activity-logger"
 
 export const dynamic = "force-dynamic"
 
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       activeSessions.set(currentSessionId, session)
 
       // Log session start
-      await logActivity({
+      await logServerActivity({
         type: 'conversation_started',
         title: 'Live Conversation Started',
         description: `Started live conversation with ${leadContext?.leadName || 'user'}`,
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
         activeSessions.delete(currentSessionId)
         
         // Log session end
-        await logActivity({
+        await logServerActivity({
           type: 'conversation_ended',
           title: 'Live Conversation Ended',
           description: `Ended live conversation after ${session.messageCount} messages`,
@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
     const responseText = `Thank you for your message: "${message}". I'm here to help with your business needs. How can I assist you today?`
 
     // Log message activity
-    await logActivity({
+    await logServerActivity({
       type: 'chat_message',
       title: 'Live Chat Message',
       description: `Live conversation message: ${message.substring(0, 100)}...`,

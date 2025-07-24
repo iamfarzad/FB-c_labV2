@@ -135,6 +135,11 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
       })
     })
     
+    if (res.status === 429) {
+      console.warn('🎤 TTS rate limited, skipping duplicate call')
+      return // Gracefully handle rate limiting
+    }
+    
     if (!res.ok) {
       throw new Error(`TTS fetch failed: ${res.status}`)
     }

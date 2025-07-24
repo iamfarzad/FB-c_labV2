@@ -1,5 +1,5 @@
 import { LeadManager, ConversationStage, LeadData } from './lead-manager'
-import { logActivity } from './activity-logger'
+import { logServerActivity } from './server-activity-logger'
 
 export interface ConversationState {
   leadId: string
@@ -70,7 +70,7 @@ export class ConversationStateManager {
 
     this.states.set(sessionId, state)
     
-    await logActivity({
+    await logServerActivity({
       type: 'conversation_started',
       title: 'New Conversation Started',
       description: `Initialized conversation session ${sessionId}`,
@@ -153,7 +153,7 @@ export class ConversationStateManager {
     await this.updateConversationContext(state, userMessage, stageResult)
 
     // Log stage transition
-    await logActivity({
+    await logServerActivity({
       type: 'stage_transition',
       title: 'Conversation Stage Advanced',
       description: `Advanced from ${previousStage} to ${stageResult.nextStage}`,
@@ -242,7 +242,7 @@ export class ConversationStateManager {
       state.context.aiReadiness = Math.max(state.context.aiReadiness, industryScore)
     }
 
-    await logActivity({
+    await logServerActivity({
       type: 'research_integrated',
       title: 'Research Data Integrated',
       description: 'Company research data integrated into conversation context',
@@ -315,7 +315,7 @@ export class ConversationStateManager {
     const nextSteps = this.determineNextSteps(state, leadData)
 
     // Log conversation completion
-    await logActivity({
+    await logServerActivity({
       type: 'conversation_completed',
       title: 'Conversation Completed',
       description: `Completed conversation with ${leadData.name}`,

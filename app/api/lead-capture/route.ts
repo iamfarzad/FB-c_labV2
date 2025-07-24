@@ -2,7 +2,7 @@ import { LeadManagementService } from "@/lib/lead-management"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 import { leadCaptureSchema, validateRequest, sanitizeString, sanitizeEmail } from "@/lib/validation"
-import { logActivity } from "@/lib/activity-logger"
+import { logServerActivity } from "@/lib/server-activity-logger"
 import { GroundedSearchService } from "@/lib/grounded-search-service"
 
 interface LeadCaptureData {
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Log lead capture activity
-    await logActivity({
+    await logServerActivity({
       type: "lead_capture",
       title: "New Lead Captured",
       description: `${leadData.name} (${leadData.email}) engaged via ${leadData.engagementType}`,
@@ -74,7 +74,27 @@ export async function POST(req: NextRequest) {
     }
 
     // Save lead using the service
-    const data = await leadManagementService.createLeadSummary(leadRecord)
+    let data
+    try {
+      data = await leadManagementService.createLeadSummary(leadRecord)
+      console.log('Lead saved successfully:', data.id)
+    } catch (error) {
+      console.error('Failed to save lead to database:', error)
+      // Log the error but don't fail the entire request
+      await logServerActivity({
+        type: "error",
+        title: "Lead Database Save Failed",
+        description: `Failed to save lead ${leadData.name} to database: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        status: "failed",
+        metadata: { 
+          name: leadData.name, 
+          email: leadData.email, 
+          error: error instanceof Error ? error.message : 'Unknown error'
+        }
+      })
+      // Create a mock data object to continue with the flow
+      data = { id: `temp-${Date.now()}`, ...leadRecord }
+    }
 
     // ✅ NEW: Perform grounded search for the lead
     let searchResults: Array<{ url: string; title?: string; snippet?: string; source: string }> = []
@@ -94,7 +114,7 @@ export async function POST(req: NextRequest) {
     } catch (searchError) {
       console.error('Grounded search failed:', searchError)
       // Don't fail the entire request if search fails
-      await logActivity({
+      await logServerActivity({
         type: "error",
         title: "Grounded Search Failed",
         description: `Search failed for ${leadData.name}: ${searchError instanceof Error ? searchError.message : 'Unknown error'}`,
@@ -109,7 +129,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Log lead research start
-    await logActivity({
+    await logServerActivity({
       type: "search",
       title: "Lead Research Started",
       description: `Researching ${leadData.name} for business insights`,

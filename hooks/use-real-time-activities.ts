@@ -26,9 +26,45 @@ export function useRealTimeActivities() {
     setActivities([])
   }, [])
 
-  // Track mount state for hydration safety
+  // Track mount state for hydration safety and load existing activities
   useEffect(() => {
     setMounted(true)
+    
+    // Load existing activities from the database
+    const loadExistingActivities = async () => {
+      try {
+        if (!supabase) return
+        
+        const { data, error } = await supabase
+          .from('activities')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50)
+        
+        if (error) {
+          console.error('Failed to load existing activities:', error)
+          return
+        }
+        
+        if (data) {
+          const formattedActivities = data.map((item: any) => ({
+            id: item.id,
+            type: item.type,
+            title: item.title,
+            description: item.description,
+            status: item.status,
+            timestamp: new Date(item.created_at).getTime(),
+            metadata: item.metadata || {}
+          })) as ActivityItem[]
+          
+          setActivities(formattedActivities)
+        }
+      } catch (error) {
+        console.error('Error loading existing activities:', error)
+      }
+    }
+    
+    loadExistingActivities()
   }, [])
 
   // Listen for real-time activities from Supabase
@@ -38,30 +74,82 @@ export function useRealTimeActivities() {
     // Check if supabase is properly initialized
     if (!supabase || typeof supabase.channel !== 'function') {
       console.warn('Supabase client not properly initialized, skipping real-time subscription')
+      setIsConnected(false)
+      return
+    }
+
+    // Check if we have valid environment variables
+    const hasValidConfig = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!hasValidConfig) {
+      console.warn('Missing Supabase configuration, skipping real-time subscription')
+      setIsConnected(false)
       return
     }
 
     try {
-      const channel = supabase.channel("ai-activity")
-
-      channel
-        .on("broadcast", { event: "activity-update" }, ({ payload }) => {
-          const activity = payload as ActivityItem
-          setActivities((prev) => {
-            // Check if activity already exists (update) or is new
-            const existingIndex = prev.findIndex((a) => a.id === activity.id)
-            if (existingIndex >= 0) {
-              // Update existing
-              const updated = [...prev]
-              updated[existingIndex] = activity
-              return updated
-            } else {
-              // Add new
-              return [activity, ...prev.slice(0, 49)]
-            }
-          })
-        })
-        .subscribe((status) => {
+      // Subscribe to the activities table for real-time updates
+      const channel = supabase
+        .channel('activities-realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'activities'
+          },
+          (payload: any) => {
+            console.log('Received real-time activity:', payload)
+            const activity = {
+              id: payload.new.id,
+              type: payload.new.type,
+              title: payload.new.title,
+              description: payload.new.description,
+              status: payload.new.status,
+              timestamp: new Date(payload.new.created_at).getTime(),
+              metadata: payload.new.metadata || {}
+            } as ActivityItem
+            
+            setActivities((prev) => {
+              // Check if activity already exists (update) or is new
+              const existingIndex = prev.findIndex((a) => a.id === activity.id)
+              if (existingIndex >= 0) {
+                // Update existing
+                const updated = [...prev]
+                updated[existingIndex] = activity
+                return updated
+              } else {
+                // Add new
+                return [activity, ...prev.slice(0, 49)]
+              }
+            })
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'activities'
+          },
+          (payload: any) => {
+            console.log('Activity updated:', payload)
+            const activity = {
+              id: payload.new.id,
+              type: payload.new.type,
+              title: payload.new.title,
+              description: payload.new.description,
+              status: payload.new.status,
+              timestamp: new Date(payload.new.created_at).getTime(),
+              metadata: payload.new.metadata || {}
+            } as ActivityItem
+            
+            setActivities((prev) => 
+              prev.map((a) => (a.id === activity.id ? activity : a))
+            )
+          }
+        )
+        .subscribe((status: any) => {
+          console.log('Real-time subscription status:', status)
           setIsConnected(status === "SUBSCRIBED")
         })
 

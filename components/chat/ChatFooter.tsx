@@ -4,10 +4,11 @@ import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Send, Camera, Monitor, Mic, Paperclip, Youtube, MoreHorizontal, Radio } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Send, Camera, Mic, Paperclip } from "lucide-react"
 import { useToast } from '@/hooks/use-toast'
 import { useAutoResizeTextarea } from "@/hooks/ui/use-auto-resize-textarea"
+import { motion, AnimatePresence } from "framer-motion"
+import { cn } from "@/lib/utils"
 
 interface ChatFooterProps {
   input: string
@@ -46,6 +47,8 @@ export function ChatFooter({
   const { toast } = useToast()
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
+  const [showAttachMenu, setShowAttachMenu] = useState(false)
+  const attachRef = useRef<HTMLDivElement>(null)
   
   // Auto-resize textarea
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
@@ -66,62 +69,112 @@ export function ChatFooter({
     return () => window.removeEventListener("resize", checkDevice)
   }, [])
 
+  // Close menus on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (attachRef.current && !attachRef.current.contains(e.target as Node)) {
+        setShowAttachMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
-
-    setIsUploading(true)
-    try {
-      // Simulate progress (or use real if API supports)
-      const interval = setInterval(() => setUploadProgress(p => Math.min(p + 10, 100)), 200)
-    if (file.type.startsWith("image/")) {
-      const reader = new FileReader()
-      reader.onload = (loadEvent) => {
-        if (loadEvent.target?.result) {
-          onImageUpload(loadEvent.target.result as string, file.name)
-        }
-      }
-      reader.readAsDataURL(file)
-    } else {
-      onFileUpload(file)
-    }
-      clearInterval(interval)
-      setUploadProgress(100)
-      toast({ title: 'Upload successful', description: file.name })
-    } catch (e: any) {
-      toast({ title: 'Upload failed', description: e.message, variant: 'destructive' })
-    } finally {
-      setIsUploading(false)
+    if (file) {
+      setIsUploading(true)
       setUploadProgress(0)
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      
+      // Simulate upload progress
+      const interval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval)
+            setIsUploading(false)
+            onFileUpload(file)
+            return 100
+          }
+          return prev + 10
+        })
+      }, 100)
     }
   }
 
   const actions = [
     { id: "voice", icon: Mic, action: () => setShowVoiceModal(true), title: "Voice Input" },
     { id: "camera", icon: Camera, action: () => setShowWebcamModal(true), title: "Webcam Capture" },
-    { id: "screen", icon: Monitor, action: () => setShowScreenShareModal(true), title: "Screen Share" },
     { id: "upload", icon: Paperclip, action: () => fileInputRef.current?.click(), title: "Upload File" },
-    { id: "video2app", icon: Youtube, action: () => setShowVideo2AppModal(true), title: "Video to App" },
   ]
 
   return (
-    <div className="w-full border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" data-testid="chat-footer">
-      <div className="max-w-4xl mx-auto">
-        <form onSubmit={handleSubmit} className="relative">
-          <div className="flex items-end gap-2">
-            {/* Main input area */}
-            <div className="flex-1 relative">
+    <motion.div
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 100, damping: 20 }}
+      className="w-full border-t border-border/20 bg-background/60 backdrop-blur-xl glass-header shadow-lg shadow-black/5" 
+      data-testid="chat-footer"
+    >
+      <div className="max-w-4xl mx-auto p-4">
+        <form onSubmit={handleSubmit} className="flex items-end gap-3">
+          {/* Attachment Menu */}
+          <div className="relative" ref={attachRef}>
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.05, rotate: 5 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400 }}
+              onClick={() => setShowAttachMenu(!showAttachMenu)}
+              className="p-2 rounded-full hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md"
+            >
+              <Paperclip size={20} />
+            </motion.button>
+            
+            <AnimatePresence>
+              {showAttachMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  className="absolute bottom-full left-0 mb-2 w-48 bg-card/90 backdrop-blur-xl border border-border/30 rounded-xl shadow-xl overflow-hidden"
+                >
+                  {actions.map((action) => (
+                    <motion.button
+                      key={action.id}
+                      type="button"
+                      whileHover={{ backgroundColor: "rgba(var(--accent), 0.1)" }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full text-left px-4 py-3 hover:bg-accent/10 flex items-center gap-3 transition-colors"
+                      onClick={() => {
+                        setShowAttachMenu(false)
+                        action.action()
+                      }}
+                    >
+                      <action.icon size={16} className="text-accent" />
+                      {action.title}
+                    </motion.button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Input field with modern design */}
+          <div className="flex-1 mx-4 relative">
+            <motion.div
+              className={cn(
+                "relative rounded-2xl border border-border/30",
+                "bg-card/50 backdrop-blur-sm",
+                "focus-within:border-accent/50 focus-within:shadow-lg focus-within:shadow-accent/10",
+                "transition-all duration-200"
+              )}
+            >
               <Textarea
                 data-testid="message-input"
                 ref={(el) => {
-                  // Set both refs to the same element
-                  if (inputRef) {
-                    if (typeof inputRef === 'function') {
-                      inputRef(el)
-                    } else {
-                      inputRef.current = el
-                    }
+                  if (inputRef && el) {
+                    inputRef.current = el
                   }
                   if (textareaRef && el) {
                     textareaRef.current = el
@@ -136,66 +189,61 @@ export function ChatFooter({
                   }
                 }}
                 onFocus={() => adjustHeight()}
-                placeholder="Message..."
-                className="resize-none border border-border rounded-2xl focus:border-primary/50 transition-colors w-full pl-4 pr-12 py-3 min-h-[46px] max-h-[200px] bg-background overflow-hidden"
+                placeholder="Ask anything..."
+                className="resize-none bg-transparent outline-none placeholder-muted-foreground text-foreground w-full min-h-[46px] max-h-[200px] overflow-hidden px-4 py-3 rounded-2xl"
+                style={{ lineHeight: '24px' }}
               />
-              
-              {/* Upload progress indicator */}
-              {isUploading && (
-                <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs px-3 py-1 rounded-full shadow-md">
-                  Uploading: {uploadProgress}%
-                </div>
-              )}
-              
-              {/* Attachment button */}
-              <div className="absolute right-2 bottom-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      type="button"
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 rounded-full text-muted-foreground hover:bg-muted"
-                      data-testid="attachment-button"
-                    >
-                      <Paperclip className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    {actions.map((action) => (
-                      <DropdownMenuItem 
-                        key={action.id} 
-                        onClick={action.action} 
-                        className="gap-2 cursor-pointer"
-                      >
-                        <action.icon className="w-4 h-4" />
-                        <span>{action.title}</span>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
+            </motion.div>
             
-            {/* Send button */}
-            <Button 
-              type="submit" 
-              disabled={!input.trim() || isLoading} 
-              size="icon"
-              className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
-            >
-              <Send className="w-5 h-5" />
-              <span className="sr-only">Send</span>
-            </Button>
+            {/* Upload progress indicator */}
+            {isUploading && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute -top-8 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs px-3 py-1 rounded-full shadow-md"
+              >
+                Uploading: {uploadProgress}%
+              </motion.div>
+            )}
           </div>
-          
-          <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-            <span>Press F1 for shortcuts</span>
-            <span>AI can make mistakes. Verify important information.</span>
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-2">
+            {input.trim() ? (
+              <motion.button
+                type="submit"
+                whileHover={{ scale: 1.05, y: -1 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={isLoading}
+                transition={{ type: "spring", stiffness: 400 }}
+                className="p-3 rounded-full hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md bg-accent text-accent-foreground"
+              >
+                <Send size={20} />
+              </motion.button>
+            ) : (
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.05, y: -1 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400 }}
+                onClick={() => setShowVoiceModal(true)}
+                className="p-3 rounded-full hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md"
+              >
+                <Mic size={20} />
+              </motion.button>
+            )}
           </div>
         </form>
-        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          onChange={handleFileChange}
+          className="hidden"
+          accept="image/*,.pdf,.doc,.docx,.txt"
+        />
       </div>
-    </div>
+    </motion.div>
   )
 }

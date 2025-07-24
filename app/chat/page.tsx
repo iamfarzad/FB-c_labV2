@@ -20,9 +20,7 @@ import type { LeadCaptureState } from "./types/lead-capture"
 import { useChatContext } from "./context/ChatProvider"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import { supabase } from "@/lib/supabase/client"
-import { sampleTimelineActivities } from "@/components/chat/sidebar/sampleTimelineData"
 import { useToast } from "@/components/ui/use-toast"
-import { activityLogger } from "@/lib/activity-logger"
 import { v4 as uuidv4 } from "uuid"
 import type { Message } from "./types/chat"
 
@@ -55,6 +53,7 @@ export default function ChatPage() {
     leadData: { engagementType: "chat" },
   })
   const [showLeadCapture, setShowLeadCapture] = useState(false)
+  const [isLoadingLeadData, setIsLoadingLeadData] = useState(true)
 
   const { 
     messages, 
@@ -74,16 +73,16 @@ export default function ChatPage() {
       userId: "anonymous_user" // Could be enhanced with real user tracking
     },
     onFinish: (message) => {
-      activityLogger.log({
+      addActivity({
         type: "ai_stream",
-        title: "AI Response Received",
-        description: `Full response generated.`,
+        title: "AI Response Generated",
+        description: `Response completed: ${message.content.substring(0, 100)}...`,
         status: "completed",
       })
     },
     onError: (err) => {
       toast({ title: "Chat Error", description: err.message, variant: "destructive" })
-      activityLogger.log({ type: "error", title: "Chat API Error", description: err.message, status: "failed" })
+      addActivity({ type: "error", title: "Chat API Error", description: err.message, status: "failed" })
     },
   })
 
@@ -95,9 +94,40 @@ export default function ChatPage() {
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   useEffect(scrollToBottom, [messages])
 
+  // Load existing lead data on component mount
+  useEffect(() => {
+    const loadExistingLeadData = async () => {
+      try {
+        // Check if there's a lead in localStorage (for session persistence)
+        const savedLeadData = localStorage.getItem('fb_lead_data')
+        if (savedLeadData) {
+          const parsedData = JSON.parse(savedLeadData)
+          setLeadCaptureState({
+            stage: "consultation",
+            hasName: true,
+            hasEmail: true,
+            hasAgreedToTC: true,
+            leadData: parsedData
+          })
+          setIsLoadingLeadData(false)
+          return
+        }
+
+        // If no localStorage data, check if we can identify the user by IP or session
+        // For now, we'll just set loading to false
+        setIsLoadingLeadData(false)
+      } catch (error) {
+        console.error('Error loading existing lead data:', error)
+        setIsLoadingLeadData(false)
+      }
+    }
+
+    loadExistingLeadData()
+  }, [])
+
   useEffect(() => {
     const userMessages = messages.filter((m) => m.role === "user")
-    if (userMessages.length === 1 && leadCaptureState.stage === "initial") {
+    if (userMessages.length === 1 && leadCaptureState.stage === "initial" && !isLoadingLeadData) {
       setShowLeadCapture(true)
       setLeadCaptureState((prev) => ({
         ...prev,
@@ -105,12 +135,12 @@ export default function ChatPage() {
         leadData: { ...prev.leadData, initialQuery: userMessages[0]?.content },
       }))
     }
-  }, [messages, leadCaptureState.stage])
+  }, [messages, leadCaptureState.stage, isLoadingLeadData])
 
   useEffect(() => {
     const channel = supabase
       .channel(`activity-log-${sessionId}`)
-      .on("broadcast", { event: "activity-update" }, ({ payload }) => addActivity(payload))
+      .on("broadcast", { event: "activity-update" }, ({ payload }: { payload: any }) => addActivity(payload))
       .subscribe()
     return () => {
       supabase.removeChannel(channel)
@@ -165,7 +195,7 @@ export default function ChatPage() {
       })
       
       handleSubmit(e)
-      activityLogger.log({ type: "user_action", title: "User Message Sent", description: input, status: "completed" })
+      addActivity({ type: "user_action", title: "User Message Sent", description: input.substring(0, 100), status: "completed" })
     }
   }
 
@@ -178,6 +208,14 @@ export default function ChatPage() {
       leadData 
     } as LeadCaptureState)
     setShowLeadCapture(false)
+    
+    // Save lead data to localStorage for session persistence
+    try {
+      localStorage.setItem('fb_lead_data', JSON.stringify(leadData))
+    } catch (error) {
+      console.error('Failed to save lead data to localStorage:', error)
+    }
+    
     toast({ title: "Welcome!", description: `Starting consultation for ${leadData.name}.` })
   }
 
@@ -188,7 +226,7 @@ export default function ChatPage() {
         content: `[Image uploaded: ${fileName}] Please analyze this image.`,
         imageUrl: imageData,
       })
-      activityLogger.log({ type: "image_upload", title: "Image Uploaded", description: fileName, status: "completed" })
+      addActivity({ type: "image_upload", title: "Image Uploaded", description: fileName, status: "completed" })
     },
     [append],
   )
@@ -198,7 +236,7 @@ export default function ChatPage() {
       role: "user",
       content: `[File uploaded: ${file.name}] Please summarize or analyze this document.`,
     })
-    activityLogger.log({
+    addActivity({
       type: "file_upload",
       title: "File Uploaded",
       description: file.name,
@@ -210,7 +248,7 @@ export default function ChatPage() {
     (transcript: string) => {
       if (!transcript.trim()) return
       append({ role: "user", content: transcript })
-      activityLogger.log({ type: "voice_input", title: "Voice Input Sent", description: transcript, status: "completed" })
+      addActivity({ type: "voice_input", title: "Voice Input Sent", description: transcript.substring(0, 100), status: "completed" })
     },
     [append],
   )
@@ -222,7 +260,7 @@ export default function ChatPage() {
         content: "[Webcam image captured] Please analyze this image.",
         imageUrl: imageData,
       })
-      activityLogger.log({ type: "image_capture", title: "Webcam Photo Captured", description: "Webcam image captured", status: "completed" })
+      addActivity({ type: "image_capture", title: "Webcam Photo Captured", description: "Webcam image captured", status: "completed" })
     },
     [append],
   )
@@ -233,7 +271,7 @@ export default function ChatPage() {
         role: "assistant",
         content: `**Screen Analysis:**\n${analysis}`,
       })
-      activityLogger.log({ type: "vision_analysis", title: "Screen Analyzed", description: "Screen content analyzed", status: "completed" })
+      addActivity({ type: "vision_analysis", title: "Screen Analyzed", description: "Screen content analyzed", status: "completed" })
     },
     [append],
   )
@@ -244,7 +282,7 @@ export default function ChatPage() {
         role: "assistant",
         content: `I have successfully generated a new learning app based on the video.`,
       })
-      activityLogger.log({ type: "tool_used", title: "Video-to-App Generated", description: "Learning app generated from video", status: "completed" })
+      addActivity({ type: "tool_used", title: "Video-to-App Generated", description: "Learning app generated from video", status: "completed" })
     },
     [append],
   )
@@ -253,7 +291,7 @@ export default function ChatPage() {
     (textContent: string, voiceStyle: string = "neutral") => {
       setVoiceOutputData({ textContent, voiceStyle })
       setShowVoiceOutputModal(true)
-      activityLogger.log({ 
+      addActivity({ 
         type: "voice_response", 
         title: "Voice Response Triggered", 
         description: `AI speaking: ${textContent.slice(0, 100)}...`, 
@@ -299,7 +337,7 @@ export default function ChatPage() {
         });
         
         // Log the export activity
-        activityLogger.log({
+        addActivity({
           type: "tool_used",
           title: "PDF Summary Exported",
           description: `Generated professional PDF summary for ${leadCaptureState.leadData.name || 'user'}`,
@@ -325,7 +363,7 @@ export default function ChatPage() {
           });
           
           // Log the export activity
-          activityLogger.log({
+          addActivity({
             type: "tool_used",
             title: "Summary Exported",
             description: `Generated summary for ${leadCaptureState.leadData.name || 'user'}`,
@@ -367,14 +405,20 @@ export default function ChatPage() {
     <ChatLayout>
       <div className="flex h-full">
         <DesktopSidebar
-          activities={activityLog.length > 0 ? activityLog : sampleTimelineActivities}
+          activities={activityLog}
           isOpen={isSidebarOpen}
           onToggle={handleToggleSidebar}
           onNewChat={handleNewChat}
           onActivityClick={handleActivityClick}
         />
         <div className="flex flex-col flex-1 h-full">
-          <ChatHeader onDownloadSummary={handleDownloadSummary} activities={activityLog} onNewChat={handleNewChat} onActivityClick={handleActivityClick} />
+          <ChatHeader 
+            onDownloadSummary={handleDownloadSummary} 
+            activities={activityLog} 
+            onNewChat={handleNewChat} 
+            onActivityClick={handleActivityClick}
+            leadName={leadCaptureState.leadData.name}
+          />
           <div className="flex-1 relative min-h-0">
             {showLeadCapture && (
               <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -418,7 +462,7 @@ export default function ChatPage() {
           onClose={() => setShowScreenShareModal(false)}
           onAIAnalysis={handleScreenShareAnalysis}
           onStream={() =>
-            activityLogger.log({ type: "screen_share", title: "Screen Share Started", description: "Screen sharing session started", status: "in_progress" })
+            addActivity({ type: "screen_share", title: "Screen Share Started", description: "Screen sharing session started", status: "in_progress" })
           }
         />
       )}

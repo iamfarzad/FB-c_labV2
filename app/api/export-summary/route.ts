@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getSupabase } from '@/lib/supabase/server';
-import { logActivity } from '@/lib/activity-logger';
+import { logServerActivity } from '@/lib/server-activity-logger';
 import { generatePdfWithPuppeteer, generatePdfPath, sanitizeTextForPdf } from '@/lib/pdf-generator-puppeteer';
 import fs from 'fs';
 
@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
       fs.unlinkSync(pdfPath);
       
       // Log the export activity
-      await logActivity({
+      await logServerActivity({
         type: 'export_summary',
         title: 'PDF Summary Exported',
         description: `Generated PDF summary for ${leadInfo.name}`,

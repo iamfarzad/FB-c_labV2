@@ -9,6 +9,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // API configuration for security
+  serverExternalPackages: [],
   // Webpack configuration for better module resolution
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // Handle potential module resolution issues

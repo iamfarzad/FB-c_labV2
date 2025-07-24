@@ -2,10 +2,11 @@ import { GoogleGenAI } from '@google/genai';
 import { getSupabase } from '@/lib/supabase/server';
 import type { NextRequest } from 'next/server';
 import { chatRequestSchema, validateRequest, sanitizeString } from '@/lib/validation';
-import { logActivity } from '@/lib/activity-logger';
+import { logServerActivity } from '@/lib/server-activity-logger';
 import { ConversationStateManager } from '@/lib/conversation-state-manager';
 import { LeadManager } from '@/lib/lead-manager';
 import { checkDevelopmentConfig } from '@/lib/config';
+import { withFullSecurity } from '@/lib/api-security';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -89,13 +90,13 @@ async function logActivityToDB(activity: {
   metadata?: any;
 }) {
   try {
-    await logActivity({
-      type: activity.type,
-      title: activity.title,
-      description: activity.description,
-      status: activity.status,
-      metadata: activity.metadata
-    });
+                await logServerActivity({
+        type: activity.type as any,
+        title: activity.title,
+        description: activity.description,
+        status: activity.status,
+        metadata: activity.metadata
+      });
   } catch (error) {
     console.error('Failed to log activity to database:', error);
   }
@@ -220,6 +221,7 @@ ${getStageSpecificInstructions(conversationState.currentStage)}`;
 
   // If we have user info, get existing lead research data
   if (leadContext?.email) {
+    console.log('Looking for lead research data for email:', leadContext.email)
     const leadResearch = await getLeadResearchData(leadContext.email);
     
     if (leadResearch) {
@@ -322,65 +324,50 @@ class EnhancedGeminiClient {
           searchType: "linkedin"
         }
       });
-
-      // Simulate search steps for real-time activity
-      setTimeout(async () => {
-        await logActivityToDB({
-          type: "ai_thinking",
-          title: "Found 3 relevant profiles",
-          description: "Extracted professional experience and career history",
-          status: "completed",
-          metadata: { 
-            name: leadContext.name, 
-            email: leadContext.email,
-            profilesFound: 3
-          }
-        });
-      }, 2000);
-
-      setTimeout(async () => {
-        await logActivityToDB({
-          type: "ai_thinking",
-          title: "Finding Online Presence",
-          description: "Discovering additional online profiles and content",
-          status: "in_progress",
-          metadata: { 
-            name: leadContext.name, 
-            email: leadContext.email,
-            searchType: "google"
-          }
-        });
-      }, 4000);
-
-      setTimeout(async () => {
-        await logActivityToDB({
-          type: "ai_thinking",
-          title: "Analyzing Profile Data",
-          description: "Processing and understanding the collected information",
-          status: "in_progress",
-          metadata: { 
-            name: leadContext.name, 
-            email: leadContext.email,
-            analysisType: "profile"
-          }
-        });
-      }, 6000);
-
-      setTimeout(async () => {
-        await logActivityToDB({
-          type: "ai_thinking",
-          title: "Generating Insights",
-          description: "Creating valuable findings from the analysis",
-          status: "in_progress",
-          metadata: { 
-            name: leadContext.name, 
-            email: leadContext.email,
-            insightType: "pain_points"
-          }
-        });
-      }, 8000);
     }
 
+    // Use live API for grounded search, regular API for normal chat
+    logConsoleActivity('info', `Debug: hasWebGrounding: ${hasWebGrounding}, leadContext?.name: ${leadContext?.name}`);
+    if (hasWebGrounding && leadContext?.name) {
+      console.log(`🔍 GROUNDED SEARCH TRIGGERED for: ${leadContext.name}`);
+      logConsoleActivity('info', `Using grounded search for: ${leadContext.name}`);
+      return this.generateGroundedResponse(messages, systemPrompt, leadContext);
+    } else {
+      console.log(`❌ NO GROUNDED SEARCH - hasWebGrounding: ${hasWebGrounding}, leadContext?.name: ${leadContext?.name}`);
+      logConsoleActivity('info', 'Using regular response - no grounded search');
+      return this.generateRegularResponse(messages, systemPrompt);
+    }
+  }
+
+  private async generateGroundedResponse(messages: Message[], systemPrompt: string, leadContext: any) {
+    try {
+      // Import and use the Gemini Live API service
+      const { GeminiLiveAPI } = await import('@/lib/gemini-live-api');
+      const geminiLiveAPI = new GeminiLiveAPI();
+      
+      // Get the user's message
+      const userMessage = messages[messages.length - 1]?.content || '';
+      
+      // Perform grounded search using the live API - this returns a complete AI response
+      const aiResponse = await geminiLiveAPI.performGroundedSearch(leadContext, userMessage);
+
+      // Convert the response to an async generator to match the expected return type
+      return (async function* () {
+        // Split the response into chunks for streaming
+        const chunks = aiResponse.match(/.{1,100}/g) || [aiResponse];
+        
+        for (const chunk of chunks) {
+          yield { text: chunk };
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+      })();
+    } catch (error) {
+      console.error('Grounded search failed, falling back to regular response:', error);
+      return this.generateRegularResponse(messages, systemPrompt);
+    }
+  }
+
+  private async generateRegularResponse(messages: Message[], systemPrompt: string) {
     // Combine system prompt with messages
     const contents = [
       {
@@ -393,16 +380,9 @@ class EnhancedGeminiClient {
       }))
     ];
 
-    const config: any = {
+    const config = {
       responseMimeType: "text/plain",
     };
-
-    // Add web grounding if enabled
-    if (hasWebGrounding && leadContext?.name) {
-      config.tools = [{
-        webSearch: {}
-      }];
-    }
 
     return this.genAI.models.generateContentStream({
       model: 'gemini-2.5-flash',
@@ -420,7 +400,7 @@ class EnhancedGeminiClient {
 // MAIN API HANDLER
 // ============================================================================
 
-export async function POST(req: NextRequest) {
+async function chatHandler(req: NextRequest) {
   // Check for missing environment variables in development
   checkDevelopmentConfig();
   
@@ -490,6 +470,17 @@ export async function POST(req: NextRequest) {
     const { messages, data = {} } = validation.data;
     const { leadContext = {}, sessionId = null } = data;
     
+    // Log the lead context for debugging
+    if (leadContext && Object.keys(leadContext).length > 0) {
+      console.log('Lead context received:', {
+        name: leadContext.name,
+        email: leadContext.email,
+        company: leadContext.company
+      })
+    } else {
+      console.log('No lead context provided')
+    }
+    
     // Sanitize messages
     const sanitizedMessages = messages.map((message: Message) => ({
       ...message,
@@ -508,16 +499,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Process message through conversation state management
-    let stageResult;
+    // Process message through conversation state management (with timeout)
+    let stageResult: any;
     if (conversationState && lastUserMessage && sessionId && typeof sessionId === 'string') {
       try {
-        // Process through the advanced conversation state machine
-        stageResult = await conversationManager.processMessage(
-          sessionId,
-          lastUserMessage,
-          leadContext?.id
+        // Add timeout to prevent long processing
+        const stagePromise = conversationManager.processMessage(sessionId, lastUserMessage, leadContext.leadId);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Stage processing timeout')), 5000)
         );
+        
+        stageResult = await Promise.race([stagePromise, timeoutPromise]);
+        
+        // Process through the advanced conversation state machine
         
         // Update conversation state
         conversationState = stageResult.updatedState;
@@ -659,6 +653,9 @@ export async function POST(req: NextRequest) {
 
     // Generate response using the enhanced client with web grounding
     const hasWebGrounding = !!leadContext?.name;
+    logConsoleActivity('info', `Lead context debug: ${JSON.stringify(leadContext)}`);
+    logConsoleActivity('info', `hasWebGrounding: ${hasWebGrounding}`);
+    logConsoleActivity('info', `Will use grounded search: ${hasWebGrounding && leadContext?.name ? 'YES' : 'NO'}`);
     let responseStream;
     try {
       responseStream = await geminiClient.generateResponse(sanitizedMessages, systemPrompt, hasWebGrounding, leadContext);
@@ -786,3 +783,7 @@ export async function POST(req: NextRequest) {
     });
   }
 }
+
+export const POST = withFullSecurity(chatHandler, {
+  payloadLimit: '100kb'
+})

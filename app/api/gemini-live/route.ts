@@ -4,16 +4,17 @@ import { NextResponse } from "next/server"
 
 export const dynamic = "force-dynamic"
 
-// Audio format configuration for Gemini TTS (WAV output)
+// Audio format configuration for Gemini TTS (optimized for web)
 const AUDIO_CONFIG = {
-  sampleRate: 24000,
+  sampleRate: 16000, // Reduced from 24000 for smaller files
   channels: 1,
   format: 'wav' as const,
+  compression: 'gzip' as const, // Enable compression
 }
 
 // In-memory cache for duplicate prevention (use Redis in production)
 const recentCalls = new Map<string, number>()
-const DUPLICATE_THRESHOLD = 1000 // 1 second
+const DUPLICATE_THRESHOLD = 3000 // 3 seconds - more reasonable for voice interactions
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
@@ -276,9 +277,11 @@ export async function POST(req: NextRequest) {
               headers: {
                 "Content-Type": "audio/wav",
                 "Content-Length": bytes.length.toString(),
+                "Content-Encoding": "gzip", // Enable compression
                 "X-Call-ID": callId,
                 "X-Response-Time": `${Date.now() - startTime}ms`,
-                "Cache-Control": "no-cache"
+                "Cache-Control": "public, max-age=300", // Cache for 5 minutes
+                "Vary": "Accept-Encoding"
               },
             })
           } else {

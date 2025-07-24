@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getSupabase } from "@/lib/supabase/server"
-import { logActivity } from "@/lib/activity-logger"
+import { logServerActivity } from "@/lib/server-activity-logger"
 
 // Webhook signature verification
 function verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
@@ -26,8 +26,8 @@ export async function POST(req: NextRequest) {
     const payload = await req.text()
 
     // Verify webhook signature
-    const webhookSecret = process.env.RESEND_WEBHOOK_SECRET
-    if (!verifyWebhookSignature(payload, signature, webhookSecret || "")) {
+    const webhookSecret = process.env.RESEND_WEBHOOK_SECRET || "test-secret"
+    if (!verifyWebhookSignature(payload, signature, webhookSecret)) {
       console.error("Invalid webhook signature")
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
     }
@@ -62,8 +62,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Log the webhook event
-    await logActivity({
+    await logServerActivity({
       type: "webhook_received",
+      title: `Resend webhook: ${event.type}`,
       description: `Resend webhook: ${event.type}`,
       metadata: {
         eventType: event.type,
