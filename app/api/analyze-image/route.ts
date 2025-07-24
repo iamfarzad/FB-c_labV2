@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     };
 
     const result = await genAI.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash-lite", // Updated from gemini-1.5-flash for cost efficiency
       config,
       contents: [
         { role: "user", parts: [{ text: prompt }] },

@@ -26,7 +26,7 @@ Format your response as a structured analysis with clear sections.`
     ]
     
     const result = await genAI.models.generateContent({ 
-      model: 'gemini-1.5-flash', 
+      model: 'gemini-2.5-flash-lite', // Updated from gemini-1.5-flash for cost efficiency
       config: { responseMimeType: 'text/plain' }, 
       contents 
     })

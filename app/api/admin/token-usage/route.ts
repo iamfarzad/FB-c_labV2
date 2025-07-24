@@ -1,8 +1,24 @@
 import { supabaseService } from "@/lib/supabase/client"
-import { TokenCostCalculator } from "@/lib/token-cost-calculator"
 import type { NextRequest } from "next/server"
 import { adminAuthMiddleware } from "@/lib/auth"
 import { NextResponse } from "next/server"
+import { getUsageStats } from "@/lib/token-usage-logger"
+
+interface TokenUsageLog {
+  id: string
+  user_id?: string
+  session_id?: string
+  model: string
+  input_tokens: number
+  output_tokens: number
+  total_tokens: number
+  estimated_cost: string | number
+  task_type: string
+  endpoint: string
+  success: boolean
+  error_message?: string
+  created_at?: string
+}
 
 export async function GET(req: NextRequest) {
   // Check admin authentication
@@ -10,106 +26,148 @@ export async function GET(req: NextRequest) {
   if (authResult) {
     return authResult;
   }
+  
   try {
     const { searchParams } = new URL(req.url)
     const timeframe = searchParams.get("timeframe") || "24h"
-    const provider = searchParams.get("provider")
-    const model = searchParams.get("model")
+    const userId = searchParams.get("userId")
 
-    // Calculate time range
-    const now = new Date()
-    let startTime: Date
-
+    // Convert timeframe to days
+    let days = 1
     switch (timeframe) {
       case "1h":
-        startTime = new Date(now.getTime() - 60 * 60 * 1000)
+        days = 1 // Will filter by hours in the query
         break
       case "24h":
-        startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+        days = 1
         break
       case "7d":
-        startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        days = 7
         break
       case "30d":
-        startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        days = 30
         break
       case "90d":
-        startTime = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+        days = 90
         break
       default:
-        startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+        days = 1
     }
 
-    // Get real token usage data from activities table
-    const { data: activities, error: activitiesError } = await supabaseService
-      .from("activities")
+    // Get real token usage data from token_usage_logs table
+    const { data: logs, error: logsError } = await supabaseService
+      .from("token_usage_logs")
       .select("*")
-      .gte("created_at", startTime.toISOString())
+      .gte("created_at", new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
       .order("created_at", { ascending: false })
 
-    if (activitiesError) {
-      console.error("Activities fetch error:", activitiesError)
+    if (logsError) {
+      console.error("Token usage logs fetch error:", logsError)
+      return NextResponse.json({ error: "Failed to fetch token usage data" }, { status: 500 })
     }
 
-    // Calculate token usage from activities (estimate based on activity types)
-    const tokenEstimates = activities?.map(activity => {
-      const baseTokens = 100 // Base tokens per activity
-      const multiplier = activity.type === 'chat_message' ? 2 : 
-                        activity.type === 'lead_captured' ? 1.5 : 1
-      return {
-        id: activity.id,
-        session_id: 'unknown', // Not available in activities table
-        provider: 'google',
-        model: 'gemini-2.5-flash',
-        input_tokens: baseTokens * multiplier,
-        output_tokens: baseTokens * multiplier * 2,
-        total_tokens: baseTokens * multiplier * 3,
-        input_cost: (baseTokens * multiplier * 0.000001),
-        output_cost: (baseTokens * multiplier * 2 * 0.000002),
-        total_cost: (baseTokens * multiplier * 3 * 0.0000015),
-        request_type: activity.type,
-        user_id: 'unknown', // Not available in activities table
-        metadata: activity.metadata || {},
-        created_at: activity.created_at
-      }
-    }) || []
+    // Filter by user if specified
+    const filteredLogs: TokenUsageLog[] = userId ? (logs as TokenUsageLog[])?.filter(log => log.user_id === userId) : (logs as TokenUsageLog[]) || []
 
     // Calculate analytics
-    const totalCost = tokenEstimates.reduce((sum, log) => sum + log.total_cost, 0)
-    const totalTokens = tokenEstimates.reduce((sum, log) => sum + log.total_tokens, 0)
-    const totalRequests = tokenEstimates.length
+    const totalCost = filteredLogs.reduce((sum: number, log: TokenUsageLog) => sum + Number(log.estimated_cost), 0)
+    const totalTokens = filteredLogs.reduce((sum: number, log: TokenUsageLog) => sum + log.total_tokens, 0)
+    const totalRequests = filteredLogs.length
 
-    const providerBreakdown = { google: { cost: totalCost, usage: totalTokens, requests: totalRequests } }
-    const dailyCosts = [{ date: new Date().toISOString().split('T')[0], cost: totalCost }]
+    // Provider breakdown (all Google for now)
+    const providerBreakdown = { 
+      google: { 
+        cost: totalCost, 
+        usage: totalTokens, 
+        requests: totalRequests 
+      } 
+    }
+
+    // Daily breakdown
+    const dailyMap = new Map<string, { cost: number; tokens: number; requests: number }>()
+    filteredLogs.forEach((log: TokenUsageLog) => {
+      const date = log.created_at?.split('T')[0] || 'unknown'
+      const current = dailyMap.get(date) || { cost: 0, tokens: 0, requests: 0 }
+      dailyMap.set(date, {
+        cost: current.cost + Number(log.estimated_cost),
+        tokens: current.tokens + log.total_tokens,
+        requests: current.requests + 1
+      })
+    })
+
+    const dailyCosts = Array.from(dailyMap.entries()).map(([date, stats]) => ({
+      date,
+      cost: stats.cost,
+      tokens: stats.tokens,
+      requests: stats.requests
+    })).sort((a, b) => a.date.localeCompare(b.date))
 
     // Model breakdown
     const modelBreakdown: Record<string, { cost: number; usage: number; requests: number }> = {}
-    tokenEstimates.forEach((log) => {
-      const key = `${log.provider}/${log.model}`
-      if (!modelBreakdown[key]) {
-        modelBreakdown[key] = { cost: 0, usage: 0, requests: 0 }
+    filteredLogs.forEach((log: TokenUsageLog) => {
+      const model = log.model
+      if (!modelBreakdown[model]) {
+        modelBreakdown[model] = { cost: 0, usage: 0, requests: 0 }
       }
-      modelBreakdown[key].cost += log.total_cost
-      modelBreakdown[key].usage += log.total_tokens
-      modelBreakdown[key].requests += 1
+      modelBreakdown[model].cost += Number(log.estimated_cost)
+      modelBreakdown[model].usage += log.total_tokens
+      modelBreakdown[model].requests += 1
     })
+
+    // Task type breakdown
+    const taskBreakdown: Record<string, { cost: number; usage: number; requests: number }> = {}
+    filteredLogs.forEach((log: TokenUsageLog) => {
+      const taskType = log.task_type
+      if (!taskBreakdown[taskType]) {
+        taskBreakdown[taskType] = { cost: 0, usage: 0, requests: 0 }
+      }
+      taskBreakdown[taskType].cost += Number(log.estimated_cost)
+      taskBreakdown[taskType].usage += log.total_tokens
+      taskBreakdown[taskType].requests += 1
+    })
+
+    // Success rate
+    const successfulRequests = filteredLogs.filter(log => log.success).length
+    const successRate = totalRequests > 0 ? (successfulRequests / totalRequests) * 100 : 0
 
     return NextResponse.json({
       summary: {
         totalCost: Number(totalCost.toFixed(6)),
         totalTokens,
         totalRequests,
+        successfulRequests,
+        successRate: Number(successRate.toFixed(2)),
         averageCostPerRequest: totalRequests > 0 ? Number((totalCost / totalRequests).toFixed(6)) : 0,
+        averageTokensPerRequest: totalRequests > 0 ? Math.round(totalTokens / totalRequests) : 0,
         timeframe,
-        startTime: startTime.toISOString(),
-        endTime: now.toISOString(),
+        startTime: new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString(),
+        endTime: new Date().toISOString(),
       },
       breakdown: {
         byProvider: providerBreakdown,
         byModel: modelBreakdown,
+        byTaskType: taskBreakdown,
         byDay: dailyCosts,
       },
-      logs: tokenEstimates || [],
+      logs: filteredLogs.map((log: TokenUsageLog) => ({
+        id: log.id,
+        session_id: log.session_id,
+        provider: 'google',
+        model: log.model,
+        input_tokens: log.input_tokens,
+        output_tokens: log.output_tokens,
+        total_tokens: log.total_tokens,
+        input_cost: Number(log.estimated_cost) * (log.input_tokens / log.total_tokens),
+        output_cost: Number(log.estimated_cost) * (log.output_tokens / log.total_tokens),
+        total_cost: Number(log.estimated_cost),
+        request_type: log.task_type,
+        user_id: log.user_id,
+        endpoint: log.endpoint,
+        success: log.success,
+        error_message: log.error_message,
+        metadata: {},
+        created_at: log.created_at
+      })),
     })
   } catch (error: any) {
     console.error("Token usage fetch error:", error)

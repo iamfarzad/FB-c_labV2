@@ -7,6 +7,9 @@ import { ConversationStateManager } from '@/lib/conversation-state-manager';
 import { LeadManager } from '@/lib/lead-manager';
 import { checkDevelopmentConfig } from '@/lib/config';
 import { withFullSecurity } from '@/lib/api-security';
+import { selectModel, estimateTokens, estimateCost } from '@/lib/model-selector';
+import { logTokenUsage, checkBudget } from '@/lib/token-usage-logger';
+import { checkDemoAccess, recordDemoUsage, getDemoSession, DemoFeature } from '@/lib/demo-budget-manager';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -98,32 +101,114 @@ async function logActivityToDB(activity: {
         metadata: activity.metadata
       });
   } catch (error) {
-    console.error('Failed to log activity to database:', error);
+    console.error('Failed to log activity:', error);
   }
 }
 
 // ============================================================================
-// LEAD RESEARCH INTEGRATION
+// LEAD RESEARCH DATA
 // ============================================================================
 
 async function getLeadResearchData(email: string): Promise<any> {
   try {
     const supabase = getSupabase();
-    const { data: leadData, error } = await supabase
-      .from("lead_summaries")
-      .select("conversation_summary, consultant_brief, lead_score, ai_capabilities_shown")
-      .eq("email", email)
+    const { data, error } = await supabase
+      .from('lead_summaries')
+      .select('*')
+      .eq('email', email)
       .single();
 
-    if (error || !leadData) {
-      console.log("No lead research data found for:", email);
+    if (error || !data) {
       return null;
     }
 
-    return leadData;
+    return {
+      name: data.name,
+      email: data.email,
+      company: data.company_name,
+      summary: data.conversation_summary,
+      brief: data.consultant_brief,
+      leadScore: data.lead_score,
+      aiCapabilities: data.ai_capabilities_shown
+    };
   } catch (error) {
-    console.error("Error fetching lead research:", error);
+    console.error('Failed to get lead research data:', error);
     return null;
+  }
+}
+
+// ============================================================================
+// SYSTEM PROMPT BUILDER
+// ============================================================================
+
+async function buildEnhancedSystemPrompt(
+  leadContext: any, 
+  userMessage: string,
+  conversationState?: any
+): Promise<string> {
+  const basePrompt = `You are F.B/c AI, a specialized business consulting AI assistant. Your role is to help businesses identify AI automation opportunities and provide strategic guidance.
+
+Key Capabilities:
+- Lead research and analysis
+- AI automation strategy
+- Business process optimization
+- Technology recommendations
+- ROI analysis
+
+Always be professional, concise, and actionable. Focus on practical business value.`;
+
+  if (!leadContext) {
+    return basePrompt;
+  }
+
+  const leadInfo = `
+LEAD CONTEXT:
+- Name: ${leadContext.name || 'Unknown'}
+- Email: ${leadContext.email || 'Unknown'}
+- Company: ${leadContext.company || 'Unknown'}
+- Lead Score: ${leadContext.leadScore || 'Not scored'}
+- Previous Research: ${leadContext.summary ? 'Available' : 'None'}
+
+${leadContext.brief ? `CONSULTANT BRIEF: ${leadContext.brief}` : ''}
+${leadContext.aiCapabilities ? `AI CAPABILITIES SHOWN: ${leadContext.aiCapabilities.join(', ')}` : ''}
+`;
+
+  const stageInstructions = conversationState?.stage ? getStageSpecificInstructions(conversationState.stage) : '';
+
+  return `${basePrompt}
+
+${leadInfo}
+
+${stageInstructions}
+
+Current user message: "${userMessage}"
+
+Provide a helpful, professional response that leverages the lead context when relevant.`;
+}
+
+// ============================================================================
+// STAGE-SPECIFIC INSTRUCTIONS
+// ============================================================================
+
+function getStageSpecificInstructions(stage: string): string {
+  switch (stage) {
+    case 'initial_contact':
+      return 'Focus on building rapport and understanding their business needs. Ask open-ended questions about their current challenges.';
+    
+    case 'needs_assessment':
+      return 'Dive deeper into their specific pain points and processes. Identify areas where AI could provide value.';
+    
+    case 'solution_presentation':
+      return 'Present specific AI solutions tailored to their needs. Include ROI estimates and implementation timelines.';
+    
+    case 'objection_handling':
+      return 'Address concerns professionally. Provide data and case studies to support your recommendations.';
+    
+    case 'closing':
+      return 'Focus on next steps and commitment. Be clear about what happens next in the process.';
+    
+    default:
+      return 'Maintain a professional, consultative approach. Focus on understanding their needs and providing value.';
   }
 }
 
@@ -135,170 +220,7 @@ const conversationManager = new ConversationStateManager();
 const leadManager = new LeadManager();
 
 // ============================================================================
-// ENHANCED SYSTEM PROMPT BUILDER
-// ============================================================================
-
-async function buildEnhancedSystemPrompt(
-  leadContext: any, 
-  userMessage: string,
-  conversationState?: any
-): Promise<string> {
-  let systemPrompt = `You are F.B/c, a lead-generation assistant for Farzad Bayat's website. You speak clearly in Norwegian or English based on user preference. You are optimized for real-time interactive chat (text, voice, video), and can:
-
-**CORE CAPABILITIES:**
-- Lead qualification and research
-- Company intelligence gathering
-- Pain point discovery
-- AI solution presentation
-- Meeting scheduling
-- Follow-up sequence management
-
-**CONVERSATION STAGES (7-STAGE FSM):**
-1. GREETING - Welcome and establish rapport
-2. NAME_COLLECTION - Get contact information
-3. EMAIL_CAPTURE - Collect email for follow-up
-4. BACKGROUND_RESEARCH - Research company and role
-5. PROBLEM_DISCOVERY - Identify pain points and challenges
-6. SOLUTION_PRESENTATION - Present AI solutions
-7. CALL_TO_ACTION - Schedule meeting or next steps
-
-**SMART CONVERSATION FLOW:**
-- If user info is already available, skip asking for it and move directly to value delivery
-- If name/email are provided, immediately start with personalized insights
-- Focus on business value, not data collection
-- Move quickly to problem discovery and solution presentation
-- Avoid repetitive questions about information already known
-- Use the conversation stage to guide your responses appropriately
-
-**RESPONSE STYLE:**
-- Professional yet conversational
-- Data-driven insights
-- Personalized to company context
-- Clear value propositions
-- Gentle persuasion without being pushy
-- Efficient and direct - don't waste time on information already available
-
-**GDPR COMPLIANCE:**
-- Always ask for consent before collecting data
-- Explain how data will be used
-- Provide opt-out options
-- Respect user privacy preferences
-
-**TOOL CALLING:**
-- Use internal tools for research when needed
-- Integrate with lead management system
-- Log all interactions for follow-up
-- Trigger appropriate next steps
-
-**AFFECTIVE DIALOG:**
-- Show empathy for business challenges
-- Demonstrate understanding of industry context
-- Build trust through expertise and transparency
-- Create emotional connection to AI transformation benefits
-
-**IMPORTANT: If you already have user information, don't ask for it again. Move directly to providing value and discovering their business needs.`;
-
-  // Add conversation context if available
-  if (conversationState) {
-    systemPrompt += `\n\n**CONVERSATION CONTEXT:**
-Current Stage: ${conversationState.currentStage}
-Participant: ${conversationState.context.leadData.name || 'Unknown'}
-Company: ${conversationState.context.leadData.company || 'Unknown'}
-AI Readiness: ${conversationState.context.aiReadiness || 50}/100
-Pain Points: ${conversationState.context.painPoints.join(', ') || 'None identified yet'}
-
-**STAGE-SPECIFIC INSTRUCTIONS:**
-${getStageSpecificInstructions(conversationState.currentStage)}`;
-  }
-
-  // Add lead context if available
-  if (leadContext?.name) {
-    systemPrompt += `\n\nCURRENT USER CONTEXT:\n- Name: ${sanitizeString(leadContext.name)}`;
-    if (leadContext.email) systemPrompt += `\n- Email: ${sanitizeString(leadContext.email)}`;
-    if (leadContext.company) systemPrompt += `\n- Company: ${sanitizeString(leadContext.company)}`;
-    if (leadContext.role) systemPrompt += `\n- Role: ${sanitizeString(leadContext.role)}`;
-  }
-
-  // If we have user info, get existing lead research data
-  if (leadContext?.email) {
-    console.log('Looking for lead research data for email:', leadContext.email)
-    const leadResearch = await getLeadResearchData(leadContext.email);
-    
-    if (leadResearch) {
-      systemPrompt += `\n\nLEAD RESEARCH CONTEXT:\n${leadResearch.conversation_summary}\n\nCONSULTANT BRIEF:\n${leadResearch.consultant_brief || 'No brief available'}\n\nLEAD SCORE: ${leadResearch.lead_score}/100\n\nAI CAPABILITIES IDENTIFIED:\n${leadResearch.ai_capabilities_shown || 'None identified'}`;
-      
-      // Log that we're using lead research
-      await logActivityToDB({
-        type: "ai_thinking",
-        title: "Using Lead Research Data",
-        description: `Incorporating research data for ${leadContext.name}`,
-        status: "completed",
-        metadata: { 
-          name: leadContext.name, 
-          email: leadContext.email,
-          leadScore: leadResearch.lead_score 
-        }
-      });
-    }
-  }
-
-  return systemPrompt;
-}
-
-// ============================================================================
-// STAGE-SPECIFIC INSTRUCTIONS
-// ============================================================================
-
-function getStageSpecificInstructions(stage: string): string {
-  switch (stage) {
-    case 'greeting':
-      return `- Welcome warmly and establish rapport
-- Ask about their business and current challenges
-- Set expectations for the consultation
-- Move to name collection if not already provided`;
-    
-    case 'name_collection':
-      return `- Politely ask for their name if not provided
-- Explain why we need this information
-- Move to email capture once name is obtained`;
-    
-    case 'email_capture':
-      return `- Request email for follow-up and resources
-- Explain GDPR compliance and data usage
-- Move to background research once email is captured`;
-    
-    case 'background_research':
-      return `- Research their company and role
-- Analyze industry trends and challenges
-- Identify potential AI opportunities
-- Move to problem discovery`;
-    
-    case 'problem_discovery':
-      return `- Ask targeted questions about their challenges
-- Identify pain points and inefficiencies
-- Understand their AI readiness and goals
-- Move to solution presentation`;
-    
-    case 'solution_presentation':
-      return `- Present relevant AI solutions
-- Show specific benefits and ROI
-- Address their specific pain points
-- Move to call to action`;
-    
-    case 'call_to_action':
-      return `- Propose next steps (meeting, proposal, etc.)
-- Create urgency without being pushy
-- Provide clear value proposition
-- Close with specific action items`;
-    
-    default:
-      return `- Adapt response based on conversation flow
-- Focus on providing value and building trust`;
-  }
-}
-
-// ============================================================================
-// ENHANCED GEMINI CLIENT WITH GOOGLE SEARCH
+// ENHANCED GEMINI CLIENT WITH DEMO BUDGET SYSTEM
 // ============================================================================
 
 class EnhancedGeminiClient {
@@ -310,7 +232,7 @@ class EnhancedGeminiClient {
     });
   }
 
-  async generateResponse(messages: Message[], systemPrompt: string, hasWebGrounding: boolean = false, leadContext?: any) {
+  async generateResponse(messages: Message[], systemPrompt: string, hasWebGrounding: boolean = false, leadContext?: any, sessionId?: string) {
     // Log search activity if we have lead context
     if (leadContext?.name && hasWebGrounding) {
       await logActivityToDB({
@@ -331,15 +253,15 @@ class EnhancedGeminiClient {
     if (hasWebGrounding && leadContext?.name) {
       console.log(`🔍 GROUNDED SEARCH TRIGGERED for: ${leadContext.name}`);
       logConsoleActivity('info', `Using grounded search for: ${leadContext.name}`);
-      return this.generateGroundedResponse(messages, systemPrompt, leadContext);
+      return this.generateGroundedResponse(messages, systemPrompt, leadContext, sessionId);
     } else {
       console.log(`❌ NO GROUNDED SEARCH - hasWebGrounding: ${hasWebGrounding}, leadContext?.name: ${leadContext?.name}`);
       logConsoleActivity('info', 'Using regular response - no grounded search');
-      return this.generateRegularResponse(messages, systemPrompt);
+      return this.generateRegularResponse(messages, systemPrompt, sessionId);
     }
   }
 
-  private async generateGroundedResponse(messages: Message[], systemPrompt: string, leadContext: any) {
+  private async generateGroundedResponse(messages: Message[], systemPrompt: string, leadContext: any, sessionId?: string) {
     try {
       // Import and use the Gemini Live API service
       const { GeminiLiveAPI } = await import('@/lib/gemini-live-api');
@@ -350,6 +272,15 @@ class EnhancedGeminiClient {
       
       // Perform grounded search using the live API - this returns a complete AI response
       const aiResponse = await geminiLiveAPI.performGroundedSearch(leadContext, userMessage);
+
+      // Log token usage for grounded search
+      if (sessionId) {
+        const inputTokens = estimateTokens(systemPrompt + userMessage);
+        const outputTokens = estimateTokens(aiResponse);
+        const totalTokens = inputTokens + outputTokens;
+        
+        await recordDemoUsage(sessionId, 'lead_research' as DemoFeature, totalTokens, true);
+      }
 
       // Convert the response to an async generator to match the expected return type
       return (async function* () {
@@ -363,11 +294,11 @@ class EnhancedGeminiClient {
       })();
     } catch (error) {
       console.error('Grounded search failed, falling back to regular response:', error);
-      return this.generateRegularResponse(messages, systemPrompt);
+      return this.generateRegularResponse(messages, systemPrompt, sessionId);
     }
   }
 
-  private async generateRegularResponse(messages: Message[], systemPrompt: string) {
+  private async generateRegularResponse(messages: Message[], systemPrompt: string, sessionId?: string) {
     // Combine system prompt with messages
     const contents = [
       {
@@ -380,19 +311,45 @@ class EnhancedGeminiClient {
       }))
     ];
 
+    // Use demo budget system for model selection
+    const fullPrompt = systemPrompt + messages.map(m => m.content).join('\n');
+    const estimatedTokens = estimateTokens(fullPrompt);
+    
+    // Check demo access for chat feature
+    if (sessionId) {
+      const accessCheck = await checkDemoAccess(sessionId, 'chat' as DemoFeature, estimatedTokens);
+      
+      if (!accessCheck.allowed) {
+        throw new Error(accessCheck.reason || 'Demo budget exceeded');
+      }
+    }
+
+    // Select model based on demo budget system
+    const model = sessionId ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
+
     const config = {
       responseMimeType: "text/plain",
     };
 
-    return this.genAI.models.generateContentStream({
-      model: 'gemini-2.5-flash',
+    const stream = this.genAI.models.generateContentStream({
+      model,
       config,
       contents,
     });
+
+    // Log token usage for demo tracking
+    if (sessionId) {
+      const estimatedOutputTokens = estimatedTokens * 0.5;
+      const totalTokens = estimatedTokens + estimatedOutputTokens;
+      
+      await recordDemoUsage(sessionId, 'chat' as DemoFeature, totalTokens, true);
+    }
+
+    return stream;
   }
 
   async countTokens(text: string): Promise<number> {
-    return Math.ceil(text.length / 4);
+    return estimateTokens(text);
   }
 }
 
@@ -400,359 +357,110 @@ class EnhancedGeminiClient {
 // MAIN API HANDLER
 // ============================================================================
 
-async function chatHandler(req: NextRequest) {
-  // Check for missing environment variables in development
-  checkDevelopmentConfig();
-  
+export async function POST(req: NextRequest) {
   const startTime = Date.now();
-  const correlationId = logConsoleActivity('info', 'Enhanced chat request started');
+  const correlationId = logConsoleActivity('info', 'Chat request started');
   
   try {
+    // Get client IP for rate limiting and demo session tracking
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const userAgent = req.headers.get('user-agent') || 'unknown';
+    
     // Rate limiting check
-    const forwarded = req.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
-    
     if (!checkRateLimit(ip, 20, 60000)) {
-      logConsoleActivity('warn', 'Rate limit exceeded', { ip, correlationId });
-      return new Response(JSON.stringify({
-        error: 'Rate limit exceeded',
-        retryAfter: 60
-      }), { 
-        status: 429,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Retry-After': '60',
-          'X-RateLimit-Limit': '20',
-          'X-RateLimit-Window': '60000'
-        }
-      });
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429 });
     }
 
-    // Authentication check (bypass in development or demo mode)
-    let auth: { success: boolean; userId?: string; error?: string };
-    
-    if (process.env.NODE_ENV === 'development') {
-      auth = { success: true, userId: 'dev-user', error: undefined };
-      logConsoleActivity('info', 'Development mode - authentication bypassed', { ip, correlationId });
-    } else if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
-      auth = { success: true, userId: 'demo' };
-      logConsoleActivity('info', 'Demo mode – authentication bypassed', { ip, correlationId });
-    } else {
-      auth = await authenticateRequest(req);
-      if (!auth.success) {
-        logConsoleActivity('warn', 'Authentication failed', { ip, correlationId, error: auth.error });
-        return new Response(JSON.stringify({
-          error: 'Authentication required',
-          details: auth.error
-        }), { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-    }
+    // Get session ID from headers or cookies
+    const sessionId = req.headers.get('x-demo-session-id') || req.cookies.get('demo-session-id')?.value;
 
-    // Input validation
+    // Authentication check (optional for demo)
+    const auth = await authenticateRequest(req);
+    const isAuthenticated = auth.success;
+
+    // Parse and validate request
     const rawData = await req.json();
     const validation = validateRequest(chatRequestSchema, rawData);
+    
     if (!validation.success) {
-      logConsoleActivity('warn', 'Validation failed', { 
-        ip, 
-        correlationId, 
-        userId: auth.userId,
-        errors: validation.errors 
-      });
       return new Response(JSON.stringify({
         error: 'Validation failed',
         details: validation.errors
-      }), { 
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }), { status: 400 });
     }
-    
+
     const { messages, data = {} } = validation.data;
-    const { leadContext = {}, sessionId = null } = data;
-    
-    // Log the lead context for debugging
-    if (leadContext && Object.keys(leadContext).length > 0) {
-      console.log('Lead context received:', {
-        name: leadContext.name,
-        email: leadContext.email,
-        company: leadContext.company
-      })
-    } else {
-      console.log('No lead context provided')
-    }
-    
+    const { hasWebGrounding = false, leadContext } = data;
+
     // Sanitize messages
     const sanitizedMessages = messages.map((message: Message) => ({
       ...message,
       content: sanitizeString(message.content)
     }));
 
-    // Get the latest user message for context
-    const lastUserMessage = sanitizedMessages.filter(m => m.role === 'user').pop()?.content || '';
-
-    // Initialize or get conversation state
-    let conversationState;
-    if (sessionId && typeof sessionId === 'string') {
-      conversationState = conversationManager.getConversationState(sessionId);
-      if (!conversationState) {
-        conversationState = await conversationManager.initializeConversation(sessionId);
+    // Check demo budget for chat feature
+    if (sessionId) {
+      const fullPrompt = messages.map(m => m.content).join('\n');
+      const estimatedTokens = estimateTokens(fullPrompt);
+      
+      const accessCheck = await checkDemoAccess(sessionId, 'chat' as DemoFeature, estimatedTokens);
+      
+      if (!accessCheck.allowed) {
+        return new Response(JSON.stringify({
+          error: 'Demo limit reached',
+          message: accessCheck.reason,
+          remainingTokens: accessCheck.remainingTokens,
+          remainingRequests: accessCheck.remainingRequests
+        }), { status: 429 });
       }
     }
 
-    // Process message through conversation state management (with timeout)
-    let stageResult: any;
-    if (conversationState && lastUserMessage && sessionId && typeof sessionId === 'string') {
-      try {
-        // Add timeout to prevent long processing
-        const stagePromise = conversationManager.processMessage(sessionId, lastUserMessage, leadContext.leadId);
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Stage processing timeout')), 5000)
-        );
-        
-        stageResult = await Promise.race([stagePromise, timeoutPromise]);
-        
-        // Process through the advanced conversation state machine
-        
-        // Update conversation state
-        conversationState = stageResult.updatedState;
-        
-        // Handle stage-specific actions
-        if (stageResult.shouldTriggerResearch && leadContext?.email) {
-          // Trigger background research for the lead
-          setTimeout(async () => {
-            try {
-              const domainAnalysis = await leadManager.analyzeEmailDomain(leadContext.email);
-              await conversationManager.integrateResearchData(sessionId, {
-                companySize: domainAnalysis.companySize,
-                industry: domainAnalysis.industry,
-                decisionMaker: domainAnalysis.decisionMaker,
-                aiReadiness: domainAnalysis.aiReadiness
-              });
-              
-              await logActivityToDB({
-                type: "ai_thinking",
-                title: "Company Research Complete",
-                description: `Analyzed ${leadContext.email} - ${domainAnalysis.companySize} company in ${domainAnalysis.industry}`,
-                status: "completed",
-                metadata: { 
-                  name: leadContext.name, 
-                  email: leadContext.email,
-                  companySize: domainAnalysis.companySize,
-                  industry: domainAnalysis.industry,
-                  aiReadiness: domainAnalysis.aiReadiness
-                }
-              });
-            } catch (error) {
-              console.error('Error in background research:', error);
-            }
-          }, 1000);
-        }
-        
-        // Handle follow-up sequence creation
-        if (stageResult.shouldSendFollowUp && leadContext?.email) {
-          setTimeout(async () => {
-            try {
-              const followUpSequence = await leadManager.createFollowUpSequence(leadContext.id || 'temp');
-              await logActivityToDB({
-                type: "follow_up_created",
-                title: "Follow-up Sequence Created",
-                description: `Created ${followUpSequence.emails.length} follow-up emails for ${leadContext.name}`,
-                status: "completed",
-                metadata: { 
-                  name: leadContext.name, 
-                  email: leadContext.email,
-                  sequenceId: followUpSequence.id,
-                  emailCount: followUpSequence.emails.length
-                }
-              });
-            } catch (error) {
-              console.error('Error creating follow-up sequence:', error);
-            }
-          }, 2000);
-        }
-        
-        // Log stage transition with enhanced details
-        await logActivityToDB({
-          type: "stage_transition",
-          title: "Conversation Stage Advanced",
-          description: `Advanced from ${stageResult.updatedState.currentStage} to ${stageResult.newStage} for ${leadContext?.name || 'user'}`,
-          status: "completed",
-          metadata: { 
-            name: leadContext?.name, 
-            email: leadContext?.email,
-            fromStage: stageResult.updatedState.currentStage,
-            toStage: stageResult.newStage,
-            shouldTriggerResearch: stageResult.shouldTriggerResearch,
-            shouldSendFollowUp: stageResult.shouldSendFollowUp,
-            totalMessages: stageResult.updatedState.metadata.totalMessages
-          }
-        });
-        
-        // Update lead data if we have new information
-        if (leadContext?.email && stageResult.updatedState.context.leadData) {
-          try {
-            await leadManager.updateLead(leadContext.id || 'temp', {
-              ...stageResult.updatedState.context.leadData,
-              conversationStage: stageResult.newStage,
-              lastInteraction: new Date(),
-              totalInteractions: stageResult.updatedState.metadata.totalMessages
-            });
-          } catch (error) {
-            console.error('Error updating lead:', error);
-          }
-        }
-        
-      } catch (error) {
-        console.error('Error processing conversation state:', error);
-        // Continue with basic chat if state management fails
-      }
+    // Build system prompt
+    const systemPrompt = await buildEnhancedSystemPrompt(leadContext, messages[messages.length - 1]?.content || '', null);
+
+    // Initialize Gemini client
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY environment variable is not set');
     }
 
-    // Log chat activity if we have lead context
-    if (leadContext?.name) {
-      await logActivityToDB({
-        type: "ai_request",
-        title: "Enhanced Chat Request",
-        description: `Chat with ${leadContext.name}${leadContext.company ? ` from ${leadContext.company}` : ''}`,
-        status: "in_progress",
-        metadata: { 
-          name: leadContext.name, 
-          email: leadContext.email,
-          company: leadContext.company,
-          messageCount: sanitizedMessages.length,
-          currentStage: conversationState?.currentStage || 'unknown'
-        }
-      });
-    }
+    const geminiClient = new EnhancedGeminiClient(process.env.GEMINI_API_KEY);
 
-    // Validate API key
-    const apiKey = process.env.GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      logConsoleActivity('error', 'Missing API key configuration', { correlationId });
-      return new Response(JSON.stringify({
-        error: 'Service configuration error'
-      }), { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Initialize enhanced Gemini client
-    const geminiClient = new EnhancedGeminiClient(apiKey);
-    const systemPrompt = await buildEnhancedSystemPrompt(leadContext, lastUserMessage, conversationState);
-
-    logConsoleActivity('info', 'Processing enhanced chat request', { 
-      correlationId,
-      userId: auth.userId,
-      sessionId,
-      messageCount: sanitizedMessages.length,
-      model: 'gemini-2.5-flash',
-      leadContext: !!leadContext?.name
-    });
-
-    // Generate response using the enhanced client with web grounding
-    const hasWebGrounding = !!leadContext?.name;
-    logConsoleActivity('info', `Lead context debug: ${JSON.stringify(leadContext)}`);
-    logConsoleActivity('info', `hasWebGrounding: ${hasWebGrounding}`);
-    logConsoleActivity('info', `Will use grounded search: ${hasWebGrounding && leadContext?.name ? 'YES' : 'NO'}`);
+    // Generate response
     let responseStream;
     try {
-      responseStream = await geminiClient.generateResponse(sanitizedMessages, systemPrompt, hasWebGrounding, leadContext);
-    } catch (error) {
+      responseStream = await geminiClient.generateResponse(sanitizedMessages, systemPrompt, hasWebGrounding, leadContext, sessionId);
+    } catch (error: any) {
       logConsoleActivity('error', 'Failed to generate enhanced response', {
         correlationId,
-        userId: auth.userId,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error.message || 'Unknown error',
+        sessionId
       });
-      return new Response(JSON.stringify({
-        error: 'Failed to generate response'
-      }), { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      throw error;
     }
 
-    // Stream the response
-    const encoder = new TextEncoder();
+    // Create SSE stream
     const stream = new ReadableStream({
       async start(controller) {
+        const encoder = new TextEncoder();
         try {
-          let fullResponse = '';
-          
           for await (const chunk of responseStream) {
-            const text = chunk.text;
-            if (text) {
-              fullResponse += text;
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ content: text })}\n\n`)
-              );
-            }
+            const text = chunk.text || '';
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: text })}\n\n`));
           }
-          
-          // Log successful response completion
-          if (leadContext?.name) {
-            await logActivityToDB({
-              type: "ai_stream",
-              title: "Enhanced Response Complete",
-              description: `Generated ${fullResponse.length} character response for ${leadContext.name} with lead research context`,
-              status: "completed",
-              metadata: { 
-                name: leadContext.name, 
-                responseLength: fullResponse.length
-              }
-            });
-
-            // Log summary creation step
-            setTimeout(async () => {
-              await logActivityToDB({
-                type: "ai_thinking",
-                title: "Creating Summary",
-                description: "Finalizing the analysis report",
-                status: "in_progress",
-                metadata: { 
-                  name: leadContext.name, 
-                  email: leadContext.email,
-                  summaryType: "conversation"
-                }
-              });
-            }, 1000);
-
-            setTimeout(async () => {
-              await logActivityToDB({
-                type: "ai_thinking",
-                title: "Summary Ready",
-                description: "PDF summary available for download",
-                status: "completed",
-                metadata: { 
-                  name: leadContext.name, 
-                  email: leadContext.email,
-                  summaryType: "pdf",
-                  downloadReady: true
-                }
-              });
-            }, 3000);
-          }
-          
           controller.close();
-        } catch (error) {
+        } catch (error: any) {
+          logConsoleActivity('error', 'Stream error', { correlationId, error: error.message || 'Unknown error' });
           controller.error(error);
         }
       },
     });
 
-    // Calculate token usage (approximate)
-    const inputTokens = lastUserMessage ? await geminiClient.countTokens(lastUserMessage) : 0;
-    
-    logConsoleActivity('info', 'Enhanced chat response streaming started', {
+    // Log successful completion
+    logConsoleActivity('info', 'Chat request completed', {
       correlationId,
-      userId: auth.userId,
-      inputTokens,
       responseTime: Date.now() - startTime,
-      leadContext: !!leadContext?.name
+      sessionId,
+      isAuthenticated
     });
 
     return new Response(stream, {
@@ -760,33 +468,24 @@ async function chatHandler(req: NextRequest) {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
-        'X-Correlation-ID': correlationId.toString(),
-        'X-Response-Time': `${Date.now() - startTime}ms`,
-        'X-Lead-Research': leadContext?.email ? 'enabled' : 'disabled'
+        'X-Correlation-ID': correlationId,
+        'X-Response-Time': `${Date.now() - startTime}ms`
       },
     });
+
   } catch (error: any) {
-    const responseTime = Date.now() - startTime;
-    logConsoleActivity('error', 'Enhanced chat API error', { 
-      correlationId,
-      error: error.message || 'Unknown error',
-      responseTime,
-      stack: error.stack
+    logConsoleActivity('error', 'Chat API error', { 
+      correlationId, 
+      error: error.message,
+      stack: error.stack 
     });
     
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
-      correlationId
+      message: error.message 
     }), { 
       status: 500,
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-Correlation-ID': correlationId
-      }
+      headers: { 'X-Correlation-ID': correlationId }
     });
   }
 }
-
-export const POST = withFullSecurity(chatHandler, {
-  payloadLimit: '100kb'
-})

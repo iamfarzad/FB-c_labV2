@@ -50,6 +50,7 @@ export const chatRequestSchema = z.object({
     leadContext: z.any().optional(),
     sessionId: z.string().optional(),
     userId: z.string().optional(),
+    hasWebGrounding: z.boolean().optional(),
   }).optional(),
 });
 

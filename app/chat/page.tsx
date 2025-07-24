@@ -15,20 +15,20 @@ import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
 import { VoiceOutputModal } from "@/components/chat/modals/VoiceOutputModal"
 import { WebcamModal } from "@/components/chat/modals/WebcamModal"
 import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
+import { useDemoSession, DemoBudgetWarning } from "@/components/demo-session-manager"
 
 import type { LeadCaptureState } from "./types/lead-capture"
 import { useChatContext } from "./context/ChatProvider"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import { supabase } from "@/lib/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
-import { v4 as uuidv4 } from "uuid"
 import type { Message } from "./types/chat"
 
 // Disable static optimization for this page
 export const dynamic = 'force-dynamic'
 
 export default function ChatPage() {
-  const [sessionId] = useState(() => uuidv4())
+  const { sessionId } = useDemoSession()
   const { activityLog, addActivity, clearActivities } = useChatContext()
   const { toast } = useToast()
 
@@ -43,7 +43,6 @@ export default function ChatPage() {
   const [showWebcamModal, setShowWebcamModal] = useState(false)
   const [showScreenShareModal, setShowScreenShareModal] = useState(false)
   const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
-
 
   const [leadCaptureState, setLeadCaptureState] = useState<LeadCaptureState>({
     stage: "initial",
@@ -69,7 +68,7 @@ export default function ChatPage() {
   } = useChat({
     data: {
       leadContext: leadCaptureState.leadData,
-      sessionId: sessionId,
+      sessionId: sessionId || 'anonymous',
       userId: "anonymous_user" // Could be enhanced with real user tracking
     },
     onFinish: (message) => {
@@ -443,6 +442,7 @@ export default function ChatPage() {
                 />
               </div>
             )}
+            <DemoBudgetWarning feature="chat" estimatedTokens={input.length * 2} />
             <ChatMain messages={messages as Message[]} isLoading={isLoading} messagesEndRef={messagesEndRef} />
           </div>
           <div className="shrink-0">
