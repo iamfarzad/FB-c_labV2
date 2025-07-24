@@ -13,6 +13,9 @@ interface TimelineActivityLogProps {
 }
 
 export function TimelineActivityLog({ activities, onActivityClick, isCompact = false }: TimelineActivityLogProps) {
+  // Limit activities to prevent performance issues - show only last 20 activities
+  const limitedActivities = activities.slice(-20)
+  
   const getStatusIcon = (status: ActivityItem["status"]) => {
     switch (status) {
       case "completed":
@@ -33,7 +36,7 @@ export function TimelineActivityLog({ activities, onActivityClick, isCompact = f
     })
   }
 
-  if (activities.length === 0) {
+  if (limitedActivities.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center">
@@ -48,7 +51,7 @@ export function TimelineActivityLog({ activities, onActivityClick, isCompact = f
   return (
     <ScrollArea className="h-full">
       <div className="space-y-3">
-        {activities.map((activity, index) => (
+        {limitedActivities.map((activity, index) => (
           <div
             key={activity.id}
             className={`relative flex gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer ${

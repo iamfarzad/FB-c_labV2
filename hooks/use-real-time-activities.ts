@@ -15,7 +15,19 @@ export function useRealTimeActivities() {
       id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now(),
     }
-    setActivities((prev) => [newActivity, ...prev.slice(0, 49)]) // Keep last 50
+    setActivities((prev) => {
+      // Add new activity and keep only last 15 activities to prevent performance issues
+      const updated = [newActivity, ...prev]
+      
+      // Remove old completed activities (older than 2 minutes) to keep the list manageable
+      const twoMinutesAgo = Date.now() - (2 * 60 * 1000)
+      const filtered = updated.filter(activity => 
+        activity.status !== 'completed' || activity.timestamp > twoMinutesAgo
+      )
+      
+      // Keep only last 15 activities maximum
+      return filtered.slice(0, 15)
+    })
   }, [])
 
   const updateActivity = useCallback((id: string, updates: Partial<ActivityItem>) => {
@@ -24,6 +36,24 @@ export function useRealTimeActivities() {
 
   const clearActivities = useCallback(() => {
     setActivities([])
+  }, [])
+
+  // Cleanup old activities periodically
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      setActivities((prev) => {
+        // Remove completed activities older than 2 minutes for more aggressive cleanup
+        const twoMinutesAgo = Date.now() - (2 * 60 * 1000)
+        const filtered = prev.filter(activity => 
+          activity.status !== 'completed' || activity.timestamp > twoMinutesAgo
+        )
+        
+        // Keep only last 15 activities maximum
+        return filtered.slice(0, 15)
+      })
+    }, 15000) // Run every 15 seconds for more frequent cleanup
+
+    return () => clearInterval(cleanupInterval)
   }, [])
 
   // Track mount state for hydration safety and load existing activities
@@ -39,7 +69,7 @@ export function useRealTimeActivities() {
           .from('activities')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(50)
+          .limit(15) // Reduced from 50 to 15 for better performance
         
         if (error) {
           console.error('Failed to load existing activities:', error)
@@ -118,8 +148,17 @@ export function useRealTimeActivities() {
                 updated[existingIndex] = activity
                 return updated
               } else {
-                // Add new
-                return [activity, ...prev.slice(0, 49)]
+                // Add new and keep only last 15 activities for performance
+                const updated = [activity, ...prev]
+                
+                // Remove old completed activities (older than 3 minutes)
+                const threeMinutesAgo = Date.now() - (3 * 60 * 1000)
+                const filtered = updated.filter(activity => 
+                  activity.status !== 'completed' || activity.timestamp > threeMinutesAgo
+                )
+                
+                // Keep only last 15 activities maximum
+                return filtered.slice(0, 15)
               }
             })
           }
@@ -177,7 +216,17 @@ export function useRealTimeActivities() {
           updated[existingIndex] = activity
           return updated
         } else {
-          return [activity, ...prev.slice(0, 49)]
+          // Add new and keep only last 15 activities for performance
+          const updated = [activity, ...prev]
+          
+          // Remove old completed activities (older than 3 minutes)
+          const threeMinutesAgo = Date.now() - (3 * 60 * 1000)
+          const filtered = updated.filter(activity => 
+            activity.status !== 'completed' || activity.timestamp > threeMinutesAgo
+          )
+          
+          // Keep only last 15 activities maximum
+          return filtered.slice(0, 15)
         }
       })
     }

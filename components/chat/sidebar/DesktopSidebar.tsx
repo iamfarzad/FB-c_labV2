@@ -14,6 +14,7 @@ interface DesktopSidebarProps {
   onToggle: () => void
   onNewChat: () => void
   onActivityClick: (activity: ActivityItem) => void
+  onClearActivities?: () => void
   className?: string
 }
 
@@ -23,6 +24,7 @@ export const DesktopSidebar = ({
   onToggle,
   onNewChat,
   onActivityClick,
+  onClearActivities,
   className,
 }: DesktopSidebarProps) => {
   const [isTablet, setIsTablet] = useState(false)
@@ -59,6 +61,7 @@ export const DesktopSidebar = ({
               activities={activities}
               onNewChat={onNewChat}
               onActivityClick={onActivityClick}
+              onClearActivities={onClearActivities}
               isTablet={isTablet}
             />
           </motion.div>

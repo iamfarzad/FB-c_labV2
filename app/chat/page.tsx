@@ -29,7 +29,7 @@ export const dynamic = 'force-dynamic'
 
 export default function ChatPage() {
   const [sessionId] = useState(() => uuidv4())
-  const { activityLog, addActivity } = useChatContext()
+  const { activityLog, addActivity, clearActivities } = useChatContext()
   const { toast } = useToast()
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -401,6 +401,18 @@ export default function ChatPage() {
     console.log("Activity clicked:", activity)
   }, [])
 
+  const handleClearActivities = useCallback(() => {
+    // Clear all activities
+    clearActivities()
+    // Add a confirmation activity
+    addActivity({ 
+      type: "user_action", 
+      title: "Activities Cleared", 
+      description: "Activity log has been cleared", 
+      status: "completed" 
+    })
+  }, [clearActivities, addActivity])
+
   return (
     <ChatLayout>
       <div className="flex h-full">
@@ -410,6 +422,7 @@ export default function ChatPage() {
           onToggle={handleToggleSidebar}
           onNewChat={handleNewChat}
           onActivityClick={handleActivityClick}
+          onClearActivities={handleClearActivities}
         />
         <div className="flex flex-col flex-1 h-full">
           <ChatHeader 

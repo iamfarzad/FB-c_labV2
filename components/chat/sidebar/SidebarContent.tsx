@@ -13,10 +13,11 @@ interface SidebarContentProps {
   activities: ActivityItem[]
   onNewChat: () => void
   onActivityClick: (activity: ActivityItem) => void
+  onClearActivities?: () => void
   isTablet?: boolean
 }
 
-export const SidebarContent = ({ activities, onNewChat, onActivityClick, isTablet = false }: SidebarContentProps) => {
+export const SidebarContent = ({ activities, onNewChat, onActivityClick, onClearActivities, isTablet = false }: SidebarContentProps) => {
   const liveActivities = activities.filter((a) => a.status === "in_progress" || a.status === "pending").length
 
   return (
@@ -43,6 +44,19 @@ export const SidebarContent = ({ activities, onNewChat, onActivityClick, isTable
           >
             Chat History
           </h2>
+          {activities.length > 0 && onClearActivities && (
+            <Button
+              onClick={onClearActivities}
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "text-muted-foreground hover:text-foreground",
+                isTablet ? "h-6 px-2 text-xs" : "h-7 px-2 text-xs"
+              )}
+            >
+              Clear
+            </Button>
+          )}
         </div>
 
         <motion.div
