@@ -7,15 +7,18 @@
 **Fixed critical build-time error with Supabase environment variables**:
 - ✅ **Environment Variable Validation** - Added proper runtime validation for SUPABASE_URL and SUPABASE_ANON_KEY
 - ✅ **Build-Time Safety** - Fixed hardcoded credentials in `lib/supabase/server.ts` that were causing build failures
+- ✅ **Next.js Config Integration** - Added Supabase environment variables to `next.config.mjs` for build-time access
 - ✅ **Error Handling** - Added clear error messages when environment variables are missing
 - ✅ **Fallback Support** - Supports both `SUPABASE_URL`/`SUPABASE_ANON_KEY` and `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - ✅ **Build Success** - Verified successful production build with proper environment variable handling
 
 **Technical Improvements**:
 - ✅ **Server-Side Client** - Fixed `lib/supabase/server.ts` to use environment variables instead of hardcoded values
+- ✅ **Next.js Configuration** - Added Supabase credentials to `next.config.mjs` env section for build-time availability
 - ✅ **Runtime Validation** - Added proper error checking for missing environment variables
 - ✅ **Backward Compatibility** - Maintains support for both public and private environment variable patterns
 - ✅ **Security Enhancement** - Removed hardcoded credentials from source code
+- ✅ **Codex Compatibility** - Ensures environment variables are available during Codex build process
 
 ## [1.4.3] - 2025-07-25
 
