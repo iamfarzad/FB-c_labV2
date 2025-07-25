@@ -1,19 +1,9 @@
+import { getSupabase } from './supabase/server'
+
 /**
  * Demo Budget Manager
  * Manages per-feature and per-session budgets for curated demo experience
  */
-
-export interface DemoBudget {
-  sessionId: string
-  ipAddress?: string
-  userAgent?: string
-  createdAt: string
-  expiresAt: string
-  totalTokensUsed: number
-  featureUsage: Record<DemoFeature, number>
-  isComplete: boolean
-  completedFeatures: DemoFeature[]
-}
 
 export type DemoFeature = 
   | 'chat' 
@@ -24,79 +14,51 @@ export type DemoFeature =
   | 'video_to_app' 
   | 'lead_research'
 
-export interface FeatureBudget {
-  maxTokens: number
-  maxRequests: number
-  model: string
-  description: string
+export interface DemoBudget {
+  sessionId: string
+  ipAddress?: string
+  userAgent?: string
+  createdAt: string
+  expiresAt: string
+  totalTokensUsed: number
+  totalRequestsMade: number
+  featureUsage: Record<DemoFeature, {
+    tokensUsed: number
+    requestsMade: number
+  }>
+  isComplete: boolean
+  completedFeatures: DemoFeature[]
 }
 
-export const FEATURE_BUDGETS: Record<DemoFeature, FeatureBudget> = {
-  chat: {
-    maxTokens: 10000,
-    maxRequests: 10,
-    model: 'gemini-2.5-flash-lite',
-    description: 'Interactive chat conversations'
-  },
-  voice_tts: {
-    maxTokens: 5000,
-    maxRequests: 5,
-    model: 'gemini-2.5-flash-preview-tts',
-    description: 'Text-to-speech generation'
-  },
-  webcam_analysis: {
-    maxTokens: 5000,
-    maxRequests: 3,
-    model: 'gemini-2.5-flash-lite',
-    description: 'Webcam image analysis'
-  },
-  screenshot_analysis: {
-    maxTokens: 5000,
-    maxRequests: 3,
-    model: 'gemini-2.5-flash-lite',
-    description: 'Screenshot analysis'
-  },
-  document_analysis: {
-    maxTokens: 10000,
-    maxRequests: 2,
-    model: 'gemini-2.5-flash-lite',
-    description: 'Document processing and analysis'
-  },
-  video_to_app: {
-    maxTokens: 15000,
-    maxRequests: 1,
-    model: 'gemini-2.5-flash',
-    description: 'Video to learning app generation'
-  },
-  lead_research: {
-    maxTokens: 10000,
-    maxRequests: 2,
-    model: 'gemini-2.5-flash',
-    description: 'Lead research with web search'
-  }
+export interface DemoAccessResult {
+  allowed: boolean
+  reason?: string
+  remainingTokens: number
+  remainingRequests: number
+  featureRemainingTokens: number
+  featureRemainingRequests: number
 }
 
+// Feature-specific budgets
+export const FEATURE_BUDGETS: Record<DemoFeature, { tokens: number; requests: number }> = {
+  chat: { tokens: 10000, requests: 10 },
+  voice_tts: { tokens: 5000, requests: 5 },
+  webcam_analysis: { tokens: 5000, requests: 3 },
+  screenshot_analysis: { tokens: 5000, requests: 3 },
+  document_analysis: { tokens: 10000, requests: 2 },
+  video_to_app: { tokens: 15000, requests: 1 },
+  lead_research: { tokens: 10000, requests: 2 }
+}
+
+// Overall session limits
 export const DEMO_LIMITS = {
   SESSION_DURATION_HOURS: 24,
-  TOTAL_SESSION_TOKENS: 50000,
-  PER_REQUEST_MAX_TOKENS: 5000,
-  SESSION_ID_LENGTH: 16
+  TOTAL_TOKENS: 50000,
+  TOTAL_REQUESTS: 50
 }
 
 export class DemoBudgetManager {
-  private static instance: DemoBudgetManager
-  private sessionCache: Map<string, DemoBudget> = new Map()
-
-  static getInstance(): DemoBudgetManager {
-    if (!DemoBudgetManager.instance) {
-      DemoBudgetManager.instance = new DemoBudgetManager()
-    }
-    return DemoBudgetManager.instance
-  }
-
-  generateSessionId(): string {
-    return Math.random().toString(36).substring(2, 2 + DEMO_LIMITS.SESSION_ID_LENGTH)
-  }
+  private sessionCache = new Map<string, DemoBudget>()
 
   async getOrCreateSession(sessionId?: string, ipAddress?: string, userAgent?: string): Promise<DemoBudget> {
     const id = sessionId || this.generateSessionId()
@@ -112,6 +74,39 @@ export class DemoBudgetManager {
       }
     }
 
+    // Try to load from database
+    try {
+      const supabase = getSupabase()
+      const { data: existingSession } = await supabase
+        .from('demo_sessions')
+        .select('*')
+        .eq('session_id', id)
+        .single()
+
+      if (existingSession && new Date(existingSession.expires_at) > new Date()) {
+        const session: DemoBudget = {
+          sessionId: existingSession.session_id,
+          ipAddress: existingSession.ip_address,
+          userAgent: existingSession.user_agent,
+          createdAt: existingSession.created_at,
+          expiresAt: existingSession.expires_at,
+          totalTokensUsed: existingSession.total_tokens_used || 0,
+          totalRequestsMade: existingSession.total_requests_made || 0,
+          featureUsage: existingSession.feature_usage || Object.keys(FEATURE_BUDGETS).reduce((acc, feature) => {
+            acc[feature as DemoFeature] = { tokensUsed: 0, requestsMade: 0 }
+            return acc
+          }, {} as Record<DemoFeature, { tokensUsed: number; requestsMade: number }>),
+          isComplete: existingSession.is_complete || false,
+          completedFeatures: existingSession.completed_features || []
+        }
+        
+        this.sessionCache.set(id, session)
+        return session
+      }
+    } catch (error) {
+      console.warn('Failed to load session from database:', error)
+    }
+
     // Create new session
     const now = new Date()
     const expiresAt = new Date(now.getTime() + DEMO_LIMITS.SESSION_DURATION_HOURS * 60 * 60 * 1000)
@@ -123,202 +118,183 @@ export class DemoBudgetManager {
       createdAt: now.toISOString(),
       expiresAt: expiresAt.toISOString(),
       totalTokensUsed: 0,
+      totalRequestsMade: 0,
       featureUsage: Object.keys(FEATURE_BUDGETS).reduce((acc, feature) => {
-        acc[feature as DemoFeature] = 0
+        acc[feature as DemoFeature] = { tokensUsed: 0, requestsMade: 0 }
         return acc
-      }, {} as Record<DemoFeature, number>),
+      }, {} as Record<DemoFeature, { tokensUsed: number; requestsMade: number }>),
       isComplete: false,
       completedFeatures: []
+    }
+
+    // Save to database
+    try {
+      const supabase = getSupabase()
+      await supabase.from('demo_sessions').insert({
+        session_id: id,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        created_at: newSession.createdAt,
+        expires_at: newSession.expiresAt,
+        total_tokens_used: 0,
+        total_requests_made: 0,
+        feature_usage: newSession.featureUsage,
+        is_complete: false,
+        completed_features: []
+      })
+    } catch (error) {
+      console.warn('Failed to save session to database:', error)
     }
 
     this.sessionCache.set(id, newSession)
     return newSession
   }
 
-  async checkFeatureAccess(sessionId: string, feature: DemoFeature, estimatedTokens: number): Promise<{
-    allowed: boolean
-    reason?: string
-    remainingTokens: number
-    remainingRequests: number
-    suggestedModel?: string
-  }> {
+  async checkDemoAccess(sessionId: string, feature: DemoFeature, estimatedTokens: number): Promise<DemoAccessResult> {
     const session = await this.getOrCreateSession(sessionId)
     
-    if (session.isComplete) {
+    // Check if session is expired
+    if (new Date() > new Date(session.expiresAt)) {
       return {
         allowed: false,
-        reason: 'Demo session complete. Please schedule a call to continue.',
+        reason: 'Demo session expired. Please start a new session.',
         remainingTokens: 0,
-        remainingRequests: 0
+        remainingRequests: 0,
+        featureRemainingTokens: 0,
+        featureRemainingRequests: 0
       }
     }
 
-    // Check per-request limit
-    if (estimatedTokens > DEMO_LIMITS.PER_REQUEST_MAX_TOKENS) {
+    // Check overall session limits
+    if (session.totalTokensUsed + estimatedTokens > DEMO_LIMITS.TOTAL_TOKENS) {
       return {
         allowed: false,
-        reason: `Request too large: ${estimatedTokens} tokens exceeds limit of ${DEMO_LIMITS.PER_REQUEST_MAX_TOKENS}`,
-        remainingTokens: FEATURE_BUDGETS[feature].maxTokens - session.featureUsage[feature],
-        remainingRequests: FEATURE_BUDGETS[feature].maxRequests - Math.floor(session.featureUsage[feature] / 1000)
+        reason: `Demo session token limit reached (${DEMO_LIMITS.TOTAL_TOKENS} tokens). Please start a new session.`,
+        remainingTokens: Math.max(0, DEMO_LIMITS.TOTAL_TOKENS - session.totalTokensUsed),
+        remainingRequests: Math.max(0, DEMO_LIMITS.TOTAL_REQUESTS - session.totalRequestsMade),
+        featureRemainingTokens: 0,
+        featureRemainingRequests: 0
       }
     }
 
-    // Check feature budget
+    if (session.totalRequestsMade >= DEMO_LIMITS.TOTAL_REQUESTS) {
+      return {
+        allowed: false,
+        reason: `Demo session request limit reached (${DEMO_LIMITS.TOTAL_REQUESTS} requests). Please start a new session.`,
+        remainingTokens: Math.max(0, DEMO_LIMITS.TOTAL_TOKENS - session.totalTokensUsed),
+        remainingRequests: 0,
+        featureRemainingTokens: 0,
+        featureRemainingRequests: 0
+      }
+    }
+
+    // Check feature-specific limits
     const featureBudget = FEATURE_BUDGETS[feature]
-    const currentUsage = session.featureUsage[feature]
+    const featureUsage = session.featureUsage[feature]
     
-    if (currentUsage + estimatedTokens > featureBudget.maxTokens) {
+    if (featureUsage.tokensUsed + estimatedTokens > featureBudget.tokens) {
       return {
         allowed: false,
-        reason: `Feature budget exceeded: ${currentUsage + estimatedTokens} tokens exceeds ${featureBudget.maxTokens} limit`,
-        remainingTokens: 0,
-        remainingRequests: 0
+        reason: `${feature} token limit reached (${featureBudget.tokens} tokens). Try a different feature.`,
+        remainingTokens: Math.max(0, DEMO_LIMITS.TOTAL_TOKENS - session.totalTokensUsed),
+        remainingRequests: Math.max(0, DEMO_LIMITS.TOTAL_REQUESTS - session.totalRequestsMade),
+        featureRemainingTokens: 0,
+        featureRemainingRequests: Math.max(0, featureBudget.requests - featureUsage.requestsMade)
       }
     }
 
-    // Check total session budget
-    if (session.totalTokensUsed + estimatedTokens > DEMO_LIMITS.TOTAL_SESSION_TOKENS) {
+    if (featureUsage.requestsMade >= featureBudget.requests) {
       return {
         allowed: false,
-        reason: `Session budget exceeded: ${session.totalTokensUsed + estimatedTokens} tokens exceeds ${DEMO_LIMITS.TOTAL_SESSION_TOKENS} limit`,
-        remainingTokens: 0,
-        remainingRequests: 0
+        reason: `${feature} request limit reached (${featureBudget.requests} requests). Try a different feature.`,
+        remainingTokens: Math.max(0, DEMO_LIMITS.TOTAL_TOKENS - session.totalTokensUsed),
+        remainingRequests: Math.max(0, DEMO_LIMITS.TOTAL_REQUESTS - session.totalRequestsMade),
+        featureRemainingTokens: Math.max(0, featureBudget.tokens - featureUsage.tokensUsed),
+        featureRemainingRequests: 0
       }
     }
 
     return {
       allowed: true,
-      remainingTokens: featureBudget.maxTokens - currentUsage,
-      remainingRequests: featureBudget.maxRequests - Math.floor(currentUsage / 1000)
+      remainingTokens: Math.max(0, DEMO_LIMITS.TOTAL_TOKENS - session.totalTokensUsed),
+      remainingRequests: Math.max(0, DEMO_LIMITS.TOTAL_REQUESTS - session.totalRequestsMade),
+      featureRemainingTokens: Math.max(0, featureBudget.tokens - featureUsage.tokensUsed),
+      featureRemainingRequests: Math.max(0, featureBudget.requests - featureUsage.requestsMade)
     }
   }
 
-  async recordUsage(sessionId: string, feature: DemoFeature, actualTokens: number, success: boolean = true): Promise<void> {
+  async recordDemoUsage(sessionId: string, feature: DemoFeature, tokensUsed: number, requestsMade: number = 1): Promise<void> {
     const session = await this.getOrCreateSession(sessionId)
     
-    // Update usage
-    session.featureUsage[feature] += actualTokens
-    session.totalTokensUsed += actualTokens
+    // Update session
+    session.totalTokensUsed += tokensUsed
+    session.totalRequestsMade += requestsMade
+    session.featureUsage[feature].tokensUsed += tokensUsed
+    session.featureUsage[feature].requestsMade += requestsMade
 
-    // Check if feature is complete
+    // Check if feature is completed
     const featureBudget = FEATURE_BUDGETS[feature]
-    if (session.featureUsage[feature] >= featureBudget.maxTokens && !session.completedFeatures.includes(feature)) {
-      session.completedFeatures.push(feature)
+    if (session.featureUsage[feature].tokensUsed >= featureBudget.tokens * 0.8 || 
+        session.featureUsage[feature].requestsMade >= featureBudget.requests) {
+      if (!session.completedFeatures.includes(feature)) {
+        session.completedFeatures.push(feature)
+      }
     }
 
     // Check if session is complete
-    if (session.totalTokensUsed >= DEMO_LIMITS.TOTAL_SESSION_TOKENS || 
-        session.completedFeatures.length >= Object.keys(FEATURE_BUDGETS).length) {
+    if (session.completedFeatures.length >= 3 || 
+        session.totalTokensUsed >= DEMO_LIMITS.TOTAL_TOKENS * 0.8) {
       session.isComplete = true
     }
 
     // Update cache
     this.sessionCache.set(sessionId, session)
 
-    // Log to database
-    await this.logUsage(session, feature, actualTokens, success)
-  }
-
-  async getSessionStatus(sessionId: string): Promise<{
-    session: DemoBudget
-    featureStatus: Record<DemoFeature, {
-      used: number
-      remaining: number
-      maxTokens: number
-      isComplete: boolean
-    }>
-    overallProgress: number
-    isComplete: boolean
-  }> {
-    const session = await this.getOrCreateSession(sessionId)
-    
-    const featureStatus = Object.keys(FEATURE_BUDGETS).reduce((acc, feature) => {
-      const featureKey = feature as DemoFeature
-      const budget = FEATURE_BUDGETS[featureKey]
-      const used = session.featureUsage[featureKey]
-      
-      acc[featureKey] = {
-        used,
-        remaining: Math.max(0, budget.maxTokens - used),
-        maxTokens: budget.maxTokens,
-        isComplete: used >= budget.maxTokens
-      }
-      return acc
-    }, {} as Record<DemoFeature, any>)
-
-    const totalFeatures = Object.keys(FEATURE_BUDGETS).length
-    const completedFeatures = session.completedFeatures.length
-    const overallProgress = Math.round((completedFeatures / totalFeatures) * 100)
-
-    return {
-      session,
-      featureStatus,
-      overallProgress,
-      isComplete: session.isComplete
-    }
-  }
-
-  async getDemoCompletionMessage(sessionId: string): Promise<string> {
-    const status = await this.getSessionStatus(sessionId)
-    
-    if (status.isComplete) {
-      return `🎉 Demo Complete! You've explored all our AI capabilities. Ready to see how this can transform your business? Schedule a consultation to discuss your specific needs and get a custom implementation plan.`
-    }
-
-    const remainingFeatures = Object.keys(FEATURE_BUDGETS).filter(feature => 
-      !status.featureStatus[feature as DemoFeature].isComplete
-    )
-
-    return `Great progress! You've completed ${status.overallProgress}% of the demo. Try out: ${remainingFeatures.slice(0, 3).join(', ')}.`
-  }
-
-  private async logUsage(session: DemoBudget, feature: DemoFeature, tokens: number, success: boolean): Promise<void> {
+    // Persist to database
     try {
-      // This would log to your token_usage_logs table
-      // For now, we'll just console.log
-      console.log(`Demo Usage: Session ${session.sessionId}, Feature ${feature}, Tokens ${tokens}, Success ${success}`)
+      const supabase = getSupabase()
+      await supabase
+        .from('demo_sessions')
+        .update({
+          total_tokens_used: session.totalTokensUsed,
+          total_requests_made: session.totalRequestsMade,
+          feature_usage: session.featureUsage,
+          is_complete: session.isComplete,
+          completed_features: session.completedFeatures,
+          updated_at: new Date().toISOString()
+        })
+        .eq('session_id', sessionId)
     } catch (error) {
-      console.error('Failed to log demo usage:', error)
+      console.error('Failed to update session in database:', error)
     }
   }
 
-  // Utility method to get appropriate model for feature
-  getModelForFeature(feature: DemoFeature): string {
-    return FEATURE_BUDGETS[feature].model
+  async getDemoStatus(sessionId: string): Promise<DemoBudget | null> {
+    try {
+      const session = await this.getOrCreateSession(sessionId)
+      return session
+    } catch (error) {
+      console.error('Failed to get demo status:', error)
+      return null
+    }
   }
 
-  // Check if session should be upgraded to full model
-  shouldUseFullModel(sessionId: string, feature: DemoFeature): boolean {
-    const session = this.sessionCache.get(sessionId)
-    if (!session) return false
-
-    // Use full model for video_to_app and lead_research regardless of budget
-    if (feature === 'video_to_app' || feature === 'lead_research') {
-      return true
-    }
-
-    // Use full model if user has completed most features
-    if (session.completedFeatures.length >= Object.keys(FEATURE_BUDGETS).length - 2) {
-      return true
-    }
-
-    return false
+  private generateSessionId(): string {
+    return Math.random().toString(36).substring(2, 18)
   }
 }
 
-// Convenience functions
-export const getDemoSession = (sessionId?: string, ipAddress?: string, userAgent?: string) => {
-  return DemoBudgetManager.getInstance().getOrCreateSession(sessionId, ipAddress, userAgent)
+// Singleton instance
+const demoBudgetManager = new DemoBudgetManager()
+
+export async function checkDemoAccess(sessionId: string, feature: DemoFeature, estimatedTokens: number): Promise<DemoAccessResult> {
+  return demoBudgetManager.checkDemoAccess(sessionId, feature, estimatedTokens)
 }
 
-export const checkDemoAccess = (sessionId: string, feature: DemoFeature, estimatedTokens: number) => {
-  return DemoBudgetManager.getInstance().checkFeatureAccess(sessionId, feature, estimatedTokens)
+export async function recordDemoUsage(sessionId: string, feature: DemoFeature, tokensUsed: number, requestsMade?: number): Promise<void> {
+  return demoBudgetManager.recordDemoUsage(sessionId, feature, tokensUsed, requestsMade)
 }
 
-export const recordDemoUsage = (sessionId: string, feature: DemoFeature, actualTokens: number, success?: boolean) => {
-  return DemoBudgetManager.getInstance().recordUsage(sessionId, feature, actualTokens, success)
-}
-
-export const getDemoStatus = (sessionId: string) => {
-  return DemoBudgetManager.getInstance().getSessionStatus(sessionId)
+export async function getDemoSession(sessionId: string): Promise<DemoBudget | null> {
+  return demoBudgetManager.getDemoStatus(sessionId)
 } 

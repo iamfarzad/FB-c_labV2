@@ -2,7 +2,7 @@ import type React from "react"
 import { Inter, Rajdhani, Space_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { DemoSessionProvider, DemoStatusIndicator } from "@/components/demo-session-manager"
+import { DemoSessionProvider, DemoSessionStatus } from "@/components/demo-session-manager"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { Toaster } from "@/components/ui/toaster"
@@ -38,7 +38,7 @@ export default function RootLayout({
             <Header />
             <main className="min-h-screen">{children}</main>
             <Footer />
-            <DemoStatusIndicator />
+            <DemoSessionStatus />
             <Toaster />
           </DemoSessionProvider>
         </ThemeProvider>

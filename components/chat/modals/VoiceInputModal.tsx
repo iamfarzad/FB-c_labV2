@@ -237,6 +237,30 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
       return
     }
 
+    // Check if we're in a secure context (HTTPS required for microphone access)
+    if (!window.isSecureContext) {
+      setIsSupported(false)
+      setRecordingState("error")
+      toast({
+        title: "Microphone Access Requires HTTPS",
+        description: "Voice recognition requires a secure connection (HTTPS). Please ensure you're using a secure connection.",
+        variant: "destructive"
+      })
+      return
+    }
+    
+    // Check if getUserMedia is supported for microphone
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setIsSupported(false)
+      setRecordingState("error")
+      toast({
+        title: "Microphone Access Not Supported",
+        description: "Your browser doesn't support microphone access. Please use Chrome, Edge, or Safari.",
+        variant: "destructive"
+      })
+      return
+    }
+
     const recognition = new SpeechRecognition()
     recognition.continuous = true
     recognition.interimResults = true
@@ -274,20 +298,53 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
 
     recognition.onerror = (event: any) => {
       console.error("Speech recognition error:", event.error)
-      setRecordingState("error")
       
-      const errorMessages: Record<string, string> = {
-        'network': 'Network error. Please check your connection.',
-        'not-allowed': 'Microphone access denied. Please allow microphone access.',
-        'no-speech': 'No speech detected. Please try speaking closer to the microphone.',
-        'audio-capture': 'Microphone not found. Please check your microphone.',
-        'service-not-allowed': 'Speech service not allowed.',
+      let errorMessage = "Voice recognition error occurred"
+      let fallbackMessage = ""
+      
+      if (event.error === "not-allowed") {
+        errorMessage = "Microphone access denied. Please allow microphone access in your browser settings and refresh the page."
+        fallbackMessage = "You can still use text chat instead."
+      } else if (event.error === "no-speech") {
+        errorMessage = "No speech detected. Please try speaking again."
+        fallbackMessage = "Speak clearly and try again, or use text input."
+      } else if (event.error === "audio-capture") {
+        errorMessage = "No microphone found. Please connect a microphone and try again."
+        fallbackMessage = "You can use text chat instead."
+      } else if (event.error === "network") {
+        errorMessage = "Network error. Please check your connection and try again."
+        fallbackMessage = "Check your internet connection and try again."
+      } else if (event.error === "service-not-allowed") {
+        errorMessage = "Speech recognition service not available. Please try again later."
+        fallbackMessage = "You can use text chat instead."
+      } else if (event.error === "bad-grammar") {
+        errorMessage = "Speech recognition error. Please try speaking more clearly."
+        fallbackMessage = "Speak slowly and clearly, or use text input."
       }
       
+      setRecordingState("error")
       toast({
         title: "Voice Recognition Error",
-        description: errorMessages[event.error] || "An error occurred with voice recognition.",
+        description: errorMessage,
         variant: "destructive"
+      })
+      
+      // Show fallback message if available
+      if (fallbackMessage) {
+        setTimeout(() => {
+          toast({
+            title: "Alternative Options",
+            description: fallbackMessage,
+            variant: "default"
+          })
+        }, 2000)
+      }
+      
+      addActivity({
+        type: "error",
+        title: "Voice Recognition Failed",
+        description: errorMessage,
+        status: "failed"
       })
     }
 
@@ -923,12 +980,43 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             </div>
 
             {/* Error Message */}
-            {!isSupported && (
+            {(!isSupported || recordingState === "error") && (
               <Card className="bg-red-500/20 border-red-500/30 max-w-md">
-                <CardContent className="p-4 text-center">
+                <CardContent className="p-4 text-center space-y-3">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <MicOff className="w-5 h-5 text-red-400" />
+                    <h3 className="text-red-200 font-semibold">
+                      {!isSupported ? "Voice Input Not Supported" : "Voice Recognition Error"}
+                    </h3>
+                  </div>
+                  
                   <p className="text-red-200 text-sm">
-                    Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari for voice input.
+                    {!isSupported 
+                      ? "Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari for voice input."
+                      : "We couldn't access your microphone. This might be due to browser permissions or security settings."
+                    }
                   </p>
+                  
+                  <div className="text-xs text-red-300/80 space-y-1 pt-2 border-t border-red-500/30">
+                    <p>• Check browser microphone permissions</p>
+                    <p>• Ensure you're using HTTPS</p>
+                    <p>• Try refreshing the page</p>
+                    <p>• Use text chat instead</p>
+                  </div>
+                  
+                  {recordingState === "error" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setRecordingState("idle")
+                        startRecording()
+                      }}
+                      className="mt-3 bg-red-500/20 hover:bg-red-500/30 text-red-200 border-red-500/50"
+                    >
+                      Try Again
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )}

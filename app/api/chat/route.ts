@@ -7,8 +7,8 @@ import { ConversationStateManager } from '@/lib/conversation-state-manager';
 import { LeadManager } from '@/lib/lead-manager';
 import { checkDevelopmentConfig } from '@/lib/config';
 import { withFullSecurity } from '@/lib/api-security';
-import { selectModel, estimateTokens, estimateCost } from '@/lib/model-selector';
-import { logTokenUsage, checkBudget } from '@/lib/token-usage-logger';
+import { selectModelForFeature, estimateTokensForMessages } from '@/lib/model-selector';
+import { enforceBudgetAndLog } from '@/lib/token-usage-logger';
 import { checkDemoAccess, recordDemoUsage, getDemoSession, DemoFeature } from '@/lib/demo-budget-manager';
 
 interface Message {
@@ -17,28 +17,23 @@ interface Message {
   imageUrl?: string;
 }
 
-export const dynamic = 'force-dynamic';
-
-// ============================================================================
-// AUTHENTICATION & RATE LIMITING MIDDLEWARE
-// ============================================================================
-
-// Rate limiting map (in production, use Redis)
+// Rate limiting
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
-function checkRateLimit(identifier: string, limit: number = 20, windowMs: number = 60000): boolean {
+function checkRateLimit(ip: string, maxRequests: number, windowMs: number): boolean {
   const now = Date.now();
-  const record = rateLimitMap.get(identifier);
-  
+  const key = ip;
+  const record = rateLimitMap.get(key);
+
   if (!record || now > record.resetTime) {
-    rateLimitMap.set(identifier, { count: 1, resetTime: now + windowMs });
+    rateLimitMap.set(key, { count: 1, resetTime: now + windowMs });
     return true;
   }
-  
-  if (record.count >= limit) {
+
+  if (record.count >= maxRequests) {
     return false;
   }
-  
+
   record.count++;
   return true;
 }
@@ -65,292 +60,58 @@ async function authenticateRequest(req: NextRequest): Promise<{ success: boolean
   }
 }
 
-// ============================================================================
-// LOGGING UTILITIES
-// ============================================================================
-
-function logConsoleActivity(level: 'info' | 'error' | 'warn', message: string, metadata: any = {}) {
+function logConsoleActivity(level: 'info' | 'warn' | 'error', message: string, metadata?: any): string {
   const correlationId = Math.random().toString(36).substring(7);
-  console.log(JSON.stringify({
+  const logEntry = {
     timestamp: new Date().toISOString(),
     level,
     message,
     correlationId,
     ...metadata
-  }));
+  };
+  
+  console.log(JSON.stringify(logEntry));
   return correlationId;
 }
 
-// ============================================================================
-// ACTIVITY LOGGING
-// ============================================================================
+async function buildEnhancedSystemPrompt(leadContext: any, currentMessage: string, sessionId: string | null): Promise<string> {
+  const basePrompt = `You are F.B/c AI, a professional business consulting assistant specializing in AI automation and digital transformation.
 
-async function logActivityToDB(activity: {
-  type: string;
-  title: string;
-  description: string;
-  status: 'completed' | 'in_progress' | 'failed';
-  metadata?: any;
-}) {
-  try {
-                await logServerActivity({
-        type: activity.type as any,
-        title: activity.title,
-        description: activity.description,
-        status: activity.status,
-        metadata: activity.metadata
-      });
-  } catch (error) {
-    console.error('Failed to log activity:', error);
-  }
-}
+Your capabilities include:
+- Business process analysis and optimization
+- AI implementation strategy and ROI assessment
+- Digital transformation consulting
+- Technical solution architecture
+- Industry-specific insights and best practices
 
-// ============================================================================
-// LEAD RESEARCH DATA
-// ============================================================================
+Core Principles:
+1. Provide actionable, business-focused advice
+2. Ask clarifying questions to understand specific needs
+3. Offer concrete next steps and implementation guidance
+4. Consider cost-benefit analysis and ROI
+5. Stay professional yet approachable
 
-async function getLeadResearchData(email: string): Promise<any> {
-  try {
-    const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from('lead_summaries')
-      .select('*')
-      .eq('email', email)
-      .single();
+Response Style:
+- Be concise but comprehensive
+- Use bullet points for clarity when appropriate
+- Provide specific examples and recommendations
+- Ask follow-up questions to gather more context
+- Focus on business value and practical implementation`
 
-    if (error || !data) {
-      return null;
-    }
+  // Add lead context if available
+  if (leadContext && leadContext.name) {
+    return `${basePrompt}
 
-    return {
-      name: data.name,
-      email: data.email,
-      company: data.company_name,
-      summary: data.conversation_summary,
-      brief: data.consultant_brief,
-      leadScore: data.lead_score,
-      aiCapabilities: data.ai_capabilities_shown
-    };
-  } catch (error) {
-    console.error('Failed to get lead research data:', error);
-    return null;
-  }
-}
+Current Client Context:
+- Name: ${leadContext.name}
+- Company: ${leadContext.company || 'Not specified'}
+- Role: ${leadContext.role || 'Not specified'}
+- Industry: ${leadContext.industry || 'Not specified'}
 
-// ============================================================================
-// SYSTEM PROMPT BUILDER
-// ============================================================================
-
-async function buildEnhancedSystemPrompt(
-  leadContext: any, 
-  userMessage: string,
-  conversationState?: any
-): Promise<string> {
-  const basePrompt = `You are F.B/c AI, a specialized business consulting AI assistant. Your role is to help businesses identify AI automation opportunities and provide strategic guidance.
-
-Key Capabilities:
-- Lead research and analysis
-- AI automation strategy
-- Business process optimization
-- Technology recommendations
-- ROI analysis
-
-Always be professional, concise, and actionable. Focus on practical business value.`;
-
-  if (!leadContext) {
-    return basePrompt;
+Personalize your responses for ${leadContext.name} and their specific business context.`
   }
 
-  const leadInfo = `
-LEAD CONTEXT:
-- Name: ${leadContext.name || 'Unknown'}
-- Email: ${leadContext.email || 'Unknown'}
-- Company: ${leadContext.company || 'Unknown'}
-- Lead Score: ${leadContext.leadScore || 'Not scored'}
-- Previous Research: ${leadContext.summary ? 'Available' : 'None'}
-
-${leadContext.brief ? `CONSULTANT BRIEF: ${leadContext.brief}` : ''}
-${leadContext.aiCapabilities ? `AI CAPABILITIES SHOWN: ${leadContext.aiCapabilities.join(', ')}` : ''}
-`;
-
-  const stageInstructions = conversationState?.stage ? getStageSpecificInstructions(conversationState.stage) : '';
-
-  return `${basePrompt}
-
-${leadInfo}
-
-${stageInstructions}
-
-Current user message: "${userMessage}"
-
-Provide a helpful, professional response that leverages the lead context when relevant.`;
-}
-
-// ============================================================================
-// STAGE-SPECIFIC INSTRUCTIONS
-// ============================================================================
-
-function getStageSpecificInstructions(stage: string): string {
-  switch (stage) {
-    case 'initial_contact':
-      return 'Focus on building rapport and understanding their business needs. Ask open-ended questions about their current challenges.';
-    
-    case 'needs_assessment':
-      return 'Dive deeper into their specific pain points and processes. Identify areas where AI could provide value.';
-    
-    case 'solution_presentation':
-      return 'Present specific AI solutions tailored to their needs. Include ROI estimates and implementation timelines.';
-    
-    case 'objection_handling':
-      return 'Address concerns professionally. Provide data and case studies to support your recommendations.';
-    
-    case 'closing':
-      return 'Focus on next steps and commitment. Be clear about what happens next in the process.';
-    
-    default:
-      return 'Maintain a professional, consultative approach. Focus on understanding their needs and providing value.';
-  }
-}
-
-// ============================================================================
-// CONVERSATION STATE MANAGEMENT
-// ============================================================================
-
-const conversationManager = new ConversationStateManager();
-const leadManager = new LeadManager();
-
-// ============================================================================
-// ENHANCED GEMINI CLIENT WITH DEMO BUDGET SYSTEM
-// ============================================================================
-
-class EnhancedGeminiClient {
-  private genAI: GoogleGenAI;
-
-  constructor(apiKey: string) {
-    this.genAI = new GoogleGenAI({
-      apiKey: apiKey,
-    });
-  }
-
-  async generateResponse(messages: Message[], systemPrompt: string, hasWebGrounding: boolean = false, leadContext?: any, sessionId?: string) {
-    // Log search activity if we have lead context
-    if (leadContext?.name && hasWebGrounding) {
-      await logActivityToDB({
-        type: "ai_thinking",
-        title: "Searching LinkedIn",
-        description: "Finding relevant profiles and information",
-        status: "in_progress",
-        metadata: { 
-          name: leadContext.name, 
-          email: leadContext.email,
-          searchType: "linkedin"
-        }
-      });
-    }
-
-    // Use live API for grounded search, regular API for normal chat
-    logConsoleActivity('info', `Debug: hasWebGrounding: ${hasWebGrounding}, leadContext?.name: ${leadContext?.name}`);
-    if (hasWebGrounding && leadContext?.name) {
-      console.log(`🔍 GROUNDED SEARCH TRIGGERED for: ${leadContext.name}`);
-      logConsoleActivity('info', `Using grounded search for: ${leadContext.name}`);
-      return this.generateGroundedResponse(messages, systemPrompt, leadContext, sessionId);
-    } else {
-      console.log(`❌ NO GROUNDED SEARCH - hasWebGrounding: ${hasWebGrounding}, leadContext?.name: ${leadContext?.name}`);
-      logConsoleActivity('info', 'Using regular response - no grounded search');
-      return this.generateRegularResponse(messages, systemPrompt, sessionId);
-    }
-  }
-
-  private async generateGroundedResponse(messages: Message[], systemPrompt: string, leadContext: any, sessionId?: string) {
-    try {
-      // Import and use the Gemini Live API service
-      const { GeminiLiveAPI } = await import('@/lib/gemini-live-api');
-      const geminiLiveAPI = new GeminiLiveAPI();
-      
-      // Get the user's message
-      const userMessage = messages[messages.length - 1]?.content || '';
-      
-      // Perform grounded search using the live API - this returns a complete AI response
-      const aiResponse = await geminiLiveAPI.performGroundedSearch(leadContext, userMessage);
-
-      // Log token usage for grounded search
-      if (sessionId) {
-        const inputTokens = estimateTokens(systemPrompt + userMessage);
-        const outputTokens = estimateTokens(aiResponse);
-        const totalTokens = inputTokens + outputTokens;
-        
-        await recordDemoUsage(sessionId, 'lead_research' as DemoFeature, totalTokens, true);
-      }
-
-      // Convert the response to an async generator to match the expected return type
-      return (async function* () {
-        // Split the response into chunks for streaming
-        const chunks = aiResponse.match(/.{1,100}/g) || [aiResponse];
-        
-        for (const chunk of chunks) {
-          yield { text: chunk };
-          await new Promise(resolve => setTimeout(resolve, 50));
-        }
-      })();
-    } catch (error) {
-      console.error('Grounded search failed, falling back to regular response:', error);
-      return this.generateRegularResponse(messages, systemPrompt, sessionId);
-    }
-  }
-
-  private async generateRegularResponse(messages: Message[], systemPrompt: string, sessionId?: string) {
-    // Combine system prompt with messages
-    const contents = [
-      {
-        role: "user",
-        parts: [{ text: systemPrompt }],
-      },
-      ...messages.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }],
-      }))
-    ];
-
-    // Use demo budget system for model selection
-    const fullPrompt = systemPrompt + messages.map(m => m.content).join('\n');
-    const estimatedTokens = estimateTokens(fullPrompt);
-    
-    // Check demo access for chat feature
-    if (sessionId) {
-      const accessCheck = await checkDemoAccess(sessionId, 'chat' as DemoFeature, estimatedTokens);
-      
-      if (!accessCheck.allowed) {
-        throw new Error(accessCheck.reason || 'Demo budget exceeded');
-      }
-    }
-
-    // Select model based on demo budget system
-    const model = sessionId ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
-
-    const config = {
-      responseMimeType: "text/plain",
-    };
-
-    const stream = this.genAI.models.generateContentStream({
-      model,
-      config,
-      contents,
-    });
-
-    // Log token usage for demo tracking
-    if (sessionId) {
-      const estimatedOutputTokens = estimatedTokens * 0.5;
-      const totalTokens = estimatedTokens + estimatedOutputTokens;
-      
-      await recordDemoUsage(sessionId, 'chat' as DemoFeature, totalTokens, true);
-    }
-
-    return stream;
-  }
-
-  async countTokens(text: string): Promise<number> {
-    return estimateTokens(text);
-  }
+  return basePrompt
 }
 
 // ============================================================================
@@ -398,11 +159,12 @@ export async function POST(req: NextRequest) {
       content: sanitizeString(message.content)
     }));
 
+    // Estimate tokens and select model
+    const estimatedTokens = estimateTokensForMessages(sanitizedMessages);
+    const modelSelection = selectModelForFeature('chat', estimatedTokens, !!sessionId);
+
     // Check demo budget for chat feature
     if (sessionId) {
-      const fullPrompt = messages.map(m => m.content).join('\n');
-      const estimatedTokens = estimateTokens(fullPrompt);
-      
       const accessCheck = await checkDemoAccess(sessionId, 'chat' as DemoFeature, estimatedTokens);
       
       if (!accessCheck.allowed) {
@@ -415,27 +177,89 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Check user budget if authenticated
+    if (isAuthenticated && auth.userId) {
+      const budgetCheck = await enforceBudgetAndLog(
+        auth.userId,
+        sessionId,
+        'chat',
+        modelSelection.model,
+        estimatedTokens,
+        estimatedTokens * 0.5, // Estimate output tokens
+        true
+      );
+
+      if (!budgetCheck.allowed) {
+        return new Response(JSON.stringify({
+          error: 'Budget limit reached',
+          message: budgetCheck.reason,
+          suggestedModel: budgetCheck.suggestedModel
+        }), { status: 429 });
+      }
+    }
+
     // Build system prompt
-    const systemPrompt = await buildEnhancedSystemPrompt(leadContext, messages[messages.length - 1]?.content || '', null);
+    const systemPrompt = await buildEnhancedSystemPrompt(leadContext, messages[messages.length - 1]?.content || '', sessionId || null);
 
     // Initialize Gemini client
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY environment variable is not set');
     }
 
-    const geminiClient = new EnhancedGeminiClient(process.env.GEMINI_API_KEY);
+    const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const model = genAI.models.generateContentStream;
+
+    // Prepare content for Gemini
+    const contents = [
+      { role: 'user', parts: [{ text: systemPrompt }] },
+      ...sanitizedMessages.map(msg => ({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }]
+      }))
+    ];
 
     // Generate response
     let responseStream;
+    let actualInputTokens = 0;
+    let actualOutputTokens = 0;
+    
     try {
-      responseStream = await geminiClient.generateResponse(sanitizedMessages, systemPrompt, hasWebGrounding, leadContext, sessionId);
+      responseStream = await model({
+        model: modelSelection.model,
+        config: { responseMimeType: 'text/plain' },
+        contents
+      });
+
+      // Estimate actual token counts (Gemini doesn't provide usageMetadata in streaming)
+      actualInputTokens = estimatedTokens;
+      actualOutputTokens = estimatedTokens * 0.5;
     } catch (error: any) {
-      logConsoleActivity('error', 'Failed to generate enhanced response', {
+      logConsoleActivity('error', 'Failed to generate response', {
         correlationId,
         error: error.message || 'Unknown error',
-        sessionId
+        sessionId,
+        model: modelSelection.model
       });
       throw error;
+    }
+
+    // Record usage
+    if (sessionId) {
+      await recordDemoUsage(sessionId, 'chat' as DemoFeature, actualInputTokens + actualOutputTokens, 1);
+    }
+
+    if (isAuthenticated && auth.userId) {
+      await enforceBudgetAndLog(
+        auth.userId,
+        sessionId,
+        'chat',
+        modelSelection.model,
+        actualInputTokens,
+        actualOutputTokens,
+        true,
+        undefined,
+        { correlationId, modelSelection: modelSelection.reason }
+      );
     }
 
     // Create SSE stream
@@ -455,37 +279,48 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Log successful completion
+    const responseTime = Date.now() - startTime;
     logConsoleActivity('info', 'Chat request completed', {
       correlationId,
-      responseTime: Date.now() - startTime,
-      sessionId,
-      isAuthenticated
+      responseTime,
+      inputTokens: actualInputTokens,
+      outputTokens: actualOutputTokens,
+      model: modelSelection.model,
+      sessionId
     });
 
     return new Response(stream, {
-      headers: { 
-        'Content-Type': 'text/event-stream',
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
         'X-Correlation-ID': correlationId,
-        'X-Response-Time': `${Date.now() - startTime}ms`
-      },
+        'X-Response-Time': responseTime.toString(),
+        'X-Model-Used': modelSelection.model,
+        'X-Tokens-Used': (actualInputTokens + actualOutputTokens).toString()
+      }
     });
 
   } catch (error: any) {
-    logConsoleActivity('error', 'Chat API error', { 
-      correlationId, 
-      error: error.message,
-      stack: error.stack 
+    const responseTime = Date.now() - startTime;
+    logConsoleActivity('error', 'Chat request failed', {
+      correlationId,
+      error: error.message || 'Unknown error',
+      responseTime,
+      sessionId: req.headers.get('x-demo-session-id')
     });
-    
-    return new Response(JSON.stringify({ 
+
+    return new Response(JSON.stringify({
       error: 'Internal server error',
-      message: error.message 
-    }), { 
+      message: error.message || 'An unexpected error occurred',
+      correlationId
+    }), {
       status: 500,
-      headers: { 'X-Correlation-ID': correlationId }
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Correlation-ID': correlationId,
+        'X-Response-Time': responseTime.toString()
+      }
     });
   }
 }

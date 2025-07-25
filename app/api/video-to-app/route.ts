@@ -3,6 +3,9 @@ import { GoogleGenAI } from "@google/genai"
 import { parseJSON, parseHTML } from "@/lib/parse-utils"
 import { SPEC_FROM_VIDEO_PROMPT, CODE_REGION_OPENER, CODE_REGION_CLOSER, SPEC_ADDENDUM } from "@/lib/ai-prompts"
 import { getYouTubeVideoId } from "@/lib/youtube"
+import { selectModelForFeature, estimateTokens } from "@/lib/model-selector"
+import { enforceBudgetAndLog } from "@/lib/token-usage-logger"
+import { checkDemoAccess, recordDemoUsage } from "@/lib/demo-budget-manager"
 
 async function generateText(options: {
   modelName: string
@@ -72,18 +75,61 @@ async function generateText(options: {
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now()
+  const correlationId = Math.random().toString(36).substring(7)
+  
   try {
+    // Extract session and user info
+    const sessionId = request.headers.get('x-demo-session-id') || undefined
+    const userId = request.headers.get('authorization')?.replace('Bearer ', '') || undefined
+    
     const { action, videoUrl, spec } = await request.json()
 
     if (action === "generateSpec") {
       if (!videoUrl) throw new Error('Video URL required for spec')
       
-      // Use multimodal model for video analysis
+      // Estimate tokens and select model
+      const estimatedTokens = estimateTokens(SPEC_FROM_VIDEO_PROMPT + videoUrl)
+      const modelSelection = selectModelForFeature('video_to_app', estimatedTokens, !!sessionId)
+      
+      // Check demo access and budget
+      const demoAccess = await checkDemoAccess(sessionId || '', 'video_to_app', estimatedTokens)
+      if (!demoAccess.allowed) {
+        return NextResponse.json({ 
+          error: 'Demo budget exceeded', 
+          details: demoAccess.reason 
+        }, { status: 429 })
+      }
+      
+      // Enforce budget and log usage
+      const budgetResult = await enforceBudgetAndLog(
+        userId,
+        sessionId,
+        'video_to_app',
+        modelSelection.model,
+        estimatedTokens,
+        estimatedTokens * 0.8, // Estimate output tokens
+        true,
+        undefined,
+        { action: 'generateSpec', videoUrl }
+      )
+      
+      if (!budgetResult.allowed) {
+        return NextResponse.json({ 
+          error: 'Budget exceeded', 
+          details: budgetResult.reason 
+        }, { status: 429 })
+      }
+      
+      // Use selected model for video analysis
       const specResponse = await generateText({
-        modelName: "gemini-2.5-flash", // Supports video, audio, image, text
+        modelName: modelSelection.model,
         prompt: SPEC_FROM_VIDEO_PROMPT,
         videoUrl: videoUrl,
       })
+
+      // Record demo usage
+      await recordDemoUsage(sessionId || '', 'video_to_app', estimatedTokens)
 
       let parsedSpec
       try {
@@ -97,15 +143,55 @@ export async function POST(request: NextRequest) {
       
       parsedSpec += SPEC_ADDENDUM
 
-      return NextResponse.json({ spec: parsedSpec })
+      return NextResponse.json({ 
+        spec: parsedSpec,
+        model: modelSelection.model,
+        estimatedCost: modelSelection.estimatedCost
+      })
     } else if (action === "generateCode") {
       if (!spec) throw new Error('Spec required for code generation')
       
-      // Use standard model for code generation
+      // Estimate tokens and select model
+      const estimatedTokens = estimateTokens(spec)
+      const modelSelection = selectModelForFeature('video_to_app', estimatedTokens, !!sessionId)
+      
+      // Check demo access and budget
+      const demoAccess = await checkDemoAccess(sessionId || '', 'video_to_app', estimatedTokens)
+      if (!demoAccess.allowed) {
+        return NextResponse.json({ 
+          error: 'Demo budget exceeded', 
+          details: demoAccess.reason 
+        }, { status: 429 })
+      }
+      
+      // Enforce budget and log usage
+      const budgetResult = await enforceBudgetAndLog(
+        userId,
+        sessionId,
+        'video_to_app',
+        modelSelection.model,
+        estimatedTokens,
+        estimatedTokens * 0.8, // Estimate output tokens
+        true,
+        undefined,
+        { action: 'generateCode' }
+      )
+      
+      if (!budgetResult.allowed) {
+        return NextResponse.json({ 
+          error: 'Budget exceeded', 
+          details: budgetResult.reason 
+        }, { status: 429 })
+      }
+      
+      // Use selected model for code generation
       const codeResponse = await generateText({
-        modelName: "gemini-2.5-flash",
+        modelName: modelSelection.model,
         prompt: spec,
       })
+
+      // Record demo usage
+      await recordDemoUsage(sessionId || '', 'video_to_app', estimatedTokens)
 
       let code
       try {
@@ -116,7 +202,11 @@ export async function POST(request: NextRequest) {
         code = codeResponse
       }
       
-      return NextResponse.json({ code })
+      return NextResponse.json({ 
+        code,
+        model: modelSelection.model,
+        estimatedCost: modelSelection.estimatedCost
+      })
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 })

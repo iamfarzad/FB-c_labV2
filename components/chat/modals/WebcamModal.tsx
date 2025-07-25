@@ -59,6 +59,16 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
     try {
       setWebcamState("initializing")
       
+      // Check if we're in a secure context (HTTPS required for camera access)
+      if (!window.isSecureContext) {
+        throw new Error("Camera access requires a secure connection (HTTPS)")
+      }
+      
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Camera access is not supported in this browser")
+      }
+      
       const constraints: MediaStreamConstraints = {
         video: {
           width: { ideal: 1280 },
@@ -90,13 +100,44 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
       setWebcamState("error")
       
       const errorMessage = error instanceof Error ? error.message : "Unknown error"
+      
+      // Provide specific guidance based on error type
+      let userMessage = "Failed to start camera. Please try again."
+      let fallbackMessage = ""
+      
+      if (errorMessage.includes("Permission denied") || errorMessage.includes("NotAllowedError")) {
+        userMessage = "Camera permission denied. Please allow camera access in your browser settings and refresh the page."
+        fallbackMessage = "You can still use text chat or upload images instead."
+      } else if (errorMessage.includes("secure connection") || errorMessage.includes("HTTPS")) {
+        userMessage = "Camera access requires HTTPS. Please ensure you're using a secure connection."
+        fallbackMessage = "Try accessing the site via HTTPS or use text chat instead."
+      } else if (errorMessage.includes("NotFoundError") || errorMessage.includes("no camera")) {
+        userMessage = "No camera found. Please connect a camera and try again."
+        fallbackMessage = "You can upload images from your device instead."
+      } else if (errorMessage.includes("not supported")) {
+        userMessage = "Camera access is not supported in this browser."
+        fallbackMessage = "Please use Chrome, Firefox, Safari, or Edge for camera features."
+      } else if (errorMessage.includes("OverconstrainedError")) {
+        userMessage = "Camera doesn't meet requirements. Please try a different camera."
+        fallbackMessage = "You can upload images from your device instead."
+      }
+      
       toast({
         title: "Camera Access Failed",
-        description: errorMessage.includes("Permission denied") 
-          ? "Camera permission denied. Please allow camera access."
-          : "Failed to start camera. Please try again.",
+        description: userMessage,
         variant: "destructive"
       })
+      
+      // Show fallback message if available
+      if (fallbackMessage) {
+        setTimeout(() => {
+          toast({
+            title: "Alternative Options",
+            description: fallbackMessage,
+            variant: "default"
+          })
+        }, 2000)
+      }
     }
   }, [selectedDeviceId, addActivity, toast])
 
@@ -363,19 +404,31 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
 
               {webcamState === "error" && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-                  <div className="text-center">
+                  <div className="text-center max-w-md mx-auto p-6">
                     <div className="p-4 rounded-full bg-red-500/20 mb-4 mx-auto w-fit">
                       <X className="w-8 h-8 text-red-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-2">Camera Error</h3>
-                    <p className="text-white/70 text-sm">Failed to access camera</p>
-                    <Button
-                      variant="outline"
-                      onClick={startCamera}
-                      className="mt-4 bg-white/10 hover:bg-white/20 text-white border-white/20"
-                    >
-                      Try Again
-                    </Button>
+                    <h3 className="text-lg font-semibold text-white mb-2">Camera Access Failed</h3>
+                    <p className="text-white/70 text-sm mb-4">
+                      We couldn't access your camera. This might be due to browser permissions or security settings.
+                    </p>
+                    
+                    <div className="space-y-3">
+                      <Button
+                        variant="outline"
+                        onClick={startCamera}
+                        className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20"
+                      >
+                        Try Again
+                      </Button>
+                      
+                      <div className="text-xs text-white/50 space-y-1">
+                        <p>• Check browser camera permissions</p>
+                        <p>• Ensure you're using HTTPS</p>
+                        <p>• Try refreshing the page</p>
+                        <p>• Use text chat or file upload instead</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Send, Camera, Mic, Paperclip } from "lucide-react"
+import { Send, Camera, Mic, Paperclip, Play } from "lucide-react"
 import { useToast } from '@/hooks/use-toast'
 import { useAutoResizeTextarea } from "@/hooks/ui/use-auto-resize-textarea"
 import { motion, AnimatePresence } from "framer-motion"
@@ -105,6 +105,7 @@ export function ChatFooter({
     { id: "voice", icon: Mic, action: () => setShowVoiceModal(true), title: "Voice Input" },
     { id: "camera", icon: Camera, action: () => setShowWebcamModal(true), title: "Webcam Capture" },
     { id: "upload", icon: Paperclip, action: () => fileInputRef.current?.click(), title: "Upload File" },
+    { id: "video2app", icon: Play, action: () => setShowVideo2AppModal(true), title: "Video2App Generator" },
   ]
 
   return (

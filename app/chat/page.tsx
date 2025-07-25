@@ -15,7 +15,7 @@ import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
 import { VoiceOutputModal } from "@/components/chat/modals/VoiceOutputModal"
 import { WebcamModal } from "@/components/chat/modals/WebcamModal"
 import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
-import { useDemoSession, DemoBudgetWarning } from "@/components/demo-session-manager"
+import { useDemoSession } from "@/components/demo-session-manager"
 
 import type { LeadCaptureState } from "./types/lead-capture"
 import { useChatContext } from "./context/ChatProvider"
@@ -156,6 +156,21 @@ export default function ChatPage() {
       leadData: { engagementType: "chat" },
     })
     setShowLeadCapture(false)
+    
+    // Clear all persistent data to prevent session leakage
+    try {
+      localStorage.removeItem('fb_lead_data')
+      sessionStorage.removeItem('demo-session-id')
+      // Clear any other session-related data
+      Object.keys(localStorage).forEach(key => {
+        if (key.includes('chat') || key.includes('session') || key.includes('lead')) {
+          localStorage.removeItem(key)
+        }
+      })
+    } catch (error) {
+      console.error('Error clearing session data:', error)
+    }
+    
     toast({ title: "New Chat Started" })
   }, [clearMessages, toast])
 
@@ -230,17 +245,105 @@ export default function ChatPage() {
     [append],
   )
 
-  const handleFileUpload = (file: File) => {
-    append({
-      role: "user",
-      content: `[File uploaded: ${file.name}] Please summarize or analyze this document.`,
-    })
-    addActivity({
-      type: "file_upload",
-      title: "File Uploaded",
-      description: file.name,
-      status: "completed",
-    })
+  const handleFileUpload = async (file: File) => {
+    try {
+      // Show upload activity
+      addActivity({
+        type: "file_upload",
+        title: "File Upload Started",
+        description: `Uploading ${file.name}`,
+        status: "in_progress",
+      })
+
+      // Create FormData for upload
+      const formData = new FormData()
+      formData.append('file', file)
+
+      // Upload file
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Upload failed')
+      }
+
+      const uploadData = await uploadResponse.json()
+
+      // Add file message to chat
+      append({
+        role: "user",
+        content: `[File uploaded: ${file.name}] Please analyze this document.`,
+      })
+
+      // Update activity
+      addActivity({
+        type: "file_upload",
+        title: "File Uploaded",
+        description: file.name,
+        status: "completed",
+      })
+
+      // If it's a document file, trigger analysis
+      if (file.type === 'application/pdf' || file.type === 'text/plain' || file.type.includes('document')) {
+        try {
+          // Read file content for analysis
+          const fileContent = await file.text()
+          const base64Data = btoa(fileContent)
+
+          // Call document analysis endpoint
+          const analysisResponse = await fetch('/api/analyze-document', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              data: base64Data,
+              mimeType: file.type,
+              fileName: file.name
+            })
+          })
+
+          if (analysisResponse.ok) {
+            const analysisData = await analysisResponse.json()
+            
+            // Add AI analysis to chat
+            append({
+              role: "assistant",
+              content: `**Document Analysis for ${file.name}:**\n\n${analysisData.summary}`,
+            })
+
+            addActivity({
+              type: "doc_analysis",
+              title: "Document Analyzed",
+              description: `AI analysis completed for ${file.name}`,
+              status: "completed",
+            })
+          } else {
+            throw new Error('Document analysis failed')
+          }
+        } catch (error) {
+          console.error('Document analysis error:', error)
+          append({
+            role: "assistant",
+            content: `I received your document "${file.name}" but encountered an issue analyzing it. Please try again or describe what you'd like me to help you with regarding this document.`,
+          })
+        }
+      }
+    } catch (error) {
+      console.error('File upload error:', error)
+      toast({
+        title: "Upload Failed",
+        description: error instanceof Error ? error.message : "Failed to upload file",
+        variant: "destructive"
+      })
+      
+      addActivity({
+        type: "error",
+        title: "Upload Failed",
+        description: `Failed to upload ${file.name}`,
+        status: "failed",
+      })
+    }
   }
 
   const handleVoiceTranscript = useCallback(
@@ -442,7 +545,7 @@ export default function ChatPage() {
                 />
               </div>
             )}
-            <DemoBudgetWarning feature="chat" estimatedTokens={input.length * 2} />
+            
             <ChatMain messages={messages as Message[]} isLoading={isLoading} messagesEndRef={messagesEndRef} />
           </div>
           <div className="shrink-0">

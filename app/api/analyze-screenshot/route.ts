@@ -6,27 +6,27 @@ import { checkDemoAccess, recordDemoUsage, DemoFeature } from '@/lib/demo-budget
 
 export async function POST(request: NextRequest) {
   try {
-    const { data, mimeType, fileName } = await request.json()
+    const { imageData, description, context } = await request.json()
     
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY not configured')
     }
     
-    if (!data) {
-      return NextResponse.json({ error: 'No document data provided' }, { status: 400 })
+    if (!imageData) {
+      return NextResponse.json({ error: 'No image data provided' }, { status: 400 })
     }
 
     // Get session ID for demo budget tracking
     const sessionId = request.headers.get('x-demo-session-id') || undefined
     const userId = request.headers.get('x-user-id') || undefined
 
-    // Estimate tokens for the document content
-    const estimatedTokens = estimateTokens(data)
-    const modelSelection = selectModelForFeature('document_analysis', estimatedTokens, !!sessionId)
+    // Estimate tokens for the analysis
+    const estimatedTokens = estimateTokens(description || '') + 2000 // Base tokens for image analysis
+    const modelSelection = selectModelForFeature('screenshot_analysis', estimatedTokens, !!sessionId)
 
     // Check demo budget
     if (sessionId) {
-      const accessCheck = await checkDemoAccess(sessionId, 'document_analysis' as DemoFeature, estimatedTokens)
+      const accessCheck = await checkDemoAccess(sessionId, 'screenshot_analysis' as DemoFeature, estimatedTokens)
       
       if (!accessCheck.allowed) {
         return NextResponse.json({
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       const budgetCheck = await enforceBudgetAndLog(
         userId,
         sessionId,
-        'document_analysis',
+        'screenshot_analysis',
         modelSelection.model,
         estimatedTokens,
         estimatedTokens * 0.5, // Estimate output tokens
@@ -61,27 +61,19 @@ export async function POST(request: NextRequest) {
     
     const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
     
-    // Customize prompt based on file type
-    let prompt = `Analyze this business document and provide:
-1. Executive summary in two sentences
-2. Key pain points or challenges identified
+    const prompt = `Analyze this screenshot and provide business insights:
+
+${description ? `Description: ${description}` : ''}
+${context ? `Context: ${context}` : ''}
+
+Please provide:
+1. What you see in the screenshot
+2. Potential issues or inefficiencies
 3. Opportunities for AI automation or process improvement
-4. Suggested next steps for implementation
-5. Estimated ROI potential
+4. Specific recommendations for optimization
+5. Estimated impact on productivity or cost savings
 
-Document: ${fileName}
-Content: ${data}
-
-Please provide a structured analysis with clear sections.`
-
-    // Add file type specific instructions
-    if (mimeType.includes('pdf')) {
-      prompt += '\n\nNote: This appears to be a PDF document. Focus on extracting key business insights and actionable recommendations.'
-    } else if (mimeType.includes('text')) {
-      prompt += '\n\nNote: This is a text document. Provide detailed analysis of the content and business implications.'
-    } else if (mimeType.includes('image')) {
-      prompt += '\n\nNote: This appears to be an image document. Analyze any visible text and provide insights based on the visual content.'
-    }
+Focus on identifying business process improvements and automation opportunities.`
 
     const model = genAI.models.generateContentStream
 
@@ -93,7 +85,20 @@ Please provide a structured analysis with clear sections.`
       const result = await model({
         model: modelSelection.model,
         config: { responseMimeType: 'text/plain' },
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+        contents: [
+          { 
+            role: 'user', 
+            parts: [
+              { text: prompt },
+              { 
+                inlineData: { 
+                  mimeType: 'image/jpeg', 
+                  data: imageData 
+                } 
+              }
+            ] 
+          }
+        ]
       })
 
       // Collect the full response
@@ -105,42 +110,41 @@ Please provide a structured analysis with clear sections.`
       actualInputTokens = estimatedTokens
       actualOutputTokens = estimateTokens(analysisResult)
     } catch (error: any) {
-      console.error('Document analysis failed:', error)
+      console.error('Screenshot analysis failed:', error)
       return NextResponse.json({ 
-        error: 'Document analysis failed', 
-        message: error.message || 'Failed to analyze document'
+        error: 'Screenshot analysis failed', 
+        message: error.message || 'Failed to analyze screenshot'
       }, { status: 500 })
     }
 
     // Record usage
     if (sessionId) {
-      await recordDemoUsage(sessionId, 'document_analysis' as DemoFeature, actualInputTokens + actualOutputTokens, 1)
+      await recordDemoUsage(sessionId, 'screenshot_analysis' as DemoFeature, actualInputTokens + actualOutputTokens, 1)
     }
 
     if (userId) {
       await enforceBudgetAndLog(
         userId,
         sessionId,
-        'document_analysis',
+        'screenshot_analysis',
         modelSelection.model,
         actualInputTokens,
         actualOutputTokens,
         true,
         undefined,
-        { fileName, mimeType, modelSelection: modelSelection.reason }
+        { description, context, modelSelection: modelSelection.reason }
       )
     }
 
     return NextResponse.json({
       analysis: analysisResult,
-      fileName,
       modelUsed: modelSelection.model,
       tokensUsed: actualInputTokens + actualOutputTokens,
       estimatedCost: modelSelection.estimatedCost
     })
 
   } catch (error: any) {
-    console.error('Document analysis error:', error)
+    console.error('Screenshot analysis error:', error)
     return NextResponse.json({ 
       error: 'Internal server error',
       message: error.message || 'An unexpected error occurred'
