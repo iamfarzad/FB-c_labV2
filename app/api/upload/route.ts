@@ -68,19 +68,26 @@ export async function POST(request: NextRequest) {
     // Return file info
     const fileUrl = `/uploads/${filename}`
     
-    // In POST, after save:
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    const { error: logError } = await supabase.from('upload_logs').insert({
-      filename,
-      original_name: file.name,
-      size: file.size,
-      type: file.type,
-      url: fileUrl,
-      uploaded_at: new Date().toISOString(),
-      session_id: request.headers.get('x-session-id') || null, // Assuming session header
-      user_id: request.headers.get('x-user-id') || null
-    })
-    if (logError) console.error('Failed to log upload:', logError)
+    // Log upload to Supabase if configured
+    try {
+      if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+        const { error: logError } = await supabase.from('upload_logs').insert({
+          filename,
+          original_name: file.name,
+          size: file.size,
+          type: file.type,
+          url: fileUrl,
+          uploaded_at: new Date().toISOString(),
+          session_id: request.headers.get('x-demo-session-id') || null,
+          user_id: request.headers.get('x-user-id') || null
+        })
+        if (logError) console.error('Failed to log upload:', logError)
+      }
+    } catch (dbError) {
+      console.error('Database logging error:', dbError)
+      // Don't fail the upload if logging fails
+    }
     
     return NextResponse.json({
       success: true,
@@ -94,7 +101,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[Upload API Error]', error)
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      details: process.env.NODE_ENV === 'development' ? error : undefined
+    }, { status: 500 })
   }
 }
 

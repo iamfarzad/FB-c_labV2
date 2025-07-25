@@ -270,9 +270,13 @@ export default function ChatPage() {
       const formData = new FormData()
       formData.append('file', file)
 
-      // Upload file
+      // Upload file with session ID
       const uploadResponse = await fetch('/api/upload', {
         method: 'POST',
+        headers: {
+          'x-demo-session-id': sessionId || 'anonymous',
+          'x-user-id': 'anonymous_user'
+        },
         body: formData,
       })
 
@@ -303,10 +307,14 @@ export default function ChatPage() {
           const fileContent = await file.text()
           const base64Data = btoa(fileContent)
 
-          // Call document analysis endpoint
+          // Call document analysis endpoint with session ID
           const analysisResponse = await fetch('/api/analyze-document', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-demo-session-id': sessionId || 'anonymous',
+              'x-user-id': 'anonymous_user'
+            },
             body: JSON.stringify({
               data: base64Data,
               mimeType: file.type,
@@ -317,10 +325,10 @@ export default function ChatPage() {
           if (analysisResponse.ok) {
             const analysisData = await analysisResponse.json()
             
-            // Add AI analysis to chat
+            // Add AI analysis to chat (use 'analysis' property, not 'summary')
             append({
               role: "assistant",
-              content: `**Document Analysis for ${file.name}:**\n\n${analysisData.summary}`,
+              content: `**Document Analysis for ${file.name}:**\n\n${analysisData.analysis}`,
             })
 
             addActivity({
@@ -330,7 +338,8 @@ export default function ChatPage() {
               status: "completed",
             })
           } else {
-            throw new Error('Document analysis failed')
+            const errorData = await analysisResponse.json()
+            throw new Error(errorData.message || 'Document analysis failed')
           }
         } catch (error) {
           console.error('Document analysis error:', error)
