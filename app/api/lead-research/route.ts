@@ -9,24 +9,28 @@ interface LeadResearchRequest {
   email: string
   company?: string
   linkedinUrl?: string
+  researchActivityId?: string
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, company, linkedinUrl }: LeadResearchRequest = await req.json()
+    const { name, email, company, linkedinUrl, researchActivityId }: LeadResearchRequest = await req.json()
 
     if (!name || !email) {
       return NextResponse.json({ error: "Name and email are required" }, { status: 400 })
     }
 
-    // Log research start
-    await logServerActivity({
-      type: "search",
-      title: "AI Research in Progress",
-      description: `Searching for ${name}'s business background`,
-      status: "in_progress",
-      metadata: { name, email, company }
-    })
+    // Log research start (only if not already logged)
+    let aiResearchActivityId = researchActivityId
+    if (!aiResearchActivityId) {
+      aiResearchActivityId = await logServerActivity({
+        type: "search",
+        title: "AI Research in Progress",
+        description: `Searching for ${name}'s business background`,
+        status: "in_progress",
+        metadata: { name, email, company }
+      })
+    }
 
     const ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY!,
@@ -106,7 +110,8 @@ Focus on finding actionable insights for AI consulting opportunities.
               name, 
               email, 
               company,
-              researchLength: fullResearch.length 
+              researchLength: fullResearch.length,
+              originalActivityId: aiResearchActivityId
             }
           })
 
@@ -141,7 +146,13 @@ Focus on finding actionable insights for AI consulting opportunities.
             title: "Lead Research Failed",
             description: `Research failed for ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
             status: "failed",
-            metadata: { name, email, company, error: error instanceof Error ? error.message : 'Unknown error' }
+            metadata: { 
+              name, 
+              email, 
+              company, 
+              error: error instanceof Error ? error.message : 'Unknown error',
+              originalActivityId: aiResearchActivityId
+            }
           })
           
           controller.error(error)

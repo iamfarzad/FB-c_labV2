@@ -38,6 +38,24 @@ export function useRealTimeActivities() {
     setActivities([])
   }, [])
 
+  // Clean up stuck activities (those in progress for too long)
+  const cleanupStuckActivities = useCallback(() => {
+    setActivities((prev) => {
+      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000)
+      return prev.map((activity) => {
+        // If activity has been in progress for more than 5 minutes, mark it as failed
+        if (activity.status === 'in_progress' && activity.timestamp < fiveMinutesAgo) {
+          return {
+            ...activity,
+            status: 'failed' as const,
+            description: `${activity.description} (timed out)`
+          }
+        }
+        return activity
+      })
+    })
+  }, [])
+
   // Cleanup old activities periodically
   useEffect(() => {
     const cleanupInterval = setInterval(() => {
@@ -53,8 +71,16 @@ export function useRealTimeActivities() {
       })
     }, 15000) // Run every 15 seconds for more frequent cleanup
 
-    return () => clearInterval(cleanupInterval)
-  }, [])
+    // Clean up stuck activities every 30 seconds
+    const stuckCleanupInterval = setInterval(() => {
+      cleanupStuckActivities()
+    }, 30000)
+
+    return () => {
+      clearInterval(cleanupInterval)
+      clearInterval(stuckCleanupInterval)
+    }
+  }, [cleanupStuckActivities])
 
   // Track mount state for hydration safety and load existing activities
   useEffect(() => {
@@ -241,5 +267,6 @@ export function useRealTimeActivities() {
     addActivity,
     updateActivity,
     clearActivities,
+    cleanupStuckActivities,
   }
 }

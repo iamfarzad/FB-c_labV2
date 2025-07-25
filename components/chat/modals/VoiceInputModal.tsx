@@ -61,7 +61,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     userId: userId || 'anonymous'
   })
 
-  // Check microphone permissions on mount
+  // Check microphone permissions on mount and auto-connect to Gemini Live
   useEffect(() => {
     if (!isOpen) return
 
@@ -127,7 +127,12 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     }
 
     checkMicrophonePermission()
-  }, [isOpen, toast])
+    
+    // Auto-connect to Gemini Live when modal opens
+    connect().catch(err => {
+      console.error("Failed to auto-connect Gemini Live:", err)
+    })
+  }, [isOpen, toast, connect])
 
   const initializeSpeechRecognition = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
@@ -235,36 +240,6 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     }
   }, [recordingState])
 
-  const startRecording = useCallback(() => {
-    if (recognitionRef.current && isSupported && permissionGranted) {
-      setFinalTranscript("")
-      setCurrentTranscription("")
-      setRecordingTime(0)
-      recognitionRef.current.start()
-      
-      // If connected to Gemini Live, start audio streaming
-      if (isConnected) {
-        startAudioStreaming()
-      }
-    }
-  }, [isSupported, permissionGranted, isConnected])
-
-  const stopRecording = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop()
-      setRecordingState("processing")
-      
-      // Stop audio streaming if connected to Gemini Live
-      if (isConnected) {
-        stopAudioStreaming()
-      }
-      
-      setTimeout(() => {
-        setRecordingState("idle")
-      }, 1000)
-    }
-  }, [isConnected])
-
   // Audio streaming for Gemini Live
   const startAudioStreaming = useCallback(async () => {
     if (!isConnected || !sendStream) return
@@ -315,6 +290,40 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     (window as any).currentMediaRecorder = null
     (window as any).currentAudioStream = null
   }, [])
+
+  const startRecording = useCallback(() => {
+    if (recognitionRef.current && isSupported && permissionGranted) {
+      setFinalTranscript("")
+      setCurrentTranscription("")
+      setRecordingTime(0)
+      recognitionRef.current.start()
+      
+      // Ensure we're connected before streaming
+      if (!isConnected) {
+        connect()
+          .then(() => startAudioStreaming())
+          .catch(err => console.error("Live connect failed:", err))
+      } else {
+        startAudioStreaming()
+      }
+    }
+  }, [isSupported, permissionGranted, isConnected, connect, startAudioStreaming])
+
+  const stopRecording = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop()
+      setRecordingState("processing")
+      
+      // Stop audio streaming if connected to Gemini Live
+      if (isConnected) {
+        stopAudioStreaming()
+      }
+      
+      setTimeout(() => {
+        setRecordingState("idle")
+      }, 1000)
+    }
+  }, [isConnected, stopAudioStreaming])
 
   const handleOrbClick = useCallback(() => {
     if (!isSupported || !permissionGranted) return

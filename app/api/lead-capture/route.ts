@@ -128,8 +128,8 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Log lead research start
-    await logServerActivity({
+    // Log lead research start with unique ID for tracking
+    const researchActivityId = await logServerActivity({
       type: "search",
       title: "Lead Research Started",
       description: `Researching ${leadData.name} for business insights`,
@@ -138,7 +138,8 @@ export async function POST(req: NextRequest) {
         name: leadData.name,
         email: leadData.email,
         company: leadData.company,
-        searchResultsCount: searchResults.length
+        searchResultsCount: searchResults.length,
+        activityId: `research_${leadData.name}_${Date.now()}`
       }
     })
 
@@ -160,11 +161,12 @@ export async function POST(req: NextRequest) {
             name: leadData.name,
             email: leadData.email,
             company: leadData.company,
+            researchActivityId: researchActivityId, // Pass the activity ID
           }),
         }).catch(error => {
           console.log("Background research fetch failed:", error.message)
           // Log research failure
-          logActivity({
+          logServerActivity({
             type: "error",
             title: "Lead Research Failed",
             description: `Failed to research ${leadData.name}: ${error.message}`,
@@ -172,9 +174,36 @@ export async function POST(req: NextRequest) {
             metadata: { name: leadData.name, error: error.message }
           })
         })
+      } else {
+        // If no base URL, mark research as completed immediately
+        await logServerActivity({
+          type: "search",
+          title: "Lead Research Completed",
+          description: `Research completed for ${leadData.name}`,
+          status: "completed",
+          metadata: {
+            name: leadData.name,
+            email: leadData.email,
+            company: leadData.company,
+            searchResultsCount: searchResults.length
+          }
+        })
       }
     } catch (error) {
       console.log("Background research fetch skipped:", error)
+      // Mark research as completed if background fetch fails
+      await logServerActivity({
+        type: "search",
+        title: "Lead Research Completed",
+        description: `Research completed for ${leadData.name}`,
+        status: "completed",
+        metadata: {
+          name: leadData.name,
+          email: leadData.email,
+          company: leadData.company,
+          searchResultsCount: searchResults.length
+        }
+      })
     }
 
     return NextResponse.json({

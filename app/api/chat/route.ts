@@ -100,15 +100,50 @@ Response Style:
 
   // Add lead context if available and valid
   if (leadContext && leadContext.name && leadContext.name.trim() !== '') {
-    return `${basePrompt}
+    let enhancedContext = `${basePrompt}
 
 Current Client Context:
 - Name: ${leadContext.name}
 - Company: ${leadContext.company || 'Not specified'}
 - Role: ${leadContext.role || 'Not specified'}
 - Industry: ${leadContext.industry || 'Not specified'}
+- Email: ${leadContext.email || 'Not specified'}`
+
+    // Try to fetch grounded search results for this lead
+    try {
+      const { LeadManagementService } = await import('@/lib/lead-management');
+      const leadManager = new LeadManagementService();
+      
+      // Find the lead by email
+      const leads = await leadManager.getUserLeads();
+      const lead = leads.find(l => l.email === leadContext.email);
+      
+      if (lead) {
+        const searchResults = await leadManager.getLeadSearchResults(lead.id);
+        
+        if (searchResults && searchResults.length > 0) {
+          enhancedContext += `
+
+Background Research (from online sources):
+${searchResults.map((result, index) => `
+${index + 1}. ${result.title || 'Untitled'}
+   Source: ${result.url}
+   Summary: ${result.snippet || 'No description available'}
+`).join('')}
+
+Use this background research to personalize your responses for ${leadContext.name}. Reference specific details from their online presence when relevant to provide more targeted and valuable advice.`
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch lead search results:', error);
+      // Continue without search results if there's an error
+    }
+
+    enhancedContext += `
 
 Personalize your responses for ${leadContext.name} and their specific business context.`
+
+    return enhancedContext;
   }
 
   // If no valid lead context, use a generic greeting

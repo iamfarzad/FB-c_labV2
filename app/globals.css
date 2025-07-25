@@ -86,6 +86,11 @@
     font-feature-settings: "rlig" 1, "calt" 1;
     scroll-behavior: smooth;
     overflow-x: hidden;
+    /* Prevent layout shift on mobile */
+    overscroll-behavior: contain;
+    /* Ensure proper viewport height on mobile */
+    height: 100vh;
+    height: 100dvh;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -213,4 +218,43 @@
 .smooth-scroll {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Chat-specific scrolling improvements */
+.chat-scroll-container {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+}
+
+.chat-message-container {
+  /* Ensure messages don't cause layout shift */
+  contain: layout style paint;
+  /* Prevent text selection during scroll */
+  user-select: none;
+  /* Allow text selection on message content */
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+.chat-message-container * {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+/* Mobile-specific chat improvements */
+@media (max-width: 767px) {
+  .chat-scroll-container {
+    /* Prevent bounce scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+  }
+  
+  .chat-message-container {
+    /* Optimize for mobile scrolling */
+    will-change: scroll-position;
+  }
 }

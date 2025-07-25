@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Loader2, User, Bot, ImageIcon, Copy, Check, Brain, AlertTriangle, Info, CheckCircle, Clock, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { Message } from "@/app/chat/types/chat"
 
@@ -165,6 +165,7 @@ const detectMessageType = (content: string): { type: string; icon?: React.ReactN
 
 export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps) {
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   const copyToClipboard = async (text: string, messageId: string) => {
     try {
@@ -176,17 +177,37 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
     }
   }
 
-  // Auto-scroll to bottom when messages change
+  // Improved auto-scroll to bottom when messages change
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    const scrollToBottom = () => {
+      if (messagesEndRef.current && scrollAreaRef.current) {
+        // Use requestAnimationFrame to ensure DOM is updated
+        requestAnimationFrame(() => {
+          messagesEndRef.current?.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'end'
+          })
+        })
+      }
     }
-  }, [messages]);
+
+    // Scroll immediately for new messages
+    scrollToBottom()
+    
+    // Also scroll after a short delay to handle dynamic content
+    const timeoutId = setTimeout(scrollToBottom, 100)
+    
+    return () => clearTimeout(timeoutId)
+  }, [messages, isLoading])
 
   return (
-    <div className="flex-1 overflow-hidden" data-testid="chat-main">
-      <ScrollArea className="h-full w-full">
-        <div className="max-w-3xl mx-auto space-y-6 p-4" data-testid="messages-container">
+    <div className="flex-1 flex flex-col min-h-0" data-testid="chat-main">
+      <ScrollArea 
+        ref={scrollAreaRef}
+        className="flex-1 w-full chat-scroll-container"
+        style={{ height: '100%' }}
+      >
+        <div className="max-w-3xl mx-auto space-y-6 p-4 pb-8 chat-message-container" data-testid="messages-container">
           {messages.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
@@ -343,11 +364,12 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
           </div>
         )}
 
-        <div ref={el => {
-          if (el && messagesEndRef) {
-            (messagesEndRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-          }
-        }} className="h-0 w-0" />
+        {/* Scroll anchor - positioned at the bottom */}
+        <div 
+          ref={messagesEndRef} 
+          className="h-0 w-0" 
+          style={{ scrollMarginBottom: '20px' }}
+        />
         </div>
       </ScrollArea>
     </div>

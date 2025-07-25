@@ -14,10 +14,11 @@ interface SidebarContentProps {
   onNewChat: () => void
   onActivityClick: (activity: ActivityItem) => void
   onClearActivities?: () => void
+  onCleanupStuckActivities?: () => void
   isTablet?: boolean
 }
 
-export const SidebarContent = ({ activities, onNewChat, onActivityClick, onClearActivities, isTablet = false }: SidebarContentProps) => {
+export const SidebarContent = ({ activities, onNewChat, onActivityClick, onClearActivities, onCleanupStuckActivities, isTablet = false }: SidebarContentProps) => {
   const liveActivities = activities.filter((a) => a.status === "in_progress" || a.status === "pending").length
 
   return (
@@ -44,19 +45,35 @@ export const SidebarContent = ({ activities, onNewChat, onActivityClick, onClear
           >
             Chat History
           </h2>
-          {activities.length > 0 && onClearActivities && (
-            <Button
-              onClick={onClearActivities}
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "text-muted-foreground hover:text-foreground",
-                isTablet ? "h-6 px-2 text-xs" : "h-7 px-2 text-xs"
-              )}
-            >
-              Clear
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {activities.length > 0 && onCleanupStuckActivities && (
+              <Button
+                onClick={onCleanupStuckActivities}
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "text-muted-foreground hover:text-foreground",
+                  isTablet ? "h-6 px-2 text-xs" : "h-7 px-2 text-xs"
+                )}
+                title="Clean up stuck activities"
+              >
+                Fix
+              </Button>
+            )}
+            {activities.length > 0 && onClearActivities && (
+              <Button
+                onClick={onClearActivities}
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "text-muted-foreground hover:text-foreground",
+                  isTablet ? "h-6 px-2 text-xs" : "h-7 px-2 text-xs"
+                )}
+              >
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
 
         <motion.div

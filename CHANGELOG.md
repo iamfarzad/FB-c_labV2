@@ -1,5 +1,96 @@
 # Changelog
 
+## [1.4.3] - 2025-07-25
+
+### 🎤 **GEMINI LIVE AUDIO AUTO-CONNECT & UI CLEANUP**
+
+**Fixed critical issue where Gemini Live sessions weren't being established**:
+- ✅ **Auto-Connect on Modal Open** - Gemini Live session now connects automatically when voice modal opens
+- ✅ **Connect Before Streaming** - Ensures connection is established before starting audio streaming
+- ✅ **Proper Error Handling** - Graceful fallback if connection fails during recording
+- ✅ **UI Cleanup** - Removed all text input fallbacks and Voice/Text toggles from voice modal
+- ✅ **SDK Compliance** - Verified correct `ai.live.connect()` pattern with proper Modality enums
+- ✅ **Connection Testing** - Added comprehensive test script to verify live API functionality
+
+**Enhanced `hooks/useGeminiLiveAudio.ts`**:
+- ✅ **Correct SDK Import** - Fixed import from `@google/genai` with proper `GoogleGenAI` class
+- ✅ **Live API Pattern** - Updated to use `ai.live.connect()` instead of `startChat({ enableAudio })`
+- ✅ **Modality Support** - Proper `Modality.AUDIO` and `Modality.TEXT` enum usage
+- ✅ **Voice Configuration** - Added proper speech config with Zephyr voice
+- ✅ **Error Recovery** - Enhanced error handling with structured logging
+
+**Updated `components/chat/modals/VoiceInputModal.tsx`**:
+- ✅ **Auto-Connect Logic** - Calls `connect()` automatically when modal opens
+- ✅ **Connection Before Streaming** - Ensures live session is ready before audio streaming
+- ✅ **Clean UI** - Removed all text input fallbacks and toggles
+- ✅ **Proper Dependencies** - Fixed function dependencies and call order
+
+**Testing & Verification**:
+- ✅ **Connection Test Script** - Created `scripts/test-gemini-live-connection.ts` for API verification
+- ✅ **Live API Validation** - Confirmed `ai.live.connect()` works with proper configuration
+- ✅ **Session Management** - Verified session creation, message sending, and cleanup
+- ✅ **Error Scenarios** - Tested connection failures and fallback mechanisms
+
+**UI Improvements**:
+- ✅ **Voice-Only Interface** - Removed all text input elements and toggles
+- ✅ **Clean Attachment Menu** - ChatFooter already properly structured with voice input
+- ✅ **Status Indicators** - Enhanced live connection status display
+- ✅ **Error Feedback** - Better error messages for connection issues
+
+### 🔧 **TECHNICAL FIXES**
+
+**Fixed linter errors and build issues**:
+- ✅ **Import Corrections** - Fixed `GoogleGenAI` import and constructor usage
+- ✅ **Type Safety** - Proper TypeScript types for Modality enums and API responses
+- ✅ **Function Dependencies** - Corrected useCallback dependencies and call order
+- ✅ **Resource Management** - Proper cleanup and memory management
+
+## [1.4.2] - 2025-07-25
+
+### 🔧 **CHAT SCROLLING & LAYOUT FIXES**
+
+**Fixed critical scrolling and layout issues in chat interface**:
+- ✅ **ScrollArea Component Enhancement** - Improved height constraints and overflow handling
+- ✅ **Auto-scroll Logic** - Enhanced with requestAnimationFrame for smoother scrolling behavior
+- ✅ **Layout Structure** - Fixed flex constraints and min-height settings for proper container sizing
+- ✅ **Mobile Scrolling** - Added overscroll-behavior and touch scrolling improvements
+- ✅ **CSS Optimizations** - Added chat-specific scroll container classes and mobile improvements
+- ✅ **Scroll Anchor Positioning** - Proper scroll margin and anchor element positioning
+- ✅ **Duplicate Logic Removal** - Eliminated conflicting scroll logic between components
+
+### 🚨 **STUCK ACTIVITIES FIX**
+
+**Fixed critical issue with activities stuck in "in_progress" status**:
+- ✅ **Activity Completion Logic** - Fixed lead research activities not completing properly
+- ✅ **Background Fetch Handling** - Added proper error handling and fallback completion
+- ✅ **Activity ID Tracking** - Implemented proper activity ID passing between API calls
+- ✅ **Automatic Cleanup** - Added 5-minute timeout for stuck activities with automatic cleanup
+- ✅ **Manual Cleanup Tool** - Added "Fix" button in sidebar to manually resolve stuck activities
+- ✅ **Database Cleanup Script** - Created script to fix 296 stuck activities in database
+- ✅ **Real-time Monitoring** - Enhanced activity status tracking and error handling
+
+**Enhanced Activity Management**:
+- ✅ **Timeout Handling** - Activities automatically marked as failed after 5 minutes
+- ✅ **Error Recovery** - Proper error logging and status updates for failed activities
+- ✅ **User Feedback** - Toast notifications for activity cleanup actions
+- ✅ **Performance Optimization** - Reduced activity retention to prevent UI lag
+
+**Enhanced `components/chat/ChatMain.tsx`**:
+- ✅ **Improved ScrollArea integration** - Added proper refs and height constraints
+- ✅ **Better auto-scroll timing** - Immediate scroll + delayed scroll for dynamic content
+- ✅ **Enhanced message container** - Added CSS classes for better scroll performance
+- ✅ **Scroll anchor optimization** - Proper scroll margin and positioning
+
+**Updated `components/ui/scroll-area.tsx`**:
+- ✅ **Enhanced viewport styling** - Added stable scrollbar gutter and smooth scrolling
+- ✅ **Mobile optimizations** - Improved touch scrolling and overscroll behavior
+- ✅ **Performance improvements** - Better scroll performance with proper CSS properties
+
+**CSS Improvements in `app/globals.css`**:
+- ✅ **Chat-specific classes** - Added `.chat-scroll-container` and `.chat-message-container`
+- ✅ **Mobile optimizations** - Touch scrolling improvements and bounce prevention
+- ✅ **Layout stability** - Prevented layout shift with proper containment
+
 ## [1.4.1] - 2025-07-25
 
 ### 🚀 **PRODUCTION-READY GEMINI LIVE AUDIO SYSTEM**

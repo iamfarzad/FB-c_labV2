@@ -30,7 +30,7 @@ export const dynamic = 'force-dynamic'
 
 export default function ChatPage() {
   const { sessionId, createSession } = useDemoSession()
-  const { activityLog, addActivity, clearActivities } = useChatContext()
+  const { activityLog, addActivity, clearActivities, cleanupStuckActivities } = useChatContext()
   const { toast } = useToast()
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -119,8 +119,9 @@ export default function ChatPage() {
   const lastSubmitTimeRef = useRef<number>(0)
   const SUBMIT_COOLDOWN = 2000 // 2 seconds between submissions
 
-  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  useEffect(scrollToBottom, [messages])
+  // Scroll logic is now handled in ChatMain component
+  // const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  // useEffect(scrollToBottom, [messages])
 
   // Clear all session data when component unmounts or session changes
   useEffect(() => {
@@ -537,6 +538,22 @@ export default function ChatPage() {
     })
   }, [clearActivities, addActivity])
 
+  const handleCleanupStuckActivities = useCallback(() => {
+    // Clean up stuck activities
+    cleanupStuckActivities()
+    // Add a confirmation activity
+    addActivity({ 
+      type: "user_action", 
+      title: "Stuck Activities Cleaned", 
+      description: "Timed out activities have been marked as failed", 
+      status: "completed" 
+    })
+    toast({ 
+      title: "Activities Cleaned", 
+      description: "Stuck activities have been resolved" 
+    })
+  }, [cleanupStuckActivities, addActivity, toast])
+
   return (
     <ChatLayout>
       <div className="flex h-full">
@@ -547,8 +564,9 @@ export default function ChatPage() {
           onNewChat={handleNewChat}
           onActivityClick={handleActivityClick}
           onClearActivities={handleClearActivities}
+          onCleanupStuckActivities={handleCleanupStuckActivities}
         />
-        <div className="flex flex-col flex-1 h-full">
+        <div className="flex flex-col flex-1 h-full min-h-0">
           <ChatHeader 
             onDownloadSummary={handleDownloadSummary} 
             activities={activityLog} 
@@ -556,7 +574,7 @@ export default function ChatPage() {
             onActivityClick={handleActivityClick}
             leadName={leadCaptureState.leadData.name}
           />
-          <div className="flex-1 relative min-h-0">
+          <div className="flex-1 relative min-h-0 overflow-hidden">
             {showLeadCapture && (
               <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                 <LeadCaptureFlow
@@ -570,7 +588,7 @@ export default function ChatPage() {
             
             <ChatMain messages={messages as Message[]} isLoading={isLoading} messagesEndRef={messagesEndRef} />
           </div>
-          <div className="shrink-0">
+          <div className="shrink-0 flex-shrink-0">
             <ChatFooter
               input={input}
               setInput={setInput}

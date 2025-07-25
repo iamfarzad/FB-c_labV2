@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenAI, Modality } from '@google/genai'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 import { logTokenUsage } from '@/lib/token-usage-logger'
 import { TokenCostCalculator } from '@/lib/token-cost-calculator'
@@ -112,7 +112,6 @@ export function useGeminiLiveAudio({
   // Authentication check
   const authenticateUser = useCallback(async (): Promise<{ success: boolean; userId?: string; error?: string }> => {
     try {
-      const supabase = getSupabase()
       const { data: { user }, error } = await supabase.auth.getUser()
       
       if (error || !user) {
@@ -144,14 +143,14 @@ export function useGeminiLiveAudio({
     if (correlationId) {
       logTokenUsage({
         model: modelName,
-        inputTokens: metadata.inputTokens || 0,
-        outputTokens: metadata.outputTokens || 0,
-        estimatedCost: metadata.estimatedCost || 0,
-        taskType: 'voice-live',
-        endpoint: '/api/gemini-live',
-        correlationId,
-        sessionId,
-        userId
+        input_tokens: metadata.inputTokens || 0,
+        output_tokens: metadata.outputTokens || 0,
+        total_tokens: (metadata.inputTokens || 0) + (metadata.outputTokens || 0),
+        estimated_cost: metadata.estimatedCost || 0,
+        feature: 'voice-live',
+        success: level !== 'error',
+        error_message: level === 'error' ? metadata.error : undefined,
+        usage_metadata: metadata
       })
     }
   }, [correlationId, sessionId, userId, modelName])
@@ -183,37 +182,35 @@ export function useGeminiLiveAudio({
       }
 
       // Initialize Gemini client with correct SDK
-      const client = new Client({ 
-        apiKey, 
-        vertexai: true, 
-        project: 'fbconsulting-6225f', 
-        location: 'global' 
-      })
+      const genAI = new GoogleGenAI({ apiKey })
       
-      const model = client.getGenerativeModel({ model: modelName })
-      
-      // Start chat session with audio enabled
-      const session = await model.startChat({
-        stream: true,
-        enableAudio: true,
-        generationConfig: {
-          responseMimeType: 'text/plain',
+      // Use the live.connect() method for real-time audio
+      const session = await genAI.live.connect({
+        model: modelName,
+        callbacks: {
+          onopen: () => {
+            setIsConnected(true)
+            setError(null)
+            onStatusChange?.('connected')
+            logActivity('info', 'Gemini Live session connected')
+          },
+          onmessage: handleMessage,
+          onerror: handleError,
+          onclose: handleClose
+        },
+        config: {
+          responseModalities: [Modality.AUDIO, Modality.TEXT],
+          speechConfig: {
+            voiceConfig: { 
+              prebuiltVoiceConfig: { 
+                voiceName: 'Zephyr' 
+              } 
+            }
+          }
         }
       })
       
       sessionRef.current = session
-      
-      // Set up event handlers
-      session.onopen = () => {
-        setIsConnected(true)
-        setError(null)
-        onStatusChange?.('connected')
-        logActivity('info', 'Gemini Live session connected')
-      }
-      
-      session.onmessage = handleMessage
-      session.onerror = handleError
-      session.onclose = handleClose
       
     } catch (e: any) {
       const errorMessage = e.message || 'Failed to connect to Gemini Live'
@@ -238,8 +235,8 @@ export function useGeminiLiveAudio({
         const view = new Uint8Array(buffer)
         for (let i = 0; i < len; i++) view[i] = binary.charCodeAt(i)
         
-        // Play the audio
-        audioPlayer.playBuffer(buffer)
+        // Play the audio using the audio player's playAudioData method
+        audioPlayer.controls.playAudioData(data.audio)
         onStatusChange?.('playing')
         
         logActivity('info', 'Audio response received and playing', {
@@ -303,7 +300,7 @@ export function useGeminiLiveAudio({
       for (const b of bytes) binary += String.fromCharCode(b)
       const b64 = btoa(binary)
       
-      // Send to Gemini
+      // Send to Gemini using the live session
       sessionRef.current.sendRealtimeInput({ audio: b64 })
       
       // Log usage
@@ -330,7 +327,7 @@ export function useGeminiLiveAudio({
         sessionRef.current = null
       }
       
-      audioPlayer.stop()
+      audioPlayer.controls.stop()
       setIsConnected(false)
       setIsStreaming(false)
       setError(null)

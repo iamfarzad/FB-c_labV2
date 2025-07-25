@@ -9,6 +9,7 @@ interface ChatContextType {
   addActivity: (activity: Omit<ActivityItem, "id" | "timestamp">) => void
   updateActivity: (id: string, updates: Partial<ActivityItem>) => void
   clearActivities: () => void
+  cleanupStuckActivities: () => void
   isConnected: boolean
 }
 
@@ -16,7 +17,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   try {
-    const { activities, addActivity, updateActivity, clearActivities, isConnected } = useRealTimeActivities()
+    const { activities, addActivity, updateActivity, clearActivities, cleanupStuckActivities, isConnected } = useRealTimeActivities()
 
     return (
       <ChatContext.Provider
@@ -25,6 +26,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           addActivity,
           updateActivity,
           clearActivities,
+          cleanupStuckActivities,
           isConnected,
         }}
       >
@@ -41,6 +43,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           addActivity: () => {},
           updateActivity: () => {},
           clearActivities: () => {},
+          cleanupStuckActivities: () => {},
           isConnected: false,
         }}
       >
