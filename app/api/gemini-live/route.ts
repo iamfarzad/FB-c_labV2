@@ -19,6 +19,7 @@ const DUPLICATE_THRESHOLD = 3000 // 3 seconds - more reasonable for voice intera
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
   const callId = Math.random().toString(36).substring(7)
+  const correlationId = req.headers.get('x-correlation-id') || callId
   
   try {
     const { 
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
     // 🟠 LOGGING: Track all API calls
     console.log("🟠 Gemini API Called:", {
       callId,
+      correlationId,
       prompt: (prompt || '').substring(0, 100) + ((prompt || '').length > 100 ? "..." : ""),
       enableTTS,
       streamAudio,
@@ -50,6 +52,7 @@ export async function POST(req: NextRequest) {
     if (lastCallTime && (now - lastCallTime) < DUPLICATE_THRESHOLD) {
       console.log("🚫 Duplicate call prevented:", {
         callId,
+        correlationId,
         promptHash,
         timeSinceLastCall: now - lastCallTime
       })
@@ -72,12 +75,12 @@ export async function POST(req: NextRequest) {
     }
 
     if (!prompt) {
-      console.log("❌ Missing prompt:", { callId })
+      console.log("❌ Missing prompt:", { callId, correlationId })
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 })
     }
 
     if (!process.env.GEMINI_API_KEY) {
-      console.log("❌ Missing API key:", { callId })
+      console.log("❌ Missing API key:", { callId, correlationId })
       return NextResponse.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 })
     }
 
@@ -87,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     if (enableTTS) {
       try {
-        console.log("🎤 TTS Generation started:", { callId, promptLength: (prompt || '').length })
+        console.log("🎤 TTS Generation started:", { callId, correlationId, promptLength: (prompt || '').length })
         
         // Generate text content first
         const config = {

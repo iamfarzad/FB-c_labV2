@@ -1,9 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Client, types } from '@google/genai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 import { logTokenUsage } from '@/lib/token-usage-logger'
-import { estimateTokens, estimateCost } from '@/lib/token-cost-calculator'
-import { getSupabase } from '@/lib/supabase/client'
+import { TokenCostCalculator } from '@/lib/token-cost-calculator'
+import { supabase } from '@/lib/supabase/client'
+
+// Helper function to estimate tokens (fallback implementation)
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4)
+}
+
+// Helper function to estimate cost
+function estimateCost(inputTokens: number, outputTokens: number): number {
+  return TokenCostCalculator.estimateCost('gemini', 'gemini-2.5-flash', inputTokens, outputTokens)
+}
 
 interface UseGeminiLiveAudioOptions {
   apiKey: string
@@ -154,6 +164,11 @@ export function useGeminiLiveAudio({
     try {
       onStatusChange?.('connecting')
       logActivity('info', 'Starting Gemini Live session')
+
+      // Secure context check
+      if (typeof window !== 'undefined' && !window.isSecureContext) {
+        throw new Error('HTTPS required for live audio streaming')
+      }
 
       // Authentication check
       const auth = await authenticateUser()
@@ -338,6 +353,7 @@ export function useGeminiLiveAudio({
     isStreaming,
     error,
     correlationId,
+    hasLiveFallback: !isConnected && error?.includes('HTTPS required'),
     connect,
     sendStream,
     cleanup
