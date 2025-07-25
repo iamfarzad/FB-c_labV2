@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { useChatContext } from "@/app/chat/context/ChatProvider"
 import { useToast } from "@/components/ui/use-toast"
+import { useGeminiLiveAudio } from "@/hooks/useGeminiLiveAudio"
 
 interface VoiceInputModalProps {
   isOpen: boolean
@@ -37,6 +38,10 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   leadContext 
 }) => {
   const { addActivity } = useChatContext()
+  
+  // Generate session and user IDs for Gemini Live
+  const sessionId = useRef(`session-${Date.now()}`).current
+  const userId = useRef('anonymous').current
   const { toast } = useToast()
   
   const [voiceMode, setVoiceMode] = useState<VoiceMode>("input")
@@ -50,9 +55,18 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   const [textInput, setTextInput] = useState("")
   const [conversationMessages, setConversationMessages] = useState<Array<{id: string, role: 'user' | 'assistant', content: string, timestamp: Date}>>([])
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
+  const [liveStatus, setLiveStatus] = useState<string>('disconnected')
   
   const recognitionRef = useRef<any>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Gemini Live Audio integration
+  const { isConnected, isStreaming, error: liveError, connect, sendStream, cleanup: cleanupLive } = useGeminiLiveAudio({
+    apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY!,
+    onStatusChange: status => setLiveStatus(status),
+    sessionId: sessionId || `session-${Date.now()}`,
+    userId: userId || 'anonymous'
+  })
 
   // Check microphone permissions on mount
   useEffect(() => {
@@ -234,18 +248,79 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
       setCurrentTranscription("")
       setRecordingTime(0)
       recognitionRef.current.start()
+      
+      // If connected to Gemini Live, start audio streaming
+      if (isConnected) {
+        startAudioStreaming()
+      }
     }
-  }, [isSupported, permissionGranted])
+  }, [isSupported, permissionGranted, isConnected])
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
       recognitionRef.current.stop()
       setRecordingState("processing")
       
+      // Stop audio streaming if connected to Gemini Live
+      if (isConnected) {
+        stopAudioStreaming()
+      }
+      
       setTimeout(() => {
         setRecordingState("idle")
       }, 1000)
     }
+  }, [isConnected])
+
+  // Audio streaming for Gemini Live
+  const startAudioStreaming = useCallback(async () => {
+    if (!isConnected || !sendStream) return
+    
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream)
+      const chunks: Blob[] = []
+      
+      mediaRecorder.ondataavailable = async (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data)
+          // Convert blob to ArrayBuffer and send to Gemini Live
+          try {
+            const buffer = await event.data.arrayBuffer()
+            if (sendStream) {
+              await sendStream(buffer)
+            }
+          } catch (error) {
+            console.error('Failed to send audio chunk:', error)
+          }
+        }
+      }
+      
+      mediaRecorder.start(100) // Send chunks every 100ms
+      
+      // Store for cleanup
+      (window as any).currentMediaRecorder = mediaRecorder
+      (window as any).currentAudioStream = stream
+      
+    } catch (error) {
+      console.error('Failed to start audio streaming:', error)
+    }
+  }, [isConnected, sendStream])
+
+  const stopAudioStreaming = useCallback(() => {
+    const mediaRecorder = (window as any).currentMediaRecorder as MediaRecorder | null
+    const stream = (window as any).currentAudioStream as MediaStream | null
+    
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop()
+    }
+    
+    if (stream) {
+      stream.getTracks().forEach((track: MediaStreamTrack) => track.stop())
+    }
+    
+    (window as any).currentMediaRecorder = null
+    (window as any).currentAudioStream = null
   }, [])
 
   const handleOrbClick = useCallback(() => {
@@ -485,8 +560,10 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     setCurrentTranscription("")
     setTextInput("")
     setRecordingTime(0)
+    stopAudioStreaming() // Stop audio streaming
+    cleanupLive() // Cleanup Gemini Live session
     onClose()
-  }, [onClose])
+  }, [onClose, cleanupLive, stopAudioStreaming])
 
   const getStateMessage = () => {
     if (inputMode === "text") {
@@ -597,6 +674,55 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
               Text
             </Button>
           </div>
+
+          {/* Live AI Voice Controls */}
+          <div className="absolute top-6 right-20 flex gap-2">
+            <Button
+              variant={isConnected ? "default" : "outline"}
+              size="sm"
+              onClick={() => isConnected ? cleanupLive() : connect()}
+              disabled={!isSupported || !permissionGranted}
+              className={cn(
+                "bg-white/10 border-white/20 text-white hover:bg-white/20",
+                isConnected && "bg-green-600/20 text-green-200 border-green-500/30",
+                (!isSupported || !permissionGranted) && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              <Radio className="w-4 h-4 mr-2" />
+              {isConnected ? "Stop Live AI" : "Start Live AI Voice"}
+            </Button>
+          </div>
+
+          {/* Live AI Status Display */}
+          {isConnected && (
+            <div className="absolute top-16 right-6 flex items-center gap-2">
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  "border-white/20",
+                  isStreaming && "bg-blue-500/20 text-blue-200 border-blue-500/30",
+                  liveStatus === "playing" && "bg-green-500/20 text-green-200 border-green-500/30",
+                  liveStatus === "error" && "bg-red-500/20 text-red-200 border-red-500/30",
+                  !isStreaming && liveStatus === "connected" && "bg-white/10 text-white"
+                )}
+              >
+                {isStreaming ? "Streaming" : liveStatus === "playing" ? "AI Speaking" : liveStatus === "error" ? "Error" : "Connected"}
+              </Badge>
+            </div>
+          )}
+
+          {/* Live AI Error Display */}
+          {liveError && (
+            <div className="absolute top-24 right-6 max-w-xs">
+              <Card className="bg-red-500/20 border-red-500/30">
+                <CardContent className="p-2 text-center">
+                  <p className="text-red-200 text-xs">
+                    {liveError}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           {/* Main content */}
           <div className="flex flex-col items-center space-y-8 w-full">
