@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useCallback, useRef } from "react"
-import { X, Camera, RotateCcw, Play, Pause } from "lucide-react"
+import { X, Camera, RotateCcw, Play, Pause, Upload, Image } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,7 +18,8 @@ interface WebcamModalProps {
   onAIAnalysis?: (analysis: string) => void
 }
 
-type WebcamState = "initializing" | "active" | "error" | "stopped"
+type WebcamState = "initializing" | "active" | "error" | "stopped" | "permission-denied"
+type InputMode = "camera" | "upload"
 
 export const WebcamModal: React.FC<WebcamModalProps> = ({
   isOpen,
@@ -30,14 +31,17 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
   const { addActivity } = useChatContext()
   
   const [webcamState, setWebcamState] = useState<WebcamState>("initializing")
+  const [inputMode, setInputMode] = useState<InputMode>("camera")
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [availableDevices, setAvailableDevices] = useState<MediaDeviceInfo[]>([])
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("")
   const [captureCount, setCaptureCount] = useState(0)
   const [isCapturing, setIsCapturing] = useState(false)
+  const [permissionGranted, setPermissionGranted] = useState(false)
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Get available camera devices
   const getAvailableDevices = useCallback(async () => {
@@ -54,20 +58,82 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
     }
   }, [selectedDeviceId])
 
+  // Check camera permissions on mount
+  useEffect(() => {
+    if (!isOpen) return
+
+    const checkCameraPermission = async () => {
+      try {
+        // Check if we're in a secure context
+        if (!window.isSecureContext) {
+          setWebcamState("error")
+          toast({
+            title: "HTTPS Required",
+            description: "Camera access requires a secure connection (HTTPS).",
+            variant: "destructive"
+          })
+          return
+        }
+
+        // Check if getUserMedia is supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          setWebcamState("error")
+          toast({
+            title: "Camera Not Supported",
+            description: "Camera access is not supported in this browser.",
+            variant: "destructive"
+          })
+          return
+        }
+
+        // Request camera permission
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true })
+        setPermissionGranted(true)
+        setWebcamState("initializing")
+        
+        // Stop the stream immediately after permission check
+        mediaStream.getTracks().forEach(track => track.stop())
+        
+        // Initialize camera
+        await getAvailableDevices()
+        await startCamera()
+        
+      } catch (error: any) {
+        console.error("Camera permission error:", error)
+        setPermissionGranted(false)
+        
+        if (error.name === 'NotAllowedError') {
+          setWebcamState("permission-denied")
+          toast({
+            title: "Camera Permission Denied",
+            description: "Please allow camera access in your browser settings and refresh the page.",
+            variant: "destructive"
+          })
+        } else if (error.name === 'NotFoundError') {
+          setWebcamState("error")
+          toast({
+            title: "No Camera Found",
+            description: "Please connect a camera and try again.",
+            variant: "destructive"
+          })
+        } else {
+          setWebcamState("error")
+          toast({
+            title: "Camera Error",
+            description: "Unable to access camera. Please check your settings.",
+            variant: "destructive"
+          })
+        }
+      }
+    }
+
+    checkCameraPermission()
+  }, [isOpen, toast])
+
   // Start camera
   const startCamera = useCallback(async () => {
     try {
       setWebcamState("initializing")
-      
-      // Check if we're in a secure context (HTTPS required for camera access)
-      if (!window.isSecureContext) {
-        throw new Error("Camera access requires a secure connection (HTTPS)")
-      }
-      
-      // Check if getUserMedia is supported
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Camera access is not supported in this browser")
-      }
       
       const constraints: MediaStreamConstraints = {
         video: {
@@ -101,25 +167,15 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
       
       const errorMessage = error instanceof Error ? error.message : "Unknown error"
       
-      // Provide specific guidance based on error type
       let userMessage = "Failed to start camera. Please try again."
-      let fallbackMessage = ""
       
       if (errorMessage.includes("Permission denied") || errorMessage.includes("NotAllowedError")) {
-        userMessage = "Camera permission denied. Please allow camera access in your browser settings and refresh the page."
-        fallbackMessage = "You can still use text chat or upload images instead."
-      } else if (errorMessage.includes("secure connection") || errorMessage.includes("HTTPS")) {
-        userMessage = "Camera access requires HTTPS. Please ensure you're using a secure connection."
-        fallbackMessage = "Try accessing the site via HTTPS or use text chat instead."
+        userMessage = "Camera permission denied. Please allow camera access in your browser settings."
+        setWebcamState("permission-denied")
       } else if (errorMessage.includes("NotFoundError") || errorMessage.includes("no camera")) {
         userMessage = "No camera found. Please connect a camera and try again."
-        fallbackMessage = "You can upload images from your device instead."
-      } else if (errorMessage.includes("not supported")) {
-        userMessage = "Camera access is not supported in this browser."
-        fallbackMessage = "Please use Chrome, Firefox, Safari, or Edge for camera features."
       } else if (errorMessage.includes("OverconstrainedError")) {
         userMessage = "Camera doesn't meet requirements. Please try a different camera."
-        fallbackMessage = "You can upload images from your device instead."
       }
       
       toast({
@@ -127,17 +183,6 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
         description: userMessage,
         variant: "destructive"
       })
-      
-      // Show fallback message if available
-      if (fallbackMessage) {
-        setTimeout(() => {
-          toast({
-            title: "Alternative Options",
-            description: fallbackMessage,
-            variant: "default"
-          })
-        }, 2000)
-      }
     }
   }, [selectedDeviceId, addActivity, toast])
 
@@ -159,6 +204,77 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
     
     onClose()
   }, [stream, onClose, captureCount, addActivity])
+
+  // Handle file upload
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please select an image file (JPEG, PNG, etc.)",
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 10MB",
+        variant: "destructive"
+      })
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const imageData = e.target?.result as string
+      if (imageData) {
+        onCapture?.(imageData)
+        
+        addActivity({
+          type: "image_upload",
+          title: "Image Uploaded",
+          description: `Uploaded: ${file.name}`,
+          status: "completed"
+        })
+        
+        toast({
+          title: "📸 Image Uploaded",
+          description: "Image sent to chat for AI analysis!"
+        })
+
+        // Auto-analyze the image
+        setTimeout(async () => {
+          try {
+            const base64Data = imageData.split(",")[1]
+            const response = await fetch('/api/analyze-image', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                image: base64Data, 
+                type: 'upload',
+                context: 'Uploaded image analysis'
+              })
+            })
+
+            if (response.ok) {
+              const data = await response.json()
+              const analysis = data.analysis || data.content || "Analysis completed"
+              onAIAnalysis?.(analysis)
+            }
+          } catch (error) {
+            console.error("Auto-analysis failed:", error)
+          }
+        }, 1000)
+      }
+    }
+    reader.readAsDataURL(file)
+  }, [onCapture, onAIAnalysis, addActivity, toast])
 
   // Capture photo and send to chat immediately
   const capturePhoto = useCallback(async () => {
@@ -284,17 +400,6 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
     })
   }, [availableDevices, selectedDeviceId, stream, startCamera, toast])
 
-  // Initialize camera when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      getAvailableDevices().then(() => {
-        if (webcamState === "initializing") {
-          startCamera()
-        }
-      })
-    }
-  }, [isOpen, getAvailableDevices, startCamera, webcamState])
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -308,6 +413,7 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
   useEffect(() => {
     if (!isOpen) {
       setCaptureCount(0)
+      setInputMode("camera")
     }
   }, [isOpen])
 
@@ -318,19 +424,23 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
       
       if (e.code === 'Space') {
         e.preventDefault()
-        capturePhoto()
+        if (inputMode === "camera" && webcamState === "active") {
+          capturePhoto()
+        }
       } else if (e.code === 'KeyC') {
         e.preventDefault()
-        switchCamera()
+        if (inputMode === "camera" && availableDevices.length > 1) {
+          switchCamera()
+        }
       } else if (e.code === 'Escape') {
         e.preventDefault()
-        stopCamera()
+        onClose()
       }
     }
 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [isOpen, capturePhoto, switchCamera, stopCamera])
+  }, [isOpen, inputMode, webcamState, capturePhoto, switchCamera, availableDevices.length, onClose])
 
   if (!isOpen) return null
 
@@ -341,7 +451,7 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-        onClick={stopCamera}
+        onClick={onClose}
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -359,7 +469,7 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
                     <Camera className="w-5 h-5 text-blue-400" />
                   </div>
                   <div>
-                    <CardTitle className="text-white text-lg">Camera</CardTitle>
+                    <CardTitle className="text-white text-lg">Image Capture</CardTitle>
                     <p className="text-sm text-white/70">
                       Photos automatically go to chat
                     </p>
@@ -373,7 +483,7 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={stopCamera}
+                    onClick={onClose}
                     className="rounded-full bg-white/10 hover:bg-white/20 text-white"
                   >
                     <X className="w-5 h-5" />
@@ -383,72 +493,174 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
             </CardHeader>
           </Card>
 
+          {/* Input Mode Switcher */}
+          <div className="flex gap-2 p-4 bg-black/30">
+            <Button
+              variant={inputMode === "camera" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setInputMode("camera")}
+              disabled={!permissionGranted && webcamState === "permission-denied"}
+              className={cn(
+                "bg-white/10 border-white/20 text-white hover:bg-white/20",
+                inputMode === "camera" && "bg-white/20",
+                (!permissionGranted && webcamState === "permission-denied") && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              <Camera className="w-4 h-4 mr-2" />
+              Camera
+            </Button>
+            <Button
+              variant={inputMode === "upload" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setInputMode("upload")}
+              className={cn(
+                "bg-white/10 border-white/20 text-white hover:bg-white/20",
+                inputMode === "upload" && "bg-white/20"
+              )}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Image
+            </Button>
+          </div>
+
           {/* Camera Display */}
           <Card className="flex-1 bg-black/50 backdrop-blur-sm border-white/20 overflow-hidden">
             <CardContent className="p-0 h-full relative">
-              {webcamState === "initializing" && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-                  <div className="text-center">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      className="p-4 rounded-full bg-blue-500/20 mb-4 mx-auto w-fit"
-                    >
-                      <Camera className="w-8 h-8 text-blue-400" />
-                    </motion.div>
-                    <h3 className="text-lg font-semibold text-white mb-2">Starting Camera</h3>
-                    <p className="text-white/70 text-sm">Please allow camera access</p>
-                  </div>
-                </div>
-              )}
-
-              {webcamState === "error" && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-                  <div className="text-center max-w-md mx-auto p-6">
-                    <div className="p-4 rounded-full bg-red-500/20 mb-4 mx-auto w-fit">
-                      <X className="w-8 h-8 text-red-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-white mb-2">Camera Access Failed</h3>
-                    <p className="text-white/70 text-sm mb-4">
-                      We couldn't access your camera. This might be due to browser permissions or security settings.
-                    </p>
-                    
-                    <div className="space-y-3">
-                      <Button
-                        variant="outline"
-                        onClick={startCamera}
-                        className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20"
-                      >
-                        Try Again
-                      </Button>
-                      
-                      <div className="text-xs text-white/50 space-y-1">
-                        <p>• Check browser camera permissions</p>
-                        <p>• Ensure you're using HTTPS</p>
-                        <p>• Try refreshing the page</p>
-                        <p>• Use text chat or file upload instead</p>
+              {inputMode === "camera" ? (
+                <>
+                  {webcamState === "initializing" && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                      <div className="text-center">
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                          className="p-4 rounded-full bg-blue-500/20 mb-4 mx-auto w-fit"
+                        >
+                          <Camera className="w-8 h-8 text-blue-400" />
+                        </motion.div>
+                        <h3 className="text-lg font-semibold text-white mb-2">Starting Camera</h3>
+                        <p className="text-white/70 text-sm">Please allow camera access</p>
                       </div>
                     </div>
+                  )}
+
+                  {webcamState === "error" && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                      <div className="text-center max-w-md mx-auto p-6">
+                        <div className="p-4 rounded-full bg-red-500/20 mb-4 mx-auto w-fit">
+                          <X className="w-8 h-8 text-red-400" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-white mb-2">Camera Access Failed</h3>
+                        <p className="text-white/70 text-sm mb-4">
+                          We couldn't access your camera. This might be due to browser permissions or security settings.
+                        </p>
+                        
+                        <div className="space-y-3">
+                          <Button
+                            variant="outline"
+                            onClick={startCamera}
+                            className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20"
+                          >
+                            Try Again
+                          </Button>
+                          
+                          <Button
+                            variant="outline"
+                            onClick={() => setInputMode("upload")}
+                            className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20"
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload Image Instead
+                          </Button>
+                          
+                          <div className="text-xs text-white/50 space-y-1">
+                            <p>• Check browser camera permissions</p>
+                            <p>• Ensure you're using HTTPS</p>
+                            <p>• Try refreshing the page</p>
+                            <p>• Use image upload instead</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {webcamState === "permission-denied" && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                      <div className="text-center max-w-md mx-auto p-6">
+                        <div className="p-4 rounded-full bg-orange-500/20 mb-4 mx-auto w-fit">
+                          <X className="w-8 h-8 text-orange-400" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-white mb-2">Camera Permission Denied</h3>
+                        <p className="text-white/70 text-sm mb-4">
+                          We couldn't access your camera. Please allow camera access in your browser settings.
+                        </p>
+                        
+                        <div className="space-y-3">
+                          <Button
+                            variant="outline"
+                            onClick={() => setInputMode("upload")}
+                            className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20"
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload Image Instead
+                          </Button>
+                          
+                          <div className="text-xs text-white/50 space-y-1">
+                            <p>• Check browser camera permissions</p>
+                            <p>• Allow camera access in settings</p>
+                            <p>• Refresh the page after allowing</p>
+                            <p>• Use image upload as alternative</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {webcamState === "active" && (
+                    <>
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="w-full h-full object-cover"
+                      />
+                      <canvas ref={canvasRef} className="hidden" />
+                      
+                      {/* Capture Overlay */}
+                      <div className="absolute inset-0 pointer-events-none">
+                        <div className="absolute inset-4 border-2 border-white/30 rounded-lg pointer-events-none" />
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
+                // Upload mode
+                <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                  <div className="text-center max-w-md mx-auto p-6">
+                    <div className="p-4 rounded-full bg-blue-500/20 mb-4 mx-auto w-fit">
+                      <Upload className="w-8 h-8 text-blue-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-2">Upload Image</h3>
+                    <p className="text-white/70 text-sm mb-4">
+                      Select an image file to analyze with AI
+                    </p>
+                    
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="bg-blue-500 hover:bg-blue-600 text-white"
+                    >
+                      <Image className="w-4 h-4 mr-2" />
+                      Choose Image File
+                    </Button>
+                    
+                    <div className="text-xs text-white/50 space-y-1 mt-4">
+                      <p>• Supported: JPEG, PNG, GIF</p>
+                      <p>• Maximum size: 10MB</p>
+                      <p>• Image will be analyzed automatically</p>
+                    </div>
                   </div>
                 </div>
-              )}
-
-              {webcamState === "active" && (
-                <>
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover"
-                  />
-                  <canvas ref={canvasRef} className="hidden" />
-                  
-                  {/* Capture Overlay */}
-                  <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute inset-4 border-2 border-white/30 rounded-lg pointer-events-none" />
-                  </div>
-                </>
               )}
             </CardContent>
           </Card>
@@ -457,7 +669,7 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
           <Card className="bg-black/50 backdrop-blur-sm border-white/20">
             <CardContent className="p-4">
               <div className="flex items-center justify-center gap-4">
-                {availableDevices.length > 1 && (
+                {inputMode === "camera" && availableDevices.length > 1 && (
                   <Button
                     variant="outline"
                     onClick={switchCamera}
@@ -469,42 +681,55 @@ export const WebcamModal: React.FC<WebcamModalProps> = ({
                   </Button>
                 )}
                 
-                <Button
-                  onClick={capturePhoto}
-                  disabled={webcamState !== "active" || isCapturing}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2 rounded-full"
-                >
-                  {isCapturing ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    >
-                      <Camera className="w-5 h-5" />
-                    </motion.div>
-                  ) : (
-                    <>
-                      <Camera className="w-5 h-5 mr-2" />
-                      Capture Photo
-                    </>
-                  )}
-                </Button>
+                {inputMode === "camera" && (
+                  <Button
+                    onClick={capturePhoto}
+                    disabled={webcamState !== "active" || isCapturing}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2 rounded-full"
+                  >
+                    {isCapturing ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Camera className="w-5 h-5" />
+                      </motion.div>
+                    ) : (
+                      <>
+                        <Camera className="w-5 h-5 mr-2" />
+                        Capture Photo
+                      </>
+                    )}
+                  </Button>
+                )}
                 
                 <Button
                   variant="outline"
-                  onClick={stopCamera}
+                  onClick={onClose}
                   className="bg-white/10 hover:bg-white/20 text-white border-white/20"
                 >
                   Done
                 </Button>
               </div>
               
-              <div className="mt-3 text-center">
-                <p className="text-xs text-white/60">
-                  Press Space to capture • C to switch camera • Esc to close
-                </p>
-              </div>
+              {inputMode === "camera" && (
+                <div className="mt-3 text-center">
+                  <p className="text-xs text-white/60">
+                    Press Space to capture • C to switch camera • Esc to close
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
         </motion.div>
       </motion.div>
     </AnimatePresence>
