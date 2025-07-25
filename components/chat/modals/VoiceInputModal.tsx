@@ -26,8 +26,6 @@ interface VoiceInputModalProps {
   }
 }
 
-type VoiceMode = "input" | "conversation"
-type InputMode = "voice" | "text"
 type RecordingState = "idle" | "listening" | "paused" | "processing" | "error" | "permission-denied"
 
 export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({ 
@@ -44,17 +42,12 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   const userId = useRef('anonymous').current
   const { toast } = useToast()
   
-  const [voiceMode, setVoiceMode] = useState<VoiceMode>("input")
-  const [inputMode, setInputMode] = useState<InputMode>("voice")
   const [recordingState, setRecordingState] = useState<RecordingState>("idle")
   const [currentTranscription, setCurrentTranscription] = useState("")
   const [finalTranscript, setFinalTranscript] = useState("")
   const [recordingTime, setRecordingTime] = useState(0)
   const [isSupported, setIsSupported] = useState(true)
   const [permissionGranted, setPermissionGranted] = useState(false)
-  const [textInput, setTextInput] = useState("")
-  const [conversationMessages, setConversationMessages] = useState<Array<{id: string, role: 'user' | 'assistant', content: string, timestamp: Date}>>([])
-  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
   const [liveStatus, setLiveStatus] = useState<string>('disconnected')
   
   const recognitionRef = useRef<any>(null)
@@ -617,63 +610,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             <X className="w-5 h-5" />
           </Button>
 
-          {/* Mode switcher */}
-          <div className="absolute top-6 left-6 flex gap-2">
-            <Button
-              variant={voiceMode === "input" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setVoiceMode("input")}
-              className={cn(
-                "bg-white/10 border-white/20 text-white hover:bg-white/20",
-                voiceMode === "input" && "bg-white/20"
-              )}
-            >
-              <Mic className="w-4 h-4 mr-2" />
-              Voice Input
-            </Button>
-            <Button
-              variant={voiceMode === "conversation" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setVoiceMode("conversation")}
-              className={cn(
-                "bg-white/10 border-white/20 text-white hover:bg-white/20",
-                voiceMode === "conversation" && "bg-white/20"
-              )}
-            >
-              <Radio className="w-4 h-4 mr-2" />
-              Live Chat
-            </Button>
-          </div>
 
-          {/* Input mode switcher */}
-          <div className="absolute top-16 left-6 flex gap-2">
-            <Button
-              variant={inputMode === "voice" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setInputMode("voice")}
-              disabled={!isSupported || !permissionGranted}
-              className={cn(
-                "bg-white/10 border-white/20 text-white hover:bg-white/20",
-                inputMode === "voice" && "bg-white/20",
-                (!isSupported || !permissionGranted) && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <Mic className="w-4 h-4 mr-2" />
-              Voice
-            </Button>
-            <Button
-              variant={inputMode === "text" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setInputMode("text")}
-              className={cn(
-                "bg-white/10 border-white/20 text-white hover:bg-white/20",
-                inputMode === "text" && "bg-white/20"
-              )}
-            >
-              <Type className="w-4 h-4 mr-2" />
-              Text
-            </Button>
-          </div>
 
           {/* Live AI Voice Controls */}
           <div className="absolute top-6 right-20 flex gap-2">
@@ -726,42 +663,40 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
 
           {/* Main content */}
           <div className="flex flex-col items-center space-y-8 w-full">
-            {/* Voice Recording Orb (only show for voice mode) */}
-            {inputMode === "voice" && (
-              <motion.div
-                className={cn(
-                  "relative w-40 h-40 rounded-full bg-gradient-to-br shadow-2xl backdrop-blur-sm border border-white/20 cursor-pointer",
-                  recordingState === "listening" ? "from-red-400 via-red-500 to-red-600" : "from-slate-400 via-slate-500 to-slate-600",
-                  (!isSupported || !permissionGranted) && "opacity-50 cursor-not-allowed"
-                )}
-                animate={{ 
-                  scale: recordingState === "listening" ? [1, 1.05, 1] : 1,
-                }}
-                transition={{ 
-                  scale: { duration: 1, repeat: recordingState === "listening" ? Infinity : 0, ease: "easeInOut" }
-                }}
-                whileHover={{ scale: (isSupported && permissionGranted) ? 1.05 : 1 }}
-                whileTap={{ scale: (isSupported && permissionGranted) ? 0.95 : 1 }}
-                onClick={handleOrbClick}
-              >
-                <div className="absolute inset-2 rounded-full bg-gradient-to-br from-white/30 to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Mic className="w-12 h-12 text-white" />
+            {/* Voice Recording Orb */}
+            <motion.div
+              className={cn(
+                "relative w-40 h-40 rounded-full bg-gradient-to-br shadow-2xl backdrop-blur-sm border border-white/20 cursor-pointer",
+                recordingState === "listening" ? "from-red-400 via-red-500 to-red-600" : "from-slate-400 via-slate-500 to-slate-600",
+                (!isSupported || !permissionGranted) && "opacity-50 cursor-not-allowed"
+              )}
+              animate={{ 
+                scale: recordingState === "listening" ? [1, 1.05, 1] : 1,
+              }}
+              transition={{ 
+                scale: { duration: 1, repeat: recordingState === "listening" ? Infinity : 0, ease: "easeInOut" }
+              }}
+              whileHover={{ scale: (isSupported && permissionGranted) ? 1.05 : 1 }}
+              whileTap={{ scale: (isSupported && permissionGranted) ? 0.95 : 1 }}
+              onClick={handleOrbClick}
+            >
+              <div className="absolute inset-2 rounded-full bg-gradient-to-br from-white/30 to-transparent" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Mic className="w-12 h-12 text-white" />
+              </div>
+              {recordingTime > 0 && (
+                <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
+                  <span className="text-sm text-muted-foreground font-mono">
+                    {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+                  </span>
                 </div>
-                {recordingTime > 0 && (
-                  <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
-                    <span className="text-sm text-muted-foreground font-mono">
-                      {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
-                    </span>
-                  </div>
-                )}
-              </motion.div>
-            )}
+              )}
+            </motion.div>
 
             {/* Status and Info */}
             <div className="text-center space-y-3">
               <h2 className="text-3xl font-bold text-white">
-                {voiceMode === "conversation" ? "Live Voice Chat" : "Voice Input"}
+                Voice Input
               </h2>
               
               <div className="flex items-center justify-center gap-4 text-white/70">
@@ -783,7 +718,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
                   {recordingState === "idle" && "Ready"}
                 </Badge>
                 
-                {inputMode === "voice" && recordingTime > 0 && (
+                {recordingTime > 0 && (
                   <Badge variant="outline" className="bg-white/10 text-white border-white/20">
                     {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
                   </Badge>
@@ -799,7 +734,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             <Card className="w-full max-w-2xl bg-white/10 backdrop-blur-sm border-white/20">
               <CardHeader className="pb-3">
                 <CardTitle className="text-white text-lg flex items-center justify-between">
-                  {voiceMode === "conversation" ? "Conversation" : (inputMode === "voice" ? "Transcript" : "Text Input")}
+                  Transcript
                   {hasContent && (
                     <Button
                       variant="ghost"
@@ -815,108 +750,36 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
               </CardHeader>
               <CardContent>
                 <div className="min-h-[120px] max-h-[300px] overflow-y-auto space-y-2">
-                  {inputMode === "text" ? (
-                    // Text input mode
-                    <Textarea
-                      value={textInput}
-                      onChange={(e) => setTextInput(e.target.value)}
-                      placeholder="Type your message here..."
-                      className="bg-white/10 border-white/20 text-white placeholder-white/50 resize-none"
-                      rows={4}
-                    />
-                  ) : voiceMode === "conversation" ? (
-                    // Conversation mode
-                    <div className="space-y-3">
-                      {conversationMessages.map((msg) => (
-                        <div key={msg.id} className={cn(
-                          "flex items-start gap-3 p-3 rounded-lg",
-                          msg.role === "user" ? "bg-blue-500/20 text-blue-100" : "bg-green-500/20 text-green-100"
-                        )}>
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                            {msg.role === "user" ? (
-                              <Mic className="w-3 h-3" />
-                            ) : (
-                              <Bot className="w-3 h-3" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-white/90 mb-1">
-                              {msg.role === "user" ? "You" : "AI Assistant"}
-                            </div>
-                            <div className="text-sm text-white/80 leading-relaxed">
-                              {msg.content}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      
-                      {fullTranscript && (
-                        <div className="p-3 rounded-lg bg-blue-500/20 text-blue-100">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Mic className="w-4 h-4" />
-                            <span className="text-sm font-medium">You (speaking...)</span>
-                          </div>
-                          <div className="text-sm text-white/80">
-                            {finalTranscript && (
-                              <span className="text-white/90">{finalTranscript}</span>
-                            )}
-                            {currentTranscription && (
-                              <span className="text-white/60 italic">
-                                {currentTranscription}
-                                {recordingState === "listening" && (
-                                  <motion.span
-                                    animate={{ opacity: [1, 0] }}
-                                    transition={{ duration: 1, repeat: Infinity }}
-                                    className="ml-1"
-                                  >
-                                    |
-                                  </motion.span>
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                  {fullTranscript ? (
+                    <div className="space-y-2">
+                      {finalTranscript && (
+                        <p className="text-white/90 leading-relaxed">
+                          {finalTranscript}
+                        </p>
                       )}
-                      
-                      {conversationMessages.length === 0 && !fullTranscript && (
-                        <div className="flex items-center justify-center h-full text-white/50">
-                          Start a conversation by speaking...
-                        </div>
+                      {currentTranscription && (
+                        <p className="text-white/60 leading-relaxed italic">
+                          {currentTranscription}
+                          {recordingState === "listening" && (
+                            <motion.span
+                              animate={{ opacity: [1, 0] }}
+                              transition={{ duration: 1, repeat: Infinity }}
+                              className="ml-1"
+                            >
+                              |
+                            </motion.span>
+                          )}
+                        </p>
                       )}
                     </div>
                   ) : (
-                    // Voice input mode - show transcript
-                    fullTranscript ? (
-                      <div className="space-y-2">
-                        {finalTranscript && (
-                          <p className="text-white/90 leading-relaxed">
-                            {finalTranscript}
-                          </p>
-                        )}
-                        {currentTranscription && (
-                          <p className="text-white/60 leading-relaxed italic">
-                            {currentTranscription}
-                            {recordingState === "listening" && (
-                              <motion.span
-                                animate={{ opacity: [1, 0] }}
-                                transition={{ duration: 1, repeat: Infinity }}
-                                className="ml-1"
-                              >
-                                |
-                              </motion.span>
-                            )}
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-white/50">
-                        {recordingState === "error" || recordingState === "permission-denied" ? (
-                          "Use text input instead"
-                        ) : (
-                          "Your speech will appear here..."
-                        )}
-                      </div>
-                    )
+                    <div className="flex items-center justify-center h-full text-white/50">
+                      {recordingState === "error" || recordingState === "permission-denied" ? (
+                        "Microphone access required"
+                      ) : (
+                        "Your speech will appear here..."
+                      )}
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -931,21 +794,24 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
                   className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
                   <Send className="w-4 h-4 mr-2" />
-                  {voiceMode === "conversation" ? "Send Message" : "Send to Chat"}
+                  Send to Chat
                 </Button>
               )}
 
-              {inputMode === "voice" && recordingState === "permission-denied" && (
+              {recordingState === "permission-denied" && (
                 <Button
-                  onClick={() => setInputMode("text")}
+                  onClick={() => {
+                    setRecordingState("idle")
+                    startRecording()
+                  }}
                   className="bg-orange-600 hover:bg-orange-700 text-white"
                 >
-                  <Type className="w-4 h-4 mr-2" />
-                  Use Text Input
+                  <Mic className="w-4 h-4 mr-2" />
+                  Try Again
                 </Button>
               )}
 
-              {inputMode === "voice" && recordingState === "error" && (
+              {recordingState === "error" && (
                 <Button
                   onClick={() => {
                     setRecordingState("idle")
@@ -960,7 +826,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             </div>
 
             {/* Error Message */}
-            {(!isSupported || recordingState === "error" || recordingState === "permission-denied") && inputMode === "voice" && (
+            {(!isSupported || recordingState === "error" || recordingState === "permission-denied") && (
               <Card className="bg-red-500/20 border-red-500/30 max-w-md">
                 <CardContent className="p-4 text-center space-y-3">
                   <div className="flex items-center justify-center gap-2 mb-2">
@@ -985,18 +851,7 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
                     <p>• Check browser microphone permissions</p>
                     <p>• Ensure you're using HTTPS</p>
                     <p>• Try refreshing the page</p>
-                    <p>• Use text input instead</p>
                   </div>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setInputMode("text")}
-                    className="mt-3 bg-red-500/20 hover:bg-red-500/30 text-red-200 border-red-500/50"
-                  >
-                    <Type className="w-4 h-4 mr-2" />
-                    Switch to Text Input
-                  </Button>
                 </CardContent>
               </Card>
             )}
