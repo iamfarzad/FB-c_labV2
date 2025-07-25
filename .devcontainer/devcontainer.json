@@ -1,0 +1,10 @@
+{
+  "name": "FB-c_labV2 Codex",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:18",
+  "customizations": {
+    "vscode": {
+      "extensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint"]
+    }
+  },
+  "postCreateCommand": "corepack enable && pnpm install"
+} 
