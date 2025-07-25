@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Send, Camera, Mic, Paperclip, Play, Calculator } from "lucide-react"
+import { Send, Camera, Mic, Paperclip, Play, Calculator, Monitor } from "lucide-react"
 import { useToast } from '@/hooks/use-toast'
 import { useAutoResizeTextarea } from "@/hooks/ui/use-auto-resize-textarea"
 import { motion, AnimatePresence } from "framer-motion"
@@ -109,6 +109,7 @@ export function ChatFooter({
     { id: "upload", icon: Paperclip, action: () => fileInputRef.current?.click(), title: "Upload File" },
     { id: "video2app", icon: Play, action: () => setShowVideo2AppModal(true), title: "Video2App Generator" },
     { id: "roi", icon: Calculator, action: () => setShowROICalculatorModal(true), title: "ROI Calculator" },
+    { id: "screen-share", icon: Monitor, action: () => setShowScreenShareModal(true), title: "Screen Share" },
   ]
 
   return (

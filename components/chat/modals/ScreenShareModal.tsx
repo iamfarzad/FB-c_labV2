@@ -151,23 +151,31 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
       const imageData = canvas.toDataURL("image/jpeg", 0.8)
       const base64Data = imageData.split(",")[1]
 
-      // Call analysis API
-      const response = await fetch('/api/analyze-image', {
+      // Get session ID from sessionStorage
+      const sessionId = sessionStorage.getItem('demo-session-id') || undefined
+
+      // Call screenshot analysis API
+      const response = await fetch('/api/analyze-screenshot', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-demo-session-id': sessionId || '',
+          'x-user-id': 'anonymous_user'
+        },
         body: JSON.stringify({ 
-          image: base64Data, 
-          type: 'screen',
-          context: 'Screen sharing analysis'
+          imageData: base64Data, 
+          description: 'Screen share analysis',
+          context: 'Real-time screen sharing session'
         })
       })
 
       if (!response.ok) {
-        throw new Error(`Analysis failed: ${response.statusText}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Analysis failed: ${response.statusText}`)
       }
 
       const data = await response.json()
-      const analysis = data.analysis || data.content || "Analysis completed"
+      const analysis = data.analysis || "Analysis completed"
 
       const result = addAnalysis(analysis, 'screen')
       
@@ -177,8 +185,8 @@ export const ScreenShareModal: React.FC<ScreenShareModalProps> = ({
         onAIAnalysis?.(analysis)
 
         toast({
-          title: "Analysis Complete",
-          description: "Screen content has been analyzed successfully."
+          title: "Screenshot Analysis Complete",
+          description: "Screen content has been analyzed for business insights."
         })
       } else {
         console.log(`Screen analysis skipped: ${result.reason}`)
