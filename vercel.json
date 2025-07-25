@@ -3,17 +3,9 @@
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install",
   "framework": "nextjs",
+  "regions": ["iad1"],
   "functions": {
-    "app/api/chat/route.ts": {
-      "maxDuration": 60
-    },
-    "app/api/gemini-live/route.ts": {
-      "maxDuration": 30
-    },
-    "app/api/video-to-app/route.ts": {
-      "maxDuration": 60
-    },
-    "app/api/lead-research/route.ts": {
+    "app/api/**/*.ts": {
       "maxDuration": 30
     }
   },
@@ -22,24 +14,56 @@
       "source": "/api/(.*)",
       "headers": [
         {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
         },
         {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
+          "key": "X-Frame-Options",
+          "value": "DENY"
         },
         {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
         }
       ]
     }
   ],
-  "rewrites": [
+  "redirects": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "source": "/api/mock/(.*)",
+      "destination": "/api/mock/status",
+      "permanent": false,
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-deployment-type",
+          "value": "production"
+        }
+      ]
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "feature/*": true,
+      "develop": true,
+      "staging": true
+    },
+    "autoAlias": {
+      "main": "production",
+      "feature/*": "preview",
+      "develop": "preview",
+      "staging": "preview"
+    }
+  },
+  "protectionBypass": {
+    "main": {
+      "requireApproval": true,
+      "requireComment": true
+    }
+  }
 } 
