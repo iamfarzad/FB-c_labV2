@@ -8,7 +8,7 @@ module.exports = {
     '**/?(*.)+(spec|test).tsx'
   ],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.(ts|tsx)$': 'ts-jest',
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
@@ -16,8 +16,12 @@ module.exports = {
   collectCoverageFrom: [
     'app/api/**/*.ts',
     'lib/**/*.ts',
+    'components/**/*.{ts,tsx}',
+    'app/**/page.tsx',
     '!**/*.d.ts',
     '!**/node_modules/**',
+    '!**/*.stories.{ts,tsx}',
+    '!**/coverage/**',
   ],
   coverageThreshold: {
     global: {

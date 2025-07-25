@@ -10,6 +10,8 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3001',
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
   projects: [
     {
@@ -29,5 +31,6 @@ export default defineConfig({
     command: 'pnpm dev',
     url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
   },
 }); 
