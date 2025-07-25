@@ -15,6 +15,7 @@ import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
 import { VoiceOutputModal } from "@/components/chat/modals/VoiceOutputModal"
 import { WebcamModal } from "@/components/chat/modals/WebcamModal"
 import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
+import { ROICalculatorModal } from "@/components/chat/modals/ROICalculatorModal"
 import { useDemoSession } from "@/components/demo-session-manager"
 
 import type { LeadCaptureState } from "./types/lead-capture"
@@ -43,6 +44,7 @@ export default function ChatPage() {
   const [showWebcamModal, setShowWebcamModal] = useState(false)
   const [showScreenShareModal, setShowScreenShareModal] = useState(false)
   const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
+  const [showROICalculatorModal, setShowROICalculatorModal] = useState(false)
 
   const [leadCaptureState, setLeadCaptureState] = useState<LeadCaptureState>({
     stage: "initial",
@@ -586,6 +588,7 @@ export default function ChatPage() {
               showScreenShareModal={showScreenShareModal}
               setShowScreenShareModal={setShowScreenShareModal}
               setShowVideo2AppModal={setShowVideo2AppModal}
+              setShowROICalculatorModal={setShowROICalculatorModal}
             />
           </div>
         </div>
@@ -635,6 +638,12 @@ export default function ChatPage() {
           isOpen={showVideo2AppModal}
           onClose={() => setShowVideo2AppModal(false)}
           onAnalysisComplete={handleVideoAppResult}
+        />
+      )}
+      {showROICalculatorModal && (
+        <ROICalculatorModal
+          isOpen={showROICalculatorModal}
+          onClose={() => setShowROICalculatorModal(false)}
         />
       )}
             {showVoiceOutputModal && voiceOutputData && (

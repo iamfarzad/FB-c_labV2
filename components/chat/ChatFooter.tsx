@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Send, Camera, Mic, Paperclip, Play } from "lucide-react"
+import { Send, Camera, Mic, Paperclip, Play, Calculator } from "lucide-react"
 import { useToast } from '@/hooks/use-toast'
 import { useAutoResizeTextarea } from "@/hooks/ui/use-auto-resize-textarea"
 import { motion, AnimatePresence } from "framer-motion"
@@ -27,6 +27,7 @@ interface ChatFooterProps {
   showScreenShareModal: boolean
   setShowScreenShareModal: (show: boolean) => void
   setShowVideo2AppModal: (show: boolean) => void
+  setShowROICalculatorModal: (show: boolean) => void
 }
 
 export function ChatFooter({
@@ -41,6 +42,7 @@ export function ChatFooter({
   setShowWebcamModal,
   setShowScreenShareModal,
   setShowVideo2AppModal,
+  setShowROICalculatorModal,
 }: ChatFooterProps) {
   const [isMobile, setIsMobile] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -106,6 +108,7 @@ export function ChatFooter({
     { id: "camera", icon: Camera, action: () => setShowWebcamModal(true), title: "Webcam Capture" },
     { id: "upload", icon: Paperclip, action: () => fileInputRef.current?.click(), title: "Upload File" },
     { id: "video2app", icon: Play, action: () => setShowVideo2AppModal(true), title: "Video2App Generator" },
+    { id: "roi", icon: Calculator, action: () => setShowROICalculatorModal(true), title: "ROI Calculator" },
   ]
 
   return (
