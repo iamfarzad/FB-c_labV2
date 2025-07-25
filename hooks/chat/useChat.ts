@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
 interface Message {
@@ -52,7 +52,22 @@ export function useChat({
   const [error, setError] = useState<Error | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const lastCallTimeRef = useRef<number>(0)
+  const currentSessionIdRef = useRef<string | null>(null)
   const DEBOUNCE_DELAY = 1000 // 1 second debounce
+
+  // Reset messages when session changes
+  useEffect(() => {
+    if (data.sessionId && data.sessionId !== currentSessionIdRef.current) {
+      console.log('🔄 Session changed, resetting messages:', {
+        oldSession: currentSessionIdRef.current,
+        newSession: data.sessionId
+      })
+      setMessages([])
+      setInput('')
+      setError(null)
+      currentSessionIdRef.current = data.sessionId
+    }
+  }, [data.sessionId])
 
   const addMessage = useCallback((message: Omit<Message, 'id' | 'timestamp'>) => {
     const newMessage: Message = {
@@ -125,6 +140,7 @@ export function useChat({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-demo-session-id': data.sessionId || 'anonymous'
         },
         body: JSON.stringify({
           messages: [...messages, userMessage].map(msg => ({
@@ -247,6 +263,8 @@ export function useChat({
 
   const clearMessages = useCallback(() => {
     setMessages([])
+    setInput('')
+    setError(null)
   }, [])
 
   const deleteMessage = useCallback((id: string) => {

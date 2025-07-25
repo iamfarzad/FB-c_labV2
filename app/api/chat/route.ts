@@ -98,8 +98,8 @@ Response Style:
 - Ask follow-up questions to gather more context
 - Focus on business value and practical implementation`
 
-  // Add lead context if available
-  if (leadContext && leadContext.name) {
+  // Add lead context if available and valid
+  if (leadContext && leadContext.name && leadContext.name.trim() !== '') {
     return `${basePrompt}
 
 Current Client Context:
@@ -111,7 +111,10 @@ Current Client Context:
 Personalize your responses for ${leadContext.name} and their specific business context.`
   }
 
-  return basePrompt
+  // If no valid lead context, use a generic greeting
+  return `${basePrompt}
+
+Welcome! I'm here to help you with your business consulting needs. Please tell me about your company and what you'd like to achieve with AI automation or digital transformation.`
 }
 
 // ============================================================================

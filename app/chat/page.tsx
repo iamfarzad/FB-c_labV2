@@ -28,7 +28,7 @@ import type { Message } from "./types/chat"
 export const dynamic = 'force-dynamic'
 
 export default function ChatPage() {
-  const { sessionId } = useDemoSession()
+  const { sessionId, createSession } = useDemoSession()
   const { activityLog, addActivity, clearActivities } = useChatContext()
   const { toast } = useToast()
 
@@ -53,6 +53,33 @@ export default function ChatPage() {
   })
   const [showLeadCapture, setShowLeadCapture] = useState(false)
   const [isLoadingLeadData, setIsLoadingLeadData] = useState(true)
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
+
+  // Initialize session on component mount
+  useEffect(() => {
+    // Create a new session if none exists
+    if (!sessionId) {
+      createSession()
+    }
+    setCurrentSessionId(sessionId)
+    setIsLoadingLeadData(false)
+  }, [sessionId, createSession])
+
+  // Reset conversation when session changes
+  useEffect(() => {
+    if (currentSessionId && currentSessionId !== sessionId) {
+      // Session changed, reset everything
+      setLeadCaptureState({
+        stage: "initial",
+        hasName: false,
+        hasEmail: false,
+        hasAgreedToTC: false,
+        leadData: { engagementType: "chat" },
+      })
+      setShowLeadCapture(false)
+      setCurrentSessionId(sessionId)
+    }
+  }, [sessionId, currentSessionId])
 
   const { 
     messages, 
@@ -93,35 +120,17 @@ export default function ChatPage() {
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   useEffect(scrollToBottom, [messages])
 
-  // Load existing lead data on component mount
+  // Clear all session data when component unmounts or session changes
   useEffect(() => {
-    const loadExistingLeadData = async () => {
+    return () => {
+      // Cleanup function - clear any session-related data
       try {
-        // Check if there's a lead in localStorage (for session persistence)
-        const savedLeadData = localStorage.getItem('fb_lead_data')
-        if (savedLeadData) {
-          const parsedData = JSON.parse(savedLeadData)
-          setLeadCaptureState({
-            stage: "consultation",
-            hasName: true,
-            hasEmail: true,
-            hasAgreedToTC: true,
-            leadData: parsedData
-          })
-          setIsLoadingLeadData(false)
-          return
-        }
-
-        // If no localStorage data, check if we can identify the user by IP or session
-        // For now, we'll just set loading to false
-        setIsLoadingLeadData(false)
+        // Only clear sessionStorage, not localStorage to avoid affecting other tabs
+        sessionStorage.removeItem('demo-session-id')
       } catch (error) {
-        console.error('Error loading existing lead data:', error)
-        setIsLoadingLeadData(false)
+        console.error('Error clearing session data:', error)
       }
     }
-
-    loadExistingLeadData()
   }, [])
 
   useEffect(() => {
@@ -157,14 +166,16 @@ export default function ChatPage() {
     })
     setShowLeadCapture(false)
     
-    // Clear all persistent data to prevent session leakage
+    // Create a new session for complete isolation
+    createSession()
+    
+    // Clear all session-related data
     try {
-      localStorage.removeItem('fb_lead_data')
       sessionStorage.removeItem('demo-session-id')
       // Clear any other session-related data
-      Object.keys(localStorage).forEach(key => {
+      Object.keys(sessionStorage).forEach(key => {
         if (key.includes('chat') || key.includes('session') || key.includes('lead')) {
-          localStorage.removeItem(key)
+          sessionStorage.removeItem(key)
         }
       })
     } catch (error) {
@@ -172,7 +183,7 @@ export default function ChatPage() {
     }
     
     toast({ title: "New Chat Started" })
-  }, [clearMessages, toast])
+  }, [clearMessages, createSession, toast])
 
   const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -223,11 +234,11 @@ export default function ChatPage() {
     } as LeadCaptureState)
     setShowLeadCapture(false)
     
-    // Save lead data to localStorage for session persistence
+    // Store lead data in sessionStorage only (not localStorage) for session isolation
     try {
-      localStorage.setItem('fb_lead_data', JSON.stringify(leadData))
+      sessionStorage.setItem('fb_lead_data', JSON.stringify(leadData))
     } catch (error) {
-      console.error('Failed to save lead data to localStorage:', error)
+      console.error('Failed to save lead data to sessionStorage:', error)
     }
     
     toast({ title: "Welcome!", description: `Starting consultation for ${leadData.name}.` })
