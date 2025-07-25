@@ -150,7 +150,7 @@ export class ModelSelector {
       'webcam_analysis': { isComplex: false, hasImages: true, hasVideo: false, hasAudio: false },
       'screenshot_analysis': { isComplex: false, hasImages: true, hasVideo: false, hasAudio: false },
       'document_analysis': { isComplex: false, hasImages: false, hasVideo: false, hasAudio: false },
-      'video_to_app': { isComplex: true, hasImages: false, hasVideo: true, hasAudio: false },
+      'video_to_app': { isComplex: true, hasImages: false, hasVideo: false, hasAudio: false }, // Fixed: no video processing needed
       'lead_research': { isComplex: true, hasImages: false, hasVideo: false, hasAudio: false }
     }
 

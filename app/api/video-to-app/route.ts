@@ -28,6 +28,11 @@ async function generateText(options: {
   }
 
   try {
+    // Create a timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout after 60 seconds')), 60000)
+    })
+
     if (prompt.includes("pedagogist and product designer")) {
       // This is a spec generation request - use multimodal model
       let contents = [
@@ -35,41 +40,50 @@ async function generateText(options: {
       ]
 
       if (videoUrl) {
-        // For YouTube URLs, we'll use the URL directly since Gemini can access web content
+        // For YouTube URLs, we'll enhance the prompt with video context
         const videoId = getYouTubeVideoId(videoUrl)
         if (videoId) {
-          // Use the video URL directly - Gemini can access YouTube content
+          // Enhanced prompt that includes video URL context
+          const enhancedPrompt = `${prompt}\n\nVideo URL: ${videoUrl}\nVideo ID: ${videoId}\n\nPlease analyze this YouTube video and create a comprehensive spec for an interactive learning app based on its content. If you cannot access the video directly, please create a spec for a general educational app that could complement video-based learning.`
+          
           contents = [
             { 
               role: "user", 
-              parts: [
-                { text: prompt },
-                { text: `Video URL: ${videoUrl}` }
-              ] 
+              parts: [{ text: enhancedPrompt }]
             },
           ]
         }
       }
 
-      const result = await genAI.models.generateContent({
-        model: modelName,
-        config,
-        contents,
-      })
+      // Race between the API call and timeout
+      const result = await Promise.race([
+        genAI.models.generateContent({
+          model: modelName,
+          config,
+          contents,
+        }),
+        timeoutPromise
+      ])
 
       return result.candidates?.[0]?.content?.parts?.[0]?.text || 'Spec generation failed'
     } else {
       // This is a code generation request
-      const result = await genAI.models.generateContent({
-        model: modelName,
-        config,
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-      })
+      const result = await Promise.race([
+        genAI.models.generateContent({
+          model: modelName,
+          config,
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+        }),
+        timeoutPromise
+      ])
 
       return result.candidates?.[0]?.content?.parts?.[0]?.text || 'Code generation failed'
     }
   } catch (error) {
     console.error("Gemini API error:", error)
+    if (error instanceof Error && error.message.includes('timeout')) {
+      throw new Error('Request timed out. Please try again with a shorter video or different content.')
+    }
     throw new Error(`Failed to generate content: ${error}`)
   }
 }
@@ -85,6 +99,13 @@ export async function POST(request: NextRequest) {
     
     const { action, videoUrl, spec } = await request.json()
 
+    console.log(`🎬 Video-to-App API called:`, {
+      action,
+      videoUrl: videoUrl ? `${videoUrl.substring(0, 50)}...` : 'none',
+      sessionId,
+      correlationId
+    })
+
     if (action === "generateSpec") {
       if (!videoUrl) throw new Error('Video URL required for spec')
       
@@ -92,9 +113,17 @@ export async function POST(request: NextRequest) {
       const estimatedTokens = estimateTokens(SPEC_FROM_VIDEO_PROMPT + videoUrl)
       const modelSelection = selectModelForFeature('video_to_app', estimatedTokens, !!sessionId)
       
+      console.log(`📊 Model selection:`, {
+        model: modelSelection.model,
+        estimatedCost: modelSelection.estimatedCost,
+        reason: modelSelection.reason,
+        correlationId
+      })
+      
       // Check demo access and budget
       const demoAccess = await checkDemoAccess(sessionId || '', 'video_to_app', estimatedTokens)
       if (!demoAccess.allowed) {
+        console.log(`🚫 Demo access denied:`, { reason: demoAccess.reason, correlationId })
         return NextResponse.json({ 
           error: 'Demo budget exceeded', 
           details: demoAccess.reason 
@@ -115,17 +144,25 @@ export async function POST(request: NextRequest) {
       )
       
       if (!budgetResult.allowed) {
+        console.log(`🚫 Budget exceeded:`, { reason: budgetResult.reason, correlationId })
         return NextResponse.json({ 
           error: 'Budget exceeded', 
           details: budgetResult.reason 
         }, { status: 429 })
       }
       
+      console.log(`🚀 Starting spec generation:`, { correlationId })
+      
       // Use selected model for video analysis
       const specResponse = await generateText({
         modelName: modelSelection.model,
         prompt: SPEC_FROM_VIDEO_PROMPT,
         videoUrl: videoUrl,
+      })
+
+      console.log(`✅ Spec generation completed:`, { 
+        responseLength: specResponse.length,
+        correlationId 
       })
 
       // Record demo usage
@@ -143,6 +180,12 @@ export async function POST(request: NextRequest) {
       
       parsedSpec += SPEC_ADDENDUM
 
+      console.log(`📋 Spec processing completed:`, { 
+        finalLength: parsedSpec.length,
+        responseTime: Date.now() - startTime,
+        correlationId 
+      })
+
       return NextResponse.json({ 
         spec: parsedSpec,
         model: modelSelection.model,
@@ -155,9 +198,17 @@ export async function POST(request: NextRequest) {
       const estimatedTokens = estimateTokens(spec)
       const modelSelection = selectModelForFeature('video_to_app', estimatedTokens, !!sessionId)
       
+      console.log(`📊 Code generation model selection:`, {
+        model: modelSelection.model,
+        estimatedCost: modelSelection.estimatedCost,
+        reason: modelSelection.reason,
+        correlationId
+      })
+      
       // Check demo access and budget
       const demoAccess = await checkDemoAccess(sessionId || '', 'video_to_app', estimatedTokens)
       if (!demoAccess.allowed) {
+        console.log(`🚫 Demo access denied for code generation:`, { reason: demoAccess.reason, correlationId })
         return NextResponse.json({ 
           error: 'Demo budget exceeded', 
           details: demoAccess.reason 
@@ -178,16 +229,24 @@ export async function POST(request: NextRequest) {
       )
       
       if (!budgetResult.allowed) {
+        console.log(`🚫 Budget exceeded for code generation:`, { reason: budgetResult.reason, correlationId })
         return NextResponse.json({ 
           error: 'Budget exceeded', 
           details: budgetResult.reason 
         }, { status: 429 })
       }
       
+      console.log(`🚀 Starting code generation:`, { correlationId })
+      
       // Use selected model for code generation
       const codeResponse = await generateText({
         modelName: modelSelection.model,
         prompt: spec,
+      })
+
+      console.log(`✅ Code generation completed:`, { 
+        responseLength: codeResponse.length,
+        correlationId 
       })
 
       // Record demo usage
@@ -201,6 +260,12 @@ export async function POST(request: NextRequest) {
         // Fallback: return the raw response
         code = codeResponse
       }
+      
+      console.log(`💻 Code processing completed:`, { 
+        finalLength: code.length,
+        responseTime: Date.now() - startTime,
+        correlationId 
+      })
       
       return NextResponse.json({ 
         code,

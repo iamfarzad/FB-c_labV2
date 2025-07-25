@@ -65,7 +65,8 @@ export const VideoToAppGenerator = forwardRef<{ getSpec: () => string; getCode: 
       })
 
       if (!response.ok) {
-        throw new Error("Failed to generate spec from video")
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to generate spec from video`)
       }
 
       const data = await response.json()
@@ -86,7 +87,8 @@ export const VideoToAppGenerator = forwardRef<{ getSpec: () => string; getCode: 
       })
 
       if (!response.ok) {
-        throw new Error("Failed to generate code from spec")
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to generate code from spec`)
       }
 
       const data = await response.json()
