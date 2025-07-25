@@ -334,7 +334,6 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   const clearTranscript = useCallback(() => {
     setFinalTranscript("")
     setCurrentTranscription("")
-    setTextInput("")
     setRecordingTime(0)
     if (recognitionRef.current) {
       recognitionRef.current.stop()
@@ -343,135 +342,27 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   }, [])
 
   const handleSendToChat = useCallback(() => {
-    let messageContent = ""
-    
-    if (inputMode === "voice") {
-      messageContent = (finalTranscript + currentTranscription).trim()
-    } else {
-      messageContent = textInput.trim()
-    }
+    const messageContent = (finalTranscript + currentTranscription).trim()
     
     if (messageContent) {
-      if (voiceMode === "conversation") {
-        // Handle as live conversation
-        handleLiveConversation(messageContent)
-        setFinalTranscript("")
-        setCurrentTranscription("")
-        setTextInput("")
-      } else {
-        // Handle as regular input
-        onTransferToChat(messageContent)
-        addActivity({
-          type: "voice_input",
-          title: "Message Sent",
-          description: `Sent message: "${messageContent.slice(0, 50)}${messageContent.length > 50 ? '...' : ''}"`,
-          status: "completed"
-        })
-        
-        toast({
-          title: "Message Sent",
-          description: "Your message has been sent to the chat."
-        })
-        handleClose()
-      }
-    }
-  }, [finalTranscript, currentTranscription, textInput, inputMode, voiceMode, onTransferToChat, addActivity, toast])
-
-  const handleLiveConversation = useCallback(async (userMessage: string) => {
-    if (!userMessage.trim()) return
-
-    const userMsg = {
-      id: `user_${Date.now()}`,
-      role: 'user' as const,
-      content: userMessage.trim(),
-      timestamp: new Date()
-    }
-    setConversationMessages(prev => [...prev, userMsg])
-
-    try {
-      const voiceSessionId = `voice_session_${leadContext?.name || 'user'}_${Date.now()}`
+      // Handle as regular voice input
+      onTransferToChat(messageContent)
+      addActivity({
+        type: "voice_input",
+        title: "Message Sent",
+        description: `Sent message: "${messageContent.slice(0, 50)}${messageContent.length > 50 ? '...' : ''}"`,
+        status: "completed"
+      })
       
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: 'user', content: userMessage }
-          ],
-          data: {
-            leadContext,
-            sessionId: voiceSessionId
-          }
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
-      }
-
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
-      let aiResponse = ''
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          
-          const chunk = decoder.decode(value)
-          const lines = chunk.split('\n')
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6))
-                if (data.content) {
-                  aiResponse += data.content
-                }
-                if (data.done) {
-                  break
-                }
-              } catch (e) {
-                // Skip invalid JSON
-              }
-            }
-          }
-        }
-      }
-
-      if (aiResponse) {
-        const aiMsg = {
-          id: `assistant_${Date.now()}`,
-          role: 'assistant' as const,
-          content: aiResponse,
-          timestamp: new Date()
-        }
-        setConversationMessages(prev => [...prev, aiMsg])
-
-        // Try to play TTS response
-        try {
-          await playGeminiTTS(aiResponse)
-          addActivity({
-            type: "voice_response",
-            title: "AI Voice Response",
-            description: "F.B/c AI is speaking back",
-            status: "completed"
-          })
-        } catch (ttsError) {
-          console.error('TTS Error:', ttsError)
-        }
-      }
-    } catch (error) {
-      console.error('Live conversation error:', error)
       toast({
-        title: "Conversation Error",
-        description: "Failed to get AI response. Please try again.",
-        variant: "destructive"
+        title: "Message Sent",
+        description: "Your message has been sent to the chat."
       })
+      handleClose()
     }
-  }, [leadContext, addActivity, toast])
+  }, [finalTranscript, currentTranscription, onTransferToChat, addActivity, toast])
+
+
 
   const playGeminiTTS = async (text: string) => {
     try {
@@ -497,17 +388,10 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
         const url = URL.createObjectURL(audioBlob)
         const audio = new Audio(url)
         
-        if (currentAudio) {
-          currentAudio.pause()
-          URL.revokeObjectURL(currentAudio.src)
-        }
-        
-        setCurrentAudio(audio)
         await audio.play()
         
         audio.onended = () => {
           URL.revokeObjectURL(url)
-          setCurrentAudio(null)
         }
       } else {
         const ttsData = await res.json()
@@ -524,17 +408,10 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
           const url = URL.createObjectURL(blob)
           const audio = new Audio(url)
           
-          if (currentAudio) {
-            currentAudio.pause()
-            URL.revokeObjectURL(currentAudio.src)
-          }
-          
-          setCurrentAudio(audio)
           await audio.play()
           
           audio.onended = () => {
             URL.revokeObjectURL(url)
-            setCurrentAudio(null)
           }
         }
       }
@@ -551,7 +428,6 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     setRecordingState("idle")
     setFinalTranscript("")
     setCurrentTranscription("")
-    setTextInput("")
     setRecordingTime(0)
     stopAudioStreaming() // Stop audio streaming
     cleanupLive() // Cleanup Gemini Live session
@@ -559,10 +435,6 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   }, [onClose, cleanupLive, stopAudioStreaming])
 
   const getStateMessage = () => {
-    if (inputMode === "text") {
-      return "Type your message below"
-    }
-    
     switch (recordingState) {
       case "listening":
         return "Listening... Tap to stop"
@@ -571,16 +443,16 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
       case "processing":
         return "Processing your voice..."
       case "permission-denied":
-        return "Microphone access denied. Use text input instead."
+        return "Microphone access denied. Please allow access."
       case "error":
-        return "Error occurred. Use text input instead."
+        return "Voice recognition error. Please try again."
       default:
         return "Ready to record. Tap the microphone to start"
     }
   }
 
   const fullTranscript = finalTranscript + currentTranscription
-  const hasContent = inputMode === "voice" ? fullTranscript.trim() : textInput.trim()
+  const hasContent = fullTranscript.trim()
 
   if (!isOpen) return null
 
