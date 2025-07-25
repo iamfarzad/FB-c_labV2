@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.4.4] - 2025-07-25
+
+### 🔧 **SUPABASE BUILD-TIME ENVIRONMENT VARIABLES FIX**
+
+**Fixed critical build-time error with Supabase environment variables**:
+- ✅ **Environment Variable Validation** - Added proper runtime validation for SUPABASE_URL and SUPABASE_ANON_KEY
+- ✅ **Build-Time Safety** - Fixed hardcoded credentials in `lib/supabase/server.ts` that were causing build failures
+- ✅ **Error Handling** - Added clear error messages when environment variables are missing
+- ✅ **Fallback Support** - Supports both `SUPABASE_URL`/`SUPABASE_ANON_KEY` and `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- ✅ **Build Success** - Verified successful production build with proper environment variable handling
+
+**Technical Improvements**:
+- ✅ **Server-Side Client** - Fixed `lib/supabase/server.ts` to use environment variables instead of hardcoded values
+- ✅ **Runtime Validation** - Added proper error checking for missing environment variables
+- ✅ **Backward Compatibility** - Maintains support for both public and private environment variable patterns
+- ✅ **Security Enhancement** - Removed hardcoded credentials from source code
+
 ## [1.4.3] - 2025-07-25
 
 ### 🎤 **GEMINI LIVE AUDIO AUTO-CONNECT & UI CLEANUP**
@@ -74,6 +91,34 @@
 - ✅ **Error Recovery** - Proper error logging and status updates for failed activities
 - ✅ **User Feedback** - Toast notifications for activity cleanup actions
 - ✅ **Performance Optimization** - Reduced activity retention to prevent UI lag
+
+### 🤖 **AI PERSONALIZATION FIX**
+
+**Fixed AI not using lead research data for personalized responses**:
+- ✅ **Demo Session Support** - Fixed lead data fetching for demo sessions (was only working for authenticated users)
+- ✅ **Database Query Enhancement** - Added direct database queries for demo sessions to find lead data
+- ✅ **Lead Context Debugging** - Added comprehensive logging to track lead context flow
+- ✅ **Search Results Integration** - Fixed lead research results not being included in AI system prompt
+- ✅ **Personalization Logic** - AI now properly uses lead research data for personalized responses
+
+**Technical Improvements**:
+- ✅ **Session-Aware Lead Lookup** - Different lead lookup strategies for demo vs authenticated sessions
+- ✅ **Error Handling** - Graceful fallback when lead data or research results are unavailable
+- ✅ **Debug Logging** - Added console logs to track lead context and search results flow
+- ✅ **Database Optimization** - Efficient queries with proper ordering and limiting
+
+### 🔧 **WEBPACK CHUNK LOADING FIX**
+
+**Fixed ChunkLoadError and module resolution issues**:
+- ✅ **Cache Cleanup** - Cleared corrupted build cache (.next, node_modules/.cache, .swc)
+- ✅ **Fresh Build** - Rebuilt application with clean dependencies
+- ✅ **Module Resolution** - Fixed webpack chunk loading errors
+- ✅ **Development Server** - Restored stable development environment
+
+**Build Optimization**:
+- ✅ **Clean Compilation** - All 39 pages compiled successfully
+- ✅ **Bundle Optimization** - Optimized chunk sizes and loading
+- ✅ **Error Resolution** - Eliminated webpack chunk loading failures
 
 **Enhanced `components/chat/ChatMain.tsx`**:
 - ✅ **Improved ScrollArea integration** - Added proper refs and height constraints

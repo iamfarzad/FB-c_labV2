@@ -133,6 +133,7 @@ export function useChat({
       console.log('📤 Sending message:', {
         contentLength: content.length,
         sessionId: data.sessionId,
+        leadContext: data.leadContext,
         timestamp: new Date().toISOString()
       })
 

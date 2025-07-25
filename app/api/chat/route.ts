@@ -99,6 +99,8 @@ Response Style:
 - Focus on business value and practical implementation`
 
   // Add lead context if available and valid
+  console.log('🔍 Lead context received:', { leadContext, sessionId });
+  
   if (leadContext && leadContext.name && leadContext.name.trim() !== '') {
     let enhancedContext = `${basePrompt}
 
@@ -114,12 +116,43 @@ Current Client Context:
       const { LeadManagementService } = await import('@/lib/lead-management');
       const leadManager = new LeadManagementService();
       
-      // Find the lead by email
-      const leads = await leadManager.getUserLeads();
-      const lead = leads.find(l => l.email === leadContext.email);
+      // For demo sessions, try to find the lead by email without user authentication
+      let lead = null;
+      
+      if (sessionId) {
+        // In demo mode, try to find lead by email in the current session
+        try {
+          const { getSupabase } = await import('@/lib/supabase/server');
+          const supabase = getSupabase();
+          
+          // Query lead_summaries table directly for demo sessions
+          const { data: leads, error } = await supabase
+            .from('lead_summaries')
+            .select('*')
+            .eq('email', leadContext.email)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          
+          if (!error && leads && leads.length > 0) {
+            lead = leads[0];
+            console.log('✅ Found lead in database:', { leadId: lead.id, email: lead.email });
+          } else {
+            console.log('❌ No lead found for email:', leadContext.email);
+          }
+        } catch (dbError) {
+          console.error('Failed to fetch lead from database:', dbError);
+        }
+      } else {
+        // For authenticated users, use the existing method
+        const leads = await leadManager.getUserLeads();
+        lead = leads.find(l => l.email === leadContext.email);
+      }
       
       if (lead) {
+        console.log('🔍 Fetching search results for lead:', lead.id);
         const searchResults = await leadManager.getLeadSearchResults(lead.id);
+        
+        console.log('📊 Search results found:', searchResults?.length || 0);
         
         if (searchResults && searchResults.length > 0) {
           enhancedContext += `
