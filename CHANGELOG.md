@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.4.1] - 2025-07-25
+
+### 🎤 **ENHANCED VOICE UI SYSTEM**
+
+#### ✅ **ADVANCED VOICE ORB COMPONENT**
+
+**Complete voice UI overhaul with sophisticated animations**:
+- ✅ **Advanced state management** - 7 detailed states: idle, listening, processing, responding, thinking, browsing, analyzing
+- ✅ **Dynamic waveform visualization** - 20 animated bars with state-specific patterns
+- ✅ **Multi-layer pulse rings** - 3 layered pulse animations for active states
+- ✅ **Particle effects** - 8 animated particles for processing states
+- ✅ **State-specific icons** - Dynamic icons (🧠, ⚡, AI) based on current state
+- ✅ **Smooth transitions** - Framer Motion animations with easing curves
+
+**Modified `components/chat/modals/VoiceInputModal.tsx`**:
+- ✅ **Enhanced VoiceRecordingOrb** - Replaced basic orb with advanced animation system
+- ✅ **State mapping** - Maps recording states to advanced visual states
+- ✅ **Real-time feedback** - Live waveform and pulse animations during recording
+- ✅ **Processing indicators** - Particle effects and rotation during AI processing
+- ✅ **Visual polish** - Inner glow, backdrop blur, and sophisticated gradients
+
+**New `lib/utils/animations.ts`**:
+- ✅ **Orb animations** - Comprehensive animation variants for all voice states
+- ✅ **Waveform patterns** - State-specific height patterns for audio visualization
+- ✅ **Pulse ring effects** - Multi-layer pulse animations with different scales
+- ✅ **Particle systems** - Animated particle effects for processing states
+- ✅ **Modal animations** - Smooth overlay and content transitions
+- ✅ **Button interactions** - Hover and tap animations for better UX
+
+#### ✅ **LIVE CONVERSATION ENHANCEMENTS**
+
+**Real-time AI voice chat improvements**:
+- ✅ **Visual state feedback** - Clear indication of AI thinking, processing, and responding
+- ✅ **Enhanced user experience** - Smooth transitions between voice input and AI response
+- ✅ **Better error handling** - Graceful fallbacks with visual feedback
+- ✅ **Performance optimization** - Efficient animation rendering and state management
+
 ## [1.4.0] - 2025-07-24
 
 ### 🚨 **COMPREHENSIVE DEPLOYMENT FIXES & ENHANCEMENTS**
