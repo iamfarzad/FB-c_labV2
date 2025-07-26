@@ -3196,3 +3196,22 @@ All API calls now include:
 ---
 
 ## [0.15.0] - 2025-01-26
+
+### 📝 **DOCUMENTATION: Frontend Design SDK Correction**
+
+**Issue**: Frontend design documentation incorrectly stated the project was using legacy `@google/generative-ai` SDK.
+
+**Correction**: Updated documentation to reflect current state:
+- ✅ **Current SDK**: `@google/genai` v1.10.0 (correctly implemented)
+- ✅ **Legacy SDK**: `@google/generative-ai` (removed and no longer used)
+- ✅ **Dependency Map**: Updated to show correct AI SDK usage
+- ✅ **Implementation**: All AI endpoints already using correct SDK
+
+**Files Updated**:
+- `frontend_design.md` - Corrected dependency map and AI SDK references
+
+**Status**: Documentation now accurately reflects the current codebase state.
+
+---
+
+## [Unreleased] - 2025-01-27

@@ -354,40 +354,34 @@ app/
 ## 12. Dependency Map
 
 ### Core Framework
-- **Next.js 15.2.4** - React framework with App Router
-- **React 19** - UI library
-- **TypeScript 5** - Type safety
+- **Next.js**: 15.2.4 (App Router)
+- **React**: 19.0.0
+- **TypeScript**: 5.4.2
 
-### UI and Styling
-- **Tailwind CSS 3.4.17** - Utility-first CSS framework
-- **Radix UI** - Headless UI components
-- **Shadcn UI** - Component library built on Radix
-- **Framer Motion** - Animation library
-- **Lucide React** - Icon library
+### AI & Machine Learning
+- **@google/genai**: 1.10.0 (Current Google GenAI SDK)
+- **@google/generative-ai**: ❌ **REMOVED** (Legacy SDK - no longer used)
 
-### Form and Validation
-- **React Hook Form 7.54.1** - Form management
-- **Zod 3.24.1** - Schema validation
-- **@hookform/resolvers 3.9.1** - Form validation integration
+### UI & Styling
+- **Tailwind CSS**: 3.4.1
+- **Shadcn UI**: Latest components
+- **Radix UI**: Latest primitives
+- **Lucide React**: Icons
 
-### AI and External Services
-- **@google/generative-ai** - Google Gemini AI
-- **@supabase/supabase-js** - Database and real-time
-- **ai** - Vercel AI SDK
-- **resend** - Email service
+### State Management
+- **React Hooks**: Built-in state management
+- **Context API**: For global state
+- **Zustand**: For complex state (if needed)
 
-### Utilities
-- **clsx** - Conditional class names
-- **class-variance-authority** - Component variants
-- **tailwind-merge** - Tailwind class merging
-- **date-fns** - Date manipulation
-- **uuid** - Unique ID generation
+### Database & Backend
+- **Supabase**: PostgreSQL database
+- **@supabase/supabase-js**: Client library
 
 ### Development Tools
-- **ESLint** - Code linting
-- **Stylelint** - CSS linting
-- **PostCSS** - CSS processing
-- **Autoprefixer** - CSS vendor prefixes
+- **ESLint**: Code linting
+- **Prettier**: Code formatting
+- **Jest**: Unit testing
+- **Playwright**: E2E testing
 
 ## 13. Build and Bundling Configuration
 
