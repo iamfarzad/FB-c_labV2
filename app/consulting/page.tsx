@@ -5,18 +5,28 @@ import { Check, Zap, Cpu } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
 
+export const metadata = {
+  title: "AI Consulting Services & Automation Solutions | Farzad Bayat",
+  description: "Professional AI consulting services including chatbot development, workflow automation, and AI copilot implementation. 10,000+ hours of real-world AI experience.",
+  keywords: ["AI consulting services", "AI automation", "chatbot development", "AI copilot", "workflow automation", "AI implementation"],
+  openGraph: {
+    title: "AI Consulting Services & Automation Solutions | Farzad Bayat",
+    description: "Professional AI consulting services including chatbot development, workflow automation, and AI copilot implementation.",
+  }
+}
+
 const consultingServices = [
-  "Build internal chatbots connected to company data",
-  "Automate customer service, HR, and operations tasks",
-  "Design and deploy private/local AI copilots",
-  "Build lightweight MVPs and test automation ideas quickly",
-  "Debug, audit, or scale broken AI systems",
+  "Build intelligent AI chatbots connected to company data and systems",
+  "Automate customer service, HR, and operations tasks with AI",
+  "Design and deploy private/local AI copilots for your business",
+  "Build lightweight AI MVPs and test automation ideas quickly",
+  "Debug, audit, or scale broken AI systems and implementations",
 ]
 
 const workshopLevels = [
-  { level: "Basic", audience: "For non-tech teams (marketing, ops, HR)" },
-  { level: "Intermediate", audience: "For product, data, project leads" },
-  { level: "Advanced", audience: "For developers or technical leads" },
+  { level: "Basic AI Training", audience: "For non-tech teams (marketing, ops, HR) - AI fundamentals" },
+  { level: "Intermediate AI Implementation", audience: "For product, data, project leads - AI automation skills" },
+  { level: "Advanced AI Development", audience: "For developers or technical leads - AI system design" },
 ]
 
 export default function ConsultingPage() {
@@ -32,12 +42,12 @@ export default function ConsultingPage() {
         />
         <div className="relative z-10">
           <PageHeader
-            title="Practical AI Services That Deliver Results"
-            subtitle="Whether you need automation, a custom chatbot, or internal AI copilots, I help you build what actually works—no fluff, no theory."
+            title="Professional AI Consulting Services That Deliver Real Results"
+            subtitle="Whether you need AI automation, custom chatbot development, or internal AI copilot implementation, I help you build AI solutions that actually work—no fluff, no theory."
           />
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Button asChild size="lg">
-              <Link href="/contact">Book a Free Consultation</Link>
+              <Link href="/contact">Book Your Free AI Consultation</Link>
             </Button>
           </div>
         </div>
@@ -50,9 +60,9 @@ export default function ConsultingPage() {
               <div className="mx-auto w-fit p-3 bg-primary/10 rounded-md mb-2">
                 <Zap className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="text-2xl">AI Consulting</CardTitle>
+              <CardTitle className="text-2xl">AI Consulting & Automation Services</CardTitle>
               <CardDescription>
-                Hands-on help for companies that want to use AI to cut costs, save time, and improve accuracy.
+                Hands-on AI consulting help for companies that want to use artificial intelligence to cut costs, save time, and improve accuracy through automation.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -65,7 +75,7 @@ export default function ConsultingPage() {
                 ))}
               </ul>
               <Button asChild className="mt-6 w-full">
-                <Link href="/contact">Request a Custom Quote</Link>
+                <Link href="/contact">Request Your Custom AI Consulting Quote</Link>
               </Button>
             </CardContent>
           </Card>
@@ -74,8 +84,8 @@ export default function ConsultingPage() {
               <div className="mx-auto w-fit p-3 bg-primary/10 rounded-md mb-2">
                 <Cpu className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="text-2xl">AI Workshops & Team Training</CardTitle>
-              <CardDescription>Teach your team how to use AI tools properly—and build real things.</CardDescription>
+              <CardTitle className="text-2xl">AI Workshops & Team Training Programs</CardTitle>
+              <CardDescription>Teach your team how to use AI tools properly and build real AI automation solutions.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -87,7 +97,7 @@ export default function ConsultingPage() {
                 ))}
               </div>
               <Button asChild variant="outline" className="mt-6 w-full bg-transparent">
-                <Link href="/workshop">Join Free Digital Preview</Link>
+                <Link href="/workshop">Join Free AI Training Preview</Link>
               </Button>
             </CardContent>
           </Card>

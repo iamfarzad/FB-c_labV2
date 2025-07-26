@@ -260,7 +260,7 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
                       <div className="relative group/image">
                         <img
                           src={message.imageUrl || "/placeholder.svg"}
-                          alt="Uploaded image"
+                          alt="AI analysis image - uploaded content for artificial intelligence processing and insights"
                           className="max-w-full h-auto rounded-lg border max-h-96 object-contain"
                           loading="lazy"
                         />

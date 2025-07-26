@@ -4,11 +4,21 @@ import Link from "next/link"
 import { CheckCircle, Book } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
+export const metadata = {
+  title: "AI Training Workshops & Team Programs | Farzad Bayat",
+  description: "Hands-on AI training workshops for your team. Learn AI automation, chatbot development, and AI implementation skills from real-world experience.",
+  keywords: ["AI training", "AI workshops", "AI team training", "AI automation training", "AI implementation workshops"],
+  openGraph: {
+    title: "AI Training Workshops & Team Programs | Farzad Bayat",
+    description: "Hands-on AI training workshops for your team. Learn AI automation, chatbot development, and AI implementation skills.",
+  }
+}
+
 const workshopFeatures = [
-  "No prior coding or AI experience required",
-  "Clear explanations of prompts, tokens, and APIs",
-  "You’ll leave knowing how to troubleshoot basic AI issues",
-  "You learn by doing and build real tools",
+  "No prior coding or AI experience required for AI training",
+  "Clear explanations of AI prompts, tokens, and APIs",
+  "You'll leave knowing how to troubleshoot basic AI implementation issues",
+  "You learn AI automation by doing and build real AI tools",
 ]
 
 export default function WorkshopPage() {
@@ -16,12 +26,12 @@ export default function WorkshopPage() {
     <>
       <PageShell className="min-h-screen">
         <PageHeader
-          title="Hands-On AI Workshops for Your Team"
-          subtitle="Coming Soon – Get notified when the full workshop schedule is live."
+          title="Hands-On AI Training Workshops for Your Team"
+          subtitle="Coming Soon – Get notified when the full AI workshop schedule is live. Learn AI automation and implementation skills."
         />
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Button asChild size="lg">
-            <Link href="/contact">Join the Waitlist</Link>
+            <Link href="/contact">Join the AI Training Waitlist</Link>
           </Button>
         </div>
       </PageShell>
@@ -33,10 +43,10 @@ export default function WorkshopPage() {
               <div className="p-3 bg-primary/10 rounded-md">
                 <Book className="h-6 w-6 text-primary" />
               </div>
-              <CardTitle className="text-2xl">What to Expect</CardTitle>
+              <CardTitle className="text-2xl">What to Expect from AI Training</CardTitle>
               <CardDescription>
-                These workshops are built from real-world experience—not theory. Every session is designed to give your
-                team a working understanding of AI.
+                These AI workshops are built from real-world AI implementation experience—not theory. Every AI training session is designed to give your
+                team a working understanding of AI automation and implementation.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -52,28 +62,28 @@ export default function WorkshopPage() {
           </Card>
           <Card className="h-full bg-secondary neu-card transition-all">
             <CardHeader>
-              <CardTitle className="text-2xl">Details</CardTitle>
+              <CardTitle className="text-2xl">AI Training Workshop Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold">Workshop Format</h3>
+                <h3 className="text-lg font-semibold">AI Workshop Format</h3>
                 <p className="text-muted-foreground">
-                  <strong className="text-primary">3 hours theory:</strong> What LLMs are, how they work, risks, and
-                  limitations.
+                  <strong className="text-primary">3 hours AI theory:</strong> What AI LLMs are, how they work, AI risks, and
+                  AI limitations.
                 </p>
                 <p className="text-muted-foreground">
-                  <strong className="text-primary">3 hours hands-on:</strong> Build a chatbot, automate a task, or
-                  create an assistant.
+                  <strong className="text-primary">3 hours hands-on AI:</strong> Build an AI chatbot, automate tasks with AI, or
+                  create an AI assistant.
                 </p>
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Delivery Options</h3>
-                <p className="text-muted-foreground">On-site (Norway + Europe) or Remote (Global).</p>
+                <h3 className="text-lg font-semibold">AI Training Delivery Options</h3>
+                <p className="text-muted-foreground">On-site AI training (Norway + Europe) or Remote AI workshops (Global).</p>
               </div>
             </CardContent>
             <CardFooter>
               <Button asChild variant="outline" className="w-full bg-transparent">
-                <Link href="/contact">Book a Consultation Instead</Link>
+                <Link href="/contact">Book AI Consultation Instead</Link>
               </Button>
             </CardFooter>
           </Card>
