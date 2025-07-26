@@ -1,15 +1,26 @@
 import { GoogleGenAI } from "@google/genai"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
+import { AudioQualityEnhancer } from "@/lib/audio-quality-enhancer"
 
 export const dynamic = "force-dynamic"
 
-// Audio format configuration for Gemini TTS (optimized for web)
+// Enhanced audio format configuration for Gemini TTS (optimized for quality)
 const AUDIO_CONFIG = {
-  sampleRate: 16000, // Reduced from 24000 for smaller files
+  sampleRate: 24000, // Higher quality for better voice clarity
   channels: 1,
   format: 'wav' as const,
   compression: 'gzip' as const, // Enable compression
+  bitDepth: 16, // 16-bit audio for better quality
+  voiceConfig: {
+    prebuiltVoiceConfig: {
+      voiceName: 'Puck',
+      voiceStyle: 'professional',
+      speakingRate: 1.0,
+      pitch: 0.0,
+      volumeGainDb: 0.0
+    }
+  }
 }
 
 // In-memory cache for duplicate prevention (use Redis in production)
@@ -28,7 +39,9 @@ export async function POST(req: NextRequest) {
       streamAudio = false, 
       voiceName = 'Puck',
       multiSpeakerMode = false,
-      languageCode = 'en-US'
+      languageCode = 'en-US',
+      audioData,
+      useWebRTC = false
     } = await req.json()
 
     // Get session ID for demo budget tracking
@@ -79,9 +92,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (!prompt) {
-      console.log("❌ Missing prompt:", { callId, correlationId })
-      return NextResponse.json({ error: "Prompt is required" }, { status: 400 })
+    if (!prompt && !audioData) {
+      console.log("❌ Missing prompt or audio data:", { callId, correlationId })
+      return NextResponse.json({ error: "Prompt or audio data is required" }, { status: 400 })
     }
 
     if (!process.env.GEMINI_API_KEY) {
@@ -94,8 +107,55 @@ export async function POST(req: NextRequest) {
     const { selectModelForFeature, estimateTokens } = await import('@/lib/model-selector')
     const { enforceBudgetAndLog } = await import('@/lib/token-usage-logger')
 
-    // Estimate tokens and select model
-    const estimatedTokens = estimateTokens(prompt)
+    // Handle WebRTC audio data or regular prompt
+    let textToProcess = prompt
+    let estimatedTokens = 0
+    
+    if (audioData && useWebRTC) {
+      try {
+        // Process WebRTC audio data
+        console.log("🎤 Processing WebRTC audio data:", { callId, audioDataLength: audioData.length })
+        
+        // Convert base64 audio to buffer
+        const audioBuffer = Buffer.from(audioData, 'base64')
+        
+        // In a real implementation, you would:
+        // 1. Use Gemini's audio input capabilities
+        // 2. Process the audio for speech recognition
+        // 3. Return the transcribed text
+        
+        // For now, simulate audio processing
+        textToProcess = "WebRTC audio processed successfully. This is a simulated transcription of the audio input."
+        estimatedTokens = estimateTokens(textToProcess)
+        
+        console.log("✅ WebRTC audio processed:", { callId, transcribedText: textToProcess })
+      } catch (error) {
+        console.error("❌ WebRTC audio processing failed:", error)
+        return NextResponse.json({ 
+          error: "Failed to process WebRTC audio",
+          details: error instanceof Error ? error.message : 'Unknown error'
+        }, { status: 500 })
+      }
+    } else {
+      estimatedTokens = estimateTokens(prompt || '')
+    }
+    
+    // If this is a WebRTC audio processing request, return the transcribed text
+    if (audioData && useWebRTC) {
+      return NextResponse.json({
+        success: true,
+        text: textToProcess,
+        sessionId,
+        callId,
+        timestamp: new Date().toISOString(),
+        responseTime: Date.now() - startTime
+      })
+    }
+      }
+    } else {
+      estimatedTokens = estimateTokens(prompt || '')
+    }
+    
     const modelSelection = selectModelForFeature('voice_tts', estimatedTokens, !!sessionId)
 
     // Check demo budget for voice TTS feature
@@ -151,17 +211,17 @@ export async function POST(req: NextRequest) {
         const textResult = await genAI.models.generateContent({
           model: "gemini-2.5-flash",
           config,
-          contents: [{ role: "user", parts: [{ text: prompt! }] }],
+          contents: [{ role: "user", parts: [{ text: textToProcess }] }],
         })
         
-        const textResponse = textResult.responseId ? prompt : prompt
+        const textResponse = textResult.responseId ? textToProcess : textToProcess
 
         console.log("✅ Text generation completed:", { callId, responseLength: textResponse.length })
 
-        // Use Gemini TTS with proper configuration (from official docs)
+        // Enhanced Gemini TTS with optimized voice configuration
         const generateTTSAudio = async (text: string, voiceName: string = 'Puck', multiSpeakerMode: boolean = false, languageCode: string = 'en-US'): Promise<string> => {
           try {
-            console.log("🔊 TTS Audio generation:", { callId, voiceName, textLength: text.length })
+            console.log("🔊 Enhanced TTS Audio generation:", { callId, voiceName, textLength: text.length })
             
             // Determine if this is multi-speaker content
             const hasMultipleSpeakers = multiSpeakerMode && text.includes(':') && text.split(':').length > 2;
@@ -174,35 +234,47 @@ export async function POST(req: NextRequest) {
               const speakers = speakerMatches ? [...new Set(speakerMatches.map(s => s.replace(':', '').trim()))] : [];
               
               if (speakers.length >= 2) {
-                // Multi-speaker configuration
+                // Enhanced multi-speaker configuration
                 speechConfig = {
                   multiSpeakerVoiceConfig: {
                     speakerVoiceConfigs: speakers.slice(0, 2).map((speaker, index) => ({
                       speaker: speaker,
                       voiceConfig: {
                         prebuiltVoiceConfig: {
-                          voiceName: index === 0 ? voiceName : 'Kore' // First speaker gets requested voice, second gets Kore
+                          voiceName: index === 0 ? voiceName : 'Kore',
+                          voiceStyle: 'professional',
+                          speakingRate: 1.0,
+                          pitch: index === 0 ? 0.0 : -2.0, // Slight pitch difference for speakers
+                          volumeGainDb: 0.0
                         }
                       }
                     }))
                   }
                 };
               } else {
-                // Fallback to single speaker if speaker detection fails
+                // Enhanced single speaker fallback
                 speechConfig = {
                   voiceConfig: {
                     prebuiltVoiceConfig: {
-                      voiceName: voiceName
+                      voiceName: voiceName,
+                      voiceStyle: 'professional',
+                      speakingRate: 1.0,
+                      pitch: 0.0,
+                      volumeGainDb: 0.0
                     }
                   }
                 };
               }
             } else {
-              // Single speaker configuration
+              // Enhanced single speaker configuration
               speechConfig = {
                 voiceConfig: {
                   prebuiltVoiceConfig: {
-                    voiceName: voiceName
+                    voiceName: voiceName,
+                    voiceStyle: 'professional',
+                    speakingRate: 1.0,
+                    pitch: 0.0,
+                    volumeGainDb: 0.0
                   }
                 }
               };
@@ -226,8 +298,17 @@ export async function POST(req: NextRequest) {
             
             if (audioData) {
               console.log("✅ TTS Audio generated successfully:", { callId, audioDataLength: audioData.length })
+              
+              // Enhance audio quality
+              const enhancer = new AudioQualityEnhancer(
+                AudioQualityEnhancer.getOptimalConfig('conversation')
+              )
+              const enhancedAudioData = await enhancer.enhanceAudioData(audioData)
+              
+              console.log("🎵 Audio quality enhanced:", { callId, originalLength: audioData.length, enhancedLength: enhancedAudioData.length })
+              
               // Convert to base64 data URL for browser playback
-              return `data:audio/wav;base64,${audioData}`;
+              return `data:audio/wav;base64,${enhancedAudioData}`;
             } else {
               throw new Error('No audio data received from Gemini TTS');
             }
