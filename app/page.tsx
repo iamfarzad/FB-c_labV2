@@ -7,6 +7,16 @@ import { ArrowRight, Bot, Cpu, Zap } from "lucide-react"
 import { CtaSection } from "@/components/cta-section"
 import { cn } from "@/lib/utils"
 
+export const metadata = {
+  title: "AI Consulting & Automation Expert | Farzad Bayat",
+  description: "AI consultant Farzad Bayat delivers practical AI automation, chatbots, and workflow solutions. 10,000+ hours of real-world AI implementation experience.",
+  keywords: ["AI consulting", "AI automation", "AI consultant", "business AI", "AI implementation"],
+  openGraph: {
+    title: "AI Consulting & Automation Expert | Farzad Bayat",
+    description: "AI consultant Farzad Bayat delivers practical AI automation, chatbots, and workflow solutions. 10,000+ hours of real-world AI implementation experience.",
+  }
+}
+
 export default function HomePage() {
   return (
     <>
@@ -24,14 +34,13 @@ export default function HomePage() {
         />
 
         <div className="container relative z-10 flex flex-col items-center justify-center h-full text-center">
-          {/* Enhanced hero content with better typography */}
+          {/* Enhanced hero content with better typography and SEO optimization */}
           <div className="max-w-4xl mx-auto space-y-8">
             <h1 className="text-5xl font-bold tracking-tight text-primary sm:text-6xl md:text-7xl lg:text-8xl text-balance leading-[0.9] bg-gradient-to-br from-foreground via-foreground to-foreground/80 bg-clip-text">
-              AI Automation Without the Hype
+              AI Automation & Consulting That Actually Works
             </h1>
             <p className="mt-6 max-w-2xl mx-auto text-lg leading-8 text-muted-foreground text-balance font-medium">
-              I'm Farzad Bayat—a self-taught AI consultant who spent 10,000+ hours figuring out what works so your
-              business doesn't have to.
+              I'm Farzad Bayat—an experienced AI consultant with 10,000+ hours building practical AI automation, chatbots, and workflow solutions for businesses that need real results.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button
@@ -39,7 +48,7 @@ export default function HomePage() {
                 size="lg"
                 className="transition-all hover:bg-primary/90 text-foreground shadow-lg hover:shadow-xl"
               >
-                <Link href="/contact">Book a Free Consultation</Link>
+                <Link href="/contact">Book Your Free AI Consultation</Link>
               </Button>
               <Button
                 asChild
@@ -65,13 +74,13 @@ export default function HomePage() {
 
       <PageShell>
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">Why Work With Me?</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">Why Choose My AI Consulting Services?</h2>
           <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-            10,000+ hours of real-world AI implementation since 2020. No theory, only what works in practice.
+            10,000+ hours of real-world AI implementation since 2020. No theory, only proven AI automation and consulting solutions that work in practice.
           </p>
           <Button asChild variant="link" className="mt-4 text-orange-accent hover:text-orange-accent/90">
             <Link href="/about">
-              Read My Full Story <ArrowRight className="ml-2 h-4 w-4" />
+              Read My Full AI Consulting Story <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         </div>
@@ -89,9 +98,9 @@ export default function HomePage() {
 
         <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">What I Offer</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">Professional AI Services & Solutions</h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Custom solutions to integrate AI into your business, from internal tools to team training.
+              Custom AI automation solutions to integrate artificial intelligence into your business, from internal AI tools to comprehensive team training programs.
             </p>
           </div>
           <div className="grid gap-6">
@@ -100,13 +109,13 @@ export default function HomePage() {
                 <div className="p-3 bg-primary/10 rounded-md">
                   <Zap className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle>AI Consulting</CardTitle>
+                <CardTitle>AI Consulting & Automation</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Custom internal copilots, chatbots, and workflow automation.</p>
+                <p className="text-muted-foreground">Custom internal AI copilots, intelligent chatbots, and advanced workflow automation solutions.</p>
                 <Button asChild variant="link" className="p-0 h-auto mt-2 text-orange-accent">
                   <Link href="/consulting">
-                    See Consulting <ArrowRight className="ml-2 h-4 w-4" />
+                    Explore AI Consulting Services <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
               </CardContent>
@@ -116,15 +125,15 @@ export default function HomePage() {
                 <div className="p-3 bg-orange-accent/10 rounded-md">
                   <Cpu className="h-6 w-6 text-orange-accent" />
                 </div>
-                <CardTitle>Hands-On AI Training</CardTitle>
+                <CardTitle>Hands-On AI Training & Workshops</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Practical workshops for ops, marketing, product, and technical teams.
+                  Practical AI workshops for operations, marketing, product, and technical teams. Learn real AI implementation skills.
                 </p>
                 <Button asChild variant="link" className="p-0 h-auto mt-2 text-orange-accent">
                   <Link href="/workshop">
-                    Explore Workshops <ArrowRight className="ml-2 h-4 w-4" />
+                    Discover AI Training Programs <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
               </CardContent>
@@ -134,9 +143,9 @@ export default function HomePage() {
       </PageShell>
 
       <CtaSection
-        title="Ready to use AI that actually works?"
-        subtitle="Let's identify a use case and get started."
-        primaryCtaText="Book Your Free Consultation"
+        title="Ready to implement AI automation that actually works?"
+        subtitle="Let's identify your AI use case and get started with practical solutions."
+        primaryCtaText="Book Your Free AI Consultation"
         primaryCtaLink="/contact"
         secondaryCtaText="Try the AI Demo"
         secondaryCtaLink="/chat"

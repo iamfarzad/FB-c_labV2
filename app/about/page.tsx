@@ -6,26 +6,36 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Award, BookOpen, Heart, MessageSquare, Target } from "lucide-react"
 
+export const metadata = {
+  title: "About Farzad Bayat - AI Consultant & Automation Expert",
+  description: "Meet Farzad Bayat, AI consultant with 10,000+ hours of real-world AI implementation experience. From TV production to AI automation expert.",
+  keywords: ["Farzad Bayat", "AI consultant", "AI automation expert", "AI implementation", "business AI"],
+  openGraph: {
+    title: "About Farzad Bayat - AI Consultant & Automation Expert",
+    description: "Meet Farzad Bayat, AI consultant with 10,000+ hours of real-world AI implementation experience.",
+  }
+}
+
 const coreValues = [
-  { icon: Target, text: "Deliver real business value, not hype" },
-  { icon: BookOpen, text: "Commit to continuous learning" },
-  { icon: Heart, text: "Uphold ethical and responsible AI practices" },
-  { icon: MessageSquare, text: "Communicate transparently, always" },
+  { icon: Target, text: "Deliver real business value through AI automation, not hype" },
+  { icon: BookOpen, text: "Commit to continuous AI learning and innovation" },
+  { icon: Heart, text: "Uphold ethical and responsible AI consulting practices" },
+  { icon: MessageSquare, text: "Communicate transparently about AI implementation, always" },
 ]
 
 const skills = [
-  { name: "AI Research", value: 90 },
-  { name: "System Design", value: 85 },
-  { name: "Problem Solving", value: 95 },
-  { name: "Team Collaboration", value: 90 },
+  { name: "AI Research & Implementation", value: 90 },
+  { name: "AI System Design", value: 85 },
+  { name: "AI Problem Solving", value: 95 },
+  { name: "AI Team Collaboration", value: 90 },
 ]
 
 const timeline = [
-  { year: 2020, milestone: "Began self-learning AI & automation, built Optix.io" },
-  { year: 2021, milestone: "Launched iWriter.ai for Norwegian SMEs" },
-  { year: 2022, milestone: "Developed 'Talk to Eve' for workplace mental wellness" },
-  { year: 2023, milestone: "Built ZingZang Lab (AI music app), expanded consulting" },
-  { year: 2024, milestone: "Ran hands-on AI workshops, launched F.B Consulting" },
+  { year: 2020, milestone: "Began self-learning AI & automation, built Optix.io AI platform" },
+  { year: 2021, milestone: "Launched iWriter.ai for Norwegian SMEs - AI automation success" },
+  { year: 2022, milestone: "Developed 'Talk to Eve' AI for workplace mental wellness" },
+  { year: 2023, milestone: "Built ZingZang Lab (AI music app), expanded AI consulting services" },
+  { year: 2024, milestone: "Ran hands-on AI workshops, launched F.B AI Consulting" },
 ]
 
 export default function AboutPage() {
@@ -33,30 +43,30 @@ export default function AboutPage() {
     <>
       <PageShell>
         <PageHeader
-          title="Self-Taught. Results-Focused. AI That Actually Works."
-          subtitle="I’m Farzad Bayat—AI consultant, builder, and systems thinker. I don’t just talk about AI. I build, test, and deliver it."
+          title="Self-Taught AI Consultant. Results-Focused. AI Automation That Actually Works."
+          subtitle="I'm Farzad Bayat—AI consultant, builder, and systems thinker. I don't just talk about AI. I build, test, and deliver practical AI automation solutions."
         />
       </PageShell>
 
       <PageShell>
         <div className="grid md:grid-cols-3 gap-10 items-start">
           <div className="md:col-span-2">
-            <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">My Journey</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">My AI Consulting Journey</h2>
             <p className="mt-4 text-muted-foreground">
               After 17 years creating and producing TV shows, documentaries, and commercials for major networks across
-              the globe, I found myself at a crossroads. I wanted to build something lasting—tools that actually help
-              people.
+              the globe, I found myself at a crossroads. I wanted to build something lasting—AI tools that actually help
+              businesses succeed.
             </p>
             <p className="mt-4 text-muted-foreground">
-              In 2020, I launched my first startup, Optix.io, and dove headfirst into the world of technology and AI. It
-              was a hard reset: I had no formal tech background. I broke things, rebuilt them, and learned by
-              doing—starting with GPT-2. Since then, I’ve discovered what really works. My philosophy: you have to build
-              and break things yourself to truly understand them.
+              In 2020, I launched my first AI startup, Optix.io, and dove headfirst into the world of AI technology and automation. It
+              was a hard reset: I had no formal tech background. I broke things, rebuilt them, and learned AI implementation by
+              doing—starting with GPT-2. Since then, I've discovered what really works in AI automation. My philosophy: you have to build
+              and break AI systems yourself to truly understand them.
             </p>
           </div>
           <div className="flex justify-center">
             <Avatar className="w-48 h-48 border-4 border-border shadow-lg">
-              <AvatarImage src="/placeholder.svg?width=200&height=200" alt="Farzad Bayat" />
+              <AvatarImage src="/placeholder.svg?width=200&height=200" alt="Farzad Bayat - AI Consultant and Automation Expert" />
               <AvatarFallback>FB</AvatarFallback>
             </Avatar>
           </div>
@@ -64,7 +74,7 @@ export default function AboutPage() {
       </PageShell>
 
       <PageShell className="bg-secondary">
-        <h2 className="text-center text-2xl font-bold tracking-tight text-primary sm:text-3xl">Core Values</h2>
+        <h2 className="text-center text-2xl font-bold tracking-tight text-primary sm:text-3xl">AI Consulting Core Values</h2>
         <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {coreValues.map((value) => (
             <Card key={value.text} className="neu-card transition-all flex flex-col items-center justify-center p-8 text-center">
@@ -80,7 +90,7 @@ export default function AboutPage() {
       <PageShell>
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">My Strengths</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">My AI Consulting Strengths</h2>
             <div className="mt-6 space-y-4">
               {skills.map((skill) => (
                 <div key={skill.name}>
@@ -94,7 +104,7 @@ export default function AboutPage() {
             </div>
           </div>
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">Timeline & Milestones</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">AI Implementation Timeline & Milestones</h2>
             <div className="mt-6 flow-root">
               <ul className="-mb-8">
                 {timeline.map((event, eventIdx) => (
@@ -127,13 +137,13 @@ export default function AboutPage() {
 
       <PageShell className="bg-secondary">
         <div className="text-center">
-          <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">Let’s Connect</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">Ready for AI Automation That Works?</h2>
           <p className="mt-4 max-w-xl mx-auto text-lg text-muted-foreground">
-            Ready for a direct path to working AI in your business?
+            Ready for a direct path to working AI automation in your business? Let's discuss your AI implementation needs.
           </p>
           <div className="mt-8 flex items-center justify-center gap-x-6">
             <Button asChild size="lg">
-              <Link href="/contact">Book a Free Call</Link>
+              <Link href="/contact">Book Your Free AI Consultation Call</Link>
             </Button>
           </div>
         </div>
