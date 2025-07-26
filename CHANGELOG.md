@@ -3155,3 +3155,44 @@ All API calls now include:
 3. Fix payload size limit error responses
 4. Add comprehensive security test coverage
 5. Document security best practices 
+
+## [Unreleased] - 2025-01-27
+
+### 🔧 **FIXED: Voice Function Demo Authentication**
+
+**Problem**: Voice functions required authentication even in demo mode, breaking the demo experience.
+
+**Root Cause**: The `useGeminiLiveAudio` hook had mandatory authentication checks that didn't account for demo sessions.
+
+**Solution Implemented**:
+
+#### **Modified `hooks/useGeminiLiveAudio.ts`**:
+- ✅ **Optional authentication** - Demo sessions no longer require auth
+- ✅ **Session ID validation** - Uses demo session ID for budget tracking
+- ✅ **Graceful fallback** - Falls back to regular TTS when live audio fails
+
+#### **Modified `app/api/gemini-live/route.ts`**:
+- ✅ **Demo session support** - Added session ID header processing
+- ✅ **Budget checking** - Validates against demo limits for voice TTS
+- ✅ **Usage tracking** - Records voice feature usage in demo sessions
+- ✅ **Model selection** - Uses appropriate models for demo vs authenticated users
+
+#### **Modified `components/chat/modals/VoiceInputModal.tsx`**:
+- ✅ **Session ID integration** - Passes demo session ID to API calls
+- ✅ **Demo context awareness** - Uses actual demo session instead of random ID
+
+**Demo Voice Limits**:
+- **Voice TTS**: 5,000 tokens, 5 requests per session
+- **Model**: `gemini-2.5-flash-preview-tts` for demo users
+- **Budget**: $0.40/1M tokens (lite model pricing)
+
+**Testing Results**:
+- ✅ Voice input works without authentication in demo mode
+- ✅ Demo budget properly enforced for voice features
+- ✅ Session tracking works correctly
+- ✅ Fallback to text input when voice fails
+- ✅ TTS responses work within demo limits
+
+---
+
+## [0.15.0] - 2025-01-26

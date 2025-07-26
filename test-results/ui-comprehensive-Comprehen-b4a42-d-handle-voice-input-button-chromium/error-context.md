@@ -1,0 +1,42 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - link "F.B":
+    - /url: /
+    - img
+    - text: F.B
+  - navigation:
+    - link "Home":
+      - /url: /
+    - link "Consulting":
+      - /url: /consulting
+    - link "About":
+      - /url: /about
+    - link "Workshop":
+      - /url: /workshop
+    - link "Contact":
+      - /url: /contact
+  - button "Toggle theme":
+    - img
+    - img
+    - text: Toggle theme
+- main:
+  - heading "404" [level=1]
+  - heading "This page could not be found." [level=2]
+- contentinfo:
+  - paragraph: © 2025 F.B Consulting. All rights reserved.
+  - link "Contact":
+    - /url: /contact
+  - text: "|"
+  - link "LinkedIn":
+    - /url: https://linkedin.com
+- img
+- text: Demo Session
+- paragraph: Start a demo session to explore our AI capabilities with usage limits.
+- region "Notifications (F8)":
+  - list
+- button "Open Next.js Dev Tools":
+  - img
+- alert
+```

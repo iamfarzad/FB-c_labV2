@@ -34,7 +34,9 @@ export function middleware(req: NextRequest) {
   if (isGeminiRoute) {
     // Route to our mock handler
     const mockUrl = req.nextUrl.clone()
-    mockUrl.pathname = '/api/mock' + req.nextUrl.pathname
+    // Remove the /api prefix and add /api/mock prefix
+    const pathWithoutApi = req.nextUrl.pathname.replace('/api', '')
+    mockUrl.pathname = '/api/mock' + pathWithoutApi
     console.log(`🟠 Mocking Gemini API: ${req.nextUrl.pathname} → ${mockUrl.pathname}`)
     return NextResponse.rewrite(mockUrl)
   }

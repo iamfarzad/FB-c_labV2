@@ -5,8 +5,6 @@
  * Tests all major features with mocking enabled
  */
 
-import fetch from 'node-fetch'
-
 const BASE_URL = 'http://localhost:3000'
 
 interface TestResult {

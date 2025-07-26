@@ -44,6 +44,7 @@ function EducationalApp() {
     }
     
     return NextResponse.json({
+      success: true,
       ...mockApp,
       correlationId,
       responseTime: Date.now() - startTime,

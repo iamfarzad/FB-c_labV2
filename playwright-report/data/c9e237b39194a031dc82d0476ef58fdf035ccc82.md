@@ -1,0 +1,61 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - link "F.B":
+    - /url: /
+    - img
+    - text: F.B
+  - navigation:
+    - link "Home":
+      - /url: /
+    - link "Consulting":
+      - /url: /consulting
+    - link "About":
+      - /url: /about
+    - link "Workshop":
+      - /url: /workshop
+    - link "Contact":
+      - /url: /contact
+  - button "Toggle theme":
+    - img
+    - text: Toggle theme
+- main:
+  - heading "Chat History" [level=2]
+  - button "New Chat":
+    - img
+    - text: New Chat
+  - img
+  - text: Live AI Activity Real-time
+  - img
+  - paragraph: No activities yet
+  - paragraph: AI actions will appear here in real-time
+  - button:
+    - img
+  - img
+  - heading "How can I help?" [level=1]
+  - text: Online • Ready to help
+  - button "Export Summary":
+    - img
+    - text: Export Summary
+  - img
+  - heading "Welcome to F.B/c AI" [level=3]
+  - paragraph: Start a conversation by typing a message, uploading an image, or using voice input. I'm here to help with AI automation, analysis, and consultation.
+  - button:
+    - img
+  - textbox "Ask anything...": Test loading state
+  - button:
+    - img
+- contentinfo:
+  - paragraph: © 2025 F.B Consulting. All rights reserved.
+  - link "Contact":
+    - /url: /contact
+  - text: "|"
+  - link "LinkedIn":
+    - /url: https://linkedin.com
+- img
+- text: Demo Session
+- paragraph: Start a demo session to explore our AI capabilities with usage limits.
+- region "Notifications (F8)":
+  - list
+```

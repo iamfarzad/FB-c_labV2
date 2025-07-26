@@ -31,6 +31,10 @@ export async function POST(req: NextRequest) {
       languageCode = 'en-US'
     } = await req.json()
 
+    // Get session ID for demo budget tracking
+    const sessionId = req.headers.get('x-demo-session-id') || undefined
+    const userId = req.headers.get('x-user-id') || undefined
+
     // 🟠 LOGGING: Track all API calls
     console.log("🟠 Gemini API Called:", {
       callId,
@@ -40,6 +44,7 @@ export async function POST(req: NextRequest) {
       streamAudio,
       voiceName,
       multiSpeakerMode,
+      sessionId,
       timestamp: new Date().toISOString(),
       userAgent: (req.headers.get('user-agent') || '').substring(0, 50)
     })
@@ -82,6 +87,52 @@ export async function POST(req: NextRequest) {
     if (!process.env.GEMINI_API_KEY) {
       console.log("❌ Missing API key:", { callId, correlationId })
       return NextResponse.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 })
+    }
+
+    // Import demo budget management functions
+    const { checkDemoAccess, recordDemoUsage } = await import('@/lib/demo-budget-manager')
+    const { selectModelForFeature, estimateTokens } = await import('@/lib/model-selector')
+    const { enforceBudgetAndLog } = await import('@/lib/token-usage-logger')
+
+    // Estimate tokens and select model
+    const estimatedTokens = estimateTokens(prompt)
+    const modelSelection = selectModelForFeature('voice_tts', estimatedTokens, !!sessionId)
+
+    // Check demo budget for voice TTS feature
+    if (sessionId) {
+      const accessCheck = await checkDemoAccess(sessionId, 'voice_tts' as any, estimatedTokens)
+      
+      if (!accessCheck.allowed) {
+        console.log("🚫 Demo access denied:", { callId, reason: accessCheck.reason })
+        return NextResponse.json({
+          error: 'Demo limit reached',
+          message: accessCheck.reason,
+          remainingTokens: accessCheck.remainingTokens,
+          remainingRequests: accessCheck.remainingRequests
+        }, { status: 429 })
+      }
+    }
+
+    // Check user budget if authenticated
+    if (userId) {
+      const budgetCheck = await enforceBudgetAndLog(
+        userId,
+        sessionId,
+        'voice_tts',
+        modelSelection.model,
+        estimatedTokens,
+        estimatedTokens * 0.5, // Estimate output tokens
+        true
+      )
+
+      if (!budgetCheck.allowed) {
+        console.log("🚫 Budget exceeded:", { callId, reason: budgetCheck.reason })
+        return NextResponse.json({
+          error: 'Budget limit reached',
+          message: budgetCheck.reason,
+          suggestedModel: budgetCheck.suggestedModel
+        }, { status: 429 })
+      }
     }
 
     const genAI = new GoogleGenAI({
@@ -276,6 +327,15 @@ export async function POST(req: NextRequest) {
               responseTime: Date.now() - startTime
             })
             
+            // Record usage for demo sessions
+            if (sessionId) {
+              try {
+                await recordDemoUsage(sessionId, 'voice_tts', estimatedTokens, estimatedTokens * 0.5)
+              } catch (error) {
+                console.warn("Failed to record demo usage:", error)
+              }
+            }
+
             return new Response(bytes, {
               headers: {
                 "Content-Type": "audio/wav",
@@ -289,6 +349,15 @@ export async function POST(req: NextRequest) {
             })
           } else {
             // Fallback to JSON response for client-side TTS
+            // Record usage for demo sessions
+            if (sessionId) {
+              try {
+                await recordDemoUsage(sessionId, 'voice_tts', estimatedTokens, estimatedTokens * 0.5)
+              } catch (error) {
+                console.warn("Failed to record demo usage:", error)
+              }
+            }
+
             return NextResponse.json({
               success: true,
               textContent: textResponse,
@@ -328,6 +397,15 @@ export async function POST(req: NextRequest) {
         callId, 
         responseTime: Date.now() - startTime 
       })
+
+      // Record usage for demo sessions (text-only)
+      if (sessionId) {
+        try {
+          await recordDemoUsage(sessionId, 'voice_tts', estimatedTokens, estimatedTokens * 0.3)
+        } catch (error) {
+          console.warn("Failed to record demo usage:", error)
+        }
+      }
 
       return NextResponse.json({
         success: true,

@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
     }
     
     return NextResponse.json({
+      success: true,
       ...mockSummary,
       correlationId,
       responseTime: Date.now() - startTime,

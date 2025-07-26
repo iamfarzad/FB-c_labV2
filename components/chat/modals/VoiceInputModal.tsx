@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 import { useChatContext } from "@/app/chat/context/ChatProvider"
 import { useToast } from "@/components/ui/use-toast"
 import { useGeminiLiveAudio } from "@/hooks/useGeminiLiveAudio"
+import { useDemoSession } from '@/components/demo-session-manager'
 
 interface VoiceInputModalProps {
   isOpen: boolean
@@ -36,9 +37,10 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   leadContext 
 }) => {
   const { addActivity } = useChatContext()
+  const { sessionId: demoSessionId } = useDemoSession()
   
-  // Generate session and user IDs for Gemini Live
-  const sessionId = useRef(`session-${Date.now()}`).current
+  // Use demo session ID or generate fallback
+  const sessionId = demoSessionId || `session-${Date.now()}`
   const userId = useRef('anonymous').current
   const { toast } = useToast()
   
@@ -377,7 +379,10 @@ export const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     try {
       const res = await fetch('/api/gemini-live', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(sessionId && { 'x-demo-session-id': sessionId })
+        },
         body: JSON.stringify({
           prompt: text,
           enableTTS: true,

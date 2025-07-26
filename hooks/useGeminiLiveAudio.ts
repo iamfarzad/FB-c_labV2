@@ -169,10 +169,13 @@ export function useGeminiLiveAudio({
         throw new Error('HTTPS required for live audio streaming')
       }
 
-      // Authentication check
+      // Authentication check (optional for demo sessions)
       const auth = await authenticateUser()
-      if (!auth.success) {
-        throw new Error(auth.error || 'Authentication failed')
+      const isAuthenticated = auth.success
+      
+      // For demo sessions, we don't require authentication
+      if (!isAuthenticated && !sessionId) {
+        throw new Error('Authentication required for voice features')
       }
 
       // Rate limiting check
@@ -221,7 +224,7 @@ export function useGeminiLiveAudio({
       // Fallback to regular TTS endpoint
       logActivity('info', 'Falling back to regular TTS endpoint')
     }
-  }, [apiKey, modelName, onStatusChange, authenticateUser, checkRateLimit, logActivity, generateCorrelationId])
+  }, [apiKey, modelName, onStatusChange, authenticateUser, checkRateLimit, logActivity, generateCorrelationId, sessionId])
 
   // Handle incoming messages from Gemini
   const handleMessage = useCallback((event: any) => {
