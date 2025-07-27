@@ -14,11 +14,10 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  // Enable experimental features for better performance
-  experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
-  },
+               // Enable experimental features for better performance
+             experimental: {
+               optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
+             },
   // API configuration for security
   serverExternalPackages: [],
   // Webpack configuration for better module resolution

@@ -51,7 +51,7 @@ export default function HomePage() {
               <Button
                 asChild
                 size="lg"
-                className="transition-all hover:bg-primary/90 text-foreground shadow-lg hover:shadow-xl"
+                className="bg-primary text-primary-foreground transition-all hover:bg-primary/90 shadow-lg hover:shadow-xl"
               >
                 <Link href="/contact" title="Book free AI automation consultation with expert consultant">Book a Free AI Consultation</Link>
               </Button>
@@ -61,8 +61,8 @@ export default function HomePage() {
                 size="lg"
                 className="border-border bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-all"
               >
-                <Link href="/chat" title="Try AI assistant for business automation demo">
-                  Try My AI Assistant <Bot className="ml-2 h-4 w-4" aria-hidden="true" />
+                <Link href="/chat" title="Try F.B/c AI assistant for business automation demo">
+                  Try F.B/c AI <Bot className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Link>
               </Button>
             </div>
@@ -156,7 +156,7 @@ export default function HomePage() {
         subtitle="Let's identify the perfect AI use case for your business and get started with proven solutions."
         primaryCtaText="Book Your Free AI Consultation"
         primaryCtaLink="/contact"
-        secondaryCtaText="Try the AI Demo"
+        secondaryCtaText="Try F.B/c AI"
         secondaryCtaLink="/chat"
       />
     </>
