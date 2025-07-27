@@ -18,6 +18,7 @@ import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
 import { ROICalculatorModal } from "@/components/chat/modals/ROICalculatorModal"
 import { useDemoSession } from "@/components/demo-session-manager"
 import { FixedVerticalProcessChain } from "@/components/chat/activity/FixedVerticalProcessChain"
+import { motion, AnimatePresence } from "framer-motion"
 
 import type { LeadCaptureState } from "./types/lead-capture"
 import { useChatContext } from "./context/ChatProvider"
@@ -57,6 +58,7 @@ export default function ChatPage() {
   const [showScreenShareModal, setShowScreenShareModal] = useState(false)
   const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
   const [showROICalculatorModal, setShowROICalculatorModal] = useState(false)
+  const [isPageLoaded, setIsPageLoaded] = useState(false)
 
   const [leadCaptureState, setLeadCaptureState] = useState<LeadCaptureState>({
     stage: "initial",
@@ -77,6 +79,10 @@ export default function ChatPage() {
     }
     setCurrentSessionId(sessionId)
     setIsLoadingLeadData(false)
+    
+    // Set page loaded state after a short delay
+    const timer = setTimeout(() => setIsPageLoaded(true), 100)
+    return () => clearTimeout(timer)
   }, [sessionId, createSession])
 
   // Reset conversation when session changes
@@ -130,10 +136,6 @@ export default function ChatPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const lastSubmitTimeRef = useRef<number>(0)
   const SUBMIT_COOLDOWN = 2000 // 2 seconds between submissions
-
-  // Scroll logic is now handled in ChatMain component
-  // const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  // useEffect(scrollToBottom, [messages])
 
   // Clear all session data when component unmounts or session changes
   useEffect(() => {
@@ -664,16 +666,24 @@ export default function ChatPage() {
             leadName={leadCaptureState.leadData.name}
           />
           <div className="flex-1 relative min-h-0 overflow-hidden">
-            {showLeadCapture && (
-              <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <LeadCaptureFlow
-                  isVisible={showLeadCapture}
-                  onComplete={handleLeadCaptureComplete}
-                  engagementType={leadCaptureState.leadData.engagementType}
-                  initialQuery={leadCaptureState.leadData.initialQuery}
-                />
-              </div>
-            )}
+            <AnimatePresence>
+              {showLeadCapture && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                >
+                  <LeadCaptureFlow
+                    isVisible={showLeadCapture}
+                    onComplete={handleLeadCaptureComplete}
+                    engagementType={leadCaptureState.leadData.engagementType}
+                    initialQuery={leadCaptureState.leadData.initialQuery}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
             
             <ChatArea 
               messages={messages as Message[]} 
@@ -707,73 +717,75 @@ export default function ChatPage() {
           />
         </div>
       </div>
+      
+      {/* Modals */}
       <KeyboardShortcutsModal isOpen={showKeyboardShortcuts} onClose={() => setShowKeyboardShortcuts(false)} />
 
-      {showScreenShareModal && (
-        <ScreenShareModal
-          isOpen={showScreenShareModal}
-          onClose={() => setShowScreenShareModal(false)}
-          onAIAnalysis={handleScreenShareAnalysis}
-          onStream={() =>
-            addActivity({ type: "screen_share", title: "Screen Share Started", description: "Screen sharing session started", status: "in_progress" })
-          }
-        />
-      )}
-      {showVoiceModal && (
-        <VoiceInputModal
-          isOpen={showVoiceModal}
-          onClose={() => setShowVoiceModal(false)}
-          onTransferToChat={handleVoiceTranscript}
-          onVoiceResponse={(responseData) => {
-            setVoiceOutputData(responseData)
-            setShowVoiceOutputModal(true)
-          }}
-          leadContext={{
-            name: leadCaptureState.leadData.name,
-            company: leadCaptureState.leadData.company
-          }}
-        />
-      )}
-      {showWebcamModal && (
-        <WebcamModal
-          isOpen={showWebcamModal}
-          onClose={() => setShowWebcamModal(false)}
-          onCapture={handleWebcamCapture}
-          onAIAnalysis={(analysis) =>
-            append({
-              role: "assistant",
-              content: `**Webcam Analysis:**\n${analysis}`,
-            })
-          }
-        />
-      )}
-      {showVideo2AppModal && (
-        <Video2AppModal
-          isOpen={showVideo2AppModal}
-          onClose={() => setShowVideo2AppModal(false)}
-          onAnalysisComplete={handleVideoAppResult}
-        />
-      )}
-      {showROICalculatorModal && (
-        <ROICalculatorModal
-          isOpen={showROICalculatorModal}
-          onClose={() => setShowROICalculatorModal(false)}
-        />
-      )}
-            {showVoiceOutputModal && voiceOutputData && (
-        <VoiceOutputModal
-          isOpen={showVoiceOutputModal}
-          onClose={() => {
-            setShowVoiceOutputModal(false)
-            setVoiceOutputData(null)
-          }}
-          textContent={voiceOutputData.textContent}
-          voiceStyle={voiceOutputData.voiceStyle}
-          autoPlay={true}
-        />
-      )}
-
-
-      </ChatLayout>
-    )
-  }
+      <AnimatePresence>
+        {showScreenShareModal && (
+          <ScreenShareModal
+            isOpen={showScreenShareModal}
+            onClose={() => setShowScreenShareModal(false)}
+            onAIAnalysis={handleScreenShareAnalysis}
+            onStream={() =>
+              addActivity({ type: "screen_share", title: "Screen Share Started", description: "Screen sharing session started", status: "in_progress" })
+            }
+          />
+        )}
+        {showVoiceModal && (
+          <VoiceInputModal
+            isOpen={showVoiceModal}
+            onClose={() => setShowVoiceModal(false)}
+            onTransferToChat={handleVoiceTranscript}
+            onVoiceResponse={(responseData) => {
+              setVoiceOutputData(responseData)
+              setShowVoiceOutputModal(true)
+            }}
+            leadContext={{
+              name: leadCaptureState.leadData.name,
+              company: leadCaptureState.leadData.company
+            }}
+          />
+        )}
+        {showWebcamModal && (
+          <WebcamModal
+            isOpen={showWebcamModal}
+            onClose={() => setShowWebcamModal(false)}
+            onCapture={handleWebcamCapture}
+            onAIAnalysis={(analysis) =>
+              append({
+                role: "assistant",
+                content: `**Webcam Analysis:**\n${analysis}`,
+              })
+            }
+          />
+        )}
+        {showVideo2AppModal && (
+          <Video2AppModal
+            isOpen={showVideo2AppModal}
+            onClose={() => setShowVideo2AppModal(false)}
+            onAnalysisComplete={handleVideoAppResult}
+          />
+        )}
+        {showROICalculatorModal && (
+          <ROICalculatorModal
+            isOpen={showROICalculatorModal}
+            onClose={() => setShowROICalculatorModal(false)}
+          />
+        )}
+        {showVoiceOutputModal && voiceOutputData && (
+          <VoiceOutputModal
+            isOpen={showVoiceOutputModal}
+            onClose={() => {
+              setShowVoiceOutputModal(false)
+              setVoiceOutputData(null)
+            }}
+            textContent={voiceOutputData.textContent}
+            voiceStyle={voiceOutputData.voiceStyle}
+            autoPlay={true}
+          />
+        )}
+      </AnimatePresence>
+    </ChatLayout>
+  )
+}
