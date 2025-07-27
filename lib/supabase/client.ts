@@ -65,20 +65,34 @@ export const supabaseService = hasRequiredVars && supabaseServiceKey
     })
   : supabase // Fallback to regular client if service key is missing
 
+// Safe authentication utility for server-side API routes
+export async function getSafeUser() {
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser()
+    return { user, error: null }
+  } catch (error) {
+    // Handle AuthSessionMissingError gracefully - this is expected in server-side API routes
+    if (error && typeof error === 'object' && 'name' in error && (error as any).name === 'AuthSessionMissingError') {
+      // This is expected behavior in server-side API routes
+      return { user: null, error: null }
+    }
+    return { user: null, error }
+  }
+}
+
 // Type-safe Lead Creation Function
 export async function createLeadSummary(
   leadData: Database['public']['Tables']['lead_summaries']['Insert']
 ) {
-  // Get current authenticated user
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  // Get current authenticated user safely
+  const { user, error: userError } = await getSafeUser()
   
   if (userError) {
     console.error('Auth error:', userError)
-    // Don't throw error, just log it and continue
   }
 
   if (!user) {
-    console.warn('No authenticated user found, using service role for lead creation')
+    console.log('No authenticated user found, using service role for lead creation')
   }
 
   // Automatically set user_id if not provided

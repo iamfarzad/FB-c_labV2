@@ -52,6 +52,7 @@
     "@supabase/supabase-js": "latest",
     "@tailwindcss/typography": "latest",
     "@types/pdfkit": "^0.17.0",
+    "@vercel/speed-insights": "^1.2.0",
     "ai": "latest",
     "autoprefixer": "^10.4.20",
     "bufferutil": "^4.0.9",
