@@ -16,238 +16,275 @@ interface ChatFooterProps {
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   isLoading: boolean
-  onFileUpload: (file: File) => void
-  onImageUpload: (imageData: string, fileName: string) => void
-  onVoiceTranscript: (transcript: string) => void
-  inputRef: React.RefObject<HTMLTextAreaElement | null>
-  showVoiceModal: boolean
-  setShowVoiceModal: (show: boolean) => void
-  showWebcamModal: boolean
-  setShowWebcamModal: (show: boolean) => void
-  showScreenShareModal: boolean
-  setShowScreenShareModal: (show: boolean) => void
-  setShowVideo2AppModal: (show: boolean) => void
-  setShowROICalculatorModal: (show: boolean) => void
+  onFileUpload?: (file: File) => void
+  onImageUpload?: (imageData: string, fileName: string) => void
+  onVoiceTranscript?: (transcript: string) => void
+  inputRef?: React.RefObject<HTMLTextAreaElement>
+  showVoiceModal?: boolean
+  setShowVoiceModal?: (show: boolean) => void
+  showWebcamModal?: boolean
+  setShowWebcamModal?: (show: boolean) => void
+  showScreenShareModal?: boolean
+  setShowScreenShareModal?: (show: boolean) => void
+  setShowVideo2AppModal?: (show: boolean) => void
+  setShowROICalculatorModal?: (show: boolean) => void
 }
 
 export function ChatFooter({
   input,
+  setInput,
   handleInputChange,
   handleSubmit,
   isLoading,
   onFileUpload,
   onImageUpload,
+  onVoiceTranscript,
   inputRef,
+  showVoiceModal,
   setShowVoiceModal,
+  showWebcamModal,
   setShowWebcamModal,
+  showScreenShareModal,
   setShowScreenShareModal,
   setShowVideo2AppModal,
-  setShowROICalculatorModal,
+  setShowROICalculatorModal
 }: ChatFooterProps) {
-  const [isMobile, setIsMobile] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [isUploading, setIsUploading] = useState(false)
-  const [showAttachMenu, setShowAttachMenu] = useState(false)
-  const attachRef = useRef<HTMLDivElement>(null)
-  
-  // Auto-resize textarea
-  const { textareaRef, adjustHeight } = useAutoResizeTextarea({
-    minHeight: 46,
-    maxHeight: 200
+  const [isComposing, setIsComposing] = useState(false)
+  const [showToolMenu, setShowToolMenu] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const { textareaRef: finalInputRef, adjustHeight } = useAutoResizeTextarea({
+    minHeight: 44,
+    maxHeight: 128
   })
-  
-  // Handle input changes with auto-resize
-  const handleLocalInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    handleInputChange(e)
-    adjustHeight()
-  }, [handleInputChange, adjustHeight])
 
-  useEffect(() => {
-    const checkDevice = () => setIsMobile(window.innerWidth < 768)
-    checkDevice()
-    window.addEventListener("resize", checkDevice)
-    return () => window.removeEventListener("resize", checkDevice)
-  }, [])
-
-  // Close menus on outside click
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (attachRef.current && !attachRef.current.contains(e.target as Node)) {
-        setShowAttachMenu(false)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
+      e.preventDefault()
+      if (input.trim() && !isLoading) {
+        handleSubmit(e as any)
       }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setIsUploading(true)
-      setUploadProgress(0)
-      
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval)
-            setIsUploading(false)
-            onFileUpload(file)
-            return 100
-          }
-          return prev + 10
-        })
-      }, 100)
     }
   }
 
-  const actions = [
-    { id: "voice", icon: Mic, action: () => setShowVoiceModal(true), title: "Voice Input" },
-    { id: "camera", icon: Camera, action: () => setShowWebcamModal(true), title: "Webcam Capture" },
-    { id: "upload", icon: Paperclip, action: () => fileInputRef.current?.click(), title: "Upload File" },
-    { id: "video2app", icon: Play, action: () => setShowVideo2AppModal(true), title: "Video2App Generator" },
-    { id: "roi", icon: Calculator, action: () => setShowROICalculatorModal(true), title: "ROI Calculator" },
-    { id: "screen-share", icon: Monitor, action: () => setShowScreenShareModal(true), title: "Screen Share" },
+  // Auto-resize when input changes
+  useEffect(() => {
+    adjustHeight()
+  }, [input, adjustHeight])
+
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file && onFileUpload) {
+      onFileUpload(file)
+    }
+    // Reset input
+    if (event.target) {
+      event.target.value = ''
+    }
+  }, [onFileUpload])
+
+  const handleImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file && onImageUpload) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        onImageUpload(result, file.name)
+      }
+      reader.readAsDataURL(file)
+    }
+    // Reset input
+    if (event.target) {
+      event.target.value = ''
+    }
+  }, [onImageUpload])
+
+  const handleVoiceInput = useCallback(() => {
+    if (setShowVoiceModal) {
+      setShowVoiceModal(true)
+    } else if (onVoiceTranscript) {
+      // Fallback to direct voice input
+      toast({
+        title: "Voice Input",
+        description: "Voice input is not available in this mode.",
+        variant: "destructive"
+      })
+    }
+  }, [setShowVoiceModal, onVoiceTranscript, toast])
+
+  const handleWebcamCapture = useCallback(() => {
+    if (setShowWebcamModal) {
+      setShowWebcamModal(true)
+    }
+  }, [setShowWebcamModal])
+
+  const handleScreenShare = useCallback(() => {
+    if (setShowScreenShareModal) {
+      setShowScreenShareModal(true)
+    }
+  }, [setShowScreenShareModal])
+
+  const handleVideo2App = useCallback(() => {
+    if (setShowVideo2AppModal) {
+      setShowVideo2AppModal(true)
+    }
+  }, [setShowVideo2AppModal])
+
+  const handleROICalculator = useCallback(() => {
+    if (setShowROICalculatorModal) {
+      setShowROICalculatorModal(true)
+    }
+  }, [setShowROICalculatorModal])
+
+  const toolButtons = [
+    {
+      icon: Mic,
+      label: "Voice Input",
+      onClick: handleVoiceInput,
+      disabled: !setShowVoiceModal && !onVoiceTranscript
+    },
+    {
+      icon: Camera,
+      label: "Webcam",
+      onClick: handleWebcamCapture,
+      disabled: !setShowWebcamModal
+    },
+    {
+      icon: Monitor,
+      label: "Screen Share",
+      onClick: handleScreenShare,
+      disabled: !setShowScreenShareModal
+    },
+    {
+      icon: Play,
+      label: "Video to App",
+      onClick: handleVideo2App,
+      disabled: !setShowVideo2AppModal
+    },
+    {
+      icon: Calculator,
+      label: "ROI Calculator",
+      onClick: handleROICalculator,
+      disabled: !setShowROICalculatorModal
+    }
   ]
 
   return (
-    <motion.div
-      initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 100, damping: 20 }}
-      className="w-full border-t border-border/20 bg-background/60 backdrop-blur-xl glass-header shadow-lg shadow-black/5 flex-shrink-0" 
-      data-testid="chat-footer"
-      style={{
-        // Ensure footer stays at bottom
-        position: 'relative',
-        zIndex: 10,
-      }}
-    >
+    <div className="border-t border-border/50 bg-background/95 backdrop-blur-sm">
       <div className="max-w-4xl mx-auto p-4">
         <form onSubmit={handleSubmit} className="flex items-end gap-3">
-          {/* Attachment Menu */}
-          <div className="relative" ref={attachRef}>
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400 }}
-              onClick={() => setShowAttachMenu(!showAttachMenu)}
-              className="p-2 rounded-full hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md focus:ring-2 focus:ring-accent/20 focus:ring-offset-2"
-              aria-label="Attachment menu"
-              data-testid="attachment-button"
-            >
-              <Paperclip size={20} />
-            </motion.button>
-            
-            <AnimatePresence>
-              {showAttachMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                  className="absolute bottom-full left-0 mb-2 w-48 bg-card/90 backdrop-blur-xl border border-border/30 rounded-xl shadow-xl overflow-hidden"
-                >
-                  {actions.map((action) => (
-                    <motion.button
-                      key={action.id}
+          {/* Tool Menu Button */}
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="shrink-0 w-10 h-10"
+            onClick={() => setShowToolMenu(!showToolMenu)}
+            disabled={isLoading}
+          >
+            <Paperclip className="w-4 h-4" />
+          </Button>
+
+          {/* Tool Menu Dropdown */}
+          <AnimatePresence>
+            {showToolMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="absolute bottom-full left-4 mb-2 bg-card border border-border rounded-lg shadow-lg p-2 z-50"
+              >
+                <div className="grid grid-cols-2 gap-2">
+                  {toolButtons.map((tool, index) => (
+                    <Button
+                      key={index}
                       type="button"
-                      whileHover={{ backgroundColor: "rgba(var(--accent), 0.1)" }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full text-left px-4 py-3 hover:bg-accent/10 flex items-center gap-3 transition-colors focus:ring-2 focus:ring-accent/20 focus:ring-offset-1"
-                      onClick={() => {
-                        setShowAttachMenu(false)
-                        action.action()
-                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-2 flex flex-col items-center gap-1 text-xs"
+                      onClick={tool.onClick}
+                      disabled={tool.disabled || isLoading}
                     >
-                      <action.icon size={16} className="text-accent" />
-                      {action.title}
-                    </motion.button>
+                      <tool.icon className="w-4 h-4" />
+                      <span>{tool.label}</span>
+                    </Button>
                   ))}
-                </motion.div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* File Upload Inputs */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.txt,.doc,.docx"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+
+          {/* Main Input Area */}
+          <div className="flex-1 relative">
+            <Textarea
+              ref={finalInputRef}
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={() => setIsComposing(false)}
+              placeholder="Ask anything about AI automation, business analysis, or upload a document..."
+              className={cn(
+                "input-minimal resize-none min-h-[44px] max-h-32",
+                "focus:ring-2 focus:ring-accent/20 focus:ring-offset-2",
+                "placeholder:text-muted-foreground/70",
+                "text-sm leading-relaxed"
               )}
-            </AnimatePresence>
+              disabled={isLoading}
+            />
           </div>
 
-          {/* Input field with improved styling */}
-          <div className="flex-1 mx-4 relative">
-            <div className="input-minimal flex-1 resize-none h-12 bg-card border border-border/50 rounded-2xl focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20 focus-within:ring-offset-2 transition-all duration-200">
-              <Textarea
-                data-testid="message-input"
-                ref={(el) => {
-                  if (inputRef && el) {
-                    inputRef.current = el
-                  }
-                  if (textareaRef && el) {
-                    textareaRef.current = el
-                  }
-                }}
-                value={input}
-                onChange={handleLocalInputChange}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault()
-                    e.currentTarget.closest("form")?.requestSubmit()
-                  }
-                }}
-                onFocus={() => adjustHeight()}
-                placeholder="Ask anything... (Press Enter to send)"
-                className="resize-none bg-transparent outline-none placeholder-muted-foreground/70 text-foreground w-full min-h-[46px] max-h-[200px] overflow-hidden px-4 py-3 rounded-2xl border-0 focus:border-0 focus:ring-0 focus:outline-none"
-                style={{ lineHeight: '24px' }}
-              />
-            </div>
-            
-            {/* Upload progress indicator */}
-            {isUploading && (
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs px-3 py-1 rounded-full shadow-md">
-                Uploading: {uploadProgress}%
-              </div>
-            )}
-          </div>
-
-          {/* Action buttons with improved styling */}
-          <div className="flex items-center gap-2">
-            {input.trim() ? (
-              <motion.button
-                type="submit"
-                disabled={isLoading}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400 }}
-                className="btn-primary p-3 rounded-full shadow-sm hover:shadow-md focus:ring-2 focus:ring-accent/20 focus:ring-offset-2 transition-all duration-200"
-                aria-label="Send message"
-              >
-                <Send size={20} />
-              </motion.button>
-            ) : (
-              <motion.button
-                type="button"
-                onClick={() => setShowVoiceModal(true)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400 }}
-                className="btn-secondary p-3 rounded-full shadow-sm hover:shadow-md focus:ring-2 focus:ring-accent/20 focus:ring-offset-2 transition-all duration-200"
-                aria-label="Voice input"
-                data-testid="voice-input-button"
-              >
-                <Mic size={20} />
-              </motion.button>
-            )}
-          </div>
+          {/* Send Button */}
+          <Button
+            type="submit"
+            size="icon"
+            className="shrink-0 w-10 h-10 btn-primary"
+            disabled={!input.trim() || isLoading}
+          >
+            <Send className="w-4 h-4" />
+          </Button>
         </form>
 
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          onChange={handleFileChange}
-          className="hidden"
-          accept="image/*,.pdf,.doc,.docx,.txt"
-        />
+        {/* Character Count and Status */}
+        <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-4">
+            <span className={cn(
+              "transition-colors",
+              input.length > 4000 ? "text-destructive" : ""
+            )}>
+              {input.length}/4000
+            </span>
+            {isLoading && (
+              <span className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                AI is responding...
+              </span>
+            )}
+          </div>
+          <div className="text-xs opacity-60">
+            Press Enter to send, Shift+Enter for new line
+          </div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   )
 }

@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Loader2, User, Bot, ImageIcon, Copy, Check, Brain, AlertTriangle, Info, CheckCircle, Clock, Target, Monitor, FileText, Sparkles, MessageSquare } from "lucide-react"
+import { Loader2, User, Bot, ImageIcon, Copy, Check, Brain, AlertTriangle, Info, CheckCircle, Clock, Target, Monitor, FileText, Sparkles, MessageSquare, Zap, Camera, Mic } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
@@ -99,45 +99,40 @@ export function ChatArea({
   }
 
   const copyToClipboard = async (text: string, messageId: string) => {
-    if (!text) return
-    
     try {
       await navigator.clipboard.writeText(text)
       setCopiedMessageId(messageId)
       setTimeout(() => setCopiedMessageId(null), 2000)
-    } catch (err) {
-      console.error('Failed to copy text: ', err)
+    } catch (error) {
+      console.error('Failed to copy text:', error)
     }
   }
 
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     const scrollToBottom = () => {
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+      if (scrollAreaRef.current) {
+        scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight
       }
     }
-
-    const timeoutId = setTimeout(scrollToBottom, 100)
-    return () => clearTimeout(timeoutId)
-  }, [messages, isLoading, messagesEndRef])
+    
+    // Scroll to bottom when new messages are added
+    if (messages.length > 0) {
+      setTimeout(scrollToBottom, 100)
+    }
+  }, [messages])
 
   const renderToolCard = (toolType: string | null, messageId: string) => {
-    if (!toolType) return null
-    
     const handleCancel = () => {
-      console.log(`Cancelled ${toolType}`)
+      // Handle tool cancellation
     }
 
     const handleSubmit = (result: ROICalculationResult | VoiceTranscriptResult | WebcamCaptureResult | VideoAppResult | ScreenShareResult) => {
-      if (!result) return
-      
       switch (toolType) {
         case 'voice_input':
-          onVoiceTranscript((result as VoiceTranscriptResult).transcript || '')
+          onVoiceTranscript((result as VoiceTranscriptResult).transcript)
           break
         case 'webcam_capture':
-          onWebcamCapture((result as WebcamCaptureResult).imageData || '')
+          onWebcamCapture((result as WebcamCaptureResult).imageData)
           break
         case 'roi_calculator':
           onROICalculation(result as ROICalculationResult)
@@ -146,7 +141,7 @@ export function ChatArea({
           onVideoAppResult(result as VideoAppResult)
           break
         case 'screen_share':
-          onScreenAnalysis((result as ScreenShareResult).analysis || '')
+          onScreenAnalysis((result as ScreenShareResult).analysis)
           break
       }
     }
@@ -156,10 +151,10 @@ export function ChatArea({
         return <VoiceInputCard onCancel={handleCancel} onTranscript={(transcript: string) => onVoiceTranscript(transcript)} />
       case 'webcam_capture':
         return <WebcamCaptureCard onCancel={handleCancel} onCapture={(imageData: string) => onWebcamCapture(imageData)} />
-              case 'roi_calculator':
-          return <ROICalculatorCard onCancel={handleCancel} onComplete={onROICalculation} />
-              case 'video_to_app':
-          return <VideoToAppCard onCancel={handleCancel} onComplete={onVideoAppResult} />
+      case 'roi_calculator':
+        return <ROICalculatorCard onCancel={handleCancel} onComplete={onROICalculation} />
+      case 'video_to_app':
+        return <VideoToAppCard onCancel={handleCancel} onComplete={onVideoAppResult} />
       case 'screen_share':
         return <ScreenShareCard onCancel={handleCancel} onAnalysis={(analysis: string) => onScreenAnalysis(analysis)} />
       default:
@@ -170,42 +165,48 @@ export function ChatArea({
   return (
     <div className="flex-1 overflow-hidden">
       <ScrollArea
-        className="h-full w-full"
+        className="h-full w-full chat-scroll-container"
         ref={scrollAreaRef}
-        style={{ height: '100%' }}
       >
         <div className="max-w-4xl mx-auto space-y-6 p-4 pb-8 chat-message-container" data-testid="messages-container">
           {messages.length === 0 && !isLoading ? (
             <div className="text-center py-16 px-4">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-                <Sparkles className="w-10 h-10 text-primary" />
+              <div className="w-24 h-24 mx-auto mb-8 rounded-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                <Sparkles className="w-12 h-12 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-foreground">Welcome to F.B/c AI</h3>
-              <p className="text-muted-foreground max-w-md mx-auto mb-6 leading-relaxed">
+              <h3 className="text-2xl font-semibold mb-4 text-foreground">Welcome to F.B/c AI</h3>
+              <p className="text-muted-foreground max-w-lg mx-auto mb-8 leading-relaxed text-base">
                 I'm your AI assistant ready to help with business analysis, automation, and consultation. 
                 Start by asking a question or uploading a document.
               </p>
               
               {/* Quick action suggestions */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
                 <Button
                   variant="outline"
-                  className="h-auto p-3 flex flex-col items-center gap-2 hover:bg-accent/10"
+                  className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-accent/10 transition-all duration-200 scale-hover"
                   onClick={() => {
                     // Trigger a sample question
                     const event = new Event('focus')
                     document.dispatchEvent(event)
                   }}
                 >
-                  <MessageSquare className="w-4 h-4" />
-                  <span className="text-sm">Ask about AI automation</span>
+                  <MessageSquare className="w-5 h-5" />
+                  <span className="text-sm font-medium">Ask about AI automation</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-auto p-3 flex flex-col items-center gap-2 hover:bg-accent/10"
+                  className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-accent/10 transition-all duration-200 scale-hover"
                 >
-                  <FileText className="w-4 h-4" />
-                  <span className="text-sm">Upload a document</span>
+                  <FileText className="w-5 h-5" />
+                  <span className="text-sm font-medium">Upload a document</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-accent/10 transition-all duration-200 scale-hover"
+                >
+                  <Zap className="w-5 h-5" />
+                  <span className="text-sm font-medium">Business analysis</span>
                 </Button>
               </div>
             </div>
@@ -250,12 +251,11 @@ export function ChatArea({
 
                       <div
                         className={cn(
-                          "px-4 py-3 rounded-lg relative group/message",
-                          "transition-all duration-200 hover:shadow-md",
+                          "relative group/message transition-all duration-200 hover:shadow-md",
                           "focus-within:ring-2 focus-within:ring-accent/20 focus-within:ring-offset-2",
                           message.role === "user"
-                            ? "chat-bubble-user bg-accent text-accent-foreground"
-                            : "chat-bubble-assistant bg-card border border-border/50"
+                            ? "chat-bubble-user"
+                            : "chat-bubble-assistant"
                         )}
                       >
                         {message.imageUrl && (

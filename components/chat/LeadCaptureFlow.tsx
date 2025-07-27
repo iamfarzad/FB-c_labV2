@@ -6,7 +6,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/components/ui/use-toast"
 import type { LeadCaptureState } from "@/app/(chat)/chat/types/lead-capture"
@@ -125,12 +124,12 @@ export function LeadCaptureFlow({
   if (!isVisible) return null
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Welcome to F.B/c AI</CardTitle>
-        <CardDescription>Please provide your details to start your AI consultation</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="card-minimal w-full max-w-md mx-auto">
+      <div className="pb-3">
+        <h2 className="text-2xl font-semibold text-foreground">Welcome to F.B/c AI</h2>
+        <p className="text-muted-foreground">Please provide your details to start your AI consultation</p>
+      </div>
+      <div className="space-y-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Name *</Label>
@@ -140,6 +139,7 @@ export function LeadCaptureFlow({
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Your full name"
+              className="input-minimal"
               required
             />
           </div>
@@ -152,6 +152,7 @@ export function LeadCaptureFlow({
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="your@email.com"
+              className="input-minimal"
               required
             />
           </div>
@@ -164,6 +165,7 @@ export function LeadCaptureFlow({
               value={formData.company}
               onChange={(e) => setFormData({ ...formData, company: e.target.value })}
               placeholder="Your company name"
+              className="input-minimal"
             />
           </div>
 
@@ -173,16 +175,16 @@ export function LeadCaptureFlow({
               checked={formData.agreedToTerms}
               onCheckedChange={(checked) => setFormData({ ...formData, agreedToTerms: !!checked })}
             />
-            <Label htmlFor="terms" className="text-sm">
+            <Label htmlFor="terms" className="text-sm text-foreground">
               I agree to the terms and conditions and privacy policy *
             </Label>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" className="w-full btn-primary" disabled={isSubmitting}>
             {isSubmitting ? "Starting..." : "Start Consultation"}
           </Button>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
