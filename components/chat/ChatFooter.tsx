@@ -167,14 +167,7 @@ export function ChatFooter({
 
           {/* Input field with modern design */}
           <div className="flex-1 mx-4 relative">
-            <motion.div
-              className={cn(
-                "relative rounded-2xl border border-border/30",
-                "bg-card/50 backdrop-blur-sm",
-                "focus-within:border-accent/50 focus-within:shadow-lg focus-within:shadow-accent/10",
-                "transition-all duration-200"
-              )}
-            >
+            <div className="input-minimal flex-1 resize-none h-12">
               <Textarea
                 data-testid="message-input"
                 ref={(el) => {
@@ -198,44 +191,34 @@ export function ChatFooter({
                 className="resize-none bg-transparent outline-none placeholder-muted-foreground text-foreground w-full min-h-[46px] max-h-[200px] overflow-hidden px-4 py-3 rounded-2xl"
                 style={{ lineHeight: '24px' }}
               />
-            </motion.div>
+            </div>
             
             {/* Upload progress indicator */}
             {isUploading && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute -top-8 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs px-3 py-1 rounded-full shadow-md"
-              >
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs px-3 py-1 rounded-full shadow-md">
                 Uploading: {uploadProgress}%
-              </motion.div>
+              </div>
             )}
           </div>
 
           {/* Action buttons */}
           <div className="flex items-center gap-2">
             {input.trim() ? (
-              <motion.button
+              <button
                 type="submit"
-                whileHover={{ scale: 1.05, y: -1 }}
-                whileTap={{ scale: 0.95 }}
                 disabled={isLoading}
-                transition={{ type: "spring", stiffness: 400 }}
-                className="p-3 rounded-full hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md bg-accent text-accent-foreground"
+                className="btn-primary p-3 rounded-full"
               >
                 <Send size={20} />
-              </motion.button>
+              </button>
             ) : (
-              <motion.button
+              <button
                 type="button"
-                whileHover={{ scale: 1.05, y: -1 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400 }}
                 onClick={() => setShowVoiceModal(true)}
-                className="p-3 rounded-full hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md"
+                className="btn-secondary p-3 rounded-full"
               >
                 <Mic size={20} />
-              </motion.button>
+              </button>
             )}
           </div>
         </form>

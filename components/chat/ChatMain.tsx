@@ -248,11 +248,12 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
                   </div>
                 )}
 
-                <Card
+                <div
                   className={cn(
-                    "neu-card scale-hover transition-all p-4 relative",
-                    message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted/50",
-                    message.role === "assistant" && "shadow-sm hover:shadow-md"
+                    "px-4 py-2 rounded-lg max-w-[75%] break-words relative",
+                    message.role === "user"
+                      ? "chat-bubble-user"
+                      : "chat-bubble-assistant"
                   )}
                 >
                   {message.imageUrl && (
@@ -324,7 +325,7 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
                   >
                     {copiedMessageId === message.id ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                   </Button>
-                </Card>
+                </div>
 
                 {message.createdAt && (
                   <span className="text-xs text-muted-foreground mt-1 px-1 flex items-center gap-1">
@@ -355,12 +356,12 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
                 <Bot className="w-4 h-4" />
               </AvatarFallback>
             </Avatar>
-            <Card className="p-4 bg-muted/50">
+            <div className="chat-bubble-assistant">
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span className="text-sm text-muted-foreground">AI is thinking...</span>
               </div>
-            </Card>
+            </div>
           </div>
         )}
 

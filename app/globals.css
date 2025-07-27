@@ -107,6 +107,38 @@
     @apply px-4 py-2 rounded-md bg-transparent border border-border hover:bg-accent/10 transition-all;
   }
 
+  /* Design System Button Classes */
+  .btn-primary {
+    @apply px-4 py-2 rounded-md bg-accent text-accent-foreground hover:bg-accent/90 shadow-md focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-md focus:outline-none focus:ring-2 focus:ring-secondary/50 transition-all;
+  }
+
+  /* Design System Card Classes */
+  .card-minimal {
+    @apply bg-card border border-border rounded-lg shadow-md p-6;
+  }
+
+  .card-glass {
+    @apply bg-glass-bg border border-glass-border backdrop-blur-sm;
+  }
+
+  /* Design System Chat Bubble Classes */
+  .chat-bubble-user {
+    @apply bg-accent text-accent-foreground rounded-lg p-4 px-4 py-2 rounded-lg max-w-[75%] break-words;
+  }
+
+  .chat-bubble-assistant {
+    @apply bg-popover text-foreground border border-border rounded-lg p-4 px-4 py-2 rounded-lg max-w-[75%] break-words;
+  }
+
+  /* Design System Input Classes */
+  .input-minimal {
+    @apply w-full px-3 py-2 rounded-md border border-muted bg-card focus:border-accent focus:ring-0 transition-all;
+  }
+
   .min-h-screen {
     min-height: 100dvh;
   }
