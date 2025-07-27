@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Radio } from "lucide-react"
 import type { ActivityItem } from "@/app/chat/types/chat"
 import { TimelineActivityLog } from "../activity/TimelineActivityLog"
+import { DemoSessionCard } from "./DemoSessionCard"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 
@@ -157,6 +158,9 @@ export const SidebarContent = ({ activities, onNewChat, onActivityClick, onClear
           </div>
         </ScrollArea>
       </motion.div>
+
+      {/* Demo Session Card - Fixed at bottom */}
+      <DemoSessionCard isTablet={isTablet} />
     </div>
   )
 }

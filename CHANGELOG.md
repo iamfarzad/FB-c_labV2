@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.4.9] - 2025-07-27
+
+### 🎨 **UI DESIGN IMPROVEMENTS - FOOTER & DEMO SESSION**
+
+**Minimized global footer and redesigned demo session card**:
+- ✅ **Compact Footer** - Reduced from large 4-column layout to minimal single-line footer
+- ✅ **Sidebar Integration** - Moved demo session card to sidebar footer for better UX
+- ✅ **Minimal Design** - Streamlined demo session interface with compact progress indicators
+- ✅ **Responsive Layout** - Improved mobile and tablet experience with responsive sizing
+- ✅ **Space Optimization** - Freed up significant vertical space for main content
+
+**Footer Redesign**:
+- **Before**: Large 4-column footer with company info, services, links (8+ lines)
+- **After**: Compact single-line footer with essential links only (1 line)
+- **Space Saved**: ~200px vertical space reduction
+- **Maintained**: All essential links (About, Contact, LinkedIn, Email)
+- **Improved**: Better mobile responsiveness with stacked layout on small screens
+
+**Demo Session Card Redesign**:
+- **Location**: Moved from global layout to sidebar footer
+- **Design**: Minimal card with compact progress bars and badges
+- **Features**: Start demo button, token/request tracking, completion status
+- **Responsive**: Tablet-optimized sizing and spacing
+- **Integration**: Seamlessly integrated into chat sidebar workflow
+
+**Technical Improvements**:
+- ✅ **New Component**: `components/chat/sidebar/DemoSessionCard.tsx` - Minimal demo session interface
+- ✅ **Layout Update**: `components/chat/sidebar/SidebarContent.tsx` - Added demo card to sidebar footer
+- ✅ **Footer Optimization**: `components/footer.tsx` - Compact single-line design
+- ✅ **Global Layout**: `app/layout.tsx` - Removed standalone demo session component
+- ✅ **Design System**: Consistent use of design tokens and responsive patterns
+
+**User Experience Benefits**:
+- **More Content Space**: Significantly more room for chat interface and content
+- **Better Workflow**: Demo session info available where users need it (in sidebar)
+- **Cleaner Interface**: Less visual clutter with minimal footer
+- **Improved Focus**: Demo session status doesn't compete with main content
+- **Mobile Friendly**: Better responsive design across all screen sizes
+
 ## [1.4.8] - 2025-07-27
 
 ### ⚡ **COMPREHENSIVE CACHING OPTIMIZATION**
