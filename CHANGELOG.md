@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.4.7] - 2025-07-27
+
+### 🔧 **AUTHENTICATION ERROR FIXES**
+
+**Fixed production authentication errors and improved error handling**:
+- ✅ **AuthSessionMissingError Resolution** - Fixed authentication errors in production logs
+- ✅ **Safe Authentication Utility** - Added `getSafeUser()` function for graceful auth handling
+- ✅ **Server-Side Auth Handling** - Improved error handling for server-side API routes
+- ✅ **Production Log Cleanup** - Prevented expected auth errors from being logged as errors
+- ✅ **Service Role Fallback** - Proper fallback to service role when no user session exists
+
+**Technical Details**:
+- Added `getSafeUser()` utility function in `lib/supabase/client.ts`
+- Updated `createLeadSummary()` to use safe authentication
+- Improved error handling for `AuthSessionMissingError` (expected in server-side contexts)
+- Maintained backward compatibility with existing authentication flows
+
 ## [1.4.6] - 2025-07-25
 
 ### 🚀 **PRODUCTION DEPLOYMENT PREPARATION & UI SYSTEM FIXES**
