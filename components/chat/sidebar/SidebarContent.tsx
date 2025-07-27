@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Radio } from "lucide-react"
-import type { ActivityItem } from "@/app/chat/types/chat"
+import type { ActivityItem } from "@/app/(chat)/chat/types/chat"
 import { TimelineActivityLog } from "../activity/TimelineActivityLog"
 import { DemoSessionCard } from "./DemoSessionCard"
 import { cn } from "@/lib/utils"
@@ -74,6 +74,28 @@ export const SidebarContent = ({ activities, onNewChat, onActivityClick, onClear
                 Clear
               </Button>
             )}
+            {liveActivities > 0 && (
+              <Button
+                onClick={async () => {
+                  try {
+                    await fetch('/api/cleanup-activities', { method: 'POST' })
+                    // Refresh the page to reload activities
+                    window.location.reload()
+                  } catch (error) {
+                    console.error('Failed to cleanup activities:', error)
+                  }
+                }}
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "text-red-500 hover:text-red-700 hover:bg-red-50",
+                  isTablet ? "h-6 px-2 text-xs" : "h-7 px-2 text-xs"
+                )}
+                title="Clean up stale activities"
+              >
+                Clean
+              </Button>
+            )}
           </div>
         </div>
 
@@ -99,51 +121,37 @@ export const SidebarContent = ({ activities, onNewChat, onActivityClick, onClear
         </motion.div>
       </motion.div>
 
-      {/* Live Activity Status */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
-        className={cn(
-          "px-4 py-3 border-b border-border/20", 
-          "bg-muted/20 backdrop-blur-sm",
-          isTablet && "px-3 py-2"
-        )}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <motion.div
-              animate={{ 
-                rotate: [0, 10, -10, 0],
-                scale: [1, 1.1, 1]
-              }}
-              transition={{ 
-                duration: 2, 
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            >
-              <Radio className={cn("text-accent", isTablet ? "w-3 h-3" : "w-4 h-4")} />
-            </motion.div>
-            <span className={cn("font-medium", isTablet ? "text-xs" : "text-sm")}>Live AI Activity</span>
+      {/* Minimal Live Activity Status */}
+      {liveActivities > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.2 }}
+          className={cn(
+            "px-4 py-2 border-b border-border/20", 
+            "bg-blue-50/30 dark:bg-blue-950/20",
+            isTablet && "px-3 py-1.5"
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              >
+                <Radio className={cn("text-blue-500", isTablet ? "w-3 h-3" : "w-4 h-4")} />
+              </motion.div>
+              <span className={cn("text-blue-700 dark:text-blue-300 font-medium", isTablet ? "text-xs" : "text-sm")}>
+                {liveActivities} AI task{liveActivities !== 1 ? 's' : ''} active
+              </span>
+            </div>
+            <Badge variant="secondary" className={cn("bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", isTablet ? "text-xs px-1.5" : "text-xs")}>
+              Live
+            </Badge>
           </div>
-          <div className="flex items-center gap-2">
-            <motion.div 
-              animate={{ 
-                opacity: [0.6, 1, 0.6],
-                scale: [1, 1.2, 1]
-              }}
-              transition={{ 
-                duration: 1.5, 
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="w-2 h-2 bg-green-500 rounded-full shadow-sm shadow-green-500/50" 
-            />
-            <span className={cn("text-muted-foreground", isTablet ? "text-xs" : "text-sm")}>Real-time</span>
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* Activity Timeline */}
       <motion.div 

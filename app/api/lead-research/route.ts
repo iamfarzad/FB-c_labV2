@@ -13,6 +13,8 @@ interface LeadResearchRequest {
 }
 
 export async function POST(req: NextRequest) {
+  let aiResearchActivityId: string | undefined
+  
   try {
     const { name, email, company, linkedinUrl, researchActivityId }: LeadResearchRequest = await req.json()
 
@@ -21,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Log research start (only if not already logged)
-    let aiResearchActivityId = researchActivityId
+    aiResearchActivityId = researchActivityId
     if (!aiResearchActivityId) {
       aiResearchActivityId = await logServerActivity({
         type: "search",
@@ -100,20 +102,24 @@ Focus on finding actionable insights for AI consulting opportunities.
             }
           }
 
-          // Log research completion
-          await logServerActivity({
-            type: "search",
-            title: "Lead Research Completed",
-            description: `Completed research for ${name}`,
-            status: "completed",
-            metadata: { 
-              name, 
-              email, 
-              company,
-              researchLength: fullResearch.length,
-              originalActivityId: aiResearchActivityId
-            }
-          })
+          // Log research completion - UPDATE the original activity instead of creating a new one
+          if (aiResearchActivityId) {
+            const supabase = getSupabase()
+            await supabase
+              .from('activities')
+              .update({
+                status: 'completed',
+                title: 'Lead Research Completed',
+                description: `Completed research for ${name}`,
+                metadata: { 
+                  name, 
+                  email, 
+                  company,
+                  researchLength: fullResearch.length
+                }
+              })
+              .eq('id', aiResearchActivityId)
+          }
 
           // Save to Supabase when complete
           const supabase = getSupabase()
@@ -140,20 +146,24 @@ Focus on finding actionable insights for AI consulting opportunities.
         } catch (error) {
           console.error("Research streaming error:", error)
           
-          // Log research error
-          await logServerActivity({
-            type: "error",
-            title: "Lead Research Failed",
-            description: `Research failed for ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            status: "failed",
-            metadata: { 
-              name, 
-              email, 
-              company, 
-              error: error instanceof Error ? error.message : 'Unknown error',
-              originalActivityId: aiResearchActivityId
-            }
-          })
+          // Log research error - UPDATE the original activity instead of creating a new one
+          if (aiResearchActivityId) {
+            const supabase = getSupabase()
+            await supabase
+              .from('activities')
+              .update({
+                status: 'failed',
+                title: 'Lead Research Failed',
+                description: `Research failed for ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                metadata: { 
+                  name, 
+                  email, 
+                  company, 
+                  error: error instanceof Error ? error.message : 'Unknown error'
+                }
+              })
+              .eq('id', aiResearchActivityId)
+          }
           
           controller.error(error)
         }
@@ -170,14 +180,19 @@ Focus on finding actionable insights for AI consulting opportunities.
   } catch (error: any) {
     console.error("Lead research error:", error)
     
-    // Log research error
-    await logServerActivity({
-      type: "error",
-      title: "Lead Research Failed",
-      description: `Research failed: ${error.message}`,
-      status: "failed",
-      metadata: { error: error.message }
-    })
+    // Log research error - UPDATE the original activity if it exists
+    if (aiResearchActivityId) {
+      const supabase = getSupabase()
+      await supabase
+        .from('activities')
+        .update({
+          status: 'failed',
+          title: 'Lead Research Failed',
+          description: `Research failed: ${error.message}`,
+          metadata: { error: error.message }
+        })
+        .eq('id', aiResearchActivityId)
+    }
     
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

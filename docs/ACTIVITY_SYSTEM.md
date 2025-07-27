@@ -89,6 +89,13 @@ await logServerActivity({
 
 ### 3. Activity Context Provider
 
+**Purpose**: Provides the unified activity system and control methods to React components via context
+
+**Key Features**:
+- Supplies `activityLog` and `addActivity` through React context
+- Manages scoped client-side activity state within the chat UI
+- Bridges client and server logging for consistency
+
 **Location**: `app/chat/context/ChatProvider.tsx`
 
 **Purpose**: Provides activity system to React components

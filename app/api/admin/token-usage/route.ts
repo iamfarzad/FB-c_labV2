@@ -1,6 +1,7 @@
 import { supabaseService } from "@/lib/supabase/client"
 import type { NextRequest } from "next/server"
 import { adminAuthMiddleware } from "@/lib/auth"
+import { adminRateLimit } from "@/lib/rate-limiting"
 import { NextResponse } from "next/server"
 import { getUsageStats } from "@/lib/token-usage-logger"
 
@@ -21,6 +22,12 @@ interface TokenUsageLog {
 }
 
 export async function GET(req: NextRequest) {
+  // Check rate limiting
+  const rateLimitResult = adminRateLimit(req);
+  if (rateLimitResult) {
+    return rateLimitResult;
+  }
+
   // Check admin authentication
   const authResult = await adminAuthMiddleware(req);
   if (authResult) {

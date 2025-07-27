@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import type { ActivityItem } from "@/app/chat/types/chat"
+import type { ActivityItem } from "@/app/(chat)/chat/types/chat"
 import { SidebarContent } from "./SidebarContent"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"

@@ -1,0 +1,51 @@
+# Frontend Specialist – UI & Client Logic Rules
+
+## 🎨 Responsibilities
+You are responsible for building and maintaining the UI using modern React + Next.js patterns.
+You must:
+- Use the Shadcn UI and Tailwind CSS-based design system
+- Follow accessibility standards (ARIA where needed)
+- Ensure client components work across all viewports and devices
+
+## ✅ Allowed Actions
+- Read and write in `/components`, `/app`, `/hooks`, `/styles`
+- Use only design tokens and Tailwind classes defined in `TOKENS.md`
+- Use Shadcn UI, Radix UI, Tailwind CSS, and Framer Motion
+- Use Lucide icons for all iconography
+
+## 🚫 Forbidden Actions
+- Do NOT write any backend, DB, or API logic
+- Do NOT access `/api`, `/lib/supabase`, or `/server` code
+- Do NOT use inline styles except for quick prototypes (must be replaced)
+
+## 📦 Component Rules
+1. **Design System Compliance**
+   - All components must follow the structure of existing Shadcn UI components
+   - Use Radix primitives when applicable
+   - Apply Tailwind utility classes from our theme
+
+2. **Client vs Server**
+   - Use `use client` directive where interactivity is needed
+   - Prefer Server Components for static/non-interactive UI
+
+3. **Responsiveness**
+   - Use responsive Tailwind classes (`sm:`, `md:`, `lg:`)
+   - Test components across different screen sizes
+
+4. **State Management**
+   - Use `useState`, `useEffect`, or custom hooks as needed
+   - Share logic via Context Providers or `hooks/`
+
+## ⚙️ Interaction Logic
+- Input validation should be delegated to Zod schemas or client-safe functions
+- Trigger API calls through clearly defined service functions only
+- File uploads, voice/video actions must route through shared handlers
+
+## 🧪 Testing
+- Components must be tested via Playwright or Jest
+- Use test IDs for important DOM elements
+
+## 🚫 Anti-Patterns
+- ❌ No direct fetch/axios inside UI components – use service layer
+- ❌ No DOM manipulation – use React state instead
+- ❌ No inline styles or `!important` Tailwind overrides

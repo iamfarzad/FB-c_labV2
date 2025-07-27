@@ -1,0 +1,142 @@
+# Rules Index
+
+## 📚 **Rules Overview**
+
+This document provides an index and navigation guide for all rules files in the `.cursor/` directory.
+
+## 🏗️ **Core Rules Structure**
+
+### Foundation Rules
+- **[core-foundation.rules](mdc:.cursor/rules/core-foundation.rules)** - Core architectural and development principles
+- **[request-flow.rules](mdc:.cursor/rules/request-flow.rules)** - Request processing and workflow management
+- **[refresh-context.rules](mdc:.cursor/rules/refresh-context.rules)** - Context maintenance and refresh strategies
+- **[system-governance.rules](mdc:.cursor/rules/system-governance.rules)** - Overall system governance and coordination
+
+### Specialist Rules (Agent Rules)
+- **[backend-engineer.rules](mdc:.cursor/rules/agent_rules/backend-engineer.rules)** - Backend API and business logic
+- **[frontend-specialist.rules](mdc:.cursor/rules/agent_rules/frontend-specialist.rules)** - UI and client logic
+- **[master-orchestrator.rules](mdc:.cursor/rules/agent_rules/master-orchestrator.rules)** - Project coordination and enforcement
+- **[performance-optimizer.rules](mdc:.cursor/rules/agent_rules/performance-optimizer.rules)** - Performance analysis and optimization
+- **[qa-engineer.rules](mdc:.cursor/rules/agent_rules/qa-engineer.rules)** - Testing and quality assurance
+- **[security-auditor.rules](mdc:.cursor/rules/agent_rules/security-auditor.rules)** - Security auditing and compliance
+- **[supabase-specialist.rules](mdc:.cursor/rules/agent_rules/supabase-specialist.rules)** - Database operations and RLS
+
+## 📋 **Reference Documents**
+
+### Architecture & Design
+- **[ai-api-patterns.mdc](mdc:.cursor/ai-api-patterns.mdc)** - AI API implementation patterns and standards
+- **[ai-governance-safety.mdc](mdc:.cursor/ai-governance-safety.mdc)** - AI governance and safety guidelines
+- **[backend-architecture.mdc](mdc:.cursor/backend-architecture.mdc)** - Backend architecture overview
+- **[backend-architecture-compliance.mdc](mdc:.cursor/backend-architecture-compliance.mdc)** - Backend compliance requirements
+- **[design-system.mdc](mdc:.cursor/design-system.mdc)** - Design system guidelines
+
+### Development & Testing
+- **[gemini-api-mocking.mdc](mdc:.cursor/gemini-api-mocking.mdc)** - Gemini API mocking strategies
+- **[missing-files-analysis.mdc](mdc:.cursor/missing-files-analysis.mdc)** - Missing files analysis workflow
+- **[pre-deletion-analysis.mdc](mdc:.cursor/pre-deletion-analysis.mdc)** - Pre-deletion analysis requirements
+- **[project-structure-priority.mdc](mdc:.cursor/project-structure-priority.mdc)** - Project structure and priority guidelines
+- **[stable-release-process.mdc](mdc:.cursor/stable-release-process.mdc)** - Stable release process and testing requirements
+
+## 🎯 **Rules Usage Guide**
+
+### For New Requests
+1. **Start with** [core-foundation.rules](mdc:.cursor/rules/core-foundation.rules) for fundamental principles
+2. **Follow** [request-flow.rules](mdc:.cursor/rules/request-flow.rules) for proper workflow
+3. **Maintain context** using [refresh-context.rules](mdc:.cursor/rules/refresh-context.rules)
+4. **Ensure governance** compliance via [system-governance.rules](mdc:.cursor/rules/system-governance.rules)
+
+### For Specific Domains
+- **Backend work**: Use [backend-engineer.rules](mdc:.cursor/rules/agent_rules/backend-engineer.rules)
+- **Frontend work**: Use [frontend-specialist.rules](mdc:.cursor/rules/agent_rules/frontend-specialist.rules)
+- **Database work**: Use [supabase-specialist.rules](mdc:.cursor/rules/agent_rules/supabase-specialist.rules)
+- **Security review**: Use [security-auditor.rules](mdc:.cursor/rules/agent_rules/security-auditor.rules)
+- **Performance work**: Use [performance-optimizer.rules](mdc:.cursor/rules/agent_rules/performance-optimizer.rules)
+- **Testing work**: Use [qa-engineer.rules](mdc:.cursor/rules/agent_rules/qa-engineer.rules)
+
+### For Coordination
+- **Cross-domain work**: Use [master-orchestrator.rules](mdc:.cursor/rules/agent_rules/master-orchestrator.rules)
+- **Architecture decisions**: Reference [backend-architecture.mdc](mdc:.cursor/backend-architecture.mdc)
+- **Design decisions**: Reference [design-system.mdc](mdc:.cursor/design-system.mdc)
+
+## 🔄 **Rules Hierarchy**
+
+```
+Core Foundation Rules
+├── Request Flow Rules
+├── Refresh Context Rules
+└── System Governance Rules
+
+Specialist Rules (Agent Rules)
+├── Backend Engineer
+├── Frontend Specialist
+├── Supabase Specialist
+├── Security Auditor
+├── Performance Optimizer
+├── QA Engineer
+└── Master Orchestrator
+
+Reference Documents
+├── Architecture & Design
+├── Development & Testing
+└── Process & Governance
+```
+
+## 📊 **Rules Compliance**
+
+### Mandatory Rules
+- **Core Foundation**: All changes must comply
+- **Request Flow**: All requests must follow
+- **System Governance**: All decisions must respect
+- **Security**: All code must pass audit
+- **Testing**: All features must have tests
+
+### Recommended Rules
+- **Performance**: Optimize when possible
+- **Documentation**: Update when relevant
+- **Context**: Refresh when needed
+
+## 🚨 **Rules Enforcement**
+
+### Automatic Enforcement
+- **CI/CD pipeline** validates rule compliance
+- **Code review** ensures rule adherence
+- **Automated testing** verifies requirements
+- **Security scanning** checks vulnerabilities
+
+### Manual Enforcement
+- **Code reviewers** validate rule compliance
+- **Architects** approve architectural changes
+- **Security team** audits security compliance
+- **QA team** validates testing requirements
+
+## 📝 **Rules Maintenance**
+
+### Regular Updates
+- **Monthly**: Review and update rules based on project evolution
+- **Quarterly**: Assess rule effectiveness and adjust as needed
+- **Annually**: Major rules restructuring if required
+
+### Change Process
+1. **Propose changes** with justification
+2. **Review impact** across all domains
+3. **Test changes** in development environment
+4. **Document updates** in changelog
+5. **Communicate changes** to all stakeholders
+
+## 🔗 **External References**
+
+### Project Documents
+- [CHANGELOG.md](mdc:CHANGELOG.md) - Project change history
+- [README.md](mdc:README.md) - Project overview
+- [package.json](mdc:package.json) - Dependencies and scripts
+
+### Architecture Documents
+- [backend_architecture.md](mdc:backend_architecture.md) - Detailed architecture
+- [frontend_design.md](mdc:frontend_design.md) - Frontend design system
+- [DESIGN.md](mdc:DESIGN.md) - Design tokens and guidelines
+
+**⚠️ REMINDER: Always consult the appropriate rules before making changes to ensure compliance and consistency.**
+description:
+globs:
+alwaysApply: false
+---

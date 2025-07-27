@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { useChatContext } from "@/app/chat/context/ChatProvider"
+import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
 
 interface ROIParameters {
   companySize: 'small' | 'medium' | 'large' | 'enterprise'

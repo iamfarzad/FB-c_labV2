@@ -1,7 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyToken } from '@/lib/auth'
 
-// Only run in development
-export function middleware(req: NextRequest) {
+export async function middleware(request: NextRequest) {
+  // Handle admin authentication first
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    // Skip middleware for login page
+    if (request.nextUrl.pathname === '/admin/login') {
+      return NextResponse.next()
+    }
+
+    // Check for admin token in cookies or headers
+    const token = request.cookies.get('adminToken')?.value || 
+                  request.headers.get('Authorization')?.replace('Bearer ', '')
+
+    if (!token) {
+      // Redirect to login if no token
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+
+    try {
+      // Verify token (async verification)
+      const isValid = await verifyToken(token)
+      if (!isValid) {
+        return NextResponse.redirect(new URL('/admin/login', request.url))
+      }
+    } catch (error) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+  }
+
+  // Handle Gemini API mocking (original functionality)
+  // Only run in development
   if (process.env.NODE_ENV !== 'development') {
     return NextResponse.next()
   }
@@ -28,23 +57,26 @@ export function middleware(req: NextRequest) {
   ]
 
   const isGeminiRoute = geminiRoutes.some(route => 
-    req.nextUrl.pathname.startsWith(route)
+    request.nextUrl.pathname.startsWith(route)
   )
 
   if (isGeminiRoute) {
     // Route to our mock handler
-    const mockUrl = req.nextUrl.clone()
+    const mockUrl = request.nextUrl.clone()
     // Remove the /api prefix and add /api/mock prefix
-    const pathWithoutApi = req.nextUrl.pathname.replace('/api', '')
+    const pathWithoutApi = request.nextUrl.pathname.replace('/api', '')
     mockUrl.pathname = '/api/mock' + pathWithoutApi
-    console.log(`🟠 Mocking Gemini API: ${req.nextUrl.pathname} → ${mockUrl.pathname}`)
+    console.log(`🟠 Mocking Gemini API: ${request.nextUrl.pathname} → ${mockUrl.pathname}`)
     return NextResponse.rewrite(mockUrl)
   }
 
   return NextResponse.next()
 }
 
-// Apply to all API routes
 export const config = {
-  matcher: '/api/:path*',
+  matcher: [
+    '/admin/:path*',
+    '/api/admin/:path*',
+    '/api/:path*'
+  ]
 } 

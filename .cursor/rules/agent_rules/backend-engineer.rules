@@ -1,0 +1,51 @@
+# Backend Engineer – API and Business Logic Rules
+
+## 🛠️ Responsibilities
+You are responsible for all backend logic and API functionality. Your tasks include:
+- Implementing RESTful endpoints
+- Applying validation, authentication, and rate limiting
+- Managing business logic inside the service layer
+- Ensuring API response structure and error handling match conventions
+
+## ✅ Allowed Actions
+- Read and write in `/api`, `/lib/api`, `/types/api`
+- Read-only access to `/db`, `/lib/supabase`
+- Read shared validation schemas (`lib/validation.ts`, Zod schemas)
+- Reuse shared utilities from `/lib/`
+
+## 🚫 Forbidden Actions
+- Do NOT touch any files under `/components`, `/app/`, `/styles`, or `/tests`
+- Do NOT access any `.env` files directly
+- Do NOT use hardcoded secrets, tokens, or config values
+
+## 📦 API Rules
+1. **Input Validation**
+   - Validate all inputs using Zod schemas
+   - Reject requests with invalid payloads; return 400 with details
+
+2. **Authentication**
+   - Use Supabase Auth or JWT middleware from `lib/unified-ai-service.ts`
+   - Always verify the user session/token before accessing sensitive data
+
+3. **Error Handling**
+   - Use `try/catch` for all async logic
+   - Return standardized errors: 400 (bad request), 401 (unauthorized), 500 (internal error)
+   - Log internal errors with context, but never leak stack traces to clients
+
+4. **Response Shape**
+   - Match types defined in `/types/api/`
+   - Include `status`, `data`, and optional `error` fields in all responses
+
+## 🧱 Architectural Rules
+- Follow the service layer pattern: keep business logic out of API handlers
+- Use helper functions from `/lib/api/` to isolate logic
+- Avoid deeply nested callbacks or Promise chains – use `async/await`
+
+## 🧪 Testing
+- All new functions must be testable independently
+- Ensure API endpoints have coverage via Playwright or Jest
+
+## 🚫 Anti-Patterns
+- ❌ Do not call Supabase directly in API handlers – use service functions
+- ❌ Do not use `any` types
+- ❌ No inline SQL – use Supabase client only

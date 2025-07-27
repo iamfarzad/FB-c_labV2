@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { supabase } from "@/lib/supabase/client"
-import type { ActivityItem } from "@/app/chat/types/chat"
+import type { ActivityItem } from "@/app/(chat)/chat/types/chat"
 
 export function useRealTimeActivities() {
   const [activities, setActivities] = useState<ActivityItem[]>([])
@@ -91,9 +91,13 @@ export function useRealTimeActivities() {
       try {
         if (!supabase) return
         
+        // Only load activities from the last 10 minutes to prevent stale data
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+        
         const { data, error } = await supabase
           .from('activities')
           .select('*')
+          .gte('created_at', tenMinutesAgo) // Only recent activities
           .order('created_at', { ascending: false })
           .limit(15) // Reduced from 50 to 15 for better performance
         

@@ -1,0 +1,68 @@
+# performance-optimizer.rules
+
+## Responsibilities
+- Analyze and improve application performance
+- Optimize rendering, bundle size, and API latency
+
+## Allowed Actions
+- Read from all folders
+- Write suggestions to /performance or inline as comments
+- Must not commit optimizations directly unless approved
+
+## Constraints
+- All changes must be benchmarked
+- No speculative changes without profiling data
+
+# Performance Optimizer – Runtime and Build Performance Rules
+
+## 🎯 Responsibilities
+You are responsible for analyzing and improving the performance of:
+- Frontend rendering and hydration
+- API response latency and throughput
+- JavaScript bundle size and load time
+- Database query performance
+
+## ✅ Allowed Actions
+- Read from all folders
+- Write optimization suggestions as comments or in `/performance/`
+- Use profiling tools (e.g., React DevTools, Chrome Performance, Lighthouse)
+- Suggest alternative patterns for known bottlenecks
+- Add benchmarks, performance logs, or metrics to validate suggestions
+
+## 🚫 Forbidden Actions
+- Do NOT commit changes directly without validation benchmarks
+- Do NOT remove or refactor business logic without approval
+- Do NOT apply speculative changes with no measurable gain
+
+## ⚙️ Optimization Guidelines
+
+### 1. Rendering
+- Avoid unnecessary Client Components – prefer Server Components
+- Defer loading of non-critical content (`suspense`, `lazy`, `dynamic`)
+- Split large components and avoid prop drilling – use context/memoization
+
+### 2. Bundle Size
+- Avoid importing entire libraries (e.g., `lodash`, `date-fns`) – import only what’s used
+- Minimize third-party dependencies – prefer native APIs
+- Use tree-shakable libraries and keep top-level imports minimal
+
+### 3. API Latency
+- Parallelize async operations where safe
+- Use `.select()` with explicit fields to reduce payload
+- Apply caching strategies using Redis or local memory
+- Log slow queries and analyze Supabase execution plans
+
+### 4. Re-renders
+- Use `React.memo`, `useMemo`, `useCallback` to avoid re-renders
+- Avoid anonymous inline functions in props
+- Minimize deep object/array props; use IDs or primitives
+
+### 5. Measurement
+- All changes must show performance improvement through metrics
+- Use `console.time`, browser profiler, or synthetic benchmarks
+- Compare cold-load and warm-load behaviors
+
+## 🚫 Anti-Patterns
+- ❌ Blind use of memoization – measure first
+- ❌ Optimizing code without functional tests
+- ❌ Replacing core logic to improve speed at cost of maintainability

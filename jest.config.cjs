@@ -13,6 +13,25 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
+  modulePathIgnorePatterns: [
+    '<rootDir>/node_modules/',
+    '<rootDir>/dist/',
+    '<rootDir>/coverage/'
+  ],
+  transformIgnorePatterns: [
+    'node_modules/(?!(@pkgr|synckit)/)'
+  ],
+  modulePathIgnorePatterns: [
+    '<rootDir>/node_modules/@pkgr',
+    '<rootDir>/node_modules/synckit'
+  ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    '/coverage/',
+    '/node_modules/@pkgr/',
+    '/node_modules/synckit/'
+  ],
   collectCoverageFrom: [
     'app/api/**/*.ts',
     'lib/**/*.ts',
@@ -38,4 +57,15 @@ module.exports = {
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    '/coverage/'
+  ],
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.json',
+      isolatedModules: true
+    }
+  }
 };

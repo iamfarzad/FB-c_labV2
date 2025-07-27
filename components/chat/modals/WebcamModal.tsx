@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { useChatContext } from "@/app/chat/context/ChatProvider"
+import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
 import { useToast } from "@/components/ui/use-toast"
 
 interface WebcamModalProps {

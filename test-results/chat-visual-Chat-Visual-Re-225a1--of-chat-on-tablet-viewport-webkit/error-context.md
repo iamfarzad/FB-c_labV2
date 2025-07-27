@@ -1,0 +1,41 @@
+# Page snapshot
+
+```yaml
+- heading "Chat History" [level=2]
+- button "New Chat":
+  - img
+  - text: New Chat
+- img
+- paragraph: No activities yet
+- paragraph: AI actions will appear here in real-time
+- img
+- text: Demo Session
+- button [disabled]:
+  - img
+- text: Tokens 50,000
+- progressbar
+- text: Requests 50
+- progressbar
+- button:
+  - img
+- banner:
+  - img
+  - heading "How can I help?" [level=1]
+  - text: Online • Ready to help
+  - button "Export Summary":
+    - img
+    - text: Export Summary
+- img
+- heading "Welcome to F.B/c AI" [level=3]
+- paragraph: Start a conversation by typing a message, uploading an image, or using voice input. I'm here to help with AI automation, analysis, and consultation.
+- button:
+  - img
+- textbox "Ask anything..."
+- button "Voice input":
+  - img
+- region "Notifications (F8)":
+  - list
+- button "Open Next.js Dev Tools":
+  - img
+- alert
+```

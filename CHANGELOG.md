@@ -1,5 +1,362 @@
 # Changelog
 
+## [Unreleased] - 2025-01-27
+
+### Added
+- **Admin Authentication System**: Implemented secure admin-only access
+  - Created admin login page (`/admin/login`) with owner-only credentials
+  - Added admin authentication hook (`useAdminAuth`) for session management
+  - Implemented automatic redirect to login for unauthenticated users
+  - Added token-based authentication with 24-hour expiration
+- **Simplified Admin Dashboard**: Redesigned admin interface for focused lead management
+  - Replaced clunky multi-tab interface with clean, focused design
+  - Added key metrics cards (Total Leads, New Leads, Qualified, Conversion Rate, Avg Score)
+  - Implemented lead summary table with conversation details and consultant briefs
+  - Added status filtering and quick status updates
+  - Removed unnecessary features, focused on lead follow-ups only
+- **Rate Limiting Implementation**: Applied comprehensive rate limiting to all admin endpoints
+  - Added rate limiting to all admin API endpoints (leads, stats, analytics, ai-performance, etc.)
+  - Implemented 100 requests per 15 minutes limit for admin endpoints
+  - Added proper HTTP headers for rate limit information (Retry-After, X-RateLimit-*)
+  - Enhanced security against DoS attacks and abuse
+- **Error Boundary Implementation**: Added comprehensive error handling for admin components
+  - Created AdminErrorBoundary component with fallback UI
+  - Implemented useAdminErrorHandler hook for functional components
+  - Added error logging and monitoring capabilities
+  - Enhanced user experience with retry and navigation options
+- **API Documentation**: Created comprehensive admin API documentation
+  - Added detailed endpoint documentation with request/response examples
+  - Documented authentication, rate limiting, and error handling
+  - Included best practices and security considerations
+  - Created reference guide for all admin endpoints
+- **Jest Configuration Issues Identified**: Found and documented Jest configuration problems
+  - Identified module resolution conflicts with @pkgr/core and synckit packages
+  - Found package.json "type": "module" conflicts with Jest CJS configuration
+  - Created simplified Jest configuration for testing
+  - Documented issues for future resolution
+- **Admin Monitoring and Logging System**: Implemented comprehensive monitoring for admin operations
+  - Created AdminMonitoringService with detailed logging capabilities
+  - Added admin monitoring API endpoint for accessing logs and metrics
+  - Implemented request/response tracking with performance metrics
+  - Added error tracking and user activity monitoring
+  - Created middleware wrapper for automatic admin action logging
+  - Added data sanitization for sensitive information
+  - Implemented time-based filtering and analytics
+- **Admin System Security Enhancements**: Implemented comprehensive security improvements
+  - Added missing individual lead update endpoint (`/api/admin/leads/[id]`)
+  - Implemented rate limiting middleware for admin endpoints
+  - Added input validation schemas for all admin operations
+  - Enhanced error handling and response standardization
+- **Rate Limiting System**: Created production-ready rate limiting middleware
+  - Admin endpoints: 100 requests per 15 minutes
+  - General API: 1000 requests per 15 minutes
+  - Configurable key generation and window sizes
+  - Proper HTTP headers for rate limit information
+- **Input Validation**: Added comprehensive Zod schemas for admin operations
+  - Lead status updates with enum validation
+  - Search parameters with proper defaults
+  - Analytics parameters with metric validation
+  - Email campaign creation with content validation
+- **Development Workflow Rules**: Implemented mandatory process management rules
+  - Added development workflow section to `core-foundation.rules`
+  - Created process conflict detection and resolution rules
+  - Implemented port conflict resolution guidelines
+  - Added development server management best practices
+- **Process Management Script**: Created automated development process checker
+  - Added `scripts/check-dev-processes.js` for conflict detection
+  - Implemented lock file mechanism to prevent multiple dev servers
+  - Added interactive conflict resolution with user choice options
+  - Created automatic process termination for stale instances
+- **Package.json Scripts**: Enhanced development workflow commands
+  - `pnpm dev:check` - Checks for existing development processes
+  - `pnpm dev:safe` - Safe development server startup with conflict resolution
+  - Added process management to existing development scripts
+- **Rule Enforcement System**: Implemented comprehensive rule compliance framework
+  - Created `.cursorrules` file for mandatory AI assistant compliance
+  - Added rule validation scripts (`scripts/validate-rules.js`)
+  - Implemented automated rule checking via `pnpm rules:validate`
+  - Added pre-commit hooks for rule compliance verification
+- **Enhanced .cursor/ Structure**: Reorganized rules directory for better maintainability
+  - Created core foundation rules (`core-foundation.rules`, `request-flow.rules`, `refresh-context.rules`, `system-governance.rules`)
+  - Moved reference documents to root level for better organization
+  - Added comprehensive rules index (`rules-index.mdc`) for navigation
+  - Maintained all specialist rules in `agent_rules/` subdirectory
+
+### Changed
+- **Development Workflow**: Enhanced development server startup process
+  - All `pnpm dev` commands now check for conflicts first
+  - Added automatic process cleanup for stale instances
+  - Implemented user-friendly conflict resolution interface
+  - Added lock file mechanism for process tracking
+- **Package.json Scripts**: Added rule validation commands
+  - `pnpm rules:validate` - Validates rule compliance
+  - `pnpm rules:check` - Comprehensive rule checking
+  - `pnpm pre-commit` - Automated pre-commit validation
+
+### Security
+- **Process Management**: Prevents resource conflicts and port collisions
+- **Rule Compliance**: All code changes now require rule validation
+- **Automated Checks**: Security, performance, and architectural compliance enforced
+- **API Error Handling**: Fixed missing error handling in webhook route (Rule S1.4 compliance)
+
+### Fixed
+- **CRITICAL**: Restored Gemini API mocking system that was accidentally broken
+  - Fixed middleware to handle both admin authentication and API mocking
+  - Preserved original development mocking functionality
+  - Maintained ENABLE_GEMINI_MOCKING environment variable support
+- **CRITICAL**: Fixed middleware async/await syntax error
+  - Made middleware function async to support await verifyToken()
+  - Fixed token verification in admin authentication flow
+- **CRITICAL**: Restored original AdminDashboard component functionality
+  - Reverted admin page to use original AdminDashboard component
+  - Maintained proper authentication checks with original UI
+- **CRITICAL**: Fixed admin authentication flow with proper cookie handling
+  - Implemented HTTP-only cookies for secure token storage
+  - Fixed async token verification in middleware
+  - Added proper error handling for authentication failures
+  - **FINAL FIX**: Removed NextResponse.next() from API route handlers (caused 500 errors)
+  - Admin API endpoints now working correctly with proper authentication
+- **CRITICAL**: Fixed environment variable parsing issue with special characters
+  - Quoted ADMIN_PASSWORD in .env.local to prevent ## from being treated as comments
+  - Fixed production environment variable setup in Vercel
+
+### Bug Fixes
+- **Import Path Fix**: Corrected ActivityItem import path in use-real-time-activities hook
+- **UI Accessibility**: Added missing aria-label and data-testid attributes to voice and attachment buttons
+- **Test Infrastructure**: Fixed component import issues causing build failures
+
+## [1.4.14] - 2025-07-27
+
+### 🎯 **LAYOUT FIX - REMOVE GLOBAL HEADER/FOOTER FROM CHAT**
+
+**Fixed the layout issue where global header and footer were appearing in the chat interface**:
+
+#### ✅ **ISSUE RESOLVED**
+- **Problem**: Global header and footer from main layout were visible in chat interface
+- **Impact**: Chat interface was constrained within global layout, not taking full viewport
+- **Root Cause**: Chat route was inheriting from main app layout with header/footer
+- **Solution**: Created route group `(chat)` with dedicated layout that bypasses global header/footer
+
+#### 🔧 **TECHNICAL FIXES**
+- **Route Group**: Created `app/(chat)/layout.tsx` with clean layout structure
+- **Layout Override**: Route group provides full viewport without global header/footer
+- **Provider Management**: Moved theme and session providers to route group layout
+- **Clean Structure**: Chat interface now has complete control over its layout
+
+#### 🎯 **LAYOUT ARCHITECTURE**
+- **Before**: Chat interface nested within global header/footer
+- **After**: Chat interface takes full viewport with dedicated route group layout
+- **Result**: Proper fixed layout with only chat components visible
+
+#### 📱 **USER EXPERIENCE**
+- ✅ **Full Viewport**: Chat interface now uses entire screen
+- ✅ **Clean Interface**: No global navigation interfering with chat
+- ✅ **Proper Scrolling**: Only chat message area scrolls
+- ✅ **Consistent Layout**: Header, sidebar, footer properly positioned
+
+#### 🔄 **ROUTE STRUCTURE**
+```
+app/
+├── layout.tsx (Global layout with header/footer)
+├── (chat)/ (Route group - bypasses global layout)
+│   ├── layout.tsx (Clean layout for chat)
+│   └── chat/
+│       ├── page.tsx (Chat interface)
+│       ├── layout.tsx (Chat-specific layout)
+│       └── context/ (Chat providers)
+```
+
+**Files Changed**:
+- `app/(chat)/layout.tsx` - New route group layout
+- `app/(chat)/chat/page.tsx` - Moved chat page to route group
+- `app/(chat)/chat/layout.tsx` - Simplified chat layout
+- `CHANGELOG.md` - Updated with layout fix details
+
+---
+
+## [1.4.13] - 2025-07-27
+
+### 🏗️ **FIXED LAYOUT IMPROVEMENTS - PROPER SCROLL BEHAVIOR**
+
+**Implemented a proper fixed layout where only the chat message container scrolls, following web application best practices**:
+
+#### ✅ **LAYOUT ARCHITECTURE**
+- **Fixed Viewport**: Main layout is now fixed to viewport height with no page-level scrolling
+- **Static Sidebar**: Sidebar always visible, height matches viewport, no scrolling
+- **Fixed Header**: Chat header remains static at top, never scrolls
+- **Fixed Footer**: Chat footer anchored to bottom, never disappears
+- **Scrollable Content**: Only the chat message area scrolls
+
+#### 🔧 **TECHNICAL IMPLEMENTATION**
+- **ChatLayout**: Updated to use `fixed inset-0` positioning with `overflow: hidden`
+- **ChatMain**: Enhanced with proper `overflow-hidden` and scroll containment
+- **ChatHeader**: Added `flex-shrink-0` to prevent scrolling
+- **ChatFooter**: Added `flex-shrink-0` and proper positioning
+- **CSS Updates**: Added fixed layout classes and scroll optimizations
+
+#### 🎯 **USER EXPERIENCE IMPROVEMENTS**
+- ✅ **Consistent Layout**: Header, sidebar, and footer always visible
+- ✅ **Smooth Scrolling**: Only message content scrolls smoothly
+- ✅ **No Layout Shift**: Fixed positioning prevents content jumping
+- ✅ **Mobile Optimized**: Proper viewport handling on mobile devices
+- ✅ **Performance**: Reduced layout thrashing and improved scroll performance
+
+#### 📱 **RESPONSIVE BEHAVIOR**
+- **Desktop**: Full-height layout with sidebar and main content
+- **Tablet**: Responsive sidebar width with maintained layout
+- **Mobile**: Collapsible sidebar with fixed header/footer
+- **Touch Devices**: Optimized touch scrolling in message area
+
+#### 🔄 **SCROLL BEHAVIOR**
+- **Page Level**: No scrolling - fixed viewport
+- **Sidebar**: Independent scroll for activities (if needed)
+- **Message Area**: Auto-scroll to bottom with smooth behavior
+- **Footer**: Always visible, never scrolls off-screen
+
+**Files Changed**:
+- `components/chat/ChatLayout.tsx` - Fixed viewport layout
+- `components/chat/ChatMain.tsx` - Enhanced scroll containment
+- `components/chat/ChatHeader.tsx` - Fixed header positioning
+- `components/chat/ChatFooter.tsx` - Fixed footer positioning
+- `app/chat/page.tsx` - Updated layout structure
+- `app/globals.css` - Added fixed layout styles
+- `CHANGELOG.md` - Updated with layout improvements
+
+---
+
+## [1.4.12] - 2025-07-27
+
+### 🧹 **STALE ACTIVITIES CLEANUP - FIX "8 AI TASKS ACTIVE"**
+
+**Fixed the issue where old activities were showing as active and causing incorrect counts**:
+
+#### ✅ **ISSUE RESOLVED**
+- **Problem**: Database had 17+ stale activities in "in_progress" status
+- **Impact**: Live AI Activity showed "8 AI tasks active" when none were actually running
+- **Root Cause**: Lead Research API was creating activities but never completing them properly
+- **Solution**: Fixed lead research endpoint to update original activities instead of creating duplicates
+
+#### 🔧 **TECHNICAL FIXES**
+- **Database Cleanup**: Created `/api/cleanup-activities` endpoint to mark stale activities as failed
+- **Activity Filtering**: Only load activities from last 10 minutes to prevent stale data
+- **Manual Cleanup**: Added "Clean" button in sidebar when stale activities detected
+- **Real-time Updates**: Improved activity loading to prevent old data accumulation
+- **Lead Research Fix**: Fixed `/api/lead-research/route.ts` to properly update original activities to completed/failed status
+
+#### 🎯 **USER EXPERIENCE**
+- ✅ **Accurate Counts**: Live AI Activity now shows correct active task count
+- ✅ **Clean Interface**: No more false "8 AI tasks active" indicators
+- ✅ **Manual Control**: Users can click "Clean" button to fix stale activities
+- ✅ **Automatic Cleanup**: Old activities automatically filtered out
+
+#### 📊 **ACTIVITY MANAGEMENT**
+- **Before**: 17+ stale activities showing as active
+- **After**: Only truly active activities displayed
+- **Cleanup**: All stale activities marked as "failed"
+- **Filtering**: 10-minute window for recent activities only
+
+#### 🔍 **ROOT CAUSE ANALYSIS**
+- **Lead Research Activities**: Were being created with "in_progress" status but never updated
+- **Duplicate Activities**: System was creating new "completed" activities instead of updating originals
+- **Activity Scope**: Fixed variable scope issues in error handlers
+- **Database Updates**: Now properly updates existing activities instead of creating new ones
+
+**Files Changed**:
+- `app/api/cleanup-activities/route.ts` - New cleanup endpoint
+- `app/api/debug-activities/route.ts` - Debug endpoint for activity analysis
+- `app/api/lead-research/route.ts` - Fixed activity completion logic
+- `hooks/use-real-time-activities.ts` - Improved activity filtering
+- `components/chat/sidebar/SidebarContent.tsx` - Added manual cleanup button
+- `CHANGELOG.md` - Updated with cleanup details
+
+---
+
+## [1.4.11] - 2025-07-27
+
+### 🐛 **BUG FIX - Demo Session Context Error**
+
+**Fixed critical runtime error**: "Cannot read properties of undefined (reading 'call')"
+
+#### ✅ **ISSUE RESOLVED**
+- **Root Cause**: `createSession` function was calling `refreshStatus()` with stale sessionId state
+- **Problem**: React state updates are asynchronous, so `refreshStatus` was called with `null` sessionId
+- **Impact**: Demo session functionality was completely broken
+- **Fix**: Created `refreshStatusWithId()` function to handle immediate sessionId parameter
+
+#### 🔧 **TECHNICAL FIX**
+- **Before**: `createSession()` → `setSessionId(newId)` → `refreshStatus()` (with old null sessionId)
+- **After**: `createSession()` → `setSessionId(newId)` → `refreshStatusWithId(newId)` (with correct sessionId)
+- **Context Interface**: Added `refreshStatusWithId` to context type
+- **useEffect**: Updated session loading to use new function
+
+#### 🎯 **RESULT**
+- ✅ Demo session creation now works correctly
+- ✅ Session status updates properly
+- ✅ No more runtime errors
+- ✅ All demo functionality restored
+
+**Files Changed**:
+- `components/demo-session-manager.tsx` - Fixed session creation logic
+- `CHANGELOG.md` - Updated with bug fix details
+
+---
+
+## [1.4.10] - 2025-07-27
+
+### 🤖 **LIVE AI ACTIVITY SYSTEM - FUNCTIONAL & MINIMAL**
+
+**Made Live AI Activity system actually functional with minimized design**:
+
+#### ✅ **FUNCTIONAL IMPROVEMENTS**
+- **Real Activity Logging**: Chat API now logs actual AI processing activities
+- **Live Status Updates**: Shows real-time progress of AI operations
+- **Transparency**: Users can see exactly what the AI is doing
+- **Error Tracking**: Failed operations are logged and displayed
+- **Performance Metrics**: Processing time and token usage tracked
+
+#### 🎨 **DESIGN MINIMIZATION**
+- **Before**: Large static "Live AI Activity" section always visible
+- **After**: Compact dynamic indicator only shows when AI tasks are active
+- **Space Saved**: ~60px vertical space when no activities are running
+- **Visual Clarity**: Blue-themed indicator with task count
+- **Responsive**: Adapts to tablet/mobile layouts
+
+#### 🔧 **TECHNICAL IMPLEMENTATION**
+- **Activity Types Added**:
+  - `ai_thinking` - AI processing user messages
+  - `ai_stream` - AI response generation
+  - `error` - Failed operations with details
+- **Real-time Integration**: Supabase real-time subscriptions working
+- **Database Logging**: All activities persisted with metadata
+- **Error Handling**: Graceful fallbacks for database issues
+
+#### 📊 **ACTIVITY TRACKING DETAILS**
+- **Processing Start**: Logs when AI begins analyzing messages
+- **Model Selection**: Tracks which AI model is being used
+- **Token Usage**: Records input/output token counts
+- **Processing Time**: Measures actual AI response time
+- **Error Context**: Detailed error information for debugging
+
+#### 🎯 **USER EXPERIENCE**
+- **Transparency**: Users see "1 AI task active" when processing
+- **Progress**: Real-time status updates during AI operations
+- **Completion**: Clear indication when AI finishes processing
+- **Error Visibility**: Failed operations clearly marked
+- **Minimal Intrusion**: Only appears when needed
+
+**Files Changed**:
+- `components/chat/sidebar/SidebarContent.tsx` - Minimized Live AI Activity design
+- `app/api/chat/route.ts` - Added functional activity logging
+- `CHANGELOG.md` - Updated with new improvements
+
+**Technical Notes**:
+- Activity logging uses `logServerActivity` from unified system
+- Real-time updates via Supabase subscriptions
+- Database schema supports all activity types
+- Error handling includes graceful fallbacks
+
+---
+
 ## [1.4.9] - 2025-07-27
 
 ### 🎨 **UI DESIGN IMPROVEMENTS - FOOTER & DEMO SESSION**
@@ -2737,6 +3094,23 @@ then summarize his background and industry, and write a quick bullet points pain
 - **Activity Logger**: ✅ WORKING - Has proper Supabase realtime structure
 - **Multimodal Input Support**: ✅ WORKING - All modals exist with media support
 - **Upload Endpoint**: ✅ IMPLEMENTED - New file upload API created
+- **Mock API System**: ✅ IMPLEMENTED - Created `/api/mock/chat` for UI testing with realistic streaming responses
+- **Scroll Function Debug**: ✅ FIXED - Added debug logging and proper viewport ref attachment for scroll functionality
+- **Duplicate Chat Pages**: ✅ CLEANED - Removed duplicate `app/chat` directory and fixed import paths
+- **Unused ChatArea Component**: ✅ REMOVED - Deleted orphaned ChatArea component that was causing scroll confusion
+- **Terminal Issues Fixed**: ✅ RESOLVED - Removed chat-modern page causing build failures, added missing mock lead-research API
+- **Advanced ChatArea Integration**: ✅ UPGRADED - Replaced basic ChatMain with superior ChatArea featuring tool cards, interactive features, and enhanced UI
+- **Rule Compliance Fixes**: ✅ COMPLIANT - Implemented proper service layer architecture with Zod validation, removed direct API calls from UI components, and added proper TypeScript types
+
+### 🚀 Major Improvements
+
+#### 1. **Chat Scroll Function Fixes**
+- **Fixed**: Race conditions in scroll timing with arbitrary 100ms timeout
+- **Fixed**: Inefficient re-renders on every message change
+- **Added**: Smart scroll position detection and restoration
+- **Added**: Scroll to bottom button when user scrolls up
+- **Enhanced**: Proper scroll behavior using requestAnimationFrame
+- **File**: `components/chat/ChatArea.tsx`
 
 ### 🚀 Major Improvements
 

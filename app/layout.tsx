@@ -3,8 +3,6 @@ import { Inter, Rajdhani, Space_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { DemoSessionProvider } from "@/components/demo-session-manager"
-import Header from "@/components/header"
-import Footer from "@/components/footer"
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
 import type { Metadata } from "next"
@@ -130,9 +128,7 @@ export default function RootLayout({
       <body className={cn("font-sans antialiased", fontSans.variable, fontDisplay.variable, fontMono.variable)}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <DemoSessionProvider>
-            <Header />
-            <main className="min-h-screen">{children}</main>
-            <Footer />
+            {children}
             <Toaster />
           </DemoSessionProvider>
         </ThemeProvider>

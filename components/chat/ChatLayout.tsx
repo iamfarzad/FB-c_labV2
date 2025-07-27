@@ -33,8 +33,9 @@ export const ChatLayout = ({ children, className }: ChatLayoutProps) => {
       transition={{ duration: 0.4, ease: "easeOut" }}
       data-testid="chat-layout"
       className={cn(
-        "flex flex-col h-screen w-full bg-background",
-        "relative overflow-hidden transition-all duration-300",
+        // Fixed viewport layout - no scrolling at this level
+        "fixed inset-0 w-full h-full bg-background",
+        "flex flex-col overflow-hidden",
         // Modern glassmorphism background with depth
         "before:absolute before:inset-0 before:bg-gradient-to-br",
         "before:from-accent/8 before:via-transparent before:to-primary/8",
@@ -44,7 +45,7 @@ export const ChatLayout = ({ children, className }: ChatLayoutProps) => {
         "after:bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23000000\" fill-opacity=\"0.1\"%3E%3Ccircle cx=\"30\" cy=\"30\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]",
         "after:pointer-events-none",
         // Mobile optimizations
-        "mobile:h-[100dvh] mobile:overflow-hidden",
+        "mobile:h-[100dvh]",
         // Tablet optimizations
         "tablet:h-screen",
         // Desktop optimizations
@@ -59,8 +60,11 @@ export const ChatLayout = ({ children, className }: ChatLayoutProps) => {
         overscrollBehavior: 'contain',
         // Prevent layout shift by reserving space for scrollbar
         scrollbarGutter: 'stable',
-        // Prevent layout from expanding with content
-        maxHeight: '100vh',
+        // Prevent any scrolling at the layout level
+        overflow: 'hidden',
+        // Use viewport units for consistent sizing
+        height: '100vh',
+        width: '100vw',
       }}
     >
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative z-10">

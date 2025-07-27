@@ -18,7 +18,7 @@ import {
   CheckCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { ActivityItem } from "@/app/chat/types/chat"
+import type { ActivityItem } from "@/app/(chat)/chat/types/chat"
 
 interface ActivityIconProps {
   type: ActivityItem["type"]

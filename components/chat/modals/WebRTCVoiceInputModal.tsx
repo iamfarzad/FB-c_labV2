@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
-import { useChatContext } from "@/app/chat/context/ChatProvider"
+import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
 import { useToast } from "@/components/ui/use-toast"
 import { useDemoSession } from '@/components/demo-session-manager'
 import { WebRTCAudioProcessor, WebRTCAudioConfig } from "@/lib/webrtc-audio-processor"

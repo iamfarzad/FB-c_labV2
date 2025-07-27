@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/components/ui/use-toast"
-import type { LeadCaptureState } from "@/app/chat/types/lead-capture"
+import type { LeadCaptureState } from "@/app/(chat)/chat/types/lead-capture"
 
 interface LeadCaptureFlowProps {
   isVisible: boolean

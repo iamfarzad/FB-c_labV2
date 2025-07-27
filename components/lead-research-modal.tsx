@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2, Search, Brain, Target } from "lucide-react"
-import { useChatContext } from "@/app/chat/context/ChatProvider"
+import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
 
 interface LeadResearchModalProps {
   isOpen: boolean

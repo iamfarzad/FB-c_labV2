@@ -257,6 +257,9 @@
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
+  /* Ensure only this container scrolls */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .chat-message-container {
@@ -275,6 +278,16 @@
   -webkit-user-select: text;
   -moz-user-select: text;
   -ms-user-select: text;
+}
+
+/* Fixed layout improvements */
+.fixed-layout {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
 }
 
 /* Mobile-specific chat improvements */

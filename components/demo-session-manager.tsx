@@ -13,6 +13,7 @@ interface DemoSessionContextType {
   isLoading: boolean
   createSession: () => void
   refreshStatus: () => Promise<void>
+  refreshStatusWithId: (sessionId: string) => Promise<void>
   clearSession: () => void
   remainingTokens: number
   remainingRequests: number
@@ -40,15 +41,16 @@ export function DemoSessionProvider({ children }: { children: React.ReactNode })
       console.error('Failed to store session ID:', error)
     }
     
-    refreshStatus()
+    // Call refreshStatus with the new sessionId directly
+    refreshStatusWithId(newSessionId)
   }
 
-  const refreshStatus = async () => {
-    if (!sessionId) return
+  const refreshStatusWithId = async (sessionIdToUse: string) => {
+    if (!sessionIdToUse) return
     
     try {
       setIsLoading(true)
-      const response = await fetch(`/api/demo-status?sessionId=${sessionId}`)
+      const response = await fetch(`/api/demo-status?sessionId=${sessionIdToUse}`)
       
       if (response.ok) {
         const data = await response.json()
@@ -79,6 +81,11 @@ export function DemoSessionProvider({ children }: { children: React.ReactNode })
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const refreshStatus = async () => {
+    if (!sessionId) return
+    await refreshStatusWithId(sessionId)
   }
 
   const clearSession = () => {
@@ -115,7 +122,7 @@ export function DemoSessionProvider({ children }: { children: React.ReactNode })
       const storedSessionId = sessionStorage.getItem('demo-session-id')
       if (storedSessionId) {
         setSessionId(storedSessionId)
-        refreshStatus()
+        refreshStatusWithId(storedSessionId)
       } else {
         setIsLoading(false)
       }
@@ -146,6 +153,7 @@ export function DemoSessionProvider({ children }: { children: React.ReactNode })
       isLoading,
       createSession,
       refreshStatus,
+      refreshStatusWithId,
       clearSession,
       remainingTokens,
       remainingRequests,

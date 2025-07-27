@@ -117,8 +117,13 @@ export function ChatFooter({
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 100, damping: 20 }}
-      className="w-full border-t border-border/20 bg-background/60 backdrop-blur-xl glass-header shadow-lg shadow-black/5" 
+      className="w-full border-t border-border/20 bg-background/60 backdrop-blur-xl glass-header shadow-lg shadow-black/5 flex-shrink-0" 
       data-testid="chat-footer"
+      style={{
+        // Ensure footer stays at bottom
+        position: 'relative',
+        zIndex: 10,
+      }}
     >
       <div className="max-w-4xl mx-auto p-4">
         <form onSubmit={handleSubmit} className="flex items-end gap-3">
@@ -131,6 +136,8 @@ export function ChatFooter({
               transition={{ type: "spring", stiffness: 400 }}
               onClick={() => setShowAttachMenu(!showAttachMenu)}
               className="p-2 rounded-full hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md"
+              aria-label="Attachment menu"
+              data-testid="attachment-button"
             >
               <Paperclip size={20} />
             </motion.button>
@@ -216,6 +223,8 @@ export function ChatFooter({
                 type="button"
                 onClick={() => setShowVoiceModal(true)}
                 className="btn-secondary p-3 rounded-full"
+                aria-label="Voice input"
+                data-testid="voice-input-button"
               >
                 <Mic size={20} />
               </button>

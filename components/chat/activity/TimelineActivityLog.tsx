@@ -3,7 +3,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
-import type { ActivityItem } from "@/app/chat/types/chat"
+import type { ActivityItem } from "@/app/(chat)/chat/types/chat"
 import { ActivityIcon } from "../sidebar/ActivityIcon"
 
 interface TimelineActivityLogProps {

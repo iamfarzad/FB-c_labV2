@@ -1,6 +1,6 @@
 "use client"
 
-import type { ActivityItem } from "@/app/chat/types/chat"
+import type { ActivityItem } from "@/app/(chat)/chat/types/chat"
 import { SidebarContent } from "./SidebarContent"
 import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"

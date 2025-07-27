@@ -234,11 +234,35 @@ export async function POST(req: NextRequest) {
     const estimatedTokens = estimateTokensForMessages(sanitizedMessages);
     const modelSelection = selectModelForFeature('chat', estimatedTokens, !!sessionId);
 
+    // Log AI processing start activity
+    const processingActivityId = await logServerActivity({
+      type: 'ai_thinking',
+      title: 'Processing User Message',
+      description: `Analyzing ${sanitizedMessages.length} messages (${estimatedTokens} tokens)`,
+      status: 'in_progress',
+      metadata: {
+        correlationId,
+        sessionId,
+        model: modelSelection.model,
+        estimatedTokens,
+        hasWebGrounding
+      }
+    });
+
     // Check demo budget for chat feature
     if (sessionId) {
       const accessCheck = await checkDemoAccess(sessionId, 'chat' as DemoFeature, estimatedTokens);
       
       if (!accessCheck.allowed) {
+        // Log failed activity
+        await logServerActivity({
+          type: 'error',
+          title: 'Demo Limit Reached',
+          description: accessCheck.reason,
+          status: 'failed',
+          metadata: { correlationId, sessionId, remainingTokens: accessCheck.remainingTokens }
+        });
+
         return new Response(JSON.stringify({
           error: 'Demo limit reached',
           message: accessCheck.reason,
@@ -261,6 +285,15 @@ export async function POST(req: NextRequest) {
       );
 
       if (!budgetCheck.allowed) {
+        // Log failed activity
+        await logServerActivity({
+          type: 'error',
+          title: 'Budget Limit Reached',
+          description: budgetCheck.reason,
+          status: 'failed',
+          metadata: { correlationId, userId: auth.userId, suggestedModel: budgetCheck.suggestedModel }
+        });
+
         return new Response(JSON.stringify({
           error: 'Budget limit reached',
           message: budgetCheck.reason,
@@ -305,6 +338,15 @@ export async function POST(req: NextRequest) {
       actualInputTokens = estimatedTokens;
       actualOutputTokens = estimatedTokens * 0.5;
     } catch (error: any) {
+      // Log failed activity
+      await logServerActivity({
+        type: 'error',
+        title: 'AI Response Generation Failed',
+        description: error.message || 'Unknown error during AI processing',
+        status: 'failed',
+        metadata: { correlationId, sessionId, model: modelSelection.model, error: error.message }
+      });
+
       logConsoleActivity('error', 'Failed to generate response', {
         correlationId,
         error: error.message || 'Unknown error',
@@ -333,6 +375,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Log successful completion
+    await logServerActivity({
+      type: 'ai_stream',
+      title: 'AI Response Generated',
+      description: `Generated response using ${modelSelection.model} (${actualInputTokens + actualOutputTokens} tokens)`,
+      status: 'completed',
+      metadata: {
+        correlationId,
+        sessionId,
+        model: modelSelection.model,
+        inputTokens: actualInputTokens,
+        outputTokens: actualOutputTokens,
+        processingTime: Date.now() - startTime
+      }
+    });
+
     // Create SSE stream
     const stream = new ReadableStream({
       async start(controller) {
@@ -344,54 +402,50 @@ export async function POST(req: NextRequest) {
           }
           controller.close();
         } catch (error: any) {
+          // Log stream error
+          await logServerActivity({
+            type: 'error',
+            title: 'Stream Error',
+            description: 'Error during response streaming',
+            status: 'failed',
+            metadata: { correlationId, error: error.message || 'Unknown error' }
+          });
+
           logConsoleActivity('error', 'Stream error', { correlationId, error: error.message || 'Unknown error' });
           controller.error(error);
         }
       },
     });
 
-    const responseTime = Date.now() - startTime;
-    logConsoleActivity('info', 'Chat request completed', {
-      correlationId,
-      responseTime,
-      inputTokens: actualInputTokens,
-      outputTokens: actualOutputTokens,
-      model: modelSelection.model,
-      sessionId
-    });
-
     return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
+      headers: { 
+        'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
         'X-Correlation-ID': correlationId,
-        'X-Response-Time': responseTime.toString(),
-        'X-Model-Used': modelSelection.model,
-        'X-Tokens-Used': (actualInputTokens + actualOutputTokens).toString()
-      }
+        'X-Response-Time': `${Date.now() - startTime}ms`
+      },
     });
 
   } catch (error: any) {
-    const responseTime = Date.now() - startTime;
-    logConsoleActivity('error', 'Chat request failed', {
-      correlationId,
-      error: error.message || 'Unknown error',
-      responseTime,
-      sessionId: req.headers.get('x-demo-session-id')
+    // Log general error
+    await logServerActivity({
+      type: 'error',
+      title: 'Chat Request Failed',
+      description: error.message || 'Unknown error processing chat request',
+      status: 'failed',
+      metadata: { correlationId, error: error.message || 'Unknown error' }
     });
 
-    return new Response(JSON.stringify({
-      error: 'Internal server error',
-      message: error.message || 'An unexpected error occurred',
-      correlationId
-    }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Correlation-ID': correlationId,
-        'X-Response-Time': responseTime.toString()
-      }
+    logConsoleActivity('error', 'Chat request failed', { 
+      correlationId, 
+      error: error.message || 'Unknown error',
+      processingTime: Date.now() - startTime
     });
+
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      message: error.message || 'An unexpected error occurred'
+    }), { status: 500 });
   }
 }

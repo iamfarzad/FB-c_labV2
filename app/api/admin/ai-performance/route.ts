@@ -1,7 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { adminAuthMiddleware } from "@/lib/auth"
+import { adminRateLimit } from "@/lib/rate-limiting"
 
 export async function GET(request: NextRequest) {
+  // Check rate limiting
+  const rateLimitResult = adminRateLimit(request);
+  if (rateLimitResult) {
+    return rateLimitResult;
+  }
+
   // Check admin authentication
   const authResult = await adminAuthMiddleware(request);
   if (authResult) {

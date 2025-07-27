@@ -25,3 +25,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# admin documentation (contains sensitive credentials)
+docs/ADMIN_LOGIN.md
+docs/ADMIN_API.md
+docs/PRODUCTION_DEPLOYMENT.md

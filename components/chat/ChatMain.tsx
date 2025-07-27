@@ -10,7 +10,7 @@ import { Loader2, User, Bot, ImageIcon, Copy, Check, Brain, AlertTriangle, Info,
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
-import type { Message } from "@/app/chat/types/chat"
+import type { Message } from "@/app/(chat)/chat/types/chat"
 
 interface ChatMainProps {
   messages: Message[]
@@ -201,11 +201,16 @@ export function ChatMain({ messages, isLoading, messagesEndRef }: ChatMainProps)
   }, [messages, isLoading])
 
   return (
-    <div className="flex-1 flex flex-col min-h-0" data-testid="chat-main">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden" data-testid="chat-main">
       <ScrollArea 
         ref={scrollAreaRef}
         className="flex-1 w-full chat-scroll-container"
-        style={{ height: '100%' }}
+        style={{ 
+          height: '100%',
+          // Ensure proper scrolling behavior
+          overscrollBehavior: 'contain',
+          WebkitOverflowScrolling: 'touch',
+        }}
       >
         <div className="max-w-3xl mx-auto space-y-6 p-4 pb-8 chat-message-container" data-testid="messages-container">
           {messages.length === 0 && !isLoading && (

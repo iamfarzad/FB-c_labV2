@@ -24,7 +24,12 @@ export async function createToken(payload: Omit<JWTPayload, 'exp'>): Promise<str
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
     const { payload } = await jwtVerify(token, secret);
-    return payload as JWTPayload;
+    return {
+      userId: payload.userId as string,
+      email: payload.email as string,
+      role: payload.role as 'admin' | 'user',
+      exp: payload.exp as number
+    };
   } catch (error) {
     return null;
   }
@@ -64,23 +69,37 @@ export async function authMiddleware(request: NextRequest): Promise<NextResponse
 }
 
 export async function adminAuthMiddleware(request: NextRequest): Promise<NextResponse | null> {
-  const authResult = await authMiddleware(request);
+  // Check for token in cookie first, then Authorization header
+  const token = request.cookies.get('adminToken')?.value || 
+                request.headers.get('Authorization')?.replace('Bearer ', '');
   
-  if (authResult && authResult.status === 401) {
-    return authResult;
+  if (!token) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
   }
 
-  if (authResult) {
-    const role = request.headers.get('x-user-role');
-    if (role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+  const payload = await verifyToken(token);
+
+  if (!payload) {
+    return NextResponse.json(
+      { error: 'Invalid or expired token' },
+      { status: 401 }
+    );
   }
 
-  return authResult;
+  // Verify admin role
+  if (payload.role !== 'admin') {
+    return NextResponse.json(
+      { error: 'Admin access required' },
+      { status: 403 }
+    );
+  }
+
+  // For API routes, we don't use NextResponse.next() - we return null to continue
+  // The user info is available via the payload for downstream handlers
+  return null;
 }
 
 export function getCurrentUser(request: NextRequest): JWTPayload | null {

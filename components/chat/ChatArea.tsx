@@ -9,7 +9,7 @@ import { Loader2, User, Bot, ImageIcon, Copy, Check, Brain, AlertTriangle, Info,
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
-import type { Message } from "@/app/chat/types/chat"
+import type { Message } from "@/app/(chat)/chat/types/chat"
 import { 
   VoiceInputCard, 
   WebcamCaptureCard, 
@@ -17,6 +17,13 @@ import {
   VideoToAppCard, 
   ScreenShareCard 
 } from "@/components/chat/cards"
+import type { 
+  ROICalculationResult, 
+  VoiceTranscriptResult, 
+  WebcamCaptureResult, 
+  VideoAppResult, 
+  ScreenShareResult 
+} from "@/lib/services/tool-service"
 
 interface ChatAreaProps {
   messages: Message[]
@@ -24,8 +31,8 @@ interface ChatAreaProps {
   messagesEndRef: React.RefObject<HTMLDivElement | null>
   onVoiceTranscript: (transcript: string) => void
   onWebcamCapture: (imageData: string) => void
-  onROICalculation: (result: any) => void
-  onVideoAppResult: (result: any) => void
+  onROICalculation: (result: ROICalculationResult) => void
+  onVideoAppResult: (result: VideoAppResult) => void
   onScreenAnalysis: (analysis: string) => void
 }
 
@@ -122,39 +129,39 @@ export function ChatArea({
       console.log(`Cancelled ${toolType}`)
     }
 
-    const handleSubmit = (result: any) => {
+    const handleSubmit = (result: ROICalculationResult | VoiceTranscriptResult | WebcamCaptureResult | VideoAppResult | ScreenShareResult) => {
       if (!result) return
       
       switch (toolType) {
         case 'voice_input':
-          onVoiceTranscript(result.transcript || '')
+          onVoiceTranscript((result as VoiceTranscriptResult).transcript || '')
           break
         case 'webcam_capture':
-          onWebcamCapture(result.imageData || '')
+          onWebcamCapture((result as WebcamCaptureResult).imageData || '')
           break
         case 'roi_calculator':
-          onROICalculation(result)
+          onROICalculation(result as ROICalculationResult)
           break
         case 'video_to_app':
-          onVideoAppResult(result)
+          onVideoAppResult(result as VideoAppResult)
           break
         case 'screen_share':
-          onScreenAnalysis(result.analysis || '')
+          onScreenAnalysis((result as ScreenShareResult).analysis || '')
           break
       }
     }
 
     switch (toolType) {
       case 'voice_input':
-        return <VoiceInputCard onCancel={handleCancel} onSubmit={handleSubmit} />
+        return <VoiceInputCard onCancel={handleCancel} onTranscript={(transcript: string) => onVoiceTranscript(transcript)} />
       case 'webcam_capture':
-        return <WebcamCaptureCard onCancel={handleCancel} onSubmit={handleSubmit} />
-      case 'roi_calculator':
-        return <ROICalculatorCard onCancel={handleCancel} onSubmit={handleSubmit} />
-      case 'video_to_app':
-        return <VideoToAppCard onCancel={handleCancel} onSubmit={handleSubmit} />
+        return <WebcamCaptureCard onCancel={handleCancel} onCapture={(imageData: string) => onWebcamCapture(imageData)} />
+              case 'roi_calculator':
+          return <ROICalculatorCard onCancel={handleCancel} onComplete={onROICalculation} />
+              case 'video_to_app':
+          return <VideoToAppCard onCancel={handleCancel} onComplete={onVideoAppResult} />
       case 'screen_share':
-        return <ScreenShareCard onCancel={handleCancel} onSubmit={handleSubmit} />
+        return <ScreenShareCard onCancel={handleCancel} onAnalysis={(analysis: string) => onScreenAnalysis(analysis)} />
       default:
         return null
     }

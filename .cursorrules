@@ -1,0 +1,131 @@
+# Cursor Rules - AI Assistant Configuration
+
+## 🚨 **MANDATORY RULE COMPLIANCE**
+
+**BEFORE responding to ANY request, you MUST:**
+
+1. **Read and analyze** the appropriate rules from `.cursor/rules/`
+2. **Validate request** against core-foundation.rules
+3. **Check architectural compliance** with backend_architecture.md
+4. **Review recent changes** in CHANGELOG.md
+5. **Ensure proper role delegation** for domain-specific work
+
+## 📋 **Request Processing Workflow**
+
+### Step 1: Rule Analysis
+- **Always start** by reading relevant rules files
+- **Identify applicable** specialist rules for the request
+- **Check for conflicts** between different rule sets
+- **Validate against** core foundation requirements
+
+### Step 2: Context Validation
+- **Refresh project context** using refresh-context.rules
+- **Verify current state** matches expected baseline
+- **Check for ongoing issues** or known problems
+- **Ensure environment** is properly configured
+
+### Step 3: Implementation Planning
+- **Follow request-flow.rules** for proper workflow
+- **Plan testing strategy** before implementation
+- **Consider cross-domain impacts** of changes
+- **Document planned changes** in CHANGELOG.md
+
+### Step 4: Quality Assurance
+- **Run security audit** using security-auditor.rules
+- **Check performance implications** using performance-optimizer.rules
+- **Validate testing coverage** using qa-engineer.rules
+- **Ensure architectural consistency** using master-orchestrator.rules
+
+## 🎯 **Role-Based Rule Enforcement**
+
+### For Backend Work
+- **MUST follow** backend-engineer.rules
+- **MUST validate** against backend_architecture.md
+- **MUST include** proper error handling and logging
+- **MUST implement** security measures
+
+### For Frontend Work
+- **MUST follow** frontend-specialist.rules
+- **MUST comply** with design-system.mdc
+- **MUST use** established component patterns
+- **MUST ensure** accessibility standards
+
+### For Database Work
+- **MUST follow** supabase-specialist.rules
+- **MUST use** type-safe queries
+- **MUST respect** RLS policies
+- **MUST validate** all inputs
+
+### For Security Work
+- **MUST follow** security-auditor.rules
+- **MUST check** for vulnerabilities
+- **MUST validate** access controls
+- **MUST audit** data handling
+
+## 🚫 **Prohibited Actions**
+
+**NEVER proceed without:**
+- ❌ Reading applicable rules first
+- ❌ Validating architectural compliance
+- ❌ Checking for existing implementations
+- ❌ Planning testing strategy
+- ❌ Considering security implications
+
+## ✅ **Required Validation Steps**
+
+### Before Any Code Changes
+1. **Rule compliance check** - Verify against all applicable rules
+2. **Architecture validation** - Ensure changes follow established patterns
+3. **Security review** - Check for potential vulnerabilities
+4. **Testing plan** - Ensure adequate test coverage
+5. **Documentation update** - Plan CHANGELOG.md updates
+
+### After Any Code Changes
+1. **Cross-domain impact** - Check effects on other components
+2. **Performance validation** - Ensure no regressions
+3. **Security audit** - Verify no new vulnerabilities
+4. **Test execution** - Confirm all tests pass
+5. **Documentation completion** - Update CHANGELOG.md
+
+## 🔄 **Continuous Rule Monitoring**
+
+### Automatic Triggers
+- **Every request** must start with rule analysis
+- **Every code change** must pass security audit
+- **Every feature** must include tests
+- **Every API** must follow backend patterns
+- **Every UI** must follow design system
+
+### Manual Validation
+- **Request rule validation** explicitly when needed
+- **Ask for rule compliance** confirmation
+- **Request architectural review** for complex changes
+- **Demand security audit** for sensitive operations
+
+## 📚 **Rule Reference Priority**
+
+### Primary Rules (Always Check)
+1. **core-foundation.rules** - Fundamental principles
+2. **request-flow.rules** - Workflow requirements
+3. **system-governance.rules** - Overall governance
+
+### Domain-Specific Rules (Check Based on Request)
+4. **backend-engineer.rules** - For API/database work
+5. **frontend-specialist.rules** - For UI/UX work
+6. **supabase-specialist.rules** - For database operations
+7. **security-auditor.rules** - For security-sensitive work
+8. **performance-optimizer.rules** - For performance work
+9. **qa-engineer.rules** - For testing and quality
+10. **master-orchestrator.rules** - For cross-domain coordination
+
+## 🎯 **Rule Compliance Commands**
+
+Use these commands to enforce rule compliance:
+
+- `@/rules analyze` - Analyze all rules and current state
+- `@/rules validate [request]` - Validate specific request against rules
+- `@/rules audit [changes]` - Audit recent changes against rules
+- `@/rules [specialist]` - Apply specific specialist rules
+- `@/rules compliance` - Check overall rule compliance
+
+**⚠️ REMINDER: These rules are MANDATORY and will be enforced automatically. Non-compliant responses will be rejected.** 

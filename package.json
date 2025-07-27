@@ -6,6 +6,9 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
+    "dev:check": "node scripts/check-dev-processes.js",
+    "dev:safe": "pnpm dev:check && pnpm dev",
+    "dev:shell": "./scripts/dev-safe.sh",
     "dev:local-ws": "tsx server/live-server.ts",
     "dev:live": "concurrently \"pnpm dev\" \"pnpm dev:ws\"",
     "lint": "next lint",
@@ -15,7 +18,10 @@
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:audio": "tsx scripts/test-audio-improvements.ts"
+    "test:audio": "tsx scripts/test-audio-improvements.ts",
+    "rules:validate": "node scripts/validate-rules.js",
+    "rules:check": "pnpm rules:validate && echo '✅ Rule compliance verified'",
+    "pre-commit": "pnpm rules:check && pnpm lint && pnpm test"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",

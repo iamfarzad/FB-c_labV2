@@ -1,0 +1,137 @@
+# Request Flow Rules
+
+## 🔄 **Request Processing Workflow**
+
+### 1. **Initial Request Analysis**
+- **Always analyze project structure first** before making any changes
+- **Check existing implementations** to avoid duplication
+- **Verify architectural compliance** with backend_architecture.md
+- **Review recent changes** in CHANGELOG.md
+
+### 2. **Request Classification**
+- **Bug Fixes**: Require failing test reproduction
+- **Feature Requests**: Require integration plan and test strategy
+- **Refactoring**: Require performance impact assessment
+- **Security Issues**: Require immediate attention and audit trail
+
+### 3. **Implementation Planning**
+- **Single Responsibility**: One change per request
+- **Backward Compatibility**: Maintain existing functionality
+- **Testing Strategy**: Plan unit, integration, and E2E tests
+- **Documentation**: Update relevant docs and changelog
+
+## 🛠️ **Development Workflow**
+
+### Phase 1: Analysis
+1. **Read relevant documentation**
+2. **Understand current implementation**
+3. **Identify potential conflicts**
+4. **Plan testing strategy**
+
+### Phase 2: Implementation
+1. **Follow established patterns**
+2. **Write tests first (TDD)**
+3. **Implement error handling**
+4. **Add proper logging**
+
+### Phase 3: Validation
+1. **Run all tests**
+2. **Check performance impact**
+3. **Verify security compliance**
+4. **Update documentation**
+
+### Phase 4: Integration
+1. **Create feature branch**
+2. **Submit PR with clear description**
+3. **Ensure CI passes**
+4. **Get code review approval**
+
+## 🎯 **Request-Specific Rules**
+
+### Bug Fixes
+- **Requirement**: Failing test that reproduces the bug
+- **Process**: Fix → Test → Document → Review
+- **Validation**: Ensure no regressions introduced
+
+### Feature Requests
+- **Requirement**: Integration plan and test strategy
+- **Process**: Design → Implement → Test → Document
+- **Validation**: Full E2E testing required
+
+### Refactoring
+- **Requirement**: Performance impact assessment
+- **Process**: Analyze → Plan → Execute → Validate
+- **Validation**: No functional changes, performance maintained
+
+### Security Issues
+- **Requirement**: Immediate attention and audit trail
+- **Process**: Assess → Fix → Test → Deploy
+- **Validation**: Security scan and penetration testing
+
+## 📋 **Request Validation Checklist**
+
+### Before Starting Work
+- [ ] **Project structure analyzed** and understood
+- [ ] **Existing implementations checked** for duplication
+- [ ] **Architectural compliance verified**
+- [ ] **Recent changes reviewed** in CHANGELOG.md
+- [ ] **Testing strategy planned**
+- [ ] **Integration plan documented**
+
+### During Implementation
+- [ ] **Established patterns followed**
+- [ ] **Tests written first (TDD)**
+- [ ] **Error handling implemented**
+- [ ] **Proper logging added**
+- [ ] **Security considerations addressed**
+
+### Before Submission
+- [ ] **All tests passing**
+- [ ] **Performance impact assessed**
+- [ ] **Security compliance verified**
+- [ ] **Documentation updated**
+- [ ] **CHANGELOG.md updated**
+
+## 🚫 **Request Rejection Criteria**
+
+**REJECT** any request that:
+
+- ❌ **Lacks proper analysis** of project structure
+- ❌ **Duplicates existing functionality** without justification
+- ❌ **Violates architectural patterns** defined in backend_architecture.md
+- ❌ **Missing test strategy** or failing test reproduction
+- ❌ **No integration plan** for complex changes
+- ❌ **Performance impact not assessed** for refactoring
+- ❌ **Security implications not considered**
+- ❌ **Documentation updates not planned**
+
+## 🔄 **Request Flow Diagram**
+
+```
+Request Received
+       ↓
+   Analyze Project Structure
+       ↓
+   Check Existing Implementations
+       ↓
+   Verify Architectural Compliance
+       ↓
+   Plan Testing Strategy
+       ↓
+   Implement Solution
+       ↓
+   Validate Changes
+       ↓
+   Update Documentation
+       ↓
+   Submit for Review
+```
+
+## 📚 **Reference Documents**
+
+- [backend_architecture.md](mdc:backend_architecture.md) - Architecture compliance
+- [CHANGELOG.md](mdc:CHANGELOG.md) - Recent changes and current state
+- [file-tree.md](mdc:file-tree.md) - Project structure overview
+- [package.json](mdc:package.json) - Dependencies and scripts
+
+**⚠️ REMINDER: Always follow this request flow to ensure quality and consistency.** 

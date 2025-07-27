@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Download, Bot, Menu } from "lucide-react"
 import { MobileSidebarSheet } from "./sidebar/MobileSidebarSheet"
-import type { ActivityItem } from "@/app/chat/types/chat"
+import type { ActivityItem } from "@/app/(chat)/chat/types/chat"
 import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -51,6 +51,8 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
         // Modern glassmorphism with depth
         "bg-card/40 backdrop-blur-xl glass-header",
         "shadow-sm shadow-black/5",
+        // Fixed header - no scrolling
+        "flex-shrink-0",
         // Mobile optimizations
         "mobile:px-3 mobile:py-3 mobile:min-h-[60px]",
         // Tablet optimizations
@@ -59,6 +61,11 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
         "desktop:px-6 desktop:py-4 desktop:min-h-[72px]",
         className,
       )}
+      style={{
+        // Ensure header stays at top
+        position: 'relative',
+        zIndex: 10,
+      }}
     >
       {/* Left Section - Mobile Sidebar + AI Info */}
       <div className="flex items-center gap-3 flex-1">
