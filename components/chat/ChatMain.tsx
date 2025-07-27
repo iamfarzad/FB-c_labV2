@@ -144,10 +144,6 @@ const detectMessageType = (content: string): { type: string; icon?: React.ReactN
     return { type: 'analysis', icon: <Brain className="w-4 h-4" />, badge: 'Analysis' }
   }
   
-  if (lower.includes('error') || lower.includes('failed') || lower.includes('problem')) {
-    return { type: 'error', icon: <AlertTriangle className="w-4 h-4" />, badge: 'Error' }
-  }
-  
   if (lower.includes('recommendation') || lower.includes('suggest') || lower.includes('should')) {
     return { type: 'recommendation', icon: <Target className="w-4 h-4" />, badge: 'Recommendation' }
   }

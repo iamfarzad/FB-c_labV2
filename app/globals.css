@@ -98,45 +98,49 @@
   }
 }
 
-@layer utilities {
+@layer components {
   .transition-all {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .btn-minimal {
-    @apply px-4 py-2 rounded-md bg-transparent border border-border hover:bg-accent/10 transition-all;
+    @apply px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground transition-all;
   }
 
-  /* Design System Button Classes */
   .btn-primary {
-    @apply px-4 py-2 rounded-md bg-accent text-accent-foreground hover:bg-accent/90 shadow-md focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all;
+    @apply bg-accent text-accent-foreground hover:bg-accent/90 transition-all;
   }
 
   .btn-secondary {
-    @apply px-4 py-2 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-md focus:outline-none focus:ring-2 focus:ring-secondary/50 transition-all;
+    @apply bg-muted text-muted-foreground hover:bg-muted/80 transition-all;
   }
 
-  /* Design System Card Classes */
   .card-minimal {
-    @apply bg-card border border-border rounded-lg shadow-md p-6;
+    @apply bg-card border border-border rounded-lg p-4;
   }
 
   .card-glass {
-    @apply bg-glass-bg border border-glass-border backdrop-blur-sm;
+    @apply bg-glass-bg border border-glass-border backdrop-blur-sm rounded-lg;
   }
 
-  /* Design System Chat Bubble Classes */
+  /* Improved chat bubble styles */
   .chat-bubble-user {
-    @apply bg-accent text-accent-foreground rounded-lg p-4 px-4 py-2 rounded-lg max-w-[75%] break-words;
+    @apply bg-accent text-accent-foreground rounded-lg px-4 py-3 max-w-[75%] break-words;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
   }
 
   .chat-bubble-assistant {
-    @apply bg-popover text-foreground border border-border rounded-lg p-4 px-4 py-2 rounded-lg max-w-[75%] break-words;
+    @apply bg-card text-foreground border border-border/50 rounded-lg px-4 py-3 max-w-[75%] break-words;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
   }
 
   /* Design System Input Classes */
   .input-minimal {
-    @apply w-full px-3 py-2 rounded-md border border-muted bg-card focus:border-accent focus:ring-0 transition-all;
+    @apply w-full px-3 py-2 rounded-md border border-muted bg-card focus:border-accent focus:ring-2 focus:ring-accent/20 focus:ring-offset-2 transition-all;
   }
 
   .min-h-screen {
@@ -229,58 +233,68 @@
   }
 
   .input-touch {
-    min-height: 48px;
+    min-height: 44px;
+    padding: 12px 16px;
     font-size: 16px; /* Prevents zoom on iOS */
   }
 }
 
-/* Improved text readability */
+/* Improved typography for better readability */
 .text-readable {
   line-height: 1.6;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
 }
 
-/* Animation performance improvements */
+/* GPU acceleration for smooth animations */
 .gpu-accelerated {
   transform: translateZ(0);
-  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
-/* Scroll improvements */
+/* Smooth scrolling for chat */
 .smooth-scroll {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Chat-specific scrolling improvements */
+/* Chat scroll container improvements */
 .chat-scroll-container {
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-gutter: stable;
-  /* Ensure only this container scrolls */
-  overflow-y: auto;
-  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted)) transparent;
 }
 
+.chat-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-scroll-container::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--muted));
+  border-radius: 3px;
+}
+
+.chat-scroll-container::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--muted-foreground));
+}
+
+/* Chat message container improvements */
 .chat-message-container {
-  /* Ensure messages don't cause layout shift */
-  contain: layout style paint;
-  /* Prevent text selection during scroll */
-  user-select: none;
-  /* Allow text selection on message content */
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
+  padding: 1rem;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .chat-message-container * {
-  user-select: text;
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-/* Fixed layout improvements */
+/* Fixed layout for better mobile experience */
 .fixed-layout {
   position: fixed;
   top: 0;
@@ -288,18 +302,17 @@
   right: 0;
   bottom: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Mobile-specific chat improvements */
 @media (max-width: 767px) {
   .chat-scroll-container {
-    /* Prevent bounce scrolling on iOS */
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: none;
+    padding: 0.5rem;
   }
   
   .chat-message-container {
-    /* Optimize for mobile scrolling */
-    will-change: scroll-position;
+    padding: 0.5rem;
   }
 }

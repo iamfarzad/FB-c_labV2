@@ -58,7 +58,7 @@ export function ActivityIcon({ type, className }: ActivityIconProps) {
       case "vision_analysis":
         return <Eye className={cn("text-teal-500", className)} />
       case "error":
-        return <AlertTriangle className={cn("text-red-600", className)} />
+        return <Zap className={cn("text-muted-foreground", className)} />
       case "database":
         return <Database className={cn("text-gray-500", className)} />
       case "complete":

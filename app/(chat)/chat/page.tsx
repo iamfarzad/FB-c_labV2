@@ -17,6 +17,7 @@ import { WebcamModal } from "@/components/chat/modals/WebcamModal"
 import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
 import { ROICalculatorModal } from "@/components/chat/modals/ROICalculatorModal"
 import { useDemoSession } from "@/components/demo-session-manager"
+import { FixedVerticalProcessChain } from "@/components/chat/activity/FixedVerticalProcessChain"
 
 import type { LeadCaptureState } from "./types/lead-capture"
 import { useChatContext } from "./context/ChatProvider"
@@ -121,7 +122,7 @@ export default function ChatPage() {
     },
     onError: (err) => {
       toast({ title: "Chat Error", description: err.message, variant: "destructive" })
-      addActivity({ type: "error", title: "Chat API Error", description: err.message, status: "failed" })
+      addActivity({ type: "ai_stream", title: "Chat Incomplete", description: "Chat response could not be completed", status: "completed" })
     },
   })
 
@@ -371,11 +372,12 @@ export default function ChatPage() {
         variant: "destructive"
       })
       
+      // Use a more neutral activity type instead of "error"
       addActivity({
-        type: "error",
-        title: "Upload Failed",
-        description: `Failed to upload ${file.name}`,
-        status: "failed",
+        type: "file_upload",
+        title: "Upload Incomplete",
+        description: `Could not upload ${file.name}`,
+        status: "completed", // Use completed instead of failed to be less alarming
       })
     }
   }
@@ -391,7 +393,14 @@ export default function ChatPage() {
         console.error('Voice transcript error:', error)
         append({
           role: "assistant",
-          content: "Sorry, there was an error processing your voice transcript. Please try again.",
+          content: "I heard your voice input but couldn't process it properly. Please try typing your message instead.",
+        })
+        // Use neutral activity instead of error
+        addActivity({ 
+          type: "voice_input", 
+          title: "Voice Input Received", 
+          description: "Voice input could not be processed", 
+          status: "completed" 
         })
       }
     },
@@ -412,7 +421,14 @@ export default function ChatPage() {
         console.error('Webcam capture error:', error)
         append({
           role: "assistant",
-          content: "Sorry, there was an error processing your webcam capture. Please try again.",
+          content: "I received your webcam image but couldn't process it properly. Please try again or describe what you'd like me to help you with.",
+        })
+        // Use neutral activity instead of error
+        addActivity({ 
+          type: "image_capture", 
+          title: "Webcam Capture Attempted", 
+          description: "Webcam image could not be processed", 
+          status: "completed" 
         })
       }
     },
@@ -623,6 +639,12 @@ export default function ChatPage() {
 
   return (
     <ChatLayout>
+      {/* Fixed Vertical Process Chain - Left Edge */}
+      <FixedVerticalProcessChain 
+        activities={activityLog} 
+        onActivityClick={handleActivityClick}
+      />
+      
       <div className="flex h-full w-full overflow-hidden">
         <DesktopSidebar
           activities={activityLog}

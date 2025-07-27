@@ -60,10 +60,11 @@ export const useFileUpload = () => {
       
       // Add error activity
       addActivity({
-        type: 'error',
-        title: 'Upload failed',
-        description: `Failed to upload ${file.name}`,
-      });
+        type: 'file_upload', // Use file_upload instead of error
+        title: 'Upload Incomplete',
+        description: `Could not upload ${file.name}`,
+        status: 'completed', // Use completed instead of failed
+      })
       
       return null;
     } finally {

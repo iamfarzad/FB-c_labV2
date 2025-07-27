@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Loader2, User, Bot, ImageIcon, Copy, Check, Brain, AlertTriangle, Info, CheckCircle, Clock, Target, Monitor, FileText } from "lucide-react"
+import { Loader2, User, Bot, ImageIcon, Copy, Check, Brain, AlertTriangle, Info, CheckCircle, Clock, Target, Monitor, FileText, Sparkles, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
@@ -176,15 +176,38 @@ export function ChatArea({
       >
         <div className="max-w-4xl mx-auto space-y-6 p-4 pb-8 chat-message-container" data-testid="messages-container">
           {messages.length === 0 && !isLoading ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                <Bot className="w-8 h-8 text-primary" />
+            <div className="text-center py-16 px-4">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                <Sparkles className="w-10 h-10 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Welcome to F.B/c AI</h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                Start a conversation by typing a message, uploading an image, or using voice input. I'm here to help with
-                AI automation, analysis, and consultation.
+              <h3 className="text-xl font-semibold mb-3 text-foreground">Welcome to F.B/c AI</h3>
+              <p className="text-muted-foreground max-w-md mx-auto mb-6 leading-relaxed">
+                I'm your AI assistant ready to help with business analysis, automation, and consultation. 
+                Start by asking a question or uploading a document.
               </p>
+              
+              {/* Quick action suggestions */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto">
+                <Button
+                  variant="outline"
+                  className="h-auto p-3 flex flex-col items-center gap-2 hover:bg-accent/10"
+                  onClick={() => {
+                    // Trigger a sample question
+                    const event = new Event('focus')
+                    document.dispatchEvent(event)
+                  }}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span className="text-sm">Ask about AI automation</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-auto p-3 flex flex-col items-center gap-2 hover:bg-accent/10"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span className="text-sm">Upload a document</span>
+                </Button>
+              </div>
             </div>
           ) : (
             <>
@@ -227,10 +250,12 @@ export function ChatArea({
 
                       <div
                         className={cn(
-                          "px-4 py-2 rounded-lg max-w-[75%] break-words",
+                          "px-4 py-3 rounded-lg relative group/message",
+                          "transition-all duration-200 hover:shadow-md",
+                          "focus-within:ring-2 focus-within:ring-accent/20 focus-within:ring-offset-2",
                           message.role === "user"
-                            ? "chat-bubble-user"
-                            : "chat-bubble-assistant"
+                            ? "chat-bubble-user bg-accent text-accent-foreground"
+                            : "chat-bubble-assistant bg-card border border-border/50"
                         )}
                       >
                         {message.imageUrl && (
@@ -258,7 +283,7 @@ export function ChatArea({
 
                         <div
                           className={cn(
-                            "prose prose-sm max-w-none leading-relaxed",
+                            "prose prose-sm max-w-none leading-relaxed break-words",
                             message.role === "user" 
                               ? "prose-invert" 
                               : "dark:prose-invert prose-slate",
@@ -297,7 +322,7 @@ export function ChatArea({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="absolute top-2 right-2 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-2 right-2 w-6 h-6 opacity-0 group-hover/message:opacity-100 transition-opacity hover:bg-accent/10"
                           onClick={() => copyToClipboard(message.content || '', message.id)}
                         >
                           {copiedMessageId === message.id ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}

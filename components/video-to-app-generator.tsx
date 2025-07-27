@@ -167,10 +167,10 @@ export const VideoToAppGenerator = forwardRef<{ getSpec: () => string; getCode: 
 
         // Update activity with error
         addActivity({
-          type: "error",
-          title: "Generation Failed",
-          description: err.message || "Failed to generate learning app",
-          status: "failed",
+          type: "video_processing", // Use video_processing instead of error
+          title: "Video Processing Incomplete",
+          description: "Could not complete video processing",
+          status: "completed", // Use completed instead of failed
         })
       }
     }

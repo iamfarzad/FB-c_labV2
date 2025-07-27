@@ -233,7 +233,7 @@ export function useChat({
       
       // Update assistant message with error
       updateMessage(assistantMessage.id, {
-        content: 'Sorry, I encountered an error processing your message. Please try again.',
+        content: 'I\'m having trouble processing your request right now. Please try again in a moment.',
       })
       
       if (onError) {

@@ -292,7 +292,7 @@ class CompleteAISystemTester {
       const files = [
         'lib/activity-logger.ts',
         'hooks/use-real-time-activities.ts',
-        'components/chat/activity/TimelineActivityLog.tsx'
+        'components/chat/activity/VerticalProcessChain.tsx'
       ]
       
       let filesExist = 0

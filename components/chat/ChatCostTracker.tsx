@@ -196,7 +196,6 @@ export default function ChatCostTracker({ sessionId, className }: ChatCostTracke
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Daily Budget</span>
             <div className="flex items-center gap-2">
-              {isOverBudget && <AlertTriangle className="h-4 w-4 text-red-500" />}
               <Badge variant={isOverBudget ? "destructive" : isNearLimit ? "secondary" : "default"}>
                 {dailyBudget.percentage.toFixed(1)}%
               </Badge>

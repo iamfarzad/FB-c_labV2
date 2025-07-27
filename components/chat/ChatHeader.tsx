@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Download, Bot, Menu } from "lucide-react"
+import { Download, Bot, Menu, FileText } from "lucide-react"
 import { MobileSidebarSheet } from "./sidebar/MobileSidebarSheet"
 import type { ActivityItem } from "@/app/(chat)/chat/types/chat"
 import { cn } from "@/lib/utils"
@@ -128,7 +128,7 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
                 </motion.h1>
               </AnimatePresence>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <motion.div
                 animate={{ 
                   opacity: [0.6, 1, 0.6],
@@ -141,9 +141,18 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
                 }}
                 className="w-2 h-2 bg-green-500 rounded-full shadow-sm shadow-green-500/50"
               />
-              <span className={cn("text-muted-foreground", "mobile:text-xs", "tablet:text-sm", "desktop:text-sm")}>
+              <Badge 
+                variant="secondary" 
+                className={cn(
+                  "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+                  "border border-green-200 dark:border-green-800",
+                  "mobile:text-xs mobile:px-1.5 mobile:py-0.5",
+                  "tablet:text-xs tablet:px-2 tablet:py-0.5",
+                  "desktop:text-xs desktop:px-2 desktop:py-1"
+                )}
+              >
                 Online • Ready to help
-              </span>
+              </Badge>
             </div>
           </div>
         </div>
@@ -163,13 +172,14 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
             className={cn(
               "gap-2 hover:bg-accent/10 hover:border-accent/30",
               "shadow-sm hover:shadow-md transition-all duration-200",
+              "focus:ring-2 focus:ring-accent/20 focus:ring-offset-2",
               // Mobile: Icon only, larger screens: Icon + text
               "mobile:px-2",
               "tablet:px-3",
               "desktop:px-4",
             )}
           >
-            <Download className={cn("mobile:w-4 mobile:h-4", "tablet:w-4 tablet:h-4", "desktop:w-4 desktop:h-4")} />
+            <FileText className={cn("mobile:w-4 mobile:h-4", "tablet:w-4 tablet:h-4", "desktop:w-4 desktop:h-4")} />
             <span
               className={cn(
                 // Hide text on mobile, show on larger screens

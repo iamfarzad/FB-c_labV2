@@ -135,7 +135,7 @@ export function ChatFooter({
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400 }}
               onClick={() => setShowAttachMenu(!showAttachMenu)}
-              className="p-2 rounded-full hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md"
+              className="p-2 rounded-full hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md focus:ring-2 focus:ring-accent/20 focus:ring-offset-2"
               aria-label="Attachment menu"
               data-testid="attachment-button"
             >
@@ -157,7 +157,7 @@ export function ChatFooter({
                       type="button"
                       whileHover={{ backgroundColor: "rgba(var(--accent), 0.1)" }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full text-left px-4 py-3 hover:bg-accent/10 flex items-center gap-3 transition-colors"
+                      className="w-full text-left px-4 py-3 hover:bg-accent/10 flex items-center gap-3 transition-colors focus:ring-2 focus:ring-accent/20 focus:ring-offset-1"
                       onClick={() => {
                         setShowAttachMenu(false)
                         action.action()
@@ -172,9 +172,9 @@ export function ChatFooter({
             </AnimatePresence>
           </div>
 
-          {/* Input field with modern design */}
+          {/* Input field with improved styling */}
           <div className="flex-1 mx-4 relative">
-            <div className="input-minimal flex-1 resize-none h-12">
+            <div className="input-minimal flex-1 resize-none h-12 bg-card border border-border/50 rounded-2xl focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20 focus-within:ring-offset-2 transition-all duration-200">
               <Textarea
                 data-testid="message-input"
                 ref={(el) => {
@@ -194,8 +194,8 @@ export function ChatFooter({
                   }
                 }}
                 onFocus={() => adjustHeight()}
-                placeholder="Ask anything..."
-                className="resize-none bg-transparent outline-none placeholder-muted-foreground text-foreground w-full min-h-[46px] max-h-[200px] overflow-hidden px-4 py-3 rounded-2xl"
+                placeholder="Ask anything... (Press Enter to send)"
+                className="resize-none bg-transparent outline-none placeholder-muted-foreground/70 text-foreground w-full min-h-[46px] max-h-[200px] overflow-hidden px-4 py-3 rounded-2xl border-0 focus:border-0 focus:ring-0 focus:outline-none"
                 style={{ lineHeight: '24px' }}
               />
             </div>
@@ -208,26 +208,33 @@ export function ChatFooter({
             )}
           </div>
 
-          {/* Action buttons */}
+          {/* Action buttons with improved styling */}
           <div className="flex items-center gap-2">
             {input.trim() ? (
-              <button
+              <motion.button
                 type="submit"
                 disabled={isLoading}
-                className="btn-primary p-3 rounded-full"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400 }}
+                className="btn-primary p-3 rounded-full shadow-sm hover:shadow-md focus:ring-2 focus:ring-accent/20 focus:ring-offset-2 transition-all duration-200"
+                aria-label="Send message"
               >
                 <Send size={20} />
-              </button>
+              </motion.button>
             ) : (
-              <button
+              <motion.button
                 type="button"
                 onClick={() => setShowVoiceModal(true)}
-                className="btn-secondary p-3 rounded-full"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400 }}
+                className="btn-secondary p-3 rounded-full shadow-sm hover:shadow-md focus:ring-2 focus:ring-accent/20 focus:ring-offset-2 transition-all duration-200"
                 aria-label="Voice input"
                 data-testid="voice-input-button"
               >
                 <Mic size={20} />
-              </button>
+              </motion.button>
             )}
           </div>
         </form>

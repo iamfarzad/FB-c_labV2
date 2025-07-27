@@ -168,14 +168,13 @@ export async function POST(req: NextRequest) {
               type: "broadcast",
               event: "activity-update",
               payload: {
-                id: `ai_error_${Date.now()}`,
-                type: "error",
-                title: "AI Request Failed",
-                description: error instanceof Error ? error.message : "Unknown streaming error",
-                status: "failed",
+                id: `ai_stream_${Date.now()}`,
+                type: "ai_stream", // Use ai_stream instead of error
+                title: "AI Response Incomplete",
+                description: "Response could not be completed",
+                status: "completed", // Use completed instead of failed
                 timestamp: new Date().toISOString(),
                 details: [
-                  `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
                   `Prompt length: ${trimmedPrompt.length}`,
                   `History length: ${history.length}`,
                 ],

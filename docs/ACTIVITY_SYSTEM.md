@@ -223,8 +223,14 @@ await logServerActivity({
 // In UI components
 const { activityLog } = useChatContext()
 
-// Display activities in timeline
-<TimelineActivityLog 
+// Display activities in vertical process chain
+<VerticalProcessChain 
+  activities={activityLog} 
+  onActivityClick={handleActivityClick}
+/>
+
+// Or use fixed positioning on left edge
+<FixedVerticalProcessChain 
   activities={activityLog} 
   onActivityClick={handleActivityClick}
 />
