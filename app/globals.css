@@ -44,6 +44,32 @@
     /* Destructive Colors */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
+
+    /* Enhanced Design Tokens */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    
+    /* Animation Durations */
+    --duration-75: 75ms;
+    --duration-100: 100ms;
+    --duration-150: 150ms;
+    --duration-200: 200ms;
+    --duration-300: 300ms;
+    --duration-500: 500ms;
+    --duration-700: 700ms;
+    --duration-1000: 1000ms;
+    
+    /* Easing Functions */
+    --ease-linear: linear;
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .dark {
@@ -79,6 +105,14 @@
     /* Destructive Colors - Dark Mode */
     --destructive: 0 84% 60%;
     --destructive-foreground: var(--color-gunmetal);
+
+    /* Enhanced shadows for dark mode */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.6);
   }
 
   body {
@@ -86,82 +120,205 @@
     font-feature-settings: "rlig" 1, "calt" 1;
     scroll-behavior: smooth;
     overflow-x: hidden;
-    /* Prevent layout shift on mobile */
     overscroll-behavior: contain;
-    /* Ensure proper viewport height on mobile */
     height: 100vh;
     height: 100dvh;
+    /* Enhanced font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display font-semibold tracking-tight;
+    /* Improved heading line heights */
+    line-height: 1.2;
+  }
+
+  /* Enhanced focus styles */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--accent));
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 }
 
 @layer components {
+  /* Enhanced transition utilities */
   .transition-all {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all var(--duration-200) var(--ease-out);
   }
 
+  .transition-smooth {
+    transition: all var(--duration-300) var(--ease-smooth);
+  }
+
+  .transition-bounce {
+    transition: all var(--duration-300) var(--ease-bounce);
+  }
+
+  /* Enhanced button styles */
   .btn-minimal {
-    @apply px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground transition-all;
+    @apply px-4 py-2 rounded-xl border border-border/30 bg-card/50 text-foreground;
+    @apply hover:bg-accent/5 hover:border-accent/30 backdrop-blur-sm;
+    @apply transition-all duration-200 shadow-sm hover:shadow-md;
+    @apply focus:ring-2 focus:ring-accent/20 focus:ring-offset-2;
   }
 
   .btn-primary {
-    @apply bg-accent text-accent-foreground hover:bg-accent/90 transition-all;
+    @apply bg-gradient-to-r from-accent to-accent/90 text-accent-foreground;
+    @apply hover:from-accent/90 hover:to-accent/80 shadow-lg hover:shadow-xl;
+    @apply transition-all duration-300 rounded-xl font-medium;
+    @apply focus:ring-2 focus:ring-accent/30 focus:ring-offset-2;
   }
 
   .btn-secondary {
-    @apply bg-muted text-muted-foreground hover:bg-muted/80 transition-all;
+    @apply bg-muted/50 text-muted-foreground hover:bg-muted/80;
+    @apply transition-all duration-200 rounded-xl;
+    @apply focus:ring-2 focus:ring-muted/30 focus:ring-offset-2;
   }
 
+  /* Enhanced card styles */
   .card-minimal {
-    @apply bg-card border border-border rounded-lg p-4;
+    @apply bg-card/80 border border-border/30 rounded-2xl p-6;
+    @apply backdrop-blur-sm shadow-lg;
   }
 
   .card-glass {
-    @apply bg-glass-bg border border-glass-border backdrop-blur-sm rounded-lg;
+    @apply bg-card/60 border border-border/20 backdrop-blur-2xl rounded-2xl;
+    @apply shadow-xl;
   }
 
-  /* Improved chat bubble styles */
+  .card-elevated {
+    @apply bg-card border border-border/20 rounded-2xl p-6;
+    @apply shadow-2xl hover:shadow-3xl transition-all duration-300;
+    @apply hover:-translate-y-1;
+  }
+
+  /* Enhanced chat bubble styles */
   .chat-bubble-user {
-    @apply bg-accent text-accent-foreground rounded-lg px-4 py-3 max-w-[75%] break-words;
+    @apply bg-gradient-to-br from-accent to-accent/90 text-accent-foreground;
+    @apply rounded-2xl px-5 py-4 max-w-[85%] break-words shadow-lg;
+    @apply backdrop-blur-sm border border-accent/20;
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
   }
 
   .chat-bubble-assistant {
-    @apply bg-card text-foreground border border-border/50 rounded-lg px-4 py-3 max-w-[75%] break-words;
+    @apply bg-gradient-to-br from-card to-card/80 text-foreground;
+    @apply border border-border/30 rounded-2xl px-5 py-4 max-w-[85%] break-words;
+    @apply shadow-md hover:shadow-lg transition-all duration-200;
+    @apply backdrop-blur-sm;
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
   }
 
-  /* Design System Input Classes */
+  /* Enhanced input styles */
   .input-minimal {
-    @apply w-full px-3 py-2 rounded-md border border-muted bg-card focus:border-accent focus:ring-2 focus:ring-accent/20 focus:ring-offset-2 transition-all;
+    @apply w-full px-4 py-3 rounded-xl border border-border/30 bg-card/50;
+    @apply focus:border-accent/50 focus:ring-2 focus:ring-accent/20 focus:ring-offset-2;
+    @apply backdrop-blur-sm transition-all duration-200;
+    @apply placeholder:text-muted-foreground/60;
   }
 
+  .input-enhanced {
+    @apply w-full px-4 py-3 rounded-xl border border-border/30 bg-card/50;
+    @apply focus:border-accent/50 focus:ring-2 focus:ring-accent/20 focus:ring-offset-2;
+    @apply backdrop-blur-sm transition-all duration-200 shadow-sm;
+    @apply hover:border-accent/30 hover:shadow-md;
+    @apply placeholder:text-muted-foreground/60;
+  }
+
+  /* Enhanced scroll styles */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Viewport height utilities */
   .min-h-screen {
     min-height: 100dvh;
   }
 
+  .h-screen {
+    height: 100dvh;
+  }
+
+  /* Enhanced hover effects */
   @media (hover: hover) {
     .scale-hover:hover {
       transform: scale(1.02);
     }
+
+    .scale-hover-sm:hover {
+      transform: scale(1.01);
+    }
+
+    .scale-hover-lg:hover {
+      transform: scale(1.05);
+    }
+
+    .lift-hover:hover {
+      transform: translateY(-2px);
+    }
+
+    .lift-hover-lg:hover {
+      transform: translateY(-4px);
+    }
+  }
+
+  /* Loading animations */
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-bounce-slow {
+    animation: bounce 2s infinite;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glass morphism utilities */
+  .glass-light {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-card {
+    background: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--border) / 0.3);
   }
 }
 
+/* Enhanced glass header */
 .glass-header {
-  @apply sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-lg;
+  @apply sticky top-0 z-50 w-full border-b border-border/20;
+  @apply bg-card/80 backdrop-blur-2xl shadow-lg;
 }
 
-/* Custom animation for the background texture */
+/* Enhanced animations */
 @keyframes float {
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0px) rotate(0deg);
   }
   33% {
@@ -172,77 +329,103 @@
   }
 }
 
-/* Responsive breakpoints */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s linear infinite;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--accent) / 0.1),
+    transparent
+  );
+  background-size: 200px 100%;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Enhanced responsive breakpoints */
 @media (max-width: 767px) {
-  .mobile\:block {
-    display: block;
-  }
-  .mobile\:hidden {
-    display: none;
-  }
-  .mobile\:flex {
-    display: flex;
-  }
-  .mobile\:inline {
-    display: inline;
-  }
+  .mobile\:block { display: block; }
+  .mobile\:hidden { display: none; }
+  .mobile\:flex { display: flex; }
+  .mobile\:inline { display: inline; }
+  .mobile\:grid { display: grid; }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
-  .tablet\:block {
-    display: block;
-  }
-  .tablet\:hidden {
-    display: none;
-  }
-  .tablet\:flex {
-    display: flex;
-  }
-  .tablet\:inline {
-    display: inline;
-  }
+  .tablet\:block { display: block; }
+  .tablet\:hidden { display: none; }
+  .tablet\:flex { display: flex; }
+  .tablet\:inline { display: inline; }
+  .tablet\:grid { display: grid; }
 }
 
 @media (min-width: 1024px) {
-  .desktop\:block {
-    display: block;
-  }
-  .desktop\:hidden {
-    display: none;
-  }
-  .desktop\:flex {
-    display: flex;
-  }
-  .desktop\:inline {
-    display: inline;
-  }
+  .desktop\:block { display: block; }
+  .desktop\:hidden { display: none; }
+  .desktop\:flex { display: flex; }
+  .desktop\:inline { display: inline; }
+  .desktop\:grid { display: grid; }
 }
 
-/* Improved modal and overlay handling */
+/* Enhanced modal and overlay handling */
 .modal-overlay {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.4);
 }
 
-/* Better button and interactive element sizing for touch */
+.modal-content {
+  @apply bg-card/95 backdrop-blur-2xl border border-border/30;
+  @apply rounded-3xl shadow-2xl;
+}
+
+/* Enhanced touch targets for mobile */
 @media (max-width: 767px) {
   .btn-touch {
     min-height: 44px;
     min-width: 44px;
     padding: 12px 16px;
+    border-radius: 12px;
   }
 
   .input-touch {
     min-height: 44px;
     padding: 12px 16px;
     font-size: 16px; /* Prevents zoom on iOS */
+    border-radius: 12px;
   }
 }
 
-/* Improved typography for better readability */
+/* Enhanced typography for better readability */
 .text-readable {
   line-height: 1.6;
   letter-spacing: -0.01em;
+}
+
+.text-heading {
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 600;
 }
 
 /* GPU acceleration for smooth animations */
@@ -250,15 +433,10 @@
   transform: translateZ(0);
   backface-visibility: hidden;
   perspective: 1000px;
+  will-change: transform;
 }
 
-/* Smooth scrolling for chat */
-.smooth-scroll {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Chat scroll container improvements */
+/* Enhanced chat scroll container */
 .chat-scroll-container {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted)) transparent;
@@ -275,15 +453,16 @@
 .chat-scroll-container::-webkit-scrollbar-thumb {
   background-color: hsl(var(--muted));
   border-radius: 3px;
+  transition: background-color 0.2s;
 }
 
 .chat-scroll-container::-webkit-scrollbar-thumb:hover {
   background-color: hsl(var(--muted-foreground));
 }
 
-/* Chat message container improvements */
+/* Enhanced chat message container */
 .chat-message-container {
-  padding: 1rem;
+  padding: 1.5rem;
   max-width: 100%;
   margin: 0 auto;
 }
@@ -294,7 +473,7 @@
   overflow-wrap: break-word;
 }
 
-/* Fixed layout for better mobile experience */
+/* Enhanced fixed layout */
 .fixed-layout {
   position: fixed;
   top: 0;
@@ -306,13 +485,40 @@
   flex-direction: column;
 }
 
-/* Mobile-specific chat improvements */
+/* Mobile-specific enhancements */
 @media (max-width: 767px) {
   .chat-scroll-container {
-    padding: 0.5rem;
+    padding: 0.75rem;
   }
   
   .chat-message-container {
-    padding: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  /* Improved mobile spacing */
+  .mobile-spacing {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+}
+
+/* Enhanced focus and accessibility */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-accent/20 focus:ring-offset-2;
+}
+
+.focus-ring-inset {
+  @apply focus:outline-none focus:ring-2 focus:ring-accent/20 focus:ring-inset;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
   }
 }

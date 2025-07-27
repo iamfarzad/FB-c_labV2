@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Download, Bot, Menu, FileText } from "lucide-react"
+import { Download, Bot, Menu, FileText, Sparkles, Zap, Brain, Activity } from "lucide-react"
 import { MobileSidebarSheet } from "./sidebar/MobileSidebarSheet"
 import type { ActivityItem } from "@/app/(chat)/chat/types/chat"
 import { cn } from "@/lib/utils"
@@ -23,6 +23,7 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
   const [greeting, setGreeting] = useState(`How can I help${leadName ? `, ${leadName}` : ''}?`)
+  const [currentTime, setCurrentTime] = useState(new Date())
 
   useEffect(() => {
     const checkDevice = () => {
@@ -36,39 +37,69 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
     return () => window.removeEventListener("resize", checkDevice)
   }, [])
 
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000)
+    return () => clearInterval(timer)
+  }, [])
+
   // Update greeting when leadName changes
   useEffect(() => {
-    setGreeting(`How can I help${leadName ? `, ${leadName}` : ''}?`)
+    const greetings = [
+      `How can I help${leadName ? `, ${leadName}` : ''}?`,
+      `What can I assist you with${leadName ? `, ${leadName}` : ''} today?`,
+      `Ready to help${leadName ? `, ${leadName}` : ''}!`,
+    ]
+    setGreeting(greetings[Math.floor(Math.random() * greetings.length)])
   }, [leadName])
+
+  const getTimeBasedGreeting = () => {
+    const hour = currentTime.getHours()
+    if (hour < 12) return "Good morning"
+    if (hour < 17) return "Good afternoon"
+    return "Good evening"
+  }
+
+  const activeActivities = activities.filter(a => a.status === 'in_progress').length
+  const completedActivities = activities.filter(a => a.status === 'completed').length
 
   return (
     <motion.header
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "flex items-center justify-between p-4 border-b border-border/20",
-        // Modern glassmorphism with depth
-        "bg-card/40 backdrop-blur-xl glass-header",
-        "shadow-sm shadow-black/5",
-        // Fixed header - no scrolling
-        "flex-shrink-0",
+        "flex items-center justify-between p-4 border-b border-border/10",
+        // Advanced glassmorphism with multi-layer depth
+        "bg-card/60 backdrop-blur-2xl",
+        "shadow-lg shadow-black/5",
+        "relative overflow-hidden",
+        // Fixed header positioning
+        "flex-shrink-0 z-30",
         // Mobile optimizations
-        "mobile:px-3 mobile:py-3 mobile:min-h-[60px]",
+        "mobile:px-3 mobile:py-3 mobile:min-h-[64px]",
         // Tablet optimizations
-        "tablet:px-4 tablet:py-3 tablet:min-h-[64px]",
+        "tablet:px-4 tablet:py-3 tablet:min-h-[68px]",
         // Desktop optimizations
-        "desktop:px-6 desktop:py-4 desktop:min-h-[72px]",
+        "desktop:px-6 desktop:py-4 desktop:min-h-[76px]",
         className,
       )}
-      style={{
-        // Ensure header stays at top
-        position: 'relative',
-        zIndex: 10,
-      }}
     >
+      {/* Animated background gradient */}
+      <motion.div
+        animate={{
+          background: [
+            "linear-gradient(90deg, transparent, rgba(255,165,0,0.03), transparent)",
+            "linear-gradient(90deg, transparent, rgba(255,165,0,0.05), transparent)",
+            "linear-gradient(90deg, transparent, rgba(255,165,0,0.03), transparent)",
+          ]
+        }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute inset-0 pointer-events-none"
+      />
+
       {/* Left Section - Mobile Sidebar + AI Info */}
-      <div className="flex items-center gap-3 flex-1">
+      <div className="flex items-center gap-4 flex-1 relative z-10">
         {/* Mobile Sidebar Toggle */}
         <div className="md:hidden">
           <MobileSidebarSheet activities={activities} onNewChat={onNewChat} onActivityClick={onActivityClick}>
@@ -77,47 +108,82 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400 }}
             >
-              <Button variant="ghost" size="icon" className="w-8 h-8 hover:bg-accent/10">
-                <Menu className="w-4 h-4" />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="w-10 h-10 hover:bg-accent/10 rounded-xl border border-border/20 backdrop-blur-sm"
+              >
+                <Menu className="w-5 h-5" />
               </Button>
             </motion.div>
           </MobileSidebarSheet>
         </div>
 
         {/* AI Assistant Info */}
-        <div className="flex items-center gap-3 flex-1">
+        <div className="flex items-center gap-4 flex-1">
           <motion.div
-            whileHover={{ scale: 1.05, rotate: 2 }}
+            whileHover={{ scale: 1.08, rotate: 5 }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300 }}
+            className="relative"
           >
             <Avatar
               className={cn(
-                "border-2 border-accent/30 ring-2 ring-accent/10",
-                "shadow-lg shadow-accent/20",
+                "border-2 border-accent/40 ring-4 ring-accent/10",
+                "shadow-xl shadow-accent/25 backdrop-blur-sm",
+                "bg-gradient-to-br from-accent/20 to-accent/10",
                 // Responsive avatar sizes
-                "mobile:w-8 mobile:h-8",
-                "tablet:w-10 tablet:h-10",
-                "desktop:w-12 desktop:h-12",
+                "mobile:w-10 mobile:h-10",
+                "tablet:w-12 tablet:h-12",
+                "desktop:w-14 desktop:h-14",
               )}
             >
-              <AvatarFallback className="bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-inner">
-                <Bot className={cn("mobile:w-4 mobile:h-4", "tablet:w-5 tablet:h-5", "desktop:w-6 desktop:h-6")} />
+              <AvatarFallback className="bg-gradient-to-br from-accent via-accent/90 to-accent/80 text-accent-foreground shadow-inner">
+                <motion.div
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <Bot className={cn("mobile:w-5 mobile:h-5", "tablet:w-6 tablet:h-6", "desktop:w-7 desktop:h-7")} />
+                </motion.div>
               </AvatarFallback>
             </Avatar>
+            
+            {/* Activity indicator */}
+            <motion.div
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.7, 1, 0.7]
+              }}
+              transition={{ 
+                duration: 2, 
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className={cn(
+                "absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full",
+                "border-2 border-background shadow-lg",
+                "flex items-center justify-center",
+                "mobile:w-3 mobile:h-3",
+                "tablet:w-4 tablet:h-4",
+                "desktop:w-5 desktop:h-5"
+              )}
+            >
+              <Sparkles className="w-2 h-2 text-white" />
+            </motion.div>
           </motion.div>
 
-          <div className="flex flex-col flex-1">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
               <AnimatePresence mode="wait">
                 <motion.h1
                   key={greeting}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                   className={cn(
-                    "font-semibold text-foreground",
+                    "font-bold text-foreground tracking-tight",
+                    "bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text",
                     // Responsive text sizes
                     "mobile:text-sm",
                     "tablet:text-base",
@@ -127,8 +193,24 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
                   {greeting}
                 </motion.h1>
               </AnimatePresence>
+              
+              {leadName && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                >
+                  <Badge 
+                    variant="secondary" 
+                    className="bg-accent/10 text-accent border-accent/20 text-xs px-2 py-0.5"
+                  >
+                    VIP
+                  </Badge>
+                </motion.div>
+              )}
             </div>
-            <div className="flex items-center gap-2">
+            
+            <div className="flex items-center gap-3">
               <motion.div
                 animate={{ 
                   opacity: [0.6, 1, 0.6],
@@ -139,29 +221,54 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
-                className="w-2 h-2 bg-green-500 rounded-full shadow-sm shadow-green-500/50"
+                className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-sm shadow-green-500/50 ring-2 ring-green-500/20"
               />
+              
               <Badge 
                 variant="secondary" 
                 className={cn(
-                  "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-                  "border border-green-200 dark:border-green-800",
-                  "mobile:text-xs mobile:px-1.5 mobile:py-0.5",
-                  "tablet:text-xs tablet:px-2 tablet:py-0.5",
-                  "desktop:text-xs desktop:px-2 desktop:py-1"
+                  "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+                  "border border-green-200/50 dark:border-green-800/50",
+                  "backdrop-blur-sm font-medium",
+                  "mobile:text-xs mobile:px-2 mobile:py-0.5",
+                  "tablet:text-xs tablet:px-2 tablet:py-1",
+                  "desktop:text-xs desktop:px-3 desktop:py-1"
                 )}
               >
-                Online • Ready to help
+                <Brain className="w-3 h-3 mr-1" />
+                AI Online • {getTimeBasedGreeting()}
               </Badge>
+
+              {/* Activity Stats */}
+              {(activeActivities > 0 || completedActivities > 0) && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-2"
+                >
+                  {activeActivities > 0 && (
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                      <Activity className="w-3 h-3 mr-1 animate-pulse" />
+                      {activeActivities} active
+                    </Badge>
+                  )}
+                  {completedActivities > 0 && (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                      <Zap className="w-3 h-3 mr-1" />
+                      {completedActivities} done
+                    </Badge>
+                  )}
+                </motion.div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* Right Section - Actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3 relative z-10">
         <motion.div 
-          whileHover={{ scale: 1.05, y: -1 }}
+          whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 400 }}
         >
@@ -170,28 +277,45 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
             size={isMobile ? "sm" : "default"}
             onClick={onDownloadSummary}
             className={cn(
-              "gap-2 hover:bg-accent/10 hover:border-accent/30",
-              "shadow-sm hover:shadow-md transition-all duration-200",
-              "focus:ring-2 focus:ring-accent/20 focus:ring-offset-2",
+              "gap-2 hover:bg-accent/10 hover:border-accent/40",
+              "shadow-md hover:shadow-lg transition-all duration-300",
+              "focus:ring-2 focus:ring-accent/30 focus:ring-offset-2",
+              "backdrop-blur-sm border-border/30",
+              "bg-card/50 hover:bg-card/80",
+              // Enhanced button styling
+              "rounded-xl font-medium",
               // Mobile: Icon only, larger screens: Icon + text
-              "mobile:px-2",
-              "tablet:px-3",
-              "desktop:px-4",
+              "mobile:px-3 mobile:py-2",
+              "tablet:px-4 tablet:py-2",
+              "desktop:px-5 desktop:py-2.5",
             )}
           >
-            <FileText className={cn("mobile:w-4 mobile:h-4", "tablet:w-4 tablet:h-4", "desktop:w-4 desktop:h-4")} />
+            <motion.div
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <FileText className={cn("mobile:w-4 mobile:h-4", "tablet:w-4 tablet:h-4", "desktop:w-4 desktop:h-4")} />
+            </motion.div>
             <span
               className={cn(
                 // Hide text on mobile, show on larger screens
                 "mobile:hidden",
                 "tablet:inline",
                 "desktop:inline",
+                "font-medium"
               )}
             >
               Export Summary
             </span>
           </Button>
         </motion.div>
+
+        {/* Time Display - Desktop only */}
+        <div className="hidden desktop:block">
+          <div className="text-xs text-muted-foreground font-mono bg-muted/20 px-2 py-1 rounded-lg">
+            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        </div>
       </div>
     </motion.header>
   )
