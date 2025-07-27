@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
-      <div className="relative w-full min-h-screen overflow-hidden">
+      <div className="relative w-full min-h-screen overflow-hidden flex items-center justify-center">
         {/* Animated Grid Background */}
         <AnimatedGridPattern
           numSquares={30}
@@ -37,10 +37,10 @@ export default function HomePage() {
           )}
         />
 
-        <div className="container relative z-10 flex flex-col items-center justify-center h-full text-center">
+        <div className="container relative z-10 flex flex-col items-center justify-center min-h-screen text-center px-4">
           {/* Enhanced hero content with better typography */}
-          <div className="max-w-4xl mx-auto space-y-8">
-            <h1 className="text-5xl font-bold tracking-tight text-primary sm:text-6xl md:text-7xl lg:text-8xl text-balance leading-[0.9] bg-gradient-to-br from-foreground via-foreground to-foreground/80 bg-clip-text">
+          <div className="max-w-4xl mx-auto space-y-8 w-full">
+            <h1 className="text-5xl font-bold tracking-tight text-primary sm:text-6xl md:text-7xl lg:text-8xl text-balance leading-[0.9] bg-gradient-to-br from-foreground via-foreground to-foreground/80 bg-clip-text text-center mx-auto">
               AI Automation Consultant Without the Hype
             </h1>
             <p className="mt-6 max-w-2xl mx-auto text-lg leading-8 text-muted-foreground text-balance font-medium">
