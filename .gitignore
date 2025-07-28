@@ -33,3 +33,6 @@ docs/PRODUCTION_DEPLOYMENT.md
 
 # playwright tests (moved to separate folder to avoid v0.dev conflicts)
 playwright-tests/
+
+# embedded git repositories
+fb-centric-ai/
