@@ -14,8 +14,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check password from environment variable or fallback to default
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123'
+    // Check password from environment variable
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      console.error('ADMIN_PASSWORD environment variable is required');
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      )
+    }
+    
     console.log('Debug - Admin password from env:', adminPassword)
     console.log('Debug - Provided password:', password)
     console.log('Debug - Passwords match:', password === adminPassword)

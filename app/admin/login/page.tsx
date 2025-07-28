@@ -23,10 +23,7 @@ export default function AdminLoginPage() {
     setError("")
 
     try {
-      // Simple admin authentication - only allow owner access
-      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "farzad@farzadbayat.com"
-      const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "admin123"
-
+      // Admin authentication - credentials should be validated server-side only
       const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
