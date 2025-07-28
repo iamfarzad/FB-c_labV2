@@ -3,20 +3,21 @@
 ## [Latest] - 2025-01-27
 
 ### 🐛 Fixed
-- **Vercel Deployment Issues**: Fixed client-side access of server-only environment variables
-  - Removed `SUPABASE_SERVICE_ROLE_KEY` access from client-side code
-  - Fixed `NODE_ENV` access in client components
-  - Updated environment variable checks to only use client-safe variables
-  - Fixed VoiceInputCard module resolution error
-  - Updated test environment page to only show client-safe variables
+- **Browser Error in InputWithSend Component**: Resolved critical browser error causing app crashes
+  - Fixed `useAutoResizeTextarea` hook usage with proper parameters object
+  - Added combined ref management for textarea elements
+  - Added useEffect to handle input changes and automatic resizing
+  - Updated import paths for `useChatContext` and `useKeyboardShortcuts`
+  - Resolved "Cannot destructure property 'minHeight' of 'param' as it is null" error
+  - Improved textarea auto-resize functionality with proper height constraints (44px min, 200px max)
 
 ### 🔧 Technical
-- **Environment Variables**: Improved client/server environment variable separation
-  - `SUPABASE_SERVICE_ROLE_KEY` now only accessible server-side
-  - Client components only access `NEXT_PUBLIC_` prefixed variables
-  - Added proper fallbacks for missing environment variables
+- **Hook Implementation**: Fixed `useAutoResizeTextarea` to accept proper parameters object
+- **Ref Management**: Implemented combined ref pattern for textarea elements
+- **Import Paths**: Corrected import paths for chat context and keyboard shortcuts
+- **TypeScript Compliance**: Resolved all TypeScript compilation errors
 
-## [Previous] - 2025-01-26
+## [Previous] - 2025-01-27
 
 ### 🎨 **COMPREHENSIVE CHAT UI/UX OVERHAUL - FIXED ALL MAJOR DESIGN ISSUES**
 
