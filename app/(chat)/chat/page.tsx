@@ -11,8 +11,8 @@ import { useLeadCapture } from "./hooks/useLeadCapture"
 import { useChatController } from "./hooks/useChatController"
 import { supabase } from "@/lib/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
-import { useChatContext } from "@/hooks/chat/useChatContext" // Import useChatContext
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts" // Import useKeyboardShortcuts
+import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider" // Fixed import path
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts" // Fixed import path
 
 // Disable static optimization for this page
 export const dynamic = "force-dynamic"
@@ -68,7 +68,12 @@ export default function ChatPage() {
       a.click()
       URL.revokeObjectURL(url)
       toast({ title: "PDF Summary Exported", description: "Summary downloaded successfully." })
-      addActivity({ type: "tool_used", title: "PDF Summary Exported", status: "completed" })
+      addActivity({ 
+        type: "tool_used", 
+        title: "PDF Summary Exported", 
+        description: "PDF summary exported successfully",
+        status: "completed" 
+      })
     } catch (err) {
       console.error("Export summary error:", err)
       toast({ title: "Export Failed", description: (err as Error).message, variant: "destructive" })
@@ -115,7 +120,7 @@ export default function ChatPage() {
           onNewChat={handleNewChat}
           messages={messages}
           isLoading={isLoading}
-          error={error}
+          error={error || undefined}
           onExampleQuery={(query) => setInput(query)}
           onRetry={() => window.location.reload()} // Simple retry for now
           input={chatController.input}

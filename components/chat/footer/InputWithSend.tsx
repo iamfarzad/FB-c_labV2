@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { SendHorizonal, Loader2 } from "lucide-react"
 import { useAutoResizeTextarea } from "@/hooks/ui/use-auto-resize-textarea"
-import { useRef } from "react"
+import { useRef, useEffect } from "react"
 
 interface InputWithSendProps {
   input: string
@@ -16,7 +16,21 @@ interface InputWithSendProps {
 
 export function InputWithSend({ input, handleInputChange, handleSubmit, isLoading }: InputWithSendProps) {
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
-  useAutoResizeTextarea(textAreaRef.current, input)
+  const { textareaRef, adjustHeight } = useAutoResizeTextarea({
+    minHeight: 44,
+    maxHeight: 200
+  })
+
+  // Use the ref from the hook
+  const combinedRef = (node: HTMLTextAreaElement | null) => {
+    textAreaRef.current = node
+    textareaRef.current = node
+  }
+
+  // Adjust height when input changes
+  useEffect(() => {
+    adjustHeight()
+  }, [input, adjustHeight])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -28,7 +42,7 @@ export function InputWithSend({ input, handleInputChange, handleSubmit, isLoadin
   return (
     <form onSubmit={handleSubmit} className="flex-1 flex items-end gap-2 relative">
       <Textarea
-        ref={textAreaRef}
+        ref={combinedRef}
         rows={1}
         placeholder="Ask a question or type '/' for commands..."
         className="py-3 px-4 resize-none pr-12"
