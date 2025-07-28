@@ -24,4 +24,4 @@ CREATE INDEX IF NOT EXISTS idx_activities_status ON activities(status);
 CREATE INDEX IF NOT EXISTS idx_activities_created_at ON activities(created_at DESC);
 
 -- Enable realtime for activities table
-ALTER PUBLICATION supabase_realtime ADD TABLE activities; 
+ALTER PUBLICATION supabase_realtime ADD TABLE activities;

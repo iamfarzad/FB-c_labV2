@@ -75,4 +75,4 @@ FROM information_schema.columns
 WHERE table_name IN ('lead_summaries', 'lead_search_results')
 ORDER BY table_name, ordinal_position;
 
--- NOTE: This is a temporary fix. Once the API is working, we'll re-enable RLS with proper policies. 
+-- NOTE: This is a temporary fix. Once the API is working, we'll re-enable RLS with proper policies.

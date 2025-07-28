@@ -30,7 +30,7 @@ Your chat UI now has **comprehensive 3-layer testing** as requested:
 
 ## 🚀 Quick Start Commands
 
-```bash
+\`\`\`bash
 # Run ALL tests with one command
 ./scripts/run-tests.sh
 
@@ -38,7 +38,7 @@ Your chat UI now has **comprehensive 3-layer testing** as requested:
 pnpm test              # Unit & Component tests
 pnpm test:e2e         # E2E tests
 pnpm test:coverage    # Tests with coverage
-```
+\`\`\`
 
 ## 📋 Test Coverage
 
@@ -64,7 +64,7 @@ The suite tests **everything** you requested:
 
 ## 📁 File Structure Created
 
-```
+\`\`\`
 tests/
 ├── README.md                 # Comprehensive documentation
 ├── playwright/
@@ -79,7 +79,7 @@ tests/
 
 scripts/
 └── run-tests.sh             # One-command test runner (NEW)
-```
+\`\`\`
 
 ## 🎯 Ready to Use
 

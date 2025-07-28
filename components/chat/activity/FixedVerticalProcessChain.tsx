@@ -21,4 +21,4 @@ export function FixedVerticalProcessChain({ activities, onActivityClick }: Fixed
       </div>
     </div>
   )
-} 
+}

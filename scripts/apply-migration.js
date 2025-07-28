@@ -102,4 +102,4 @@ async function applyMigration() {
   }
 }
 
-applyMigration() 
+applyMigration()

@@ -261,4 +261,4 @@ export async function POST(req: NextRequest) {
       details: error.message
     }, { status: 500 })
   }
-} 
+}

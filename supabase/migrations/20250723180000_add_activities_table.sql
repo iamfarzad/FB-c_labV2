@@ -36,4 +36,4 @@ BEGIN
     ) THEN
         ALTER PUBLICATION supabase_realtime ADD TABLE activities;
     END IF;
-END $$; 
+END $$;

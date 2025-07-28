@@ -199,4 +199,4 @@ async function main() {
 
 main().catch(console.error)
 
-export { MultilingualTTSTester } 
+export { MultilingualTTSTester }

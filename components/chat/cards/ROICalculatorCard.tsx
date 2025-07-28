@@ -360,4 +360,4 @@ export function ROICalculatorCard({ onComplete, onCancel }: ROICalculatorCardPro
       </div>
     </ToolCardWrapper>
   )
-} 
+}

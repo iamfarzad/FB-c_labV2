@@ -128,4 +128,4 @@ Use these commands to enforce rule compliance:
 - `@/rules [specialist]` - Apply specific specialist rules
 - `@/rules compliance` - Check overall rule compliance
 
-**⚠️ REMINDER: These rules are MANDATORY and will be enforced automatically. Non-compliant responses will be rejected.** 
+**⚠️ REMINDER: These rules are MANDATORY and will be enforced automatically. Non-compliant responses will be rejected.**

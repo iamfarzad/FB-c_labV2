@@ -14,7 +14,7 @@
 - **Budget alerts**: Warn when approaching token limits
 
 ### **Implementation Pattern**
-```typescript
+\`\`\`typescript
 // REQUIRED: Token estimation before AI calls
 const estimatedTokens = await countTokens(inputText);
 if (estimatedTokens > 500) {
@@ -24,7 +24,7 @@ if (estimatedTokens > 500) {
 // REQUIRED: Cost tracking
 const cost = calculateTokenCost(estimatedTokens);
 logActivity('info', 'AI call cost', { tokens: estimatedTokens, cost });
-```
+\`\`\`
 
 ### **Reference Files**
 - [lib/token-cost-calculator.ts](mdc:lib/token-cost-calculator.ts) - Token calculation utilities
@@ -39,7 +39,7 @@ logActivity('info', 'AI call cost', { tokens: estimatedTokens, cost });
 - **Request deduplication**: Prevent duplicate calls with same parameters
 
 ### **Implementation Pattern**
-```typescript
+\`\`\`typescript
 // REQUIRED: Rate limiting and deduplication
 const requestKey = generateRequestKey(params);
 if (isDuplicateRequest(requestKey, 5000)) {
@@ -50,7 +50,7 @@ if (isDuplicateRequest(requestKey, 5000)) {
 const debouncedCall = debounce(async (params) => {
   return await makeAICall(params);
 }, 1000);
-```
+\`\`\`
 
 ### **Rate Limiting Rules**
 - **Maximum 20 requests/minute** per IP address
@@ -67,7 +67,7 @@ const debouncedCall = debounce(async (params) => {
 - **Atomic changes**: Changes must be logically independent
 
 ### **Change Validation**
-```typescript
+\`\`\`typescript
 // REQUIRED: Change scope validation
 const changedLines = getChangedLines();
 const changedFiles = getChangedFiles();
@@ -79,7 +79,7 @@ if (changedLines > 50) {
 if (changedFiles.length > 3) {
   throw new Error('PR touches too many files. Consider separate PRs.');
 }
-```
+\`\`\`
 
 ### **Large Change Handling**
 - **Feature flags**: Use feature flags for large changes
@@ -96,7 +96,7 @@ if (changedFiles.length > 3) {
 - **Alternative evaluation**: Consider existing solutions first
 
 ### **Approval Process**
-```markdown
+\`\`\`markdown
 ## Dependency Approval Required
 
 **Package**: `@new-package/name`
@@ -105,7 +105,7 @@ if (changedFiles.length > 3) {
 **Security Assessment**: [npm audit] results
 **Alternatives Considered**: List of evaluated alternatives
 **Impact**: Performance and bundle size impact
-```
+\`\`\`
 
 ### **Dependency Rules**
 - **No duplicate functionality**: Don't add packages for existing capabilities
@@ -122,7 +122,7 @@ if (changedFiles.length > 3) {
 - **Local development**: Use `.env.local` for development secrets
 
 ### **Implementation Pattern**
-```typescript
+\`\`\`typescript
 // REQUIRED: Environment variable validation
 const requiredEnvVars = [
   'GEMINI_API_KEY',
@@ -139,7 +139,7 @@ for (const envVar of requiredEnvVars) {
 // REQUIRED: No hardcoded values
 const apiKey = process.env.GEMINI_API_KEY; // ✅ Correct
 const apiKey = 'sk-1234567890abcdef'; // ❌ Forbidden
-```
+\`\`\`
 
 ### **Security Checklist**
 - [ ] No API keys in code
@@ -157,7 +157,7 @@ const apiKey = 'sk-1234567890abcdef'; // ❌ Forbidden
 - **Graceful degradation**: System must continue working on errors
 
 ### **Implementation Pattern**
-```typescript
+\`\`\`typescript
 // REQUIRED: Try/catch for all async operations
 try {
   const result = await makeAICall(params);
@@ -178,7 +178,7 @@ makeAICall(params)
     logActivity('error', 'AI call failed', { error: error.message });
     handleError(error);
   });
-```
+\`\`\`
 
 ### **Error Handling Rules**
 - **No silent failures**: All errors must be logged
@@ -195,7 +195,7 @@ makeAICall(params)
 - **Testing**: Visual regression tests for UI changes
 
 ### **Implementation Pattern**
-```css
+\`\`\`css
 /* REQUIRED: Component-specific CSS with comments */
 .chat-message-input {
   /* Component: ChatMessageInput - Enhanced focus state */
@@ -209,7 +209,7 @@ makeAICall(params)
   border-color: var(--accent-color-focus);
   box-shadow: 0 0 0 2px var(--accent-color-focus-alpha);
 }
-```
+\`\`\`
 
 ### **UI Change Rules**
 - **No global style changes**: Avoid modifying global CSS

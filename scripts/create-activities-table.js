@@ -160,4 +160,4 @@ async function createActivitiesTable() {
   }
 }
 
-createActivitiesTable() 
+createActivitiesTable()

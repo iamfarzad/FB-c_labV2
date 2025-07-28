@@ -134,4 +134,4 @@ describe('Enhanced Chat API Compliance', () => {
       expect(chatApiContent).toMatch(/X-Correlation-ID.*correlationId/);
     });
   });
-}); 
+});

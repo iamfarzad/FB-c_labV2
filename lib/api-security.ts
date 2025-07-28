@@ -167,4 +167,4 @@ export function withFullSecurity(
     // Apply CORS
     return withAPISecurity(limitedHandler)(req)
   }
-} 
+}

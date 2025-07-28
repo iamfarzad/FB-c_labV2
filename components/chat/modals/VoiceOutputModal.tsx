@@ -391,4 +391,4 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
   )
 }
 
-export default VoiceOutputModal 
+export default VoiceOutputModal

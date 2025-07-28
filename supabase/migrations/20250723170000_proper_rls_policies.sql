@@ -101,4 +101,4 @@ ORDER BY tablename, policyname;
 
 -- 8. Test policy enforcement (optional - run this to verify)
 -- This should return 0 rows if policies are working correctly
--- SELECT COUNT(*) FROM lead_summaries WHERE user_id IS NULL; 
+-- SELECT COUNT(*) FROM lead_summaries WHERE user_id IS NULL;

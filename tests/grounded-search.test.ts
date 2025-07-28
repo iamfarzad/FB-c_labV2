@@ -123,4 +123,4 @@ describe('GeminiLiveAPI', () => {
       expect(validContext.role).toBeDefined()
     })
   })
-}) 
+})

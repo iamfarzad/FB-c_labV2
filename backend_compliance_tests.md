@@ -12,7 +12,7 @@ This document contains automated tests to validate compliance with the backend a
 **Description**: Verify all API endpoints require proper authentication
 **Preconditions**: Server running, test database configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test each protected endpoint
 const protectedEndpoints = [
   '/api/admin/leads',
@@ -33,7 +33,7 @@ for (const endpoint of protectedEndpoints) {
   
   assert(response.status === 401, `Endpoint ${endpoint} should require authentication`);
 }
-```
+\`\`\`
 **Commands**: `pnpm test:security:auth`
 **Expected Result**: All protected endpoints return 401 Unauthorized
 
@@ -41,7 +41,7 @@ for (const endpoint of protectedEndpoints) {
 **Description**: Verify JWT tokens expire within 24 hours
 **Preconditions**: Authentication system configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Generate token and verify expiration
 const token = await generateJWT({ userId: 'test', role: 'user' });
 const decoded = jwt.decode(token) as any;
@@ -50,7 +50,7 @@ const now = new Date();
 const maxExpiration = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
 assert(expirationTime <= maxExpiration, 'JWT token should expire within 24 hours');
-```
+\`\`\`
 **Commands**: `pnpm test:security:jwt`
 **Expected Result**: All JWT tokens expire within 24 hours
 
@@ -58,7 +58,7 @@ assert(expirationTime <= maxExpiration, 'JWT token should expire within 24 hours
 **Description**: Verify role-based access control for admin endpoints
 **Preconditions**: RBAC system configured with test users
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test admin access with different roles
 const testCases = [
   { role: 'user', shouldAccess: false },
@@ -77,7 +77,7 @@ for (const testCase of testCases) {
     `Role ${testCase.role} should ${testCase.shouldAccess ? 'have' : 'not have'} admin access`
   );
 }
-```
+\`\`\`
 **Commands**: `pnpm test:security:rbac`
 **Expected Result**: Only admin and service_role users can access admin endpoints
 
@@ -85,7 +85,7 @@ for (const testCase of testCases) {
 **Description**: Verify all user inputs are validated and sanitized
 **Preconditions**: Input validation middleware configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test malicious inputs
 const maliciousInputs = [
   { field: 'email', value: '<script>alert("xss")</script>', expected: 'invalid' },
@@ -102,7 +102,7 @@ for (const input of maliciousInputs) {
   
   assert(response.status === 400, `Malicious input should be rejected: ${input.field}`);
 }
-```
+\`\`\`
 **Commands**: `pnpm test:security:input`
 **Expected Result**: All malicious inputs are rejected with 400 status
 
@@ -110,7 +110,7 @@ for (const input of maliciousInputs) {
 **Description**: Verify rate limiting is implemented on all endpoints
 **Preconditions**: Rate limiting middleware configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test rate limiting by making rapid requests
 const endpoint = '/api/chat';
 const maxRequests = 100; // Configured limit
@@ -126,7 +126,7 @@ for (let i = 0; i < maxRequests + 10; i++) {
     assert(response.status === 429, 'Rate limit should be enforced');
   }
 }
-```
+\`\`\`
 **Commands**: `pnpm test:security:rate-limit`
 **Expected Result**: Requests beyond limit return 429 Too Many Requests
 
@@ -136,7 +136,7 @@ for (let i = 0; i < maxRequests + 10; i++) {
 **Description**: Verify webhook signatures are validated
 **Preconditions**: Webhook secret configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test webhook with invalid signature
 const payload = JSON.stringify({ type: 'email.sent', data: {} });
 const invalidSignature = 'invalid_signature';
@@ -151,7 +151,7 @@ const response = await fetch(`${baseUrl}/api/webhooks/resend`, {
 });
 
 assert(response.status === 401, 'Invalid webhook signature should be rejected');
-```
+\`\`\`
 **Commands**: `pnpm test:security:webhook`
 **Expected Result**: Invalid signatures return 401 Unauthorized
 
@@ -159,7 +159,7 @@ assert(response.status === 401, 'Invalid webhook signature should be rejected');
 **Description**: Verify CORS policies are properly configured
 **Preconditions**: CORS middleware configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test CORS headers
 const response = await fetch(`${baseUrl}/api/chat`, {
   method: 'OPTIONS',
@@ -171,7 +171,7 @@ const response = await fetch(`${baseUrl}/api/chat`, {
 
 const corsHeader = response.headers.get('Access-Control-Allow-Origin');
 assert(corsHeader !== '*', 'CORS should not allow all origins');
-```
+\`\`\`
 **Commands**: `pnpm test:security:cors`
 **Expected Result**: CORS headers restrict origins appropriately
 
@@ -179,7 +179,7 @@ assert(corsHeader !== '*', 'CORS should not allow all origins');
 **Description**: Verify request size limits are enforced
 **Preconditions**: Request size limiting configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test oversized request
 const largePayload = 'x'.repeat(10 * 1024 * 1024); // 10MB
 
@@ -190,7 +190,7 @@ const response = await fetch(`${baseUrl}/api/upload`, {
 });
 
 assert(response.status === 413, 'Oversized request should be rejected');
-```
+\`\`\`
 **Commands**: `pnpm test:security:request-size`
 **Expected Result**: Oversized requests return 413 Payload Too Large
 
@@ -200,7 +200,7 @@ assert(response.status === 413, 'Oversized request should be rejected');
 **Description**: Verify PII data is encrypted at rest
 **Preconditions**: Database encryption configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Check database encryption status
 const supabase = getSupabase();
 const { data: encryptionStatus } = await supabase
@@ -216,7 +216,7 @@ for (const table of piiTables) {
   
   assert(tableInfo.encrypted, `Table ${table} should be encrypted`);
 }
-```
+\`\`\`
 **Commands**: `pnpm test:security:encryption`
 **Expected Result**: All PII tables are encrypted
 
@@ -224,7 +224,7 @@ for (const table of piiTables) {
 **Description**: Verify SQL injection prevention
 **Preconditions**: Database with test data
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test SQL injection attempts
 const injectionAttempts = [
   "'; DROP TABLE lead_summaries; --",
@@ -240,7 +240,7 @@ for (const attempt of injectionAttempts) {
   // Should not crash or return unexpected data
   assert(response.status !== 500, 'SQL injection should not cause server error');
 }
-```
+\`\`\`
 **Commands**: `pnpm test:security:sql-injection`
 **Expected Result**: SQL injection attempts are safely handled
 
@@ -252,7 +252,7 @@ for (const attempt of injectionAttempts) {
 **Description**: Verify data subject rights implementation
 **Preconditions**: GDPR compliance system configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test data access right
 const response = await fetch(`${baseUrl}/api/gdpr/access`, {
   method: 'POST',
@@ -263,7 +263,7 @@ const response = await fetch(`${baseUrl}/api/gdpr/access`, {
 assert(response.status === 200, 'Data access request should be processed');
 const data = await response.json();
 assert(data.userData, 'User data should be returned');
-```
+\`\`\`
 **Commands**: `pnpm test:compliance:gdpr-access`
 **Expected Result**: Data access requests return user data
 
@@ -271,7 +271,7 @@ assert(data.userData, 'User data should be returned');
 **Description**: Verify data processing records are maintained
 **Preconditions**: Audit logging system configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Check audit logs for data processing
 const supabase = getSupabase();
 const { data: auditLogs } = await supabase
@@ -280,7 +280,7 @@ const { data: auditLogs } = await supabase
   .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
 assert(auditLogs.length > 0, 'Audit logs should be maintained');
-```
+\`\`\`
 **Commands**: `pnpm test:compliance:audit-logs`
 **Expected Result**: Audit logs contain data processing records
 
@@ -288,7 +288,7 @@ assert(auditLogs.length > 0, 'Audit logs should be maintained');
 **Description**: Verify consent management system
 **Preconditions**: Consent management configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test consent tracking
 const consentData = {
   email: 'test@example.com',
@@ -304,7 +304,7 @@ const response = await fetch(`${baseUrl}/api/gdpr/consent`, {
 });
 
 assert(response.status === 200, 'Consent should be recorded');
-```
+\`\`\`
 **Commands**: `pnpm test:compliance:consent`
 **Expected Result**: Consent is properly recorded and retrievable
 
@@ -314,7 +314,7 @@ assert(response.status === 200, 'Consent should be recorded');
 **Description**: Verify only necessary data is collected
 **Preconditions**: Data collection forms configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Check lead capture form fields
 const response = await fetch(`${baseUrl}/api/lead-capture/schema`);
 const schema = await response.json();
@@ -331,7 +331,7 @@ for (const field of requiredFields) {
 for (const field of optionalFields) {
   assert(!schema.required.includes(field), `Optional field ${field} should not be required`);
 }
-```
+\`\`\`
 **Commands**: `pnpm test:compliance:data-minimization`
 **Expected Result**: Only necessary fields are required
 
@@ -339,7 +339,7 @@ for (const field of optionalFields) {
 **Description**: Verify data anonymization for analytics
 **Preconditions**: Anonymization system configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test analytics data anonymization
 const response = await fetch(`${baseUrl}/api/admin/analytics`);
 const analyticsData = await response.json();
@@ -350,7 +350,7 @@ for (const field of piiFields) {
   assert(!JSON.stringify(analyticsData).includes(field), 
     `Analytics should not contain PII field: ${field}`);
 }
-```
+\`\`\`
 **Commands**: `pnpm test:compliance:anonymization`
 **Expected Result**: Analytics data contains no PII
 
@@ -362,7 +362,7 @@ for (const field of piiFields) {
 **Description**: Verify API endpoints respond within 2 seconds
 **Preconditions**: Server running, test data available
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test response times for all endpoints
 const endpoints = [
   '/api/chat',
@@ -382,7 +382,7 @@ for (const endpoint of endpoints) {
   
   assert(responseTime < 2000, `Endpoint ${endpoint} should respond within 2 seconds`);
 }
-```
+\`\`\`
 **Commands**: `pnpm test:performance:response-time`
 **Expected Result**: All endpoints respond within 2 seconds
 
@@ -390,7 +390,7 @@ for (const endpoint of endpoints) {
 **Description**: Verify database queries complete within 500ms
 **Preconditions**: Database with test data
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test database query performance
 const supabase = getSupabase();
 const startTime = Date.now();
@@ -405,7 +405,7 @@ const queryTime = endTime - startTime;
 
 assert(queryTime < 500, 'Database query should complete within 500ms');
 assert(!error, 'Query should not have errors');
-```
+\`\`\`
 **Commands**: `pnpm test:performance:database`
 **Expected Result**: Database queries complete within 500ms
 
@@ -413,7 +413,7 @@ assert(!error, 'Query should not have errors');
 **Description**: Verify file uploads complete within 30 seconds
 **Preconditions**: File upload system configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test file upload performance
 const testFile = new File(['test content'], 'test.txt', { type: 'text/plain' });
 const formData = new FormData();
@@ -429,7 +429,7 @@ const uploadTime = endTime - startTime;
 
 assert(uploadTime < 30000, 'File upload should complete within 30 seconds');
 assert(response.status === 200, 'Upload should be successful');
-```
+\`\`\`
 **Commands**: `pnpm test:performance:upload`
 **Expected Result**: File uploads complete within 30 seconds
 
@@ -439,7 +439,7 @@ assert(response.status === 200, 'Upload should be successful');
 **Description**: Verify caching improves performance
 **Preconditions**: Caching system configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test cache effectiveness
 const endpoint = '/api/admin/analytics';
 const iterations = 10;
@@ -461,7 +461,7 @@ for (let i = 0; i < iterations; i++) {
 const time2 = (Date.now() - startTime2) / iterations;
 
 assert(time2 < time1, 'Cached requests should be faster');
-```
+\`\`\`
 **Commands**: `pnpm test:performance:cache`
 **Expected Result**: Cached requests are significantly faster
 
@@ -473,7 +473,7 @@ assert(time2 < time1, 'Cached requests should be faster');
 **Description**: Verify system handles concurrent users
 **Preconditions**: Load testing environment configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Simulate concurrent users
 const concurrentUsers = 100;
 const promises = [];
@@ -494,7 +494,7 @@ const responses = await Promise.all(promises);
 const successCount = responses.filter(r => r.status === 200).length;
 
 assert(successCount >= concurrentUsers * 0.95, '95% of requests should succeed');
-```
+\`\`\`
 **Commands**: `pnpm test:scalability:concurrent`
 **Expected Result**: System handles 100 concurrent users with 95% success rate
 
@@ -502,7 +502,7 @@ assert(successCount >= concurrentUsers * 0.95, '95% of requests should succeed')
 **Description**: Verify auto-scaling triggers work
 **Preconditions**: Auto-scaling configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Monitor scaling during load test
 const startMetrics = await getSystemMetrics();
 await runLoadTest(1000); // 1000 requests
@@ -510,7 +510,7 @@ const endMetrics = await getSystemMetrics();
 
 assert(endMetrics.instanceCount > startMetrics.instanceCount, 
   'System should scale up under load');
-```
+\`\`\`
 **Commands**: `pnpm test:scalability:auto-scaling`
 **Expected Result**: System scales up under load
 
@@ -522,7 +522,7 @@ assert(endMetrics.instanceCount > startMetrics.instanceCount,
 **Description**: Verify health check endpoints work
 **Preconditions**: Health check system configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test health check endpoints
 const healthEndpoints = [
   '/api/health',
@@ -537,7 +537,7 @@ for (const endpoint of healthEndpoints) {
   assert(response.status === 200, `Health check ${endpoint} should return 200`);
   assert(health.status === 'healthy', `Health check ${endpoint} should be healthy`);
 }
-```
+\`\`\`
 **Commands**: `pnpm test:observability:health`
 **Expected Result**: All health checks return healthy status
 
@@ -545,7 +545,7 @@ for (const endpoint of healthEndpoints) {
 **Description**: Verify metrics are collected
 **Preconditions**: Metrics collection configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Check metrics endpoint
 const response = await fetch(`${baseUrl}/api/metrics`);
 const metrics = await response.json();
@@ -553,7 +553,7 @@ const metrics = await response.json();
 assert(metrics.requestCount !== undefined, 'Request count should be tracked');
 assert(metrics.errorRate !== undefined, 'Error rate should be tracked');
 assert(metrics.responseTime !== undefined, 'Response time should be tracked');
-```
+\`\`\`
 **Commands**: `pnpm test:observability:metrics`
 **Expected Result**: All required metrics are collected
 
@@ -563,7 +563,7 @@ assert(metrics.responseTime !== undefined, 'Response time should be tracked');
 **Description**: Verify structured logging is implemented
 **Preconditions**: Logging system configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Trigger an action and check logs
 await fetch(`${baseUrl}/api/chat`, {
   method: 'POST',
@@ -579,7 +579,7 @@ assert(logEntry.timestamp, 'Log should have timestamp');
 assert(logEntry.level, 'Log should have level');
 assert(logEntry.message, 'Log should have message');
 assert(logEntry.correlationId, 'Log should have correlation ID');
-```
+\`\`\`
 **Commands**: `pnpm test:observability:logging`
 **Expected Result**: Logs are structured and contain required fields
 
@@ -591,10 +591,10 @@ assert(logEntry.correlationId, 'Log should have correlation ID');
 **Description**: Verify dependency vulnerability scanning
 **Preconditions**: Security scanning configured
 **Test Steps**:
-```bash
+\`\`\`bash
 # Run security scan
 npm audit --audit-level=high
-```
+\`\`\`
 **Commands**: `pnpm test:ci:security-scan`
 **Expected Result**: No high or critical vulnerabilities found
 
@@ -602,12 +602,12 @@ npm audit --audit-level=high
 **Description**: Verify automated tests run in pipeline
 **Preconditions**: Test suite configured
 **Test Steps**:
-```bash
+\`\`\`bash
 # Run all tests
 pnpm test:unit
 pnpm test:integration
 pnpm test:e2e
-```
+\`\`\`
 **Commands**: `pnpm test:ci:automated`
 **Expected Result**: All tests pass
 
@@ -615,10 +615,10 @@ pnpm test:e2e
 **Description**: Verify code coverage requirements
 **Preconditions**: Coverage reporting configured
 **Test Steps**:
-```bash
+\`\`\`bash
 # Run tests with coverage
 pnpm test:coverage
-```
+\`\`\`
 **Commands**: `pnpm test:ci:coverage`
 **Expected Result**: Code coverage >= 80%
 
@@ -630,12 +630,12 @@ pnpm test:coverage
 **Description**: Verify database backups are created
 **Preconditions**: Backup system configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Check backup status
 const backupStatus = await checkBackupStatus();
 assert(backupStatus.lastBackup, 'Last backup should exist');
 assert(backupStatus.backupAge < 24 * 60 * 60 * 1000, 'Backup should be less than 24 hours old');
-```
+\`\`\`
 **Commands**: `pnpm test:dr:backup`
 **Expected Result**: Recent backups exist and are valid
 
@@ -643,12 +643,12 @@ assert(backupStatus.backupAge < 24 * 60 * 60 * 1000, 'Backup should be less than
 **Description**: Verify backup restoration works
 **Preconditions**: Test environment available
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test backup restoration
 const restoreResult = await restoreFromBackup('test-backup');
 assert(restoreResult.success, 'Backup restoration should succeed');
 assert(restoreResult.dataIntegrity, 'Restored data should be intact');
-```
+\`\`\`
 **Commands**: `pnpm test:dr:restore`
 **Expected Result**: Backup restoration succeeds with data integrity
 
@@ -660,10 +660,10 @@ assert(restoreResult.dataIntegrity, 'Restored data should be intact');
 **Description**: Verify 80% code coverage is maintained
 **Preconditions**: Coverage reporting configured
 **Test Steps**:
-```bash
+\`\`\`bash
 # Generate coverage report
 pnpm test:coverage:report
-```
+\`\`\`
 **Commands**: `pnpm test:coverage:threshold`
 **Expected Result**: Coverage >= 80%
 
@@ -671,7 +671,7 @@ pnpm test:coverage:report
 **Description**: Verify all business logic is tested
 **Preconditions**: Test suite configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Check test files exist for all business logic
 const businessLogicFiles = [
   'lib/token-cost-calculator.ts',
@@ -683,7 +683,7 @@ for (const file of businessLogicFiles) {
   const testFile = file.replace('.ts', '.test.ts');
   assert(fs.existsSync(testFile), `Test file should exist for ${file}`);
 }
-```
+\`\`\`
 **Commands**: `pnpm test:business-logic`
 **Expected Result**: All business logic files have corresponding tests
 
@@ -695,10 +695,10 @@ for (const file of businessLogicFiles) {
 **Description**: Verify only necessary ports are open
 **Preconditions**: Network configuration available
 **Test Steps**:
-```bash
+\`\`\`bash
 # Check open ports
 nmap -p 80,443,3000 localhost
-```
+\`\`\`
 **Commands**: `pnpm test:network:ports`
 **Expected Result**: Only necessary ports (80, 443, 3000) are open
 
@@ -706,10 +706,10 @@ nmap -p 80,443,3000 localhost
 **Description**: Verify SSL/TLS is properly configured
 **Preconditions**: SSL certificate configured
 **Test Steps**:
-```bash
+\`\`\`bash
 # Test SSL configuration
 openssl s_client -connect localhost:443 -servername localhost
-```
+\`\`\`
 **Commands**: `pnpm test:network:ssl`
 **Expected Result**: SSL/TLS is properly configured with strong ciphers
 
@@ -721,13 +721,13 @@ openssl s_client -connect localhost:443 -servername localhost
 **Description**: Verify resource usage is monitored
 **Preconditions**: Monitoring system configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Check resource usage metrics
 const metrics = await getResourceMetrics();
 assert(metrics.cpu !== undefined, 'CPU usage should be monitored');
 assert(metrics.memory !== undefined, 'Memory usage should be monitored');
 assert(metrics.storage !== undefined, 'Storage usage should be monitored');
-```
+\`\`\`
 **Commands**: `pnpm test:cost:monitoring`
 **Expected Result**: All resource metrics are collected
 
@@ -735,12 +735,12 @@ assert(metrics.storage !== undefined, 'Storage usage should be monitored');
 **Description**: Verify budget alerts are configured
 **Preconditions**: Budget monitoring configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Check budget alert configuration
 const budgetConfig = await getBudgetConfig();
 assert(budgetConfig.alerts.length > 0, 'Budget alerts should be configured');
 assert(budgetConfig.threshold < 1.0, 'Alert threshold should be less than 100%');
-```
+\`\`\`
 **Commands**: `pnpm test:cost:budget`
 **Expected Result**: Budget alerts are properly configured
 
@@ -752,14 +752,14 @@ assert(budgetConfig.threshold < 1.0, 'Alert threshold should be less than 100%')
 **Description**: Verify semantic versioning is used
 **Preconditions**: API versioning configured
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Check API version headers
 const response = await fetch(`${baseUrl}/api/chat`);
 const version = response.headers.get('X-API-Version');
 
 assert(version, 'API version header should be present');
 assert(/^\d+\.\d+\.\d+$/.test(version), 'Version should follow semantic versioning');
-```
+\`\`\`
 **Commands**: `pnpm test:api:versioning`
 **Expected Result**: API uses semantic versioning
 
@@ -767,7 +767,7 @@ assert(/^\d+\.\d+\.\d+$/.test(version), 'Version should follow semantic versioni
 **Description**: Verify backward compatibility
 **Preconditions**: Multiple API versions available
 **Test Steps**:
-```typescript
+\`\`\`typescript
 // Test backward compatibility
 const oldVersion = '1.0.0';
 const newVersion = '2.0.0';
@@ -782,7 +782,7 @@ const newResponse = await fetch(`${baseUrl}/api/v2/chat`, {
 
 assert(oldResponse.status === 200, 'Old version should still work');
 assert(newResponse.status === 200, 'New version should work');
-```
+\`\`\`
 **Commands**: `pnpm test:api:compatibility`
 **Expected Result**: Both old and new versions work
 
@@ -790,19 +790,19 @@ assert(newResponse.status === 200, 'New version should work');
 
 ### 1. Test Environment Setup
 
-```bash
+\`\`\`bash
 # Install test dependencies
 pnpm add -D jest @types/jest supertest @types/supertest
 
 # Configure test environment
 cp .env.example .env.test
-```
+\`\`\`
 
 ### 2. Test Scripts
 
 Add to `package.json`:
 
-```json
+\`\`\`json
 {
   "scripts": {
     "test:security": "jest --testPathPattern=security",
@@ -818,13 +818,13 @@ Add to `package.json`:
     "test:all": "pnpm test:security && pnpm test:compliance && pnpm test:performance && pnpm test:scalability && pnpm test:observability && pnpm test:ci && pnpm test:dr && pnpm test:network && pnpm test:cost && pnpm test:api"
   }
 }
-```
+\`\`\`
 
 ### 3. CI/CD Integration
 
 Add to `.github/workflows/compliance-tests.yml`:
 
-```yaml
+\`\`\`yaml
 name: Compliance Tests
 on: [push, pull_request]
 jobs:
@@ -838,31 +838,31 @@ jobs:
       - run: pnpm install
       - run: pnpm test:all
       - run: pnpm test:coverage
-```
+\`\`\`
 
 ### 4. Monitoring Integration
 
 Configure alerts for test failures:
 
-```typescript
+\`\`\`typescript
 // Alert configuration
 const alertConfig = {
   testFailureThreshold: 0.95, // 95% pass rate
   notificationChannels: ['email', 'slack'],
   escalationTime: 30 * 60 * 1000 // 30 minutes
 };
-```
+\`\`\`
 
 ### 5. Regular Compliance Checks
 
 Schedule regular compliance checks:
 
-```bash
+\`\`\`bash
 # Daily compliance check
 0 2 * * * cd /path/to/project && pnpm test:all
 
 # Weekly security scan
 0 3 * * 0 cd /path/to/project && pnpm test:security
-```
+\`\`\`
 
 This comprehensive test suite ensures all backend architecture rules are validated and maintained throughout the development lifecycle.

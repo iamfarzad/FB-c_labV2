@@ -146,4 +146,4 @@ Please provide a structured analysis with clear sections.`
       message: error.message || 'An unexpected error occurred'
     }, { status: 500 })
   }
-} 
+}

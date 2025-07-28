@@ -41,8 +41,16 @@ export class WebRTCAudioProcessor {
       enableEchoCancellation: true,
       enableNoiseSuppression: true,
       enableAutoGainControl: true,
-      ...config
+      ...config,
     }
+  }
+
+  /**
+   * Get the underlying RTCPeerConnection instance.
+   * Useful for attaching event listeners directly.
+   */
+  getPeerConnection(): RTCPeerConnection | null {
+    return this.peerConnection
   }
 
   /**
@@ -53,37 +61,34 @@ export class WebRTCAudioProcessor {
       // Create audio context
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
         sampleRate: this.config.sampleRate,
-        latencyHint: 'interactive'
+        latencyHint: "interactive",
       })
 
       // Create peer connection with optimized settings for low latency
       this.peerConnection = new RTCPeerConnection({
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' }
-        ],
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
         iceCandidatePoolSize: 10,
-        bundlePolicy: 'max-bundle',
-        rtcpMuxPolicy: 'require',
-        iceTransportPolicy: 'all'
+        bundlePolicy: "max-bundle",
+        rtcpMuxPolicy: "require",
+        iceTransportPolicy: "all",
       })
 
       // Set up connection state change handler
       this.peerConnection.onconnectionstatechange = () => {
-        const state = this.peerConnection?.connectionState || 'unknown'
-        this.isConnected = state === 'connected'
+        const state = this.peerConnection?.connectionState || "unknown"
+        this.isConnected = state === "connected"
         this.onConnectionStateChange?.(state)
-        console.log('WebRTC connection state:', state)
+        console.log("WebRTC connection state:", state)
       }
 
       // Set up data channel for audio streaming
-      const dataChannel = this.peerConnection.createDataChannel('audio', {
+      const dataChannel = this.peerConnection.createDataChannel("audio", {
         ordered: false,
-        maxRetransmits: 0
+        maxRetransmits: 0,
       })
 
       dataChannel.onopen = () => {
-        console.log('WebRTC data channel opened')
+        console.log("WebRTC data channel opened")
       }
 
       dataChannel.onmessage = (event) => {
@@ -92,9 +97,9 @@ export class WebRTCAudioProcessor {
         }
       }
 
-      console.log('✅ WebRTC audio processor initialized')
+      console.log("✅ WebRTC audio processor initialized")
     } catch (error) {
-      console.error('❌ Failed to initialize WebRTC audio processor:', error)
+      console.error("❌ Failed to initialize WebRTC audio processor:", error)
       throw error
     }
   }
@@ -105,7 +110,7 @@ export class WebRTCAudioProcessor {
   async startAudioCapture(): Promise<MediaStream> {
     try {
       if (!this.audioContext) {
-        throw new Error('Audio context not initialized')
+        throw new Error("Audio context not initialized")
       }
 
       // Request microphone access with optimized constraints
@@ -122,23 +127,23 @@ export class WebRTCAudioProcessor {
           googNoiseSuppression: this.config.enableNoiseSuppression,
           googHighpassFilter: true,
           googTypingNoiseDetection: true,
-          googAudioMirroring: false
+          googAudioMirroring: false,
         },
-        video: false
+        video: false,
       })
 
       // Add local stream to peer connection
-      this.localStream.getTracks().forEach(track => {
+      this.localStream.getTracks().forEach((track) => {
         this.peerConnection?.addTrack(track, this.localStream!)
       })
 
       // Set up audio processing
       await this.setupAudioProcessing()
 
-      console.log('✅ Audio capture started with WebRTC')
+      console.log("✅ Audio capture started with WebRTC")
       return this.localStream
     } catch (error) {
-      console.error('❌ Failed to start audio capture:', error)
+      console.error("❌ Failed to start audio capture:", error)
       throw error
     }
   }
@@ -148,7 +153,7 @@ export class WebRTCAudioProcessor {
    */
   private async setupAudioProcessing(): Promise<void> {
     if (!this.audioContext || !this.localStream) {
-      throw new Error('Audio context or local stream not available')
+      throw new Error("Audio context or local stream not available")
     }
 
     try {
@@ -159,7 +164,7 @@ export class WebRTCAudioProcessor {
       this.audioProcessor = this.audioContext.createScriptProcessor(
         this.config.bufferSize,
         this.config.channels,
-        this.config.channels
+        this.config.channels,
       )
 
       // Process audio in real-time
@@ -183,15 +188,14 @@ export class WebRTCAudioProcessor {
               const compressionRatio = 4
               const compressionThreshold = 0.5
               let sample = inputData[i]
-              
+
               if (Math.abs(sample) > compressionThreshold) {
                 const excess = Math.abs(sample) - compressionThreshold
                 const compressedExcess = excess / compressionRatio
-                sample = sample > 0 ? 
-                  compressionThreshold + compressedExcess : 
-                  -(compressionThreshold + compressedExcess)
+                sample =
+                  sample > 0 ? compressionThreshold + compressedExcess : -(compressionThreshold + compressedExcess)
               }
-              
+
               outputData[i] = sample
             }
           }
@@ -202,9 +206,9 @@ export class WebRTCAudioProcessor {
       source.connect(this.audioProcessor)
       this.audioProcessor.connect(this.audioContext.destination)
 
-      console.log('✅ Real-time audio processing set up')
+      console.log("✅ Real-time audio processing set up")
     } catch (error) {
-      console.error('❌ Failed to set up audio processing:', error)
+      console.error("❌ Failed to set up audio processing:", error)
       throw error
     }
   }
@@ -215,15 +219,15 @@ export class WebRTCAudioProcessor {
   async sendAudioData(audioData: ArrayBuffer): Promise<void> {
     try {
       if (!this.peerConnection || !this.isConnected) {
-        throw new Error('WebRTC not connected')
+        throw new Error("WebRTC not connected")
       }
 
       const dataChannel = this.peerConnection.dataChannels?.[0]
-      if (dataChannel && dataChannel.readyState === 'open') {
+      if (dataChannel && dataChannel.readyState === "open") {
         dataChannel.send(audioData)
       }
     } catch (error) {
-      console.error('❌ Failed to send audio data:', error)
+      console.error("❌ Failed to send audio data:", error)
       throw error
     }
   }
@@ -234,18 +238,18 @@ export class WebRTCAudioProcessor {
   async createOffer(): Promise<RTCSessionDescriptionInit> {
     try {
       if (!this.peerConnection) {
-        throw new Error('Peer connection not initialized')
+        throw new Error("Peer connection not initialized")
       }
 
       const offer = await this.peerConnection.createOffer({
         offerToReceiveAudio: true,
-        offerToReceiveVideo: false
+        offerToReceiveVideo: false,
       })
 
       await this.peerConnection.setLocalDescription(offer)
       return offer
     } catch (error) {
-      console.error('❌ Failed to create offer:', error)
+      console.error("❌ Failed to create offer:", error)
       throw error
     }
   }
@@ -256,13 +260,13 @@ export class WebRTCAudioProcessor {
   async setRemoteDescription(description: RTCSessionDescriptionInit): Promise<void> {
     try {
       if (!this.peerConnection) {
-        throw new Error('Peer connection not initialized')
+        throw new Error("Peer connection not initialized")
       }
 
       await this.peerConnection.setRemoteDescription(description)
-      console.log('✅ Remote description set')
+      console.log("✅ Remote description set")
     } catch (error) {
-      console.error('❌ Failed to set remote description:', error)
+      console.error("❌ Failed to set remote description:", error)
       throw error
     }
   }
@@ -273,12 +277,12 @@ export class WebRTCAudioProcessor {
   async addIceCandidate(candidate: RTCIceCandidateInit): Promise<void> {
     try {
       if (!this.peerConnection) {
-        throw new Error('Peer connection not initialized')
+        throw new Error("Peer connection not initialized")
       }
 
       await this.peerConnection.addIceCandidate(candidate)
     } catch (error) {
-      console.error('❌ Failed to add ICE candidate:', error)
+      console.error("❌ Failed to add ICE candidate:", error)
       throw error
     }
   }
@@ -305,7 +309,7 @@ export class WebRTCAudioProcessor {
 
       return await this.peerConnection.getStats()
     } catch (error) {
-      console.error('❌ Failed to get connection stats:', error)
+      console.error("❌ Failed to get connection stats:", error)
       return null
     }
   }
@@ -323,7 +327,7 @@ export class WebRTCAudioProcessor {
 
       // Stop local stream
       if (this.localStream) {
-        this.localStream.getTracks().forEach(track => track.stop())
+        this.localStream.getTracks().forEach((track) => track.stop())
         this.localStream = null
       }
 
@@ -340,9 +344,9 @@ export class WebRTCAudioProcessor {
       }
 
       this.isConnected = false
-      console.log('✅ WebRTC audio processor cleaned up')
+      console.log("✅ WebRTC audio processor cleaned up")
     } catch (error) {
-      console.error('❌ Error during cleanup:', error)
+      console.error("❌ Error during cleanup:", error)
     }
   }
 
@@ -351,7 +355,7 @@ export class WebRTCAudioProcessor {
    */
   static isSupported(): boolean {
     return !!(
-      typeof window !== 'undefined' &&
+      typeof window !== "undefined" &&
       window.RTCPeerConnection &&
       window.AudioContext &&
       navigator.mediaDevices &&
@@ -362,9 +366,9 @@ export class WebRTCAudioProcessor {
   /**
    * Get optimal configuration for different use cases
    */
-  static getOptimalConfig(useCase: 'conversation' | 'presentation' | 'broadcast'): WebRTCAudioConfig {
+  static getOptimalConfig(useCase: "conversation" | "presentation" | "broadcast"): WebRTCAudioConfig {
     switch (useCase) {
-      case 'conversation':
+      case "conversation":
         return {
           sampleRate: 24000,
           channels: 1,
@@ -372,9 +376,9 @@ export class WebRTCAudioProcessor {
           bufferSize: 2048, // Smaller buffer for lower latency
           enableEchoCancellation: true,
           enableNoiseSuppression: true,
-          enableAutoGainControl: true
+          enableAutoGainControl: true,
         }
-      case 'presentation':
+      case "presentation":
         return {
           sampleRate: 24000,
           channels: 1,
@@ -382,9 +386,9 @@ export class WebRTCAudioProcessor {
           bufferSize: 4096,
           enableEchoCancellation: true,
           enableNoiseSuppression: false,
-          enableAutoGainControl: true
+          enableAutoGainControl: true,
         }
-      case 'broadcast':
+      case "broadcast":
         return {
           sampleRate: 24000,
           channels: 2,
@@ -392,7 +396,7 @@ export class WebRTCAudioProcessor {
           bufferSize: 8192,
           enableEchoCancellation: false,
           enableNoiseSuppression: true,
-          enableAutoGainControl: false
+          enableAutoGainControl: false,
         }
       default:
         return {
@@ -402,7 +406,7 @@ export class WebRTCAudioProcessor {
           bufferSize: 4096,
           enableEchoCancellation: true,
           enableNoiseSuppression: true,
-          enableAutoGainControl: true
+          enableAutoGainControl: true,
         }
     }
   }

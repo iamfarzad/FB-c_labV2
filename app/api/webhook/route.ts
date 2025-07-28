@@ -18,4 +18,4 @@ export const POST = withFullSecurity(webhookHandler, {
   requireWebhookSignature: true,
   webhookSecret: process.env.WEBHOOK_SECRET || 'test-secret',
   payloadLimit: '100kb'
-}) 
+})

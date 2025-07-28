@@ -121,4 +121,4 @@ testRealtimeActivities().then((success) => {
     console.log('🔧 Check your realtime configuration')
   }
   process.exit(success ? 0 : 1)
-}) 
+})

@@ -58,4 +58,4 @@ DROP TRIGGER IF EXISTS update_lead_search_results_updated_at ON lead_search_resu
 CREATE TRIGGER update_lead_search_results_updated_at
     BEFORE UPDATE ON lead_search_results
     FOR EACH ROW
-    EXECUTE FUNCTION update_lead_search_results_updated_at(); 
+    EXECUTE FUNCTION update_lead_search_results_updated_at();

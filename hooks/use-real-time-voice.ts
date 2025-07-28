@@ -269,4 +269,4 @@ export function useRealTimeVoice() {
     // Utilities
     clearError: () => setError(null)
   }
-} 
+}

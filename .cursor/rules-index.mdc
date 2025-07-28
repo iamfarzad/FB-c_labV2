@@ -60,7 +60,7 @@ This document provides an index and navigation guide for all rules files in the 
 
 ## 🔄 **Rules Hierarchy**
 
-```
+\`\`\`
 Core Foundation Rules
 ├── Request Flow Rules
 ├── Refresh Context Rules
@@ -79,7 +79,7 @@ Reference Documents
 ├── Architecture & Design
 ├── Development & Testing
 └── Process & Governance
-```
+\`\`\`
 
 ## 📊 **Rules Compliance**
 

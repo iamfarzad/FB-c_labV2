@@ -33,20 +33,20 @@ Go to your GitHub repository settings and configure:
 
 Add these secrets to your GitHub repository:
 
-```bash
+\`\`\`bash
 # Required for GitHub Actions
 VERCEL_TOKEN=your_vercel_token_here
 VERCEL_ORG_ID=team_hcm6i4qba2sd6W0wp2IN1UDoODrO
 VERCEL_PROJECT_ID=prj_hcm6i4qba2sd6W0wp2IN1UDoODrO
-```
+\`\`\`
 
 ### **3. Vercel Token Generation**
 
-```bash
+\`\`\`bash
 # Generate a new Vercel token
 pnpm exec vercel login
 pnpm exec vercel token create "GitHub Actions" --scope=team
-```
+\`\`\`
 
 ## 🌿 **Branch Strategy**
 
@@ -75,7 +75,7 @@ pnpm exec vercel token create "GitHub Actions" --scope=team
 ## 🔄 **Deployment Flow**
 
 ### **Feature Development**
-```bash
+\`\`\`bash
 # Create feature branch
 git checkout -b feature/new-feature
 
@@ -86,10 +86,10 @@ git push origin feature/new-feature
 
 # Creates PR → Triggers preview deployment
 # PR approval → Merges to develop
-```
+\`\`\`
 
 ### **Production Release**
-```bash
+\`\`\`bash
 # Merge develop to main
 git checkout main
 git merge develop
@@ -97,7 +97,7 @@ git push origin main
 
 # Triggers production deployment
 # Requires approval in Vercel dashboard
-```
+\`\`\`
 
 ## 🛡️ **Security Features**
 
@@ -139,7 +139,7 @@ git push origin main
 ## 🔧 **Local Development**
 
 ### **Environment Setup**
-```bash
+\`\`\`bash
 # Install dependencies
 pnpm install
 
@@ -151,10 +151,10 @@ echo "ENABLE_GEMINI_MOCKING=true" >> .env.local
 
 # Start development server
 pnpm dev
-```
+\`\`\`
 
 ### **Testing**
-```bash
+\`\`\`bash
 # Run all tests
 pnpm test
 
@@ -163,27 +163,27 @@ pnpm test:watch
 
 # Run E2E tests
 pnpm test:e2e
-```
+\`\`\`
 
 ## 🚨 **Emergency Procedures**
 
 ### **Rollback Deployment**
-```bash
+\`\`\`bash
 # List recent deployments
 pnpm exec vercel ls
 
 # Rollback to previous deployment
 pnpm exec vercel rollback <deployment-url>
-```
+\`\`\`
 
 ### **Disable Mocking in Production**
-```bash
+\`\`\`bash
 # Set environment variable
 pnpm exec vercel env add ENABLE_GEMINI_MOCKING production false
-```
+\`\`\`
 
 ### **Emergency Hotfix**
-```bash
+\`\`\`bash
 # Create hotfix branch
 git checkout -b hotfix/emergency-fix
 
@@ -192,7 +192,7 @@ git commit -m "fix: emergency fix"
 
 # Push and create PR
 git push origin hotfix/emergency-fix
-```
+\`\`\`
 
 ## 📈 **Monitoring & Analytics**
 
@@ -210,7 +210,7 @@ git push origin hotfix/emergency-fix
 
 ## 🔗 **Useful Commands**
 
-```bash
+\`\`\`bash
 # Deploy to preview
 pnpm exec vercel --prod=false
 
@@ -225,11 +225,11 @@ pnpm exec vercel logs <deployment-url>
 
 # Check project status
 pnpm exec vercel project inspect v0-fb-c-ai-clone
-```
+\`\`\`
 
 ## 📞 **Support**
 
 - **Vercel Documentation**: https://vercel.com/docs
 - **GitHub Actions**: https://docs.github.com/en/actions
 - **Project Issues**: Create issue in GitHub repository
-- **Emergency Contact**: Use Vercel dashboard for urgent issues 
+- **Emergency Contact**: Use Vercel dashboard for urgent issues

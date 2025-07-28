@@ -108,4 +108,4 @@ ORDER BY usage_date DESC, total_cost DESC;
 -- Grant permissions
 GRANT SELECT, INSERT ON token_usage_logs TO authenticated;
 GRANT SELECT, UPDATE ON user_budgets TO authenticated;
-GRANT SELECT ON daily_token_usage TO authenticated; 
+GRANT SELECT ON daily_token_usage TO authenticated;

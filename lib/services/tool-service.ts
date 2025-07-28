@@ -147,4 +147,4 @@ export const handleScreenShare = async (result: ScreenShareResult) => {
     console.error('Screen share error:', error)
     throw new Error('Failed to process screen share analysis')
   }
-} 
+}

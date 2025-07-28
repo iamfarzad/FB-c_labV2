@@ -115,4 +115,4 @@ async function checkRealtimeSetup() {
 checkRealtimeSetup().then(() => {
   console.log('🔍 Realtime setup check completed')
   process.exit(0)
-}) 
+})

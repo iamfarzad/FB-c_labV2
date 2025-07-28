@@ -10,7 +10,7 @@ The FB-c_labV2 project uses a **single, unified activity system** for tracking a
 
 The entire activity system is built around one core hook:
 
-```typescript
+\`\`\`typescript
 // hooks/use-real-time-activities.ts
 export function useRealTimeActivities() {
   // Provides:
@@ -20,11 +20,11 @@ export function useRealTimeActivities() {
   // - clearActivities: () => void
   // - isConnected: boolean
 }
-```
+\`\`\`
 
 ### Data Flow
 
-```
+\`\`\`
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │   Client-Side   │    │   Server-Side    │    │   Database      │
 │                 │    │                  │    │                 │
@@ -33,7 +33,7 @@ export function useRealTimeActivities() {
 │ useRealTime     │◀───│ Supabase         │◀───│ realtime        │
 │ Activities      │    │ Realtime         │    │ subscription    │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
-```
+\`\`\`
 
 ## Components
 
@@ -50,7 +50,7 @@ export function useRealTimeActivities() {
 - Handles connection status
 
 **Usage**:
-```typescript
+\`\`\`typescript
 const { activities, addActivity, updateActivity, isConnected } = useRealTimeActivities()
 
 // Add a new activity
@@ -60,7 +60,7 @@ addActivity({
   description: "User sent a message",
   status: "completed"
 })
-```
+\`\`\`
 
 ### 2. Server-Side Activity Logging
 
@@ -75,7 +75,7 @@ addActivity({
 - Integration with real-time system
 
 **Usage**:
-```typescript
+\`\`\`typescript
 import { logServerActivity } from '@/lib/server-activity-logger'
 
 await logServerActivity({
@@ -85,7 +85,7 @@ await logServerActivity({
   status: "completed",
   metadata: { responseLength: 1500 }
 })
-```
+\`\`\`
 
 ### 3. Activity Context Provider
 
@@ -101,7 +101,7 @@ await logServerActivity({
 **Purpose**: Provides activity system to React components
 
 **Usage**:
-```typescript
+\`\`\`typescript
 const { activityLog, addActivity } = useChatContext()
 
 // Add activity from any component
@@ -111,13 +111,13 @@ addActivity({
   description: "User uploaded document.pdf",
   status: "completed"
 })
-```
+\`\`\`
 
 ## Activity Types
 
 All activity types are defined in `app/chat/types/chat.ts`:
 
-```typescript
+\`\`\`typescript
 export interface ActivityItem {
   id: string
   type: 
@@ -144,13 +144,13 @@ export interface ActivityItem {
   timestamp: number
   metadata?: Record<string, any>
 }
-```
+\`\`\`
 
 ## Database Schema
 
 **Table**: `activities`
 
-```sql
+\`\`\`sql
 CREATE TABLE activities (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type TEXT NOT NULL,
@@ -161,7 +161,7 @@ CREATE TABLE activities (
   metadata JSONB DEFAULT '{}',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-```
+\`\`\`
 
 **Features**:
 - Real-time enabled for live updates
@@ -173,7 +173,7 @@ CREATE TABLE activities (
 
 ### 1. Client-Side Activity Logging
 
-```typescript
+\`\`\`typescript
 // In React components
 const { addActivity } = useChatContext()
 
@@ -192,11 +192,11 @@ addActivity({
   description: `Generated ${response.length} character response`,
   status: "completed"
 })
-```
+\`\`\`
 
 ### 2. Server-Side Activity Logging
 
-```typescript
+\`\`\`typescript
 // In API routes
 import { logServerActivity } from '@/lib/server-activity-logger'
 
@@ -215,11 +215,11 @@ await logServerActivity({
   description: "Successfully generated AI response",
   status: "completed"
 })
-```
+\`\`\`
 
 ### 3. Activity Display
 
-```typescript
+\`\`\`typescript
 // In UI components
 const { activityLog } = useChatContext()
 
@@ -234,13 +234,13 @@ const { activityLog } = useChatContext()
   activities={activityLog} 
   onActivityClick={handleActivityClick}
 />
-```
+\`\`\`
 
 ## Activity Icons
 
 Each activity type has a corresponding icon defined in `components/chat/sidebar/ActivityIcon.tsx`:
 
-```typescript
+\`\`\`typescript
 const getIcon = () => {
   switch (type) {
     case "user_action": return <MessageSquare />
@@ -251,7 +251,7 @@ const getIcon = () => {
     // ... etc
   }
 }
-```
+\`\`\`
 
 ## Real-Time Features
 
@@ -306,7 +306,7 @@ const getIcon = () => {
 ## Best Practices
 
 ### 1. Use Appropriate Activity Types
-```typescript
+\`\`\`typescript
 // ✅ Good - Specific activity type
 addActivity({
   type: "ai_thinking",
@@ -320,10 +320,10 @@ addActivity({
   title: "Something happened",
   description: "User did something"
 })
-```
+\`\`\`
 
 ### 2. Provide Meaningful Descriptions
-```typescript
+\`\`\`typescript
 // ✅ Good - Descriptive
 addActivity({
   type: "file_upload",
@@ -337,10 +337,10 @@ addActivity({
   title: "File Uploaded",
   description: "File uploaded"
 })
-```
+\`\`\`
 
 ### 3. Use Metadata for Additional Context
-```typescript
+\`\`\`typescript
 addActivity({
   type: "ai_stream",
   title: "AI Response Generated",
@@ -351,10 +351,10 @@ addActivity({
     tokensUsed: 450
   }
 })
-```
+\`\`\`
 
 ### 4. Handle Activity States Properly
-```typescript
+\`\`\`typescript
 // Start activity
 const activityId = addActivity({
   type: "doc_analysis",
@@ -367,7 +367,7 @@ updateActivity(activityId, {
   status: "completed",
   description: "Analysis complete - found 5 key insights"
 })
-```
+\`\`\`
 
 ## Troubleshooting
 
@@ -390,7 +390,7 @@ updateActivity(activityId, {
 
 ### Debug Tools
 
-```typescript
+\`\`\`typescript
 // Check connection status
 const { isConnected } = useRealTimeActivities()
 console.log('Real-time connected:', isConnected)
@@ -399,7 +399,7 @@ console.log('Real-time connected:', isConnected)
 useEffect(() => {
   console.log('Activities updated:', activities)
 }, [activities])
-```
+\`\`\`
 
 ## Future Enhancements
 
@@ -418,4 +418,4 @@ useEffect(() => {
 
 ---
 
-**Note**: This unified activity system replaces all previous activity logging implementations. All new features should use this system exclusively. 
+**Note**: This unified activity system replaces all previous activity logging implementations. All new features should use this system exclusively.

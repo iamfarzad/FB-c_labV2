@@ -15,31 +15,31 @@ This document summarizes the comprehensive audio quality and real-time processin
 ### **Audio Quality Enhancement Features**
 
 #### **Real-time Audio Processing**
-```typescript
+\`\`\`typescript
 // Enhanced audio processing with multiple algorithms
 - Normalization: Automatic level adjustment
 - Noise Reduction: High-pass filtering for background noise
 - Dynamic Compression: 4:1 compression ratio for consistent levels
 - Equalization: Voice clarity enhancement (2-4kHz boost)
-```
+\`\`\`
 
 #### **Adaptive Voice Styles**
-```typescript
+\`\`\`typescript
 // Content-based voice adaptation
 - Questions → Friendly voice (higher pitch, slower rate)
 - Exclamations → Energetic voice (faster rate, higher volume)
 - Long text → Calm voice (slower rate, lower pitch)
 - Business → Professional voice (balanced settings)
-```
+\`\`\`
 
 #### **Multi-speaker Support**
-```typescript
+\`\`\`typescript
 // Advanced speaker detection and voice assignment
 - Automatic speaker identification from text
 - Different voices for different speakers
 - Pitch variation for speaker distinction
 - Professional voice configuration
-```
+\`\`\`
 
 ## 🔗 **2. Real-time Audio Processing with WebRTC**
 
@@ -52,32 +52,32 @@ This document summarizes the comprehensive audio quality and real-time processin
 ### **WebRTC Features**
 
 #### **Connection Management**
-```typescript
+\`\`\`typescript
 // Optimized WebRTC configuration
 - ICE servers: Google STUN servers
 - Bundle policy: max-bundle for efficiency
 - RTCP mux: Required for reduced overhead
 - Connection pooling: 10 ICE candidates
-```
+\`\`\`
 
 #### **Audio Processing Pipeline**
-```typescript
+\`\`\`typescript
 // Real-time audio enhancement
 - Echo cancellation: Built-in browser support
 - Noise suppression: Advanced algorithms
 - Auto gain control: Dynamic level adjustment
 - High-pass filter: Background noise removal
 - Typing noise detection: Smart filtering
-```
+\`\`\`
 
 #### **Quality Monitoring**
-```typescript
+\`\`\`typescript
 // Connection quality tracking
 - Latency measurement: Real-time monitoring
 - Quality indicators: Excellent/Good/Poor/Disconnected
 - Connection statistics: RTCStatsReport integration
 - Automatic fallback: Graceful degradation
-```
+\`\`\`
 
 ## 🏗️ **3. Implementation Architecture**
 
@@ -138,44 +138,44 @@ This document summarizes the comprehensive audio quality and real-time processin
 ## 🔧 **5. Technical Features**
 
 ### **Advanced Audio Processing**
-```typescript
+\`\`\`typescript
 // Professional audio enhancement
 - Normalization: Prevents clipping and ensures consistent levels
 - Noise Reduction: Removes background noise and interference
 - Compression: Maintains dynamic range while controlling peaks
 - Equalization: Enhances voice clarity and presence
-```
+\`\`\`
 
 ### **Smart Voice Adaptation**
-```typescript
+\`\`\`typescript
 // Content-aware voice styling
 - Question Detection: Friendly, higher-pitched responses
 - Emotion Recognition: Energetic for excitement, calm for long content
 - Business Context: Professional tone for business communication
 - Multi-speaker: Automatic voice assignment and distinction
-```
+\`\`\`
 
 ### **Real-time Optimization**
-```typescript
+\`\`\`typescript
 // WebRTC optimization features
 - Buffer Optimization: Minimal latency with maximum quality
 - Echo Cancellation: Prevents audio feedback
 - Noise Suppression: Real-time background noise removal
 - Auto Gain Control: Dynamic volume adjustment
-```
+\`\`\`
 
 ## 🚀 **6. Usage Examples**
 
 ### **Basic Audio Enhancement**
-```typescript
+\`\`\`typescript
 import { AudioQualityEnhancer } from '@/lib/audio-quality-enhancer'
 
 const enhancer = new AudioQualityEnhancer()
 const enhancedAudio = await enhancer.enhanceAudioData(audioData)
-```
+\`\`\`
 
 ### **WebRTC Voice Input**
-```typescript
+\`\`\`typescript
 import { WebRTCVoiceInputModal } from '@/components/chat/modals/WebRTCVoiceInputModal'
 
 <WebRTCVoiceInputModal
@@ -184,13 +184,13 @@ import { WebRTCVoiceInputModal } from '@/components/chat/modals/WebRTCVoiceInput
   onTransferToChat={handleTransfer}
   leadContext={leadContext}
 />
-```
+\`\`\`
 
 ### **Custom Voice Configuration**
-```typescript
+\`\`\`typescript
 const voiceStyle = enhancer.getVoiceStyleForContent(text)
 // Returns: { voiceStyle, speakingRate, pitch, volumeGainDb, clarity }
-```
+\`\`\`
 
 ## 📈 **7. Comparison with Pipecat**
 

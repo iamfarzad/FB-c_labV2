@@ -101,4 +101,4 @@ fixStuckActivities()
   .catch((error) => {
     console.error('❌ Failed to fix stuck activities:', error)
     process.exit(1)
-  }) 
+  })

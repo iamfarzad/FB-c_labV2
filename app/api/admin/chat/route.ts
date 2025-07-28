@@ -215,4 +215,4 @@ Use this real-time data to provide informed, actionable advice.`
       message: error.message || 'An unexpected error occurred'
     }, { status: 500 })
   }
-} 
+}

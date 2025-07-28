@@ -57,4 +57,4 @@ CREATE INDEX IF NOT EXISTS idx_token_usage_logs_created_at ON token_usage_logs(c
 -- Add comments for documentation
 COMMENT ON POLICY insert_own_tokens ON token_usage_logs IS 'Users can only insert their own token usage records';
 COMMENT ON POLICY select_own_tokens ON token_usage_logs IS 'Users can only view their own token usage records';
-COMMENT ON POLICY update_own_tokens ON token_usage_logs IS 'Users can only update their own token usage records'; 
+COMMENT ON POLICY update_own_tokens ON token_usage_logs IS 'Users can only update their own token usage records';

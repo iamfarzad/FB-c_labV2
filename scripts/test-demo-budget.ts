@@ -59,4 +59,4 @@ async function testDemoBudgetSystem() {
   }
 }
 
-testDemoBudgetSystem() 
+testDemoBudgetSystem()

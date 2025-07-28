@@ -20,7 +20,7 @@ The `MediaService` is a singleton class that serves as the central hub for all m
 
 A hook for capturing media from the user's device.
 
-```typescript
+\`\`\`typescript
 const {
   // State
   isCapturing,
@@ -52,13 +52,13 @@ const {
   onResume: () => {},
   onError: (error) => {},
 });
-```
+\`\`\`
 
 #### useMediaPlayer
 
 A hook for playing media with full control over playback.
 
-```typescript
+\`\`\`typescript
 const {
   // Refs
   mediaElementRef,
@@ -106,13 +106,13 @@ const {
   ref={setupMediaElement}
   style={{ width: '100%' }}
 />
-```
+\`\`\`
 
 #### useMediaUploader
 
 A hook for handling file uploads with progress tracking.
 
-```typescript
+\`\`\`typescript
 const {
   // State
   isUploading,
@@ -154,7 +154,7 @@ const handleUpload = async (file) => {
     console.error('Upload failed:', error);
   }
 };
-```
+\`\`\`
 
 ## Best Practices
 
@@ -162,7 +162,7 @@ const handleUpload = async (file) => {
 
 Always clean up media resources when they're no longer needed to prevent memory leaks:
 
-```typescript
+\`\`\`typescript
 useEffect(() => {
   // Start media capture
   const item = await startCapture();
@@ -174,19 +174,19 @@ useEffect(() => {
     }
   };
 }, []);
-```
+\`\`\`
 
 ### 2. Error Handling
 
 Always handle errors appropriately:
 
-```typescript
+\`\`\`typescript
 const handleError = useCallback((error) => {
   console.error('Media error:', error);
   // Show user-friendly error message
   setError(error.message);
 }, []);
-```
+\`\`\`
 
 ### 3. Performance
 
@@ -199,18 +199,18 @@ const handleError = useCallback((error) => {
 
 ### Recording Audio
 
-```typescript
+\`\`\`typescript
 const { startCapture, stopCapture, mediaItem } = useMediaCapture({
   constraints: { audio: true },
   onStop: (blob) => {
     // Handle the recorded audio blob
   },
 });
-```
+\`\`\`
 
 ### Playing a Video
 
-```typescript
+\`\`\`typescript
 const { setupMediaElement, play, pause } = useMediaPlayer({
   src: 'https://example.com/video.mp4',
   autoPlay: true,
@@ -226,11 +226,11 @@ return (
     <button onClick={pause}>Pause</button>
   </div>
 );
-```
+\`\`\`
 
 ### Uploading a File
 
-```typescript
+\`\`\`typescript
 const { uploadFile, progress, isUploading } = useMediaUploader();
 
 const handleFileChange = async (e) => {
@@ -258,7 +258,7 @@ return (
     )}
   </div>
 );
-```
+\`\`\`
 
 ## Error Handling
 

@@ -108,4 +108,4 @@ export function DemoSessionCard({ isTablet = false }: DemoSessionCardProps) {
       )}
     </div>
   )
-} 
+}

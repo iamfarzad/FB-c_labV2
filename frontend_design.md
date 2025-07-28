@@ -62,7 +62,7 @@ The FB-c_labV2 frontend is a comprehensive AI consulting platform built with Nex
 ### Design Tokens
 The project uses a comprehensive design token system defined in `app/globals.css` and `tailwind.config.ts`:
 
-```css
+\`\`\`css
 /* Color System */
 --color-orange-accent: 22 100% 51%;
 --color-gunmetal: 0 0% 10%;
@@ -77,7 +77,7 @@ The project uses a comprehensive design token system defined in `app/globals.css
 --card: 0 0% 100%;
 --popover: var(--card);
 --radius: 0.75rem;
-```
+\`\`\`
 
 ### Component Patterns
 - **Atomic Design**: Components follow atomic design principles
@@ -128,11 +128,11 @@ The project uses a comprehensive design token system defined in `app/globals.css
 ## 5. Typography
 
 ### Font Families
-```css
+\`\`\`css
 --font-sans: "Inter", sans-serif;     /* Primary body text */
 --font-display: "Rajdhani", sans-serif; /* Headings */
 --font-mono: "Space Mono", monospace;   /* Code, technical content */
-```
+\`\`\`
 
 ### Font Sizes (Tailwind Scale)
 - **xs**: `0.75rem` (12px) - Captions, labels
@@ -214,12 +214,12 @@ The project uses a comprehensive design token system defined in `app/globals.css
 ## 8. Responsive Breakpoints and Behavior
 
 ### Breakpoint System
-```css
+\`\`\`css
 /* Mobile First Approach */
 mobile: max-width: 767px
 tablet: min-width: 768px and max-width: 1023px
 desktop: min-width: 1024px
-```
+\`\`\`
 
 ### Responsive Behavior
 - **Mobile (< 768px)**:
@@ -283,7 +283,7 @@ desktop: min-width: 1024px
 ## 10. Routing and Navigation Structure
 
 ### App Router Structure
-```
+\`\`\`
 app/
 ├── layout.tsx              # Root layout
 ├── page.tsx               # Home page
@@ -296,7 +296,7 @@ app/
 │   ├── layout.tsx         # Chat layout with providers
 │   └── page.tsx           # Chat interface
 └── test-dashboard/page.tsx # Testing interface
-```
+\`\`\`
 
 ### Navigation Components
 - **Header** (`components/header.tsx`):
@@ -386,7 +386,7 @@ app/
 ## 13. Build and Bundling Configuration
 
 ### Next.js Configuration (`next.config.mjs`)
-```javascript
+\`\`\`javascript
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
@@ -412,7 +412,7 @@ const nextConfig = {
   },
   serverExternalPackages: ['@supabase/supabase-js'],
 }
-```
+\`\`\`
 
 ### Build Scripts
 - **`pnpm build`** - Production build
@@ -469,7 +469,7 @@ const nextConfig = {
   - Production-safe error messages
 
 ### API Error Handling
-```typescript
+\`\`\`typescript
 // Pattern used throughout the app
 try {
   const response = await fetch('/api/endpoint')
@@ -485,7 +485,7 @@ try {
     variant: "destructive" 
   })
 }
-```
+\`\`\`
 
 ### Form Validation
 - **Client-side**: Zod schema validation
@@ -514,7 +514,7 @@ try {
 - **E2E Testing**: User flow validation
 
 ### Test Dashboard (`components/ui-test-dashboard.tsx`)
-```typescript
+\`\`\`typescript
 // Test categories covered:
 - Lead Capture Flow
 - Chat Interface
@@ -526,7 +526,7 @@ try {
 - Business Logic
 - Admin Dashboard
 - Backend Services
-```
+\`\`\`
 
 ### Testing Patterns
 - **Component Isolation**: Individual component testing
@@ -549,7 +549,7 @@ try {
 ## 17. CI/CD Workflow for Frontend
 
 ### Current Build Process
-```bash
+\`\`\`bash
 # Development
 pnpm dev          # Start development server
 pnpm dev:live     # Start with WebSocket server
@@ -562,10 +562,10 @@ pnpm start        # Production server
 pnpm lint         # ESLint checking
 pnpm lint:style   # Stylelint checking
 pnpm lint:all     # All linting
-```
+\`\`\`
 
 ### Deployment Configuration (`vercel.json`)
-```json
+\`\`\`json
 {
   "buildCommand": "pnpm build",
   "devCommand": "pnpm dev",
@@ -577,7 +577,7 @@ pnpm lint:all     # All linting
     "app/api/video-to-app/route.ts": { "maxDuration": 60 }
   }
 }
-```
+\`\`\`
 
 ### Environment Management
 - **Development**: Local environment variables
@@ -598,7 +598,7 @@ pnpm lint:all     # All linting
 - **Hard-coded Text**: All text is hard-coded in components
 
 ### Recommended Implementation
-```typescript
+\`\`\`typescript
 // Suggested i18n setup with next-intl
 import { useTranslations } from 'next-intl'
 
@@ -606,7 +606,7 @@ export function Component() {
   const t = useTranslations('common')
   return <h1>{t('title')}</h1>
 }
-```
+\`\`\`
 
 ### Localization Needs
 - **Text Extraction**: Extract all user-facing text
@@ -624,7 +624,7 @@ export function Component() {
   - Theme persistence
 
 ### CSS Custom Properties
-```css
+\`\`\`css
 /* Theme variables for easy customization */
 :root {
   --background: 0 0% 98%;
@@ -639,7 +639,7 @@ export function Component() {
   --foreground: var(--color-light-silver);
   /* ... dark theme overrides */
 }
-```
+\`\`\`
 
 ### Customization Points
 - **Color Palette**: HSL-based color system
@@ -663,13 +663,13 @@ export function Component() {
 - **Node Version**: Latest LTS
 
 ### Environment Variables
-```bash
+\`\`\`bash
 # Required environment variables
 GEMINI_API_KEY=your_gemini_api_key
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 RESEND_API_KEY=your_resend_api_key
-```
+\`\`\`
 
 ### CDN and Static Assets
 - **Vercel Edge Network**: Global CDN distribution

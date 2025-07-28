@@ -155,4 +155,4 @@ async function testLiveAPIFixes() {
 }
 
 // Run the test
-testLiveAPIFixes().catch(console.error) 
+testLiveAPIFixes().catch(console.error)

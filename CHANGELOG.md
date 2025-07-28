@@ -296,7 +296,7 @@
 - ✅ **Consistent Layout**: Header, sidebar, footer properly positioned
 
 #### 🔄 **ROUTE STRUCTURE**
-```
+\`\`\`
 app/
 ├── layout.tsx (Global layout with header/footer)
 ├── (chat)/ (Route group - bypasses global layout)
@@ -305,7 +305,7 @@ app/
 │       ├── page.tsx (Chat interface)
 │       ├── layout.tsx (Chat-specific layout)
 │       └── context/ (Chat providers)
-```
+\`\`\`
 
 **Files Changed**:
 - `app/(chat)/layout.tsx` - New route group layout
@@ -1348,14 +1348,14 @@ app/
 #### 📊 **DEMO LIMITS CONFIGURATION**
 
 **Demo Budget Limits**:
-```typescript
+\`\`\`typescript
 const DEMO_LIMITS = {
   SESSION_DURATION_HOURS: 24,
   TOTAL_SESSION_TOKENS: 50000,
   PER_REQUEST_MAX_TOKENS: 5000,
   SESSION_ID_LENGTH: 16
 }
-```
+\`\`\`
 
 **Feature Budgets**:
 - **Simple features** (chat, analysis): gemini-2.5-flash-lite ($0.40/1M tokens)
@@ -1448,12 +1448,12 @@ const DEMO_LIMITS = {
 - ✅ **Cost estimation** - Pre-calculates costs before API calls
 
 **Model Selection Logic**:
-```typescript
+\`\`\`typescript
 // Simple tasks → gemini-2.5-flash-lite ($0.40/1M tokens)
 // Complex tasks → gemini-2.5-flash ($2.50/1M tokens)
 // Voice tasks → gemini-2.5-flash-preview-tts
 // Real-time → gemini-2.5-flash-exp-native-audio-thinking-dialog
-```
+\`\`\`
 
 #### 📊 **TOKEN USAGE LOGGING & BUDGET ENFORCEMENT**
 
@@ -1508,7 +1508,7 @@ const DEMO_LIMITS = {
 #### 🔧 **IMPLEMENTATION DETAILS**
 
 **Model Selection Criteria**:
-```typescript
+\`\`\`typescript
 interface ModelSelectionCriteria {
   taskType: 'chat' | 'research' | 'analysis' | 'generation' | 'multimodal' | 'voice'
   complexity: 'simple' | 'moderate' | 'complex'
@@ -1519,10 +1519,10 @@ interface ModelSelectionCriteria {
   estimatedTokens?: number
   budget?: number
 }
-```
+\`\`\`
 
 **Token Usage Logging**:
-```typescript
+\`\`\`typescript
 interface TokenUsageLog {
   user_id?: string
   model: string
@@ -1534,7 +1534,7 @@ interface TokenUsageLog {
   endpoint: string
   success: boolean
 }
-```
+\`\`\`
 
 #### 🚀 **NEXT STEPS**
 
@@ -1598,13 +1598,13 @@ interface TokenUsageLog {
 - ✅ **Educational overlays** - Learning objectives and key topics extraction
 
 **Test Results**:
-```
+\`\`\`
 ✅ YouTube URL validation working
 ✅ AI spec generation returning real content
 ✅ Code generation producing valid HTML
 ✅ Parsing utilities handling edge cases
 ✅ Test dashboard showing accurate results
-```
+\`\`\`
 
 #### 🔄 **NEXT STEPS**
 
@@ -1666,25 +1666,25 @@ interface TokenUsageLog {
 #### 📊 **TEST RESULTS**
 
 **Demo Mode Test**:
-```
+\`\`\`
 ✅ Demo mode – authentication bypassed
 ✅ Guest user session created: demo
 ✅ Chat functionality working for unauthenticated users
-```
+\`\`\`
 
 **Image Analysis Test**:
-```
+\`\`\`
 ✅ Real AI analysis returned: "The image shows a person sitting at a desk..."
 ✅ Webcam analysis working with detailed descriptions
 ✅ Screen capture analysis providing application insights
-```
+\`\`\`
 
 **Video Analysis Test**:
-```
+\`\`\`
 ✅ Real spec generation: "Based on the video, this appears to be..."
 ✅ Real code generation: "<div class='app-container'>..."
 ✅ Multimodal video processing working correctly
-```
+\`\`\`
 
 #### 🎯 **BUSINESS IMPACT**
 
@@ -1738,13 +1738,13 @@ interface TokenUsageLog {
 #### 📊 **TEST RESULTS**
 
 **Live Test Results**:
-```
+\`\`\`
 🔍 Real web search completed for Sarah Johnson: 2 results
 ✅ Server activity logged: Searching LinkedIn
 ✅ Server activity logged: Enhanced Response Complete
 ✅ Server activity logged: Creating Summary
 ✅ Server activity logged: Summary Ready
-```
+\`\`\`
 
 **Response Quality**: Now includes references to actual search results and provides more personalized, data-driven insights.
 
@@ -1794,7 +1794,7 @@ interface TokenUsageLog {
 #### 📊 **TEST RESULTS**
 
 **Live Test Results**:
-```
+\`\`\`
 Lead context received: { name: 'John Doe', email: 'john@techcorp.com', company: 'TechCorp', role: 'CTO' }
 hasWebGrounding: true
 Using grounded search for: John Doe
@@ -1802,7 +1802,7 @@ Using grounded search for: John Doe
 ✅ Server activity logged: Enhanced Response Complete
 ✅ Server activity logged: Creating Summary
 ✅ Server activity logged: Summary Ready
-```
+\`\`\`
 
 **Response Quality**: Professional Norwegian response with industry analysis, pain points, and AI recommendations.
 
@@ -1852,7 +1852,7 @@ Using grounded search for: John Doe
 - ✅ **Error Handling**: Proper fallback to enhanced prompts
 
 **2. API Configuration Fixed**:
-```typescript
+\`\`\`typescript
 const tools = [
   { urlContext: {} },  // ✅ Correct tool name
   { googleSearch: {} } // ✅ Correct tool name (not google_search)
@@ -1865,13 +1865,13 @@ const config = {
   tools,
   responseMimeType: 'text/plain',
 };
-```
+\`\`\`
 
 **3. Real Search Implementation**:
-```typescript
+\`\`\`typescript
 const searchQuery = `I need you to search the name ${leadContext.name} on google and linkedin using email ${leadContext.email}
 then summarize his background and industry, and write a quick bullet points pain point in his industry and how llm can automate most of it.`;
-```
+\`\`\`
 
 #### 🧪 **COMPREHENSIVE TESTING**
 
@@ -3348,7 +3348,7 @@ then summarize his background and industry, and write a quick bullet points pain
 ### 🔧 Technical Details
 
 #### Streaming Implementation
-```typescript
+\`\`\`typescript
 // New streaming response format
 const stream = new ReadableStream({
   async start(controller) {
@@ -3358,7 +3358,7 @@ const stream = new ReadableStream({
     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`))
   }
 })
-```
+\`\`\`
 
 #### Multimodal Support
 - **Image Processing**: Base64 images sent to Gemini with proper MIME types
@@ -3368,7 +3368,7 @@ const stream = new ReadableStream({
 
 ### 🏗️ Architecture Overview
 
-```
+\`\`\`
 ┌─────────────────────────────────────────────────────────────┐
 │                     AI Functions Architecture               │
 ├─────────────────────────────────────────────────────────────┤
@@ -3390,7 +3390,7 @@ const stream = new ReadableStream({
 │  ├── Supabase (Database + Realtime)                       │
 │  └── Activity Logging System                              │
 └─────────────────────────────────────────────────────────────┘
-```
+\`\`\`
 
 ### 🎯 Validation Summary
 
@@ -3549,7 +3549,7 @@ const stream = new ReadableStream({
 ### 🎯 **Technical Implementation**
 
 #### **Grounded Search Configuration**
-```typescript
+\`\`\`typescript
 const config = {
   grounding: {
     sources: ['linkedin.com', 'google.com'],
@@ -3558,20 +3558,20 @@ const config = {
   temperature: 0.0, // Deterministic results
   responseMimeType: "application/json"
 }
-```
+\`\`\`
 
 #### **Search Result Structure**
-```typescript
+\`\`\`typescript
 interface SearchResult {
   url: string
   title?: string
   snippet?: string
   source: string // 'linkedin', 'twitter', 'github', etc.
 }
-```
+\`\`\`
 
 #### **Database Schema**
-```sql
+\`\`\`sql
 CREATE TABLE lead_search_results (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   lead_id UUID REFERENCES lead_summaries(id) ON DELETE CASCADE,
@@ -3582,32 +3582,32 @@ CREATE TABLE lead_search_results (
   raw JSONB,
   created_at TIMESTAMPTZ DEFAULT now()
 );
-```
+\`\`\`
 
 ### 🧪 **Testing Instructions**
 
 1. **Capture a New Lead**:
-   ```bash
+   \`\`\`bash
    POST /api/lead-capture
    {
      "name": "John Doe",
      "email": "john@example.com",
      "company": "Tech Corp"
    }
-   ```
+   \`\`\`
 
 2. **Check Search Results**:
-   ```bash
+   \`\`\`bash
    GET /api/lead-search-results/{leadId}
-   ```
+   \`\`\`
 
 3. **Trigger New Search**:
-   ```bash
+   \`\`\`bash
    POST /api/lead-search-results/{leadId}
    {
      "sources": ["linkedin.com", "crunchbase.com"]
    }
-   ```
+   \`\`\`
 
 ### 📊 **Expected Behavior**
 
@@ -3676,7 +3676,7 @@ CREATE TABLE lead_search_results (
 ### 🎯 **Technical Implementation**
 
 #### **API Call Pattern**
-```typescript
+\`\`\`typescript
 const res = await fetch('/api/gemini-live', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
@@ -3687,20 +3687,20 @@ const res = await fetch('/api/gemini-live', {
     streamAudio: false
   })
 })
-```
+\`\`\`
 
 #### **Raw Audio Handling**
-```typescript
+\`\`\`typescript
 if (contentType?.includes('audio/wav')) {
   const audioBlob = await res.blob()
   const url = URL.createObjectURL(audioBlob)
   const audio = new Audio(url)
   await audio.play()
 }
-```
+\`\`\`
 
 #### **API Response Headers**
-```typescript
+\`\`\`typescript
 return new Response(bytes, {
   headers: {
     "Content-Type": "audio/wav",
@@ -3709,7 +3709,7 @@ return new Response(bytes, {
     "Cache-Control": "no-cache"
   },
 })
-```
+\`\`\`
 
 ### 🧪 **Testing Instructions**
 

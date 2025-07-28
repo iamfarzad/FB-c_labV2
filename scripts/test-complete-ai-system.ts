@@ -528,4 +528,4 @@ class CompleteAISystemTester {
 
 // Run the tests
 const tester = new CompleteAISystemTester()
-tester.runAllTests().catch(console.error) 
+tester.runAllTests().catch(console.error)

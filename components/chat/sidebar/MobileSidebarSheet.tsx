@@ -13,6 +13,8 @@ interface MobileSidebarSheetProps {
   activities: ActivityItem[]
   onNewChat: () => void
   onActivityClick: (activity: ActivityItem) => void
+  onClearActivities?: () => void
+  onCleanupStuckActivities?: () => void
   className?: string
   children?: React.ReactNode
 }
@@ -21,6 +23,8 @@ export const MobileSidebarSheet = ({
   activities,
   onNewChat,
   onActivityClick,
+  onClearActivities,
+  onCleanupStuckActivities,
   className,
   children,
 }: MobileSidebarSheetProps) => {
@@ -34,12 +38,19 @@ export const MobileSidebarSheet = ({
           </Button>
         )}
       </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] p-0">
+      <SheetContent side="left" className="w-[300px] p-0 flex flex-col">
         <SheetHeader className="p-4 text-left border-b">
           <SheetTitle>Chat History</SheetTitle>
         </SheetHeader>
-        <div className="h-[calc(100%-65px)] overflow-auto">
-          <SidebarContent activities={activities} onNewChat={onNewChat} onActivityClick={onActivityClick} />
+        <div className="flex-1 overflow-y-auto">
+          <SidebarContent
+            activities={activities}
+            onNewChat={onNewChat}
+            onActivityClick={onActivityClick}
+            onClearActivities={onClearActivities}
+            onCleanupStuckActivities={onCleanupStuckActivities}
+            isTablet={true} // Mobile view is similar to tablet
+          />
         </div>
       </SheetContent>
     </Sheet>

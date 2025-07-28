@@ -67,7 +67,7 @@
 ## 📋 **Governance Workflow**
 
 ### Change Request Process
-```
+\`\`\`
 Change Request Submitted
            ↓
     Role Assignment (Master Orchestrator)
@@ -81,10 +81,10 @@ Change Request Submitted
     Quality Gate Validation
            ↓
     Approval or Rejection
-```
+\`\`\`
 
 ### Escalation Process
-```
+\`\`\`
 Issue Identified
            ↓
     Specialist Assessment
@@ -96,7 +96,7 @@ Issue Identified
     System-Wide Impact Analysis
            ↓
     Resolution or Rejection
-```
+\`\`\`
 
 ## 🚫 **Governance Violations**
 
@@ -180,4 +180,4 @@ Issue Identified
 - **Level 4**: Self-governing systems
 - **Level 5**: Continuous optimization
 
-**⚠️ REMINDER: System governance ensures consistency, quality, and maintainability across all components.** 
+**⚠️ REMINDER: System governance ensures consistency, quality, and maintainability across all components.**

@@ -194,4 +194,4 @@ function generateRecommendations(params: ROIParameters, annualSavings: number, p
   }
 
   return recommendations.slice(0, 5) // Limit to top 5 recommendations
-} 
+}

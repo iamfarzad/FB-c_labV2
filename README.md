@@ -99,8 +99,8 @@ LIVE_SERVER_PORT=3001 GEMINI_API_KEY=your_key_here ts-node server/live-server.ts
 
 If you want to test Gemini Live AI features locally, you can run the custom WebSocket server:
 
-```
+\`\`\`
 LIVE_SERVER_PORT=3001 GEMINI_API_KEY=your_key_here ts-node server/live-server.ts
-```
+\`\`\`
 
 **Note:** This is for local development/testing only. In production (including Vercel), all real-time features are handled by Supabase. You do NOT need to run `server/live-server.ts` in production.

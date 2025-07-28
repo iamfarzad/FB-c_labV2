@@ -50,4 +50,4 @@ export interface UpdateLeadData {
   consultant_brief?: string;
   lead_score?: number;
   ai_capabilities_shown?: string[];
-} 
+}

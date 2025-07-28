@@ -341,4 +341,4 @@ class VoiceSystemTester {
 
 // Run the tests
 const tester = new VoiceSystemTester()
-tester.runAllTests().catch(console.error) 
+tester.runAllTests().catch(console.error)

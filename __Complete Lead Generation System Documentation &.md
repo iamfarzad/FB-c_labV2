@@ -1,4 +1,3 @@
-
 # **Complete Lead Generation System Documentation \& Implementation Guide**
 
 Based on our entire conversation, here's your comprehensive documentation with all code examples and implementation steps organized as actionable checklists.
@@ -39,7 +38,7 @@ Based on our entire conversation, here's your comprehensive documentation with a
 #### 2.2 Detailed Implementation Examples
 ### **Updated System Instruction (Replace Current)**
 
-```typescript
+\`\`\`typescript
 const enhancedSystemInstruction = `You are the "${AI_ASSISTANT_NAME}", a highly intelligent AI assistant for ${FBC_BRAND_NAME}. Your goal is to create personalized conversations that demonstrate AI capabilities while generating qualified leads.
 
 **CONVERSATION FLOW:**
@@ -78,12 +77,12 @@ const enhancedSystemInstruction = `You are the "${AI_ASSISTANT_NAME}", a highly 
 - Never ask permission to search - just show insights
 - Be conversational, not formal
 - Demonstrate AI intelligence through personalized responses`;
-```
+\`\`\`
 
 
 ### **Enhanced Chat Session Creation**
 
-```typescript
+\`\`\`typescript
 export const createEnhancedChatSession = (systemInstructionText?: string): Chat | null => {
   if (!ai || apiKeyMissingError) return null;
   
@@ -104,14 +103,14 @@ export const createEnhancedChatSession = (systemInstructionText?: string): Chat 
     return null;
   }
 };
-```
+\`\`\`
 
 
 ## **3. Company Intelligence \& Personalization**
 
 ### **Email Domain Analysis Function**
 
-```typescript
+\`\`\`typescript
 export const analyzeCompanyFromEmail = async (email: string): Promise<{
   companyName: string;
   industry: string;
@@ -167,12 +166,12 @@ export const analyzeCompanyFromEmail = async (email: string): Promise<{
     };
   }
 };
-```
+\`\`\`
 
 
 ### **Enhanced Response Generation with Intelligence**
 
-```typescript
+\`\`\`typescript
 export const generateIntelligentResponse = async (
   chat: Chat,
   userMessage: string,
@@ -254,14 +253,14 @@ export const generateIntelligentResponse = async (
     newStage 
   };
 };
-```
+\`\`\`
 
 
 ## **4. Advanced Summary Generation**
 
 ### **Enhanced Conversation Summary**
 
-```typescript
+\`\`\`typescript
 export const generateAdvancedSummary = async (
   chatHistory: ChatMessage[],
   conversationState: any
@@ -351,14 +350,14 @@ P.S. This summary was generated using the same AI technology we could implement 
     throw error;
   }
 };
-```
+\`\`\`
 
 
 ## **5. CRM Integration \& Database Setup**
 
 ### **Database Schema**
 
-```sql
+\`\`\`sql
 -- Conversations table
 CREATE TABLE conversations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -397,12 +396,12 @@ CREATE TABLE follow_up_sequences (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (conversation_id) REFERENCES conversations (id)
 );
-```
+\`\`\`
 
 
 ### **CRM Integration Functions**
 
-```typescript
+\`\`\`typescript
 export class LeadManager {
   private db: any; // Your database connection
 
@@ -535,14 +534,14 @@ export class LeadManager {
     ];
   }
 }
-```
+\`\`\`
 
 
 ## **6. Email Integration \& Automation**
 
 ### **Email Service Setup**
 
-```typescript
+\`\`\`typescript
 import nodemailer from 'nodemailer';
 
 export class EmailService {
@@ -642,14 +641,14 @@ export class EmailService {
     }
   }
 }
-```
+\`\`\`
 
 
 ## **7. Frontend Integration \& UI Components**
 
 ### **React Component for Enhanced Chat**
 
-```tsx
+\`\`\`tsx
 import React, { useState, useEffect } from 'react';
 
 interface ConversationState {
@@ -822,14 +821,14 @@ export const EnhancedChatInterface: React.FC = () => {
     </div>
   );
 };
-```
+\`\`\`
 
 
 ## **8. Calendar Integration**
 
 ### **Calendly Integration**
 
-```typescript
+\`\`\`typescript
 export const CalendarService = {
   generateBookingLink: (conversationData: any) => {
     const baseUrl = "https://calendly.com/farzad-ai-consultation";
@@ -854,7 +853,7 @@ export const CalendarService = {
     // Could integrate with Google Calendar API, Outlook, etc.
   }
 };
-```
+\`\`\`
 
 
 ## **9. Testing \& Quality Assurance**
@@ -899,7 +898,7 @@ export const CalendarService = {
 
 ### **Test Scenarios**
 
-```typescript
+\`\`\`typescript
 export const testScenarios = [
   {
     name: "Happy Path - Complete Conversation",
@@ -923,14 +922,14 @@ export const testScenarios = [
     expected: "graceful fallback response"
   }
 ];
-```
+\`\`\`
 
 
 ## **10. Deployment \& Production Setup**
 
 ### **Environment Configuration**
 
-```bash
+\`\`\`bash
 # .env file
 GEMINI_API_KEY=your_gemini_api_key
 EMAIL_USER=your_email@gmail.com
@@ -938,7 +937,7 @@ EMAIL_PASS=your_app_specific_password
 DATABASE_URL=sqlite:./leads.db
 CALENDLY_URL=https://calendly.com/farzad-ai-consultation
 NODE_ENV=production
-```
+\`\`\`
 
 
 ### **Production Deployment Checklist**
@@ -1066,4 +1065,3 @@ This documentation provides everything you need to implement your AI-powered lea
 [^27]: https://www.writethedocs.org/guide/index.html
 
 [^28]: https://devdynamics.ai/blog/a-deep-dive-into-software-documentation-best-practices/
-

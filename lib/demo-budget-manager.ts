@@ -297,4 +297,4 @@ export async function recordDemoUsage(sessionId: string, feature: DemoFeature, t
 
 export async function getDemoSession(sessionId: string): Promise<DemoBudget | null> {
   return demoBudgetManager.getDemoStatus(sessionId)
-} 
+}

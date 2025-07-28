@@ -1,6 +1,6 @@
 # Page snapshot
 
-```yaml
+\`\`\`yaml
 - heading "Unable to connect" [level=1]
 - paragraph: Firefox can’t establish a connection to the server at localhost:3001.
 - paragraph
@@ -10,4 +10,4 @@
   - listitem: If your computer or network is protected by a firewall or proxy, make sure that Nightly is permitted to access the web.
   - listitem: If you are trying to load a local network page, please check that Nightly has been granted Local Network permissions in the macOS Privacy & Security settings.
 - button "Try Again"
-```
+\`\`\`

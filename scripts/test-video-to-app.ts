@@ -92,4 +92,4 @@ async function testVideoToApp() {
 }
 
 // Run the test
-testVideoToApp().catch(console.error) 
+testVideoToApp().catch(console.error)

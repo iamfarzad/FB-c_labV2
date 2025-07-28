@@ -188,4 +188,4 @@ export function VerticalProcessChain({ activities, onActivityClick, className }:
       )}
     </div>
   )
-} 
+}

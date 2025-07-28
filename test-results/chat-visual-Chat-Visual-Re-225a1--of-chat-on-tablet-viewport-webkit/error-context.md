@@ -1,6 +1,6 @@
 # Page snapshot
 
-```yaml
+\`\`\`yaml
 - heading "Chat History" [level=2]
 - button "New Chat":
   - img
@@ -38,4 +38,4 @@
 - button "Open Next.js Dev Tools":
   - img
 - alert
-```
+\`\`\`

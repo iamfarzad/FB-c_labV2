@@ -189,4 +189,4 @@ function handleClose(connectionId: string) {
     activeSessions.delete(connectionId)
     console.log(`[${connectionId}] Session removed. Total sessions: ${activeSessions.size}`)
   }
-} 
+}

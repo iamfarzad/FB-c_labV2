@@ -24,4 +24,4 @@ if [ $? -eq 0 ]; then
 else
     echo "❌ Process check failed. Please resolve conflicts manually."
     exit 1
-fi 
+fi

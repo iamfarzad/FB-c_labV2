@@ -67,4 +67,4 @@ console.log("   - Lead record creation: PASS");
 console.log("   - Search results handling: PASS");
 console.log("   - API response format: PASS");
 console.log("\n🚨 Database RLS Issue: NEEDS FIX");
-console.log("   Run the temporary RLS bypass migration in Supabase Dashboard"); 
+console.log("   Run the temporary RLS bypass migration in Supabase Dashboard");

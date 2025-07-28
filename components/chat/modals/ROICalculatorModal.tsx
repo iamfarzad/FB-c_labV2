@@ -389,4 +389,4 @@ export const ROICalculatorModal: React.FC<ROICalculatorModalProps> = ({ isOpen, 
   )
 }
 
-export default ROICalculatorModal 
+export default ROICalculatorModal

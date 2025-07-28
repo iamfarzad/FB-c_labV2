@@ -67,4 +67,4 @@ async function testUIDashboard() {
 }
 
 // Run the test
-testUIDashboard().catch(console.error) 
+testUIDashboard().catch(console.error)

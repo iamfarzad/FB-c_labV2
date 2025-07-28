@@ -73,4 +73,4 @@ export function logMockActivity(endpoint: string, correlationId: string) {
 
 export function generateCorrelationId(): string {
   return Math.random().toString(36).substring(7)
-} 
+}

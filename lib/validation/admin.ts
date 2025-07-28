@@ -58,4 +58,4 @@ export type AdminSearchInput = z.infer<typeof adminSearchSchema>;
 export type AdminAnalyticsInput = z.infer<typeof adminAnalyticsSchema>;
 export type EmailCampaignInput = z.infer<typeof emailCampaignSchema>;
 export type AdminUserInput = z.infer<typeof adminUserSchema>;
-export type ExportInput = z.infer<typeof exportSchema>; 
+export type ExportInput = z.infer<typeof exportSchema>;

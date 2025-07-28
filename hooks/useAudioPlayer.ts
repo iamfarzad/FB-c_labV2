@@ -299,4 +299,4 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}) {
   }
 }
 
-export default useAudioPlayer 
+export default useAudioPlayer

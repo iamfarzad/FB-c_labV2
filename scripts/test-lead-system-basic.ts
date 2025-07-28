@@ -142,4 +142,4 @@ async function testBasicLeadSystem() {
 }
 
 // Run the test
-testBasicLeadSystem().catch(console.error); 
+testBasicLeadSystem().catch(console.error);

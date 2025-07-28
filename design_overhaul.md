@@ -39,33 +39,33 @@ This document outlines the comprehensive design overhaul for the F.B/c AI chat i
 ## 2. Component Classes
 
 ### Button Classes
-```css
+\`\`\`css
 .btn-primary: bg-accent text-accent-foreground hover:bg-accent/90
 .btn-secondary: bg-secondary text-secondary-foreground hover:bg-secondary/80
 .btn-minimal: bg-transparent border border-border hover:bg-accent/10
-```
+\`\`\`
 
 ### Card Classes
-```css
+\`\`\`css
 .card-minimal: bg-card border border-border rounded-lg shadow-md p-6
 .card-glass: bg-glass-bg border border-glass-border backdrop-blur-sm
-```
+\`\`\`
 
 ### Chat Bubble Classes
-```css
+\`\`\`css
 .chat-bubble-user: bg-accent text-accent-foreground rounded-lg p-4
 .chat-bubble-assistant: bg-card border border-border rounded-lg p-4
-```
+\`\`\`
 
 ### Input Classes
-```css
+\`\`\`css
 .input-minimal: bg-background border border-border rounded-md px-3 py-2
-```
+\`\`\`
 
 ## 3. Layout Structure
 
 ### Unified Chat Layout
-```
+\`\`\`
 <ChatLayout>
   <div className="flex h-full bg-background text-foreground overflow-hidden">
     <Sidebar /> {/* Left sidebar with activity log */}
@@ -77,16 +77,16 @@ This document outlines the comprehensive design overhaul for the F.B/c AI chat i
     </div>
   </div>
 </ChatLayout>
-```
+\`\`\`
 
 ### Tool Card Wrapper
-```tsx
+\`\`\`tsx
 <ToolCardWrapper>
   <div className="card-minimal space-y-4">
     {/* Tool-specific content */}
   </div>
 </ToolCardWrapper>
-```
+\`\`\`
 
 ## 4. Migration Plan
 
@@ -196,4 +196,4 @@ This document outlines the comprehensive design overhaul for the F.B/c AI chat i
 - [DESIGN.md](DESIGN.md) - Design token source
 - [frontend_design.md](frontend_design.md) - Frontend design system
 - [backend_architecture.md](backend_architecture.md) - Backend architecture rules
-- [CHANGELOG.md](CHANGELOG.md) - Change tracking 
+- [CHANGELOG.md](CHANGELOG.md) - Change tracking

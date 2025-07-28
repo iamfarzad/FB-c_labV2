@@ -116,4 +116,4 @@ async function cleanupStaleActivities() {
   }
 }
 
-cleanupStaleActivities() 
+cleanupStaleActivities()

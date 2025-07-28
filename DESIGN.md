@@ -104,4 +104,4 @@ All design tokens are defined in `globals.css` and referenced in `tailwind.confi
 
 ---
 
-**Link this file in your README.md for all contributors.** 
+**Link this file in your README.md for all contributors.**

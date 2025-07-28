@@ -103,4 +103,4 @@ describe('GroundedSearchService', () => {
       await expect((service as any).saveSearchResults('test-lead-id', mockResults)).resolves.not.toThrow()
     })
   })
-}) 
+})

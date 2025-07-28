@@ -175,4 +175,4 @@ describe('Gemini Live Audio Basic Tests', () => {
     expect(defaultModel).toContain('audio')
     expect(customModel).toBe('custom-model')
   })
-}) 
+})

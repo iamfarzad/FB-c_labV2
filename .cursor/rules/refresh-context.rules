@@ -95,7 +95,7 @@
 
 ## 🔄 **Context Refresh Workflow**
 
-```
+\`\`\`
 Context Refresh Triggered
            ↓
     Read Project Documentation
@@ -111,7 +111,7 @@ Context Refresh Triggered
     Document Current State
            ↓
     Proceed with Request
-```
+\`\`\`
 
 ## 📚 **Context Sources**
 
@@ -183,4 +183,4 @@ Context Refresh Triggered
 - **Automated testing** ensures context consistency
 - **Dependency scanning** identifies potential conflicts
 
-**⚠️ REMINDER: Always maintain fresh context to ensure accurate and effective responses.** 
+**⚠️ REMINDER: Always maintain fresh context to ensure accurate and effective responses.**

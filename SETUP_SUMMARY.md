@@ -51,11 +51,11 @@ Add these secrets to your GitHub repository:
 1. Go to **Settings** → **Secrets and variables** → **Actions**
 2. Add these repository secrets:
 
-```bash
+\`\`\`bash
 VERCEL_TOKEN=your_vercel_token_here
 VERCEL_ORG_ID=team_hcm6i4qba2sd6W0wp2IN1UDoODrO
 VERCEL_PROJECT_ID=prj_hcm6i4qba2sd6W0wp2IN1UDoODrO
-```
+\`\`\`
 
 ### **3. Generate Vercel Token**
 
@@ -67,20 +67,20 @@ VERCEL_PROJECT_ID=prj_hcm6i4qba2sd6W0wp2IN1UDoODrO
 5. Copy the token and add to GitHub secrets
 
 **Option B: Via CLI (if working)**
-```bash
+\`\`\`bash
 # Try this command
 pnpm exec vercel token create "GitHub Actions" --scope=iamfarzads-projects
-```
+\`\`\`
 
 ## 🌿 **Branch Strategy**
 
 ### **Recommended Branch Structure**
-```
+\`\`\`
 main (production)
 ├── develop (integration)
 ├── staging (pre-production)
 └── feature/* (individual features)
-```
+\`\`\`
 
 ### **Workflow**
 1. **Feature Development**: `feature/new-feature` → Preview deployment
@@ -124,16 +124,16 @@ main (production)
 ## 🚨 **Emergency Procedures**
 
 ### **Rollback Deployment**
-```bash
+\`\`\`bash
 # List recent deployments
 pnpm exec vercel ls
 
 # Rollback to previous deployment
 pnpm exec vercel rollback <deployment-url>
-```
+\`\`\`
 
 ### **Emergency Hotfix**
-```bash
+\`\`\`bash
 # Create hotfix branch
 git checkout -b hotfix/emergency-fix
 
@@ -142,7 +142,7 @@ git commit -m "fix: emergency fix"
 
 # Push and create PR
 git push origin hotfix/emergency-fix
-```
+\`\`\`
 
 ## 📈 **Monitoring & Analytics**
 
@@ -160,7 +160,7 @@ git push origin hotfix/emergency-fix
 
 ## 🔗 **Useful Commands**
 
-```bash
+\`\`\`bash
 # Deploy to preview
 pnpm exec vercel --prod=false
 
@@ -175,7 +175,7 @@ pnpm exec vercel logs <deployment-url>
 
 # Check project status
 pnpm exec vercel project inspect v0-fb-c-ai-clone
-```
+\`\`\`
 
 ## 🎯 **Next Steps**
 
@@ -194,4 +194,4 @@ pnpm exec vercel project inspect v0-fb-c-ai-clone
 
 ---
 
-**🎉 Your Vercel setup is now complete and production-ready!** 
+**🎉 Your Vercel setup is now complete and production-ready!**

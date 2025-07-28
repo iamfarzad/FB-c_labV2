@@ -84,4 +84,4 @@ You are F.B/c, a lead-generation assistant for Farzad Bayat's website. You speak
 }
 
 // Run the test
-testEnhancedChat(); 
+testEnhancedChat();

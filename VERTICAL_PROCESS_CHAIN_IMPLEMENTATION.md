@@ -81,13 +81,13 @@ Successfully implemented a new vertical AI process chain design that replaces th
 - Follows established CSS custom properties
 
 ### Color Mapping
-```typescript
+\`\`\`typescript
 // Status-based styling
 in_progress: "w-6 h-6 bg-white border-2 border-muted-foreground/60 shadow-lg animate-pulse"
 completed: "w-4 h-4 bg-muted-foreground/40 border border-muted-foreground/30"
 failed: "w-4 h-4 bg-destructive/20 border border-destructive/30 opacity-60"
 pending: "w-3 h-3 bg-muted-foreground/30 border border-muted-foreground/20 opacity-40"
-```
+\`\`\`
 
 ## 📊 Activity Type Support
 
@@ -226,4 +226,4 @@ Maintained all existing activity type mappings:
 
 **Implementation Status**: ✅ **COMPLETE**
 
-The vertical AI process chain has been successfully implemented and integrated into the application. The new design provides a more professional, technical appearance while maintaining all existing functionality and improving the user experience. 
+The vertical AI process chain has been successfully implemented and integrated into the application. The new design provides a more professional, technical appearance while maintaining all existing functionality and improving the user experience.

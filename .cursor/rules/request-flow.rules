@@ -107,7 +107,7 @@
 
 ## 🔄 **Request Flow Diagram**
 
-```
+\`\`\`
 Request Received
        ↓
    Analyze Project Structure
@@ -125,7 +125,7 @@ Request Received
    Update Documentation
        ↓
    Submit for Review
-```
+\`\`\`
 
 ## 📚 **Reference Documents**
 
@@ -134,4 +134,4 @@ Request Received
 - [file-tree.md](mdc:file-tree.md) - Project structure overview
 - [package.json](mdc:package.json) - Dependencies and scripts
 
-**⚠️ REMINDER: Always follow this request flow to ensure quality and consistency.** 
+**⚠️ REMINDER: Always follow this request flow to ensure quality and consistency.**

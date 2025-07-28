@@ -256,4 +256,4 @@ export const estimateTokensForMessages = (messages: Array<{ role: string; conten
 
 export const getModelInfo = (model: string) => {
   return ModelSelector.getInstance().getModelInfo(model)
-} 
+}

@@ -446,4 +446,4 @@ SYSTEM STATUS:
 - Data Freshness: ${context.systemStatus.dataFreshness}
 - API Health: ${context.systemStatus.apiHealth ? '✅' : '❌'}
 - Database Health: ${context.systemStatus.databaseHealth ? '✅' : '❌'}`
-} 
+}

@@ -150,4 +150,4 @@ Focus on identifying business process improvements and automation opportunities.
       message: error.message || 'An unexpected error occurred'
     }, { status: 500 })
   }
-} 
+}

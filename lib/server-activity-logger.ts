@@ -60,4 +60,4 @@ export async function logServerActivity(activityData: ServerActivityData): Promi
  * Legacy function name for backward compatibility
  * @deprecated Use logServerActivity instead
  */
-export const logActivity = logServerActivity 
+export const logActivity = logServerActivity

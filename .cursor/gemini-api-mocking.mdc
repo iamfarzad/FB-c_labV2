@@ -10,19 +10,19 @@
 
 **MANDATORY**: Use environment variable `ENABLE_GEMINI_MOCKING` to control API behavior:
 
-```bash
+\`\`\`bash
 # .env.local - Development (MOCKING ENABLED)
 ENABLE_GEMINI_MOCKING=true
 
 # .env.production - Production (REAL API)
 ENABLE_GEMINI_MOCKING=false
-```
+\`\`\`
 
 ### **2. Middleware Interception**
 
 **MANDATORY**: Implement middleware to intercept Gemini API calls in development:
 
-```typescript
+\`\`\`typescript
 // middleware.ts
 export function middleware(req: NextRequest) {
   if (process.env.NODE_ENV !== 'development') {
@@ -61,13 +61,13 @@ export function middleware(req: NextRequest) {
 
   return NextResponse.next()
 }
-```
+\`\`\`
 
 ### **3. Mock API Structure**
 
 **MANDATORY**: Create mock endpoints under `/api/mock/` directory:
 
-```
+\`\`\`
 app/api/mock/
 ├── chat/
 │   └── route.ts
@@ -83,13 +83,13 @@ app/api/mock/
 │   └── route.ts
 └── status/
     └── route.ts
-```
+\`\`\`
 
 ### **4. Mock Response Standards**
 
 **MANDATORY**: All mock responses must include:
 
-```typescript
+\`\`\`typescript
 // Required mock response structure
 {
   success: true,
@@ -99,13 +99,13 @@ app/api/mock/
   mock: true, // Always include this flag
   timestamp: new Date().toISOString()
 }
-```
+\`\`\`
 
 ### **5. Realistic Mock Data**
 
 **MANDATORY**: Provide realistic mock responses that match expected API behavior:
 
-```typescript
+\`\`\`typescript
 // Mock response examples
 const MOCK_RESPONSES = {
   chat: (message: string) => 
@@ -125,13 +125,13 @@ const MOCK_RESPONSES = {
     recommendations: ['Consider AI automation for repetitive tasks', 'Implement process optimization strategies']
   })
 }
-```
+\`\`\`
 
 ### **6. Simulated Processing Delays**
 
 **MANDATORY**: Include realistic delays to simulate API processing:
 
-```typescript
+\`\`\`typescript
 const MOCK_DELAYS = {
   chat: 1000,
   tts: 800,
@@ -143,13 +143,13 @@ const MOCK_DELAYS = {
 
 // Usage in mock endpoints
 await new Promise(resolve => setTimeout(resolve, MOCK_DELAYS.chat))
-```
+\`\`\`
 
 ### **7. Mock Configuration File**
 
 **MANDATORY**: Create [lib/mock-config.ts](mdc:lib/mock-config.ts) for centralized mock configuration:
 
-```typescript
+\`\`\`typescript
 export const MOCK_CONFIG = {
   enabled: process.env.NODE_ENV === 'development' && process.env.ENABLE_GEMINI_MOCKING === 'true',
   
@@ -170,13 +170,13 @@ export const MOCK_CONFIG = {
 export function logMockActivity(endpoint: string, correlationId: string) {
   console.log(`🟠 [MOCK] ${endpoint} called with correlation ID: ${correlationId}`)
 }
-```
+\`\`\`
 
 ### **8. Mock Status Endpoint**
 
 **MANDATORY**: Create `/api/mock/status` endpoint to verify mock status:
 
-```typescript
+\`\`\`typescript
 // app/api/mock/status/route.ts
 export async function GET() {
   return NextResponse.json({
@@ -198,30 +198,30 @@ export async function GET() {
     ]
   })
 }
-```
+\`\`\`
 
 ## 🎯 **Usage Guidelines**
 
 ### **Development Workflow**
 
 1. **Always enable mocking in development**:
-   ```bash
+   \`\`\`bash
    ENABLE_GEMINI_MOCKING=true
-   ```
+   \`\`\`
 
 2. **Test mock responses**:
-   ```bash
+   \`\`\`bash
    curl http://localhost:3000/api/mock/status
-   ```
+   \`\`\`
 
 3. **Verify UI behavior with mocks** before enabling real API
 
 ### **Production Deployment**
 
 1. **Disable mocking in production**:
-   ```bash
+   \`\`\`bash
    ENABLE_GEMINI_MOCKING=false
-   ```
+   \`\`\`
 
 2. **Monitor API costs** after deployment
 

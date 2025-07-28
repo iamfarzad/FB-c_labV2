@@ -6,4 +6,4 @@ export default function ChatGroupLayout({ children }: { children: React.ReactNod
       {children}
     </>
   )
-} 
+}

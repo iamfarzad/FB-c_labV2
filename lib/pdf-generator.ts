@@ -326,4 +326,4 @@ export function sanitizeTextForPdf(text: string): string {
     .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove links
     .replace(/\n{3,}/g, '\n\n') // Normalize line breaks
     .trim();
-} 
+}

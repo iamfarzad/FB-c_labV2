@@ -21,7 +21,7 @@ This comprehensive testing suite covers all aspects of the chat functionality wi
 - ✅ Error handling and edge cases
 
 #### Run E2E Tests:
-```bash
+\`\`\`bash
 # Run all E2E tests
 pnpm test:e2e
 
@@ -33,7 +33,7 @@ npx playwright test tests/playwright/chat.spec.ts
 
 # Run visual regression tests
 npx playwright test tests/playwright/chat-visual.spec.ts
-```
+\`\`\`
 
 ### 2. **Component Tests (Unit + UI Logic)**
 **Location:** `tests/components/`
@@ -49,7 +49,7 @@ npx playwright test tests/playwright/chat-visual.spec.ts
 - ✅ Props handling and edge cases
 
 #### Run Component Tests:
-```bash
+\`\`\`bash
 # Run all unit tests
 pnpm test
 
@@ -61,7 +61,7 @@ pnpm test:coverage
 
 # Run specific test file
 pnpm test ChatInput.test.tsx
-```
+\`\`\`
 
 ### 3. **Visual Snapshot Tests**
 **Location:** `tests/playwright/chat-visual.spec.ts`
@@ -78,13 +78,13 @@ pnpm test ChatInput.test.tsx
 - ✅ Cross-browser comparisons
 
 #### Run Visual Tests:
-```bash
+\`\`\`bash
 # Run visual tests
 npx playwright test tests/playwright/chat-visual.spec.ts
 
 # Update snapshots when UI changes
 npx playwright test tests/playwright/chat-visual.spec.ts --update-snapshots
-```
+\`\`\`
 
 ### 4. **API Route Testing**
 **Location:** `tests/api/`
@@ -99,27 +99,27 @@ npx playwright test tests/playwright/chat-visual.spec.ts --update-snapshots
 - ✅ Edge cases (large messages, concurrent requests)
 
 #### Run API Tests:
-```bash
+\`\`\`bash
 # Run API tests specifically
 pnpm test api/
 
 # Or include in general test run
 pnpm test
-```
+\`\`\`
 
 ## 🚀 Quick Start
 
 ### Setup (One Time)
-```bash
+\`\`\`bash
 # Install dependencies (if not already done)
 pnpm install
 
 # Install Playwright browsers
 npx playwright install
-```
+\`\`\`
 
 ### Run All Tests
-```bash
+\`\`\`bash
 # Run unit/component tests
 pnpm test
 
@@ -128,7 +128,7 @@ pnpm test:e2e
 
 # Run everything with coverage
 pnpm test:coverage && pnpm test:e2e
-```
+\`\`\`
 
 ## 📊 Test Coverage
 
@@ -141,7 +141,7 @@ The test suite aims for:
 ## 🐛 Debugging Tests
 
 ### Failed E2E Tests
-```bash
+\`\`\`bash
 # Run with debug mode
 npx playwright test --debug
 
@@ -150,29 +150,29 @@ npx playwright test --headed
 
 # Generate trace for failed tests
 npx playwright test --trace on
-```
+\`\`\`
 
 ### Failed Unit Tests
-```bash
+\`\`\`bash
 # Run with verbose output
 pnpm test --verbose
 
 # Run specific test with debugging
 pnpm test --testNamePattern="specific test name"
-```
+\`\`\`
 
 ### Visual Test Failures
-```bash
+\`\`\`bash
 # View visual diff report
 npx playwright show-report
 
 # Update snapshots after UI changes
 npx playwright test --update-snapshots
-```
+\`\`\`
 
 ## 📁 File Structure
 
-```
+\`\`\`
 tests/
 ├── README.md                     # This file
 ├── setup.ts                      # Jest setup
@@ -185,7 +185,7 @@ tests/
 │   └── ChatMain.test.tsx        # Main chat component tests
 └── api/                         # API endpoint tests
     └── chat-api.test.ts         # Chat API tests
-```
+\`\`\`
 
 ## 🔧 Configuration Files
 
@@ -203,7 +203,7 @@ tests/
 5. **Keep tests independent and idempotent**
 
 ### Test Data
-```typescript
+\`\`\`typescript
 // Good: Use realistic test data
 const testMessage = {
   id: '1',
@@ -214,10 +214,10 @@ const testMessage = {
 
 // Bad: Use minimal/unrealistic data
 const testMessage = { content: 'hi' }
-```
+\`\`\`
 
 ### Selectors
-```typescript
+\`\`\`typescript
 // Good: Use semantic selectors
 page.getByPlaceholder('Ask anything...')
 page.getByRole('button', { name: 'Send message' })
@@ -227,7 +227,7 @@ page.getByTestId('chat-layout')
 
 // Avoid: Brittle CSS selectors
 page.locator('.css-class-123')
-```
+\`\`\`
 
 ## 🚨 Common Issues
 

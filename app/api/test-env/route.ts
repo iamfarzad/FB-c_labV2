@@ -7,4 +7,4 @@ export async function GET(request: NextRequest) {
     nodeEnv: process.env.NODE_ENV,
     allEnvVars: Object.keys(process.env).filter(key => key.includes('ADMIN') || key.includes('JWT'))
   })
-} 
+}

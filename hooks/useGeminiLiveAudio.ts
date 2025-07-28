@@ -358,4 +358,4 @@ export function useGeminiLiveAudio({
     sendStream,
     cleanup
   }
-} 
+}

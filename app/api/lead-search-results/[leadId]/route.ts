@@ -95,4 +95,4 @@ export async function POST(
       error: error.message || "Failed to generate search results"
     }, { status: 500 })
   }
-} 
+}

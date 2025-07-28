@@ -88,4 +88,4 @@ export function useAdminAuth() {
     requireAuth,
     checkAuth
   }
-} 
+}

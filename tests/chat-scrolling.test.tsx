@@ -86,4 +86,4 @@ describe('ChatMain Scrolling', () => {
     expect(screen.getByText('Welcome to F.B/c AI')).toBeInTheDocument()
     expect(screen.getByText(/Start a conversation/)).toBeInTheDocument()
   })
-}) 
+})

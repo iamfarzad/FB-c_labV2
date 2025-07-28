@@ -484,4 +484,4 @@ if (require.main === module) {
   main().catch(console.error);
 }
 
-export { AIFunctionValidator }; 
+export { AIFunctionValidator };

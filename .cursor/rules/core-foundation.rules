@@ -187,4 +187,4 @@ Before any API endpoint can be merged, verify:
 - [CHANGELOG.md](mdc:CHANGELOG.md) - Change tracking and compliance updates
 - [package.json](mdc:package.json) - Dependency management and scripts
 
-**⚠️ REMINDER: These rules are MANDATORY and will be enforced automatically. Non-compliant code will be rejected.** 
+**⚠️ REMINDER: These rules are MANDATORY and will be enforced automatically. Non-compliant code will be rejected.**

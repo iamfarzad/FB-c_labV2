@@ -94,4 +94,4 @@ export class ClientErrorBoundary extends React.Component<ErrorBoundaryProps, Err
 
     return this.props.children
   }
-} 
+}

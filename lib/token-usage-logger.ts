@@ -371,4 +371,4 @@ export const enforceBudgetAndLog = (
 
 export const getUsageStats = (userId?: string, sessionId?: string, timeframe?: 'day' | 'week' | 'month') => {
   return TokenUsageLogger.getInstance().getUsageStats(userId, sessionId, timeframe)
-} 
+}

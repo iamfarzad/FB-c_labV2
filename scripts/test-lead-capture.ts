@@ -73,4 +73,4 @@ async function testLeadCapture(): Promise<void> {
 }
 
 // Run the test
-testLeadCapture().catch(console.error) 
+testLeadCapture().catch(console.error)

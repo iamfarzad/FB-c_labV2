@@ -79,4 +79,4 @@ export const config = {
     '/api/admin/:path*',
     '/api/:path*'
   ]
-} 
+}

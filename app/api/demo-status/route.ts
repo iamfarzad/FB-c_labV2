@@ -57,4 +57,4 @@ export async function GET(request: NextRequest) {
       message: error.message || 'An unexpected error occurred'
     }, { status: 500 })
   }
-} 
+}

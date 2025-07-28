@@ -150,4 +150,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   validateRules();
 }
 
-export { validateRules, ruleValidators }; 
+export { validateRules, ruleValidators };

@@ -386,4 +386,4 @@ export function AdminChatInterface({ className }: AdminChatInterfaceProps) {
       </div>
     </div>
   )
-} 
+}

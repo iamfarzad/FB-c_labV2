@@ -79,4 +79,4 @@ async function applyActivitiesMigration() {
   }
 }
 
-applyActivitiesMigration() 
+applyActivitiesMigration()

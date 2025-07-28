@@ -330,4 +330,4 @@ export function SimplifiedAdminDashboard() {
       </div>
     </div>
   )
-} 
+}

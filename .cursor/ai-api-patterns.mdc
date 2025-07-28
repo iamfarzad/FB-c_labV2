@@ -19,7 +19,7 @@ globs:
 - **Rule AI1.4**: Ensure `@google/genai` is the only generative AI SDK dependency; verify via automated CI checks.
 
 ### Chat Session Implementation
-```typescript
+\`\`\`typescript
 // MANDATORY: Use this pattern for chat endpoints
 import { Client, types, GoogleSearch } from '@google/genai';
 
@@ -53,7 +53,7 @@ class GeminiClient {
     }
   }
 }
-```
+\`\`\`
 
 ## 🔧 Web Grounding Implementation
 
@@ -64,7 +64,7 @@ class GeminiClient {
 - **Rule WG1.4**: Web grounding requires CSE (Custom Search Engine) setup
 
 ### Proper Tool Configuration
-```typescript
+\`\`\`typescript
 // ❌ WRONG - These will cause "Unknown name" errors
 const tools = [
   { enterpriseWebSearch: {} },     // ❌ Not supported
@@ -78,20 +78,20 @@ const tools = [
 
 // ✅ CORRECT - No tools for basic chat
 const tools = [];  // ✅ Basic chat without grounding
-```
+\`\`\`
 
 ### Environment Variables Required
-```bash
+\`\`\`bash
 # MANDATORY for web grounding
 GEMINI_API_KEY=your_gemini_api_key
 GOOGLE_CSE_API_KEY=your_custom_search_api_key  # Optional
 GOOGLE_CSE_ID=your_custom_search_engine_id     # Optional
-```
+\`\`\`
 
 ## 📡 Streaming Response Standards
 
 ### SSE (Server-Sent Events) Pattern
-```typescript
+\`\`\`typescript
 // MANDATORY: Use this pattern for streaming responses
 function createSSEStream(responseText: string): ReadableStream {
   return new ReadableStream({
@@ -123,12 +123,12 @@ return new Response(stream, {
     'X-Response-Time': `${Date.now() - startTime}ms`
   },
 });
-```
+\`\`\`
 
 ## 🔐 Authentication Integration
 
 ### JWT Token Validation
-```typescript
+\`\`\`typescript
 // MANDATORY: Authentication middleware for AI endpoints
 async function authenticateRequest(req: NextRequest): Promise<{ success: boolean; userId?: string; error?: string }> {
   try {
@@ -151,12 +151,12 @@ async function authenticateRequest(req: NextRequest): Promise<{ success: boolean
     return { success: false, error: 'Authentication service unavailable' };
   }
 }
-```
+\`\`\`
 
 ## 📝 Input Validation & Sanitization
 
 ### Message Validation
-```typescript
+\`\`\`typescript
 // MANDATORY: Validate all AI inputs
 import { chatRequestSchema, validateRequest, sanitizeString } from '@/lib/validation';
 
@@ -173,7 +173,7 @@ const sanitizedMessages = messages.map((message: Message) => ({
   ...message,
   content: sanitizeString(message.content)
 }));
-```
+\`\`\`
 
 ## 🚫 Prohibited AI Patterns
 

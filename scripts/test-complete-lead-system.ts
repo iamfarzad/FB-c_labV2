@@ -245,4 +245,4 @@ async function testCompleteLeadGenerationSystem() {
 }
 
 // Run the test
-testCompleteLeadGenerationSystem().catch(console.error); 
+testCompleteLeadGenerationSystem().catch(console.error);

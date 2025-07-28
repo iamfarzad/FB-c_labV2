@@ -1,6 +1,6 @@
 # Page snapshot
 
-```yaml
+\`\`\`yaml
 - heading "Chat History" [level=2]
 - button "Fix"
 - button "Clear"
@@ -59,4 +59,4 @@
 - button "Open Next.js Dev Tools":
   - img
 - alert
-```
+\`\`\`

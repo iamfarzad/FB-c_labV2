@@ -116,10 +116,10 @@ This document outlines all the fixes applied to resolve production deployment is
 
 Before deploying, run this SQL script in your Supabase database:
 
-```bash
+\`\`\`bash
 # Apply the migration
 psql -h your-supabase-host -U postgres -d postgres < scripts/05-fix-production-issues.sql
-```
+\`\`\`
 
 This migration will:
 - Update RLS policies for anonymous access
@@ -131,7 +131,7 @@ This migration will:
 
 To verify the fixes work locally:
 
-```bash
+\`\`\`bash
 # Build verification
 pnpm run build
 
@@ -144,10 +144,10 @@ curl -X POST "http://localhost:3000/api/lead-capture" \
 curl -X POST "http://localhost:3000/api/analyze-image" \
   -H "Content-Type: application/json" \
   -d '{"image":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...","type":"general"}'
-```
+\`\`\`
 
 All tests should now pass in production environment.
 
 ---
 
-**Summary**: All critical production deployment issues have been resolved. The application should now deploy successfully on Vercel with full functionality. 
+**Summary**: All critical production deployment issues have been resolved. The application should now deploy successfully on Vercel with full functionality.

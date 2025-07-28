@@ -103,4 +103,4 @@ CREATE INDEX IF NOT EXISTS idx_leads_lead_score ON leads(lead_score DESC);
 
 -- Enable realtime for new tables
 ALTER PUBLICATION supabase_realtime ADD TABLE activities;
-ALTER PUBLICATION supabase_realtime ADD TABLE leads; 
+ALTER PUBLICATION supabase_realtime ADD TABLE leads;

@@ -194,7 +194,7 @@
 
 ## 🔄 **DATA FLOW ARCHITECTURE**
 
-```
+\`\`\`
 User Input → API Gateway → Model Selection → AI Processing → Response
      ↓
 [Text] → gemini-2.5-flash → [Conversation/Research]
@@ -202,7 +202,7 @@ User Input → API Gateway → Model Selection → AI Processing → Response
 [Document] → gemini-1.5-flash → [Document Analysis]
 [Voice] → gemini-2.5-flash-exp-native-audio-thinking-dialog → [Real-time Audio]
 [TTS Request] → gemini-2.5-flash-preview-tts → [Audio Generation]
-```
+\`\`\`
 
 ---
 
@@ -245,10 +245,10 @@ User Input → API Gateway → Model Selection → AI Processing → Response
 ## 📋 **DEPLOYMENT CONSIDERATIONS**
 
 ### **Environment Variables**
-```bash
+\`\`\`bash
 GEMINI_API_KEY=your_api_key
 NEXT_PUBLIC_DEMO_MODE=true  # For guest access
-```
+\`\`\`
 
 ### **Rate Limiting**
 - 20 requests/minute per IP for most endpoints
@@ -263,4 +263,4 @@ NEXT_PUBLIC_DEMO_MODE=true  # For guest access
 
 ---
 
-**Status**: **PRODUCTION READY** - All AI models are properly configured and functional. 
+**Status**: **PRODUCTION READY** - All AI models are properly configured and functional.

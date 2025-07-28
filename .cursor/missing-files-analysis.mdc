@@ -24,7 +24,7 @@ Based on commit history analysis, this project has undergone extensive refactori
 - **2025-06-18**: Conversational state machine implementation
 
 ### Step 2: Search Commit History for Missing Items
-```bash
+\`\`\`bash
 # Search for specific file/function mentions
 git log --oneline --grep="filename" --all
 git log --oneline --grep="functionName" --all
@@ -34,7 +34,7 @@ git log --oneline --grep="remove\|delete\|refactor\|migrate" --all
 
 # Check specific commit details
 git show <commit-hash> --name-status
-```
+\`\`\`
 
 ### Step 3: Analyze Common Removal Patterns
 
@@ -95,14 +95,14 @@ git show <commit-hash> --name-status
 ### If File/Function Was Removed:
 
 1. **Check for replacement implementation**:
-   ```bash
+   \`\`\`bash
    git log --oneline --grep="replacement\|alternative\|new.*implementation" --all
-   ```
+   \`\`\`
 
 2. **Look for migration commits**:
-   ```bash
+   \`\`\`bash
    git show <commit-hash> --name-status | grep -E "(R|A|M)"
-   ```
+   \`\`\`
 
 3. **Check current architecture**:
    - AI functions → `lib/unified-ai-service.ts`
@@ -113,9 +113,9 @@ git show <commit-hash> --name-status
 ### If File/Function Was Refactored:
 
 1. **Search for new naming patterns**:
-   ```bash
+   \`\`\`bash
    git log --oneline --grep="rename\|refactor.*function\|move.*to" --all
-   ```
+   \`\`\`
 
 2. **Check for architectural migrations**:
    - UnifiedAIService for AI functions
@@ -132,14 +132,14 @@ git show <commit-hash> --name-status
 5. **Follow current patterns** from existing codebase
 
 ### Commit Message Format:
-```
+\`\`\`
 feat: restore [component/function] from [original-commit]
 
 - Reason for restoration
 - Compatibility with current architecture
 - References original removal commit
 - Updates CHANGELOG.md
-```
+\`\`\`
 
 ## ⚠️ Common Pitfalls to Avoid
 

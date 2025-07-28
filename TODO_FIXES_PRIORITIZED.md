@@ -33,7 +33,7 @@
 - ✅ Chat API returns proper user context
 
 ### **Acceptance Test Results**
-```bash
+\`\`\`bash
 # Test 1: New session isolation ✅ PASSED
 curl -X POST http://localhost:3000/api/chat \
   -H "Content-Type: application/json" \
@@ -51,7 +51,7 @@ curl -X POST http://localhost:3000/api/chat \
   -H "Content-Type: application/json" \
   -H "x-demo-session-id: session-3" \
   -d '{"messages": [{"role": "user", "content": "Hello"}], "data": {"leadContext": {"name": "John Smith", "company": "TechCorp", "role": "CTO"}}}'
-```
+\`\`\`
 
 ### **Key Fixes Applied**
 - **Removed localStorage persistence** - Now uses sessionStorage for proper session isolation
@@ -92,7 +92,7 @@ curl -X POST http://localhost:3000/api/chat \
 - ✅ Proper error handling and user feedback
 
 ### **Acceptance Test Results**
-```bash
+\`\`\`bash
 # Test 1: File upload with session tracking ✅ PASSED
 curl -X POST http://localhost:3000/api/upload \
   -F "file=@test_business_doc.txt" \
@@ -108,7 +108,7 @@ curl -X POST http://localhost:3000/api/analyze-document \
 
 # Test 3: Upload endpoint status ✅ PASSED
 curl -X GET http://localhost:3000/api/upload
-```
+\`\`\`
 
 ### **Key Fixes Applied**
 - **Session ID Integration** - Added proper session headers to all upload and analysis requests
@@ -149,7 +149,7 @@ curl -X GET http://localhost:3000/api/upload
 - ✅ Proper cleanup and resource management
 
 ### **Acceptance Test Results**
-```bash
+\`\`\`bash
 # Test 1: TTS API functionality ✅ PASSED
 curl -X POST http://localhost:3000/api/gemini-live \
   -H "Content-Type: application/json" \
@@ -160,7 +160,7 @@ curl -X POST http://localhost:3000/api/gemini-live \
 
 # Test 3: Fallback to text input ✅ PASSED
 # When microphone access is denied, user can switch to text input
-```
+\`\`\`
 
 ### **Key Fixes Applied**
 - **Permission Handling** - Proper getUserMedia implementation with error handling
@@ -202,7 +202,7 @@ curl -X POST http://localhost:3000/api/gemini-live \
 - ✅ Proper cleanup and resource management
 
 ### **Acceptance Test Results**
-```bash
+\`\`\`bash
 # Test 1: Image Analysis API functionality ✅ PASSED
 curl -X POST http://localhost:3000/api/analyze-image \
   -H "Content-Type: application/json" \
@@ -213,7 +213,7 @@ curl -X POST http://localhost:3000/api/analyze-image \
 
 # Test 3: Fallback to file upload ✅ PASSED
 # When camera access is denied, user can switch to file upload
-```
+\`\`\`
 
 ### **Key Fixes Applied**
 - **Permission Handling** - Proper getUserMedia implementation with error handling
@@ -258,7 +258,7 @@ curl -X POST http://localhost:3000/api/analyze-image \
 - ✅ Comprehensive logging for debugging
 
 ### **Acceptance Test Results**
-```bash
+\`\`\`bash
 # Test 1: Spec Generation API ✅ PASSED
 curl -X POST http://localhost:3000/api/video-to-app \
   -H "Content-Type: application/json" \
@@ -271,7 +271,7 @@ curl -X POST http://localhost:3000/api/video-to-app \
 
 # Test 3: Frontend Integration ✅ PASSED
 # Video-to-app generator now responds and shows progress
-```
+\`\`\`
 
 ### **Key Fixes Applied**
 - **Timeout Handling** - Added 60-second timeout with proper error handling
@@ -316,7 +316,7 @@ curl -X POST http://localhost:3000/api/video-to-app \
 - ✅ Activity logging and toast notifications working
 
 ### **Acceptance Test Results**
-```bash
+\`\`\`bash
 # Test 1: ROI Calculator API ✅ PASSED
 curl -X POST http://localhost:3000/api/calculate-roi \
   -H "Content-Type: application/json" \
@@ -329,7 +329,7 @@ curl -X POST http://localhost:3000/api/calculate-roi \
 # Modal opens with comprehensive form
 # Form validation and submission working
 # Results display with visual indicators and recommendations
-```
+\`\`\`
 
 ### **Key Features Implemented**
 - **Comprehensive Form**: Company size, industry, use case, process metrics
@@ -371,7 +371,7 @@ curl -X POST http://localhost:3000/api/calculate-roi \
 - ✅ Proper error handling and user feedback
 
 ### **Acceptance Test Results**
-```bash
+\`\`\`bash
 # Test 1: analyze-screenshot API ✅ PASSED
 curl -X POST http://localhost:3000/api/analyze-screenshot \
   -H "Content-Type: application/json" \
@@ -384,7 +384,7 @@ curl -X POST http://localhost:3000/api/analyze-screenshot \
 # Modal opens and requests screen sharing permissions
 # Proper integration with chat activity system
 # Session tracking and budget enforcement working
-```
+\`\`\`
 
 ### **Key Features Implemented**
 - **Correct API Integration**: Now uses `/api/analyze-screenshot` instead of `/api/analyze-image`
@@ -427,7 +427,7 @@ curl -X POST http://localhost:3000/api/analyze-screenshot \
 - [ ] Limits enforced
 
 ### **Acceptance Test**
-```bash
+\`\`\`bash
 # Test demo session creation
 curl -X POST http://localhost:3000/api/demo-session \
   -H "Content-Type: application/json" \
@@ -435,7 +435,7 @@ curl -X POST http://localhost:3000/api/demo-session \
 
 # Test demo status
 curl -X GET "http://localhost:3000/api/demo-status?sessionId=test-session"
-```
+\`\`\`
 
 ---
 
@@ -468,11 +468,11 @@ curl -X GET "http://localhost:3000/api/demo-status?sessionId=test-session"
 - [ ] Analytics available
 
 ### **Acceptance Test**
-```bash
+\`\`\`bash
 # Test token logging across all endpoints
 # Verify database entries created
 # Check budget enforcement
-```
+\`\`\`
 
 ---
 
@@ -504,11 +504,11 @@ curl -X GET "http://localhost:3000/api/demo-status?sessionId=test-session"
 - [ ] Performance improved
 
 ### **Acceptance Test**
-```bash
+\`\`\`bash
 # Test model selection across endpoints
 # Verify correct models chosen
 # Check cost optimization
-```
+\`\`\`
 
 ---
 
@@ -539,12 +539,12 @@ curl -X GET "http://localhost:3000/api/demo-status?sessionId=test-session"
 - [ ] PDF/email generation works
 
 ### **Acceptance Test**
-```bash
+\`\`\`bash
 # Test lead research
 curl -X POST http://localhost:3000/api/lead-research \
   -H "Content-Type: application/json" \
   -d '{"name": "John Doe", "email": "john@example.com", "company": "TestCo"}'
-```
+\`\`\`
 
 ---
 
@@ -575,14 +575,14 @@ curl -X POST http://localhost:3000/api/lead-research \
 - [ ] User management works
 
 ### **Acceptance Test**
-```bash
+\`\`\`bash
 # Test admin endpoints with auth
 curl -X GET http://localhost:3000/api/admin/stats \
   -H "Authorization: Bearer admin-token"
 
 curl -X GET http://localhost:3000/api/admin/analytics \
   -H "Authorization: Bearer admin-token"
-```
+\`\`\`
 
 ---
 
@@ -614,14 +614,14 @@ curl -X GET http://localhost:3000/api/admin/analytics \
 - [ ] Documentation updated
 
 ### **Acceptance Test**
-```bash
+\`\`\`bash
 # Run all tests
 pnpm test
 pnpm test:e2e
 
 # Verify test dashboard
 # Check documentation accuracy
-```
+\`\`\`
 
 ---
 
@@ -654,4 +654,4 @@ pnpm test:e2e
 4. **Move to next task** - Only after current task passes
 5. **Repeat** - Until all 13 tasks completed
 
-**Remember**: Each task must be completed individually with thorough testing before proceeding to the next. 
+**Remember**: Each task must be completed individually with thorough testing before proceeding to the next.
