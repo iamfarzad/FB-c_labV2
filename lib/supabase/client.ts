@@ -1,10 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../database.types'
 
-// Validate environment variables
+// Validate environment variables - only use client-safe variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 // Check if we're in a browser environment and have the required variables
 const isClient = typeof window !== 'undefined'
@@ -22,7 +21,7 @@ if (!hasRequiredVars) {
 function createSafeSupabaseClient() {
   if (!hasRequiredVars) {
     // Return a mock client for development/testing
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       console.warn('Using mock Supabase client due to missing environment variables')
       return {
         auth: {
@@ -55,15 +54,15 @@ function createSafeSupabaseClient() {
 // Improved Supabase Client Setup with TypeScript types and error handling
 export const supabase = createSafeSupabaseClient()
 
-// Service Role Client for API operations (bypasses RLS)
-export const supabaseService = hasRequiredVars && supabaseServiceKey 
-  ? createClient<Database>(supabaseUrl!, supabaseServiceKey, {
+// Service Role Client for API operations (bypasses RLS) - only available server-side
+export const supabaseService = typeof window === 'undefined' && hasRequiredVars
+  ? createClient<Database>(supabaseUrl!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
       }
     })
-  : supabase // Fallback to regular client if service key is missing
+  : supabase // Fallback to regular client if service key is missing or on client-side
 
 // Safe authentication utility for server-side API routes
 export async function getSafeUser() {
