@@ -30,3 +30,6 @@ next-env.d.ts
 docs/ADMIN_LOGIN.md
 docs/ADMIN_API.md
 docs/PRODUCTION_DEPLOYMENT.md
+
+# playwright tests (moved to separate folder to avoid v0.dev conflicts)
+playwright-tests/
