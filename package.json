@@ -74,6 +74,7 @@
     "framer-motion": "latest",
     "fs": "latest",
     "input-otp": "latest",
+    "isomorphic-dompurify": "latest",
     "jose": "latest",
     "lodash": "latest",
     "lucide-react": "^0.454.0",

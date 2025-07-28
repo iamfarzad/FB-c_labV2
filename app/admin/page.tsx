@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { AdminDashboard } from "@/components/admin/AdminDashboard"
+import { AdminDashboard } from "./components/AdminDashboard"
 import { PageHeader, PageShell } from "@/components/page-shell"
 
 export default function AdminPage() {
@@ -12,22 +12,22 @@ export default function AdminPage() {
 
   useEffect(() => {
     // Check if user is authenticated by making a request to a protected API
-    fetch('/api/admin/stats', {
-      credentials: 'include' // Include cookies
+    fetch("/api/admin/stats", {
+      credentials: "include", // Include cookies
     })
-    .then(response => {
-      if (response.ok) {
-        setIsAuthenticated(true)
-      } else {
-        router.push('/admin/login')
-      }
-    })
-    .catch(() => {
-      router.push('/admin/login')
-    })
-    .finally(() => {
-      setIsLoading(false)
-    })
+      .then((response) => {
+        if (response.ok) {
+          setIsAuthenticated(true)
+        } else {
+          router.push("/admin/login")
+        }
+      })
+      .catch(() => {
+        router.push("/admin/login")
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
   }, [router])
 
   if (isLoading) {

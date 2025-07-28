@@ -1,12 +1,10 @@
 "use client"
 
-/**
- * Educational content component with interaction tracking
- */
-
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import type { EducationalInteractionData } from "@/lib/educational-gemini-service"
+import { sanitizeHtml } from "@/lib/html-sanitizer"
+import { ErrorBoundary } from "@/components/ui/error-boundary"
 
 interface EducationalContentProps {
   htmlContent: string
@@ -31,6 +29,15 @@ export const EducationalContent: React.FC<EducationalContentProps> = ({
   const processedHtmlContentRef = useRef<string | null>(null)
   const interactionStartTime = useRef<number>(0)
   const [currentLearningObjective, setCurrentLearningObjective] = useState<string>("")
+  const [sanitizedContent, setSanitizedContent] = useState<string>("")
+
+  // Sanitize HTML content
+  useEffect(() => {
+    if (htmlContent) {
+      const sanitized = sanitizeHtml(htmlContent)
+      setSanitizedContent(sanitized)
+    }
+  }, [htmlContent])
 
   useEffect(() => {
     if (typeof window === "undefined") return // Only run on client side
@@ -112,7 +119,7 @@ export const EducationalContent: React.FC<EducationalContentProps> = ({
     container.addEventListener("focusin", handleFocus)
 
     // Process scripts when content changes and loading is complete
-    if (!isLoading && htmlContent !== processedHtmlContentRef.current) {
+    if (!isLoading && sanitizedContent !== processedHtmlContentRef.current) {
       const scripts = Array.from(container.getElementsByTagName("script"))
 
       scripts.forEach((oldScript) => {
@@ -132,7 +139,7 @@ export const EducationalContent: React.FC<EducationalContentProps> = ({
         }
       })
 
-      processedHtmlContentRef.current = htmlContent
+      processedHtmlContentRef.current = sanitizedContent
 
       // Initialize educational features
       initializeEducationalFeatures(container)
@@ -143,7 +150,7 @@ export const EducationalContent: React.FC<EducationalContentProps> = ({
       container.removeEventListener("keydown", handleInteraction)
       container.removeEventListener("focusin", handleFocus)
     }
-  }, [htmlContent, onInteract, appContext, isLoading, currentLearningObjective])
+  }, [sanitizedContent, onInteract, appContext, isLoading, currentLearningObjective])
 
   const showFeedback = (element: HTMLElement, isCorrect: boolean, value?: string) => {
     // Find or create feedback area
@@ -221,29 +228,31 @@ export const EducationalContent: React.FC<EducationalContentProps> = ({
   }
 
   return (
-    <div className="educational-content-wrapper">
-      {videoContext && (
-        <div className="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-          <h4 className="font-semibold text-blue-800">Learning Context</h4>
-          <p className="text-sm text-blue-600 mt-1">Video: {videoContext.videoTitle || "Educational Content"}</p>
-          {videoContext.learningObjectives.length > 0 && (
-            <div className="mt-2">
-              <p className="text-xs font-medium text-blue-700">Learning Objectives:</p>
-              <ul className="text-xs text-blue-600 mt-1 list-disc list-inside">
-                {videoContext.learningObjectives.slice(0, 3).map((objective, index) => (
-                  <li key={index}>{objective}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
+    <ErrorBoundary>
+      <div className="educational-content-wrapper">
+        {videoContext && (
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+            <h4 className="font-semibold text-blue-800">Learning Context</h4>
+            <p className="text-sm text-blue-600 mt-1">Video: {videoContext.videoTitle || "Educational Content"}</p>
+            {videoContext.learningObjectives.length > 0 && (
+              <div className="mt-2">
+                <p className="text-xs font-medium text-blue-700">Learning Objectives:</p>
+                <ul className="text-xs text-blue-600 mt-1 list-disc list-inside">
+                  {videoContext.learningObjectives.slice(0, 3).map((objective, index) => (
+                    <li key={index}>{objective}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
 
-      <div
-        ref={contentRef}
-        className="w-full h-full overflow-y-auto educational-content"
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
-      />
-    </div>
+        <div
+          ref={contentRef}
+          className="w-full h-full overflow-y-auto educational-content"
+          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+        />
+      </div>
+    </ErrorBoundary>
   )
 }

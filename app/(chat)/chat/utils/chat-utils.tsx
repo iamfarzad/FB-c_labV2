@@ -13,9 +13,9 @@ export const getActivityColor = (type: ActivityItem["type"]): string => {
     case "complete":
     case "video_complete":
       return "text-green-500"
-    case "analyzing":
+    case "analyze":
     case "processing":
-    case "generating":
+    case "generate":
       return "text-blue-500"
     default:
       return "text-muted-foreground"

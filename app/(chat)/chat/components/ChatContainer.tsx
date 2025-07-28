@@ -2,33 +2,34 @@
 
 import type React from "react"
 
-import { ChatHeader } from "@/components/chat/ChatHeader"
-import { LeadCaptureFlow } from "@/components/chat/LeadCaptureFlow"
+import { ChatHeader } from "./ChatHeader"
+import { ChatInput } from "./ChatInput"
 import { MessageList } from "./MessageList"
-import { ChatFooter } from "@/components/chat/ChatFooter"
-import type { Message } from "../types/chat"
-import type { ModalType } from "../hooks/useModalManager"
-import type { LeadCaptureState } from "../types/lead-capture"
+import { LeadCaptureFlow } from "@/components/chat/LeadCaptureFlow"
+import type { Activity, Message } from "../types/chat"
+import { ErrorState } from "./ErrorState"
+import { EmptyState } from "./EmptyState"
+import { LoadingState } from "./LoadingState"
 
 interface ChatContainerProps {
   leadName?: string
   onDownloadSummary: () => void
-  activities: any[]
+  activities: Activity[]
   onNewChat: () => void
   messages: Message[]
   isLoading: boolean
-  error: Error | undefined
+  error?: Error
   onExampleQuery: (query: string) => void
   onRetry: () => void
   input: string
-  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => void
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   onFileUpload: (file: File) => void
-  onImageUpload: (imageData: string, fileName: string) => void
-  openModal: (modal: ModalType) => void
+  onImageUpload: (file: File) => void
+  openModal: (modal: string) => void
   showLeadCapture: boolean
-  onLeadCaptureComplete: (leadData: LeadCaptureState["leadData"]) => void
-  engagementType?: "chat" | "voice" | "demo"
+  onLeadCaptureComplete: () => void
+  engagementType?: string
   initialQuery?: string
 }
 
@@ -54,34 +55,26 @@ export function ChatContainer({
   initialQuery,
 }: ChatContainerProps) {
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 overflow-hidden">
+    <main className="flex-1 flex flex-col bg-background">
       <ChatHeader
+        leadName={leadName}
         onDownloadSummary={onDownloadSummary}
         activities={activities}
         onNewChat={onNewChat}
-        onActivityClick={() => {}}
-        leadName={leadName}
       />
-      <div className="flex-1 relative min-h-0 overflow-hidden">
-        {showLeadCapture && (
-          <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <LeadCaptureFlow
-              isVisible={showLeadCapture}
-              onComplete={onLeadCaptureComplete}
-              engagementType={engagementType}
-              initialQuery={initialQuery}
-            />
-          </div>
+      <div className="flex-1 overflow-y-auto p-4">
+        {error ? (
+          <ErrorState onRetry={onRetry} />
+        ) : messages.length === 0 && !isLoading ? (
+          <EmptyState onExampleQuery={onExampleQuery} />
+        ) : (
+          <>
+            <MessageList messages={messages} isLoading={isLoading} />
+            {isLoading && messages.length > 0 && <LoadingState />}
+          </>
         )}
-        <MessageList
-          messages={messages}
-          isLoading={isLoading}
-          error={error}
-          onExampleQuery={onExampleQuery}
-          onRetry={onRetry}
-        />
       </div>
-      <ChatFooter
+      <ChatInput
         input={input}
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
@@ -90,6 +83,16 @@ export function ChatContainer({
         onImageUpload={onImageUpload}
         openModal={openModal}
       />
-    </div>
+      {showLeadCapture && (
+        <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <LeadCaptureFlow
+            isVisible={showLeadCapture}
+            onComplete={onLeadCaptureComplete}
+            engagementType={engagementType}
+            initialQuery={initialQuery}
+          />
+        </div>
+      )}
+    </main>
   )
 }

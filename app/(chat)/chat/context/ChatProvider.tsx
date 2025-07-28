@@ -1,56 +1,32 @@
 "use client"
 
-import { createContext, useContext, type ReactNode } from "react"
-import { useRealTimeActivities } from "@/hooks/use-real-time-activities"
-import type { ActivityItem } from "../types/chat"
+import type React from "react"
+import { createContext, useContext, useState, useCallback } from "react"
+import { useChatController } from "@/app/(chat)/chat/hooks/useChatController"
+import type { ActivityLog, ChatState } from "@/app/(chat)/chat/types/chat"
 
-interface ChatContextType {
-  activityLog: ActivityItem[]
-  addActivity: (activity: Omit<ActivityItem, "id" | "timestamp">) => void
-  updateActivity: (id: string, updates: Partial<ActivityItem>) => void
-  clearActivities: () => void
-  cleanupStuckActivities: () => void
-  isConnected: boolean
+interface ChatContextType extends ChatState {
+  activityLog: ActivityLog[]
+  addActivity: (activity: ActivityLog) => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
-export function ChatProvider({ children }: { children: ReactNode }) {
-  try {
-    const { activities, addActivity, updateActivity, clearActivities, cleanupStuckActivities, isConnected } = useRealTimeActivities()
+export function ChatProvider({ children }: { children: React.ReactNode }) {
+  const [activityLog, setActivityLog] = useState<ActivityLog[]>([])
+  const chatController = useChatController()
 
-    return (
-      <ChatContext.Provider
-        value={{
-          activityLog: activities,
-          addActivity,
-          updateActivity,
-          clearActivities,
-          cleanupStuckActivities,
-          isConnected,
-        }}
-      >
-        {children}
-      </ChatContext.Provider>
-    )
-  } catch (error) {
-    console.error('Error initializing ChatProvider:', error)
-    // Fallback provider with empty functions
-    return (
-      <ChatContext.Provider
-        value={{
-          activityLog: [],
-          addActivity: () => {},
-          updateActivity: () => {},
-          clearActivities: () => {},
-          cleanupStuckActivities: () => {},
-          isConnected: false,
-        }}
-      >
-        {children}
-      </ChatContext.Provider>
-    )
+  const addActivity = useCallback((activity: ActivityLog) => {
+    setActivityLog((prev) => [...prev, activity])
+  }, [])
+
+  const value = {
+    ...chatController,
+    activityLog,
+    addActivity,
   }
+
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
 }
 
 export function useChatContext() {

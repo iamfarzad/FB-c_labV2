@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -9,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2, Search, Brain, Target } from "lucide-react"
-import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
+import { useChatContext } from "../context/ChatProvider"
 
 interface LeadResearchModalProps {
   isOpen: boolean

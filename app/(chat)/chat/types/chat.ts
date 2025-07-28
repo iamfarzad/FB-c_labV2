@@ -51,6 +51,7 @@ export interface ActivityItem {
     | "webhook_received"
     | "conversation_ended"
     | "chat_message"
+    | "processing"
   title: string
   description: string
   status: "pending" | "in_progress" | "completed" | "failed"

@@ -4,7 +4,7 @@ import { ClientErrorBoundary } from "@/components/error-boundary-client"
 
 // Debug component to check environment variables - only client-safe ones
 function EnvDebug() {
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === "development") {
+  if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
     console.log("Environment variables check:", {
       supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -18,9 +18,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
     <>
       <EnvDebug />
       <ClientErrorBoundary>
-        <ChatProvider>
-          {children}
-        </ChatProvider>
+        <ChatProvider>{children}</ChatProvider>
       </ClientErrorBoundary>
     </>
   )

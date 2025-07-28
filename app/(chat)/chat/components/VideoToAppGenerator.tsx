@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Youtube, Loader2, CheckCircle, AlertCircle, Play, Edit, FileCode, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
+import { useChatContext } from "../context/ChatProvider"
 import { validateYoutubeUrl, getYoutubeEmbedUrl } from "@/lib/youtube"
 import { extractLearningObjectives, extractKeyTopics } from "@/lib/educational-gemini-service"
 import { EDUCATIONAL_APP_DEFINITIONS } from "@/lib/education-constants"
@@ -167,10 +167,10 @@ export const VideoToAppGenerator = forwardRef<{ getSpec: () => string; getCode: 
 
         // Update activity with error
         addActivity({
-          type: "video_processing", // Use video_processing instead of error
+          type: "video_processing",
           title: "Video Processing Incomplete",
           description: "Could not complete video processing",
-          status: "completed", // Use completed instead of failed
+          status: "completed",
         })
       }
     }

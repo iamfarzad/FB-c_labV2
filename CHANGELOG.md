@@ -2,15 +2,6 @@
 
 ## [Latest] - 2025-01-27
 
-### 🔒 Security
-- **GitHub Security Alert Fix**: Removed hardcoded JWT secret and admin password from codebase
-  - Removed hardcoded JWT_SECRET fallback from `lib/auth.ts`
-  - Removed hardcoded ADMIN_PASSWORD fallback from admin login API
-  - Removed hardcoded credentials from client-side login page
-  - Now requires environment variables for all sensitive configuration
-  - Updated `.env.example` with required security variables
-  - Fixed GitHub security alert about exposed secrets in repository
-
 ### 🐛 Fixed
 - **Browser Error in InputWithSend Component**: Resolved critical browser error causing app crashes
   - Fixed `useAutoResizeTextarea` hook usage with proper parameters object
