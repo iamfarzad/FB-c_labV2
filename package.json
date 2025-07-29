@@ -76,7 +76,6 @@
     "input-otp": "latest",
     "isomorphic-dompurify": "latest",
     "jose": "latest",
-    "jspdf": "latest",
     "lodash": "latest",
     "lucide-react": "^0.454.0",
     "mime": "^4.0.7",

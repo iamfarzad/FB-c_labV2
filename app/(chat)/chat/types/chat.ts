@@ -11,43 +11,19 @@ export interface ChatMessage {
 
 export interface Message {
   id: string
+  role: "user" | "assistant"
   content: string
-  sender: "user" | "ai"
-  timestamp: Date
-  type?: "text" | "file" | "analysis" | "roi" | "lead" | "meeting"
-  imageUrl?: string
-  sources?: any[]
-  metadata?: Record<string, any>
+  timestamp: string
+  model?: string
 }
 
 export interface ActivityItem {
   id: string
-  type:
-    | "user_action"
-    | "ai_request"
-    | "ai_stream"
-    | "tool_used"
-    | "roi_calculation"
-    | "lead_research"
-    | "document_analysis"
-    | "meeting_scheduled"
-    | "voice_input"
-    | "webcam_capture"
-    | "screen_share"
-    | "file_upload"
-    | "modal_opened"
-    | "modal_closed"
-    | "new_chat"
-    | "export"
-    | "error"
-  title?: string
-  description?: string
-  content: string
-  status?: "pending" | "in_progress" | "completed" | "failed"
+  type: string
+  status: "active" | "completed" | "failed"
+  title: string
   timestamp: string
-  duration?: number
-  details?: string[]
-  metadata?: Record<string, any>
+  details?: any
 }
 
 export interface ActiveFeatures {
@@ -61,12 +37,7 @@ export type ModalType = "voiceInput" | "webcam" | "screenShare"
 export interface ChatState {
   messages: Message[]
   isLoading: boolean
-  error?: string
-  sessionId: string
-  isTyping: boolean
-  activeFeatures: ActiveFeatures
-  activeModal: ModalType | null
-  activities: ActivityItem[]
+  currentModel: string
 }
 
 export interface StreamChunk {
@@ -110,4 +81,9 @@ export interface LeadData {
   status: "new" | "contacted" | "qualified" | "converted"
   source: string
   value: number
+}
+
+export interface ModalState {
+  isOpen: boolean
+  type: string | null
 }

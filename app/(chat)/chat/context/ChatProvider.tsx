@@ -109,26 +109,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     toast.success("New chat started")
   }, [addActivity])
 
-  return (
-    <ChatContext.Provider
-      value={{
-        messages,
-        addMessage,
-        isTyping,
-        setIsTyping,
-        activeFeatures,
-        toggleFeature,
-        activeModal,
-        openModal,
-        closeModal,
-        handleNewChat,
-        activities,
-        addActivity,
-      }}
-    >
-      {children}
-    </ChatContext.Provider>
-  )
+  const value: ChatContextType = {
+    messages,
+    addMessage,
+    isTyping,
+    setIsTyping,
+    activeFeatures,
+    toggleFeature,
+    activeModal,
+    openModal,
+    closeModal,
+    handleNewChat,
+    activities,
+    addActivity,
+  }
+
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
 }
 
 export function useChatContext() {

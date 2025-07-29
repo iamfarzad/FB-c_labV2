@@ -1,96 +1,72 @@
 "use client"
 
-import type React from "react"
+import { useState } from "react"
+import type { Message } from "../types/chat"
 
-import { useState, useCallback } from "react"
-import { useCompletion } from "ai/react"
-import type { Message, Activity } from "../types/chat"
-import jsPDF from "jspdf"
-
-export function useChatController(addActivity: (activity: Omit<Activity, "id" | "timestamp">) => void) {
+export function useChatController() {
   const [messages, setMessages] = useState<Message[]>([])
-  const [error, setError] = useState<Error | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const {
-    input,
-    handleInputChange,
-    handleSubmit: handleAISubmit,
-    isLoading,
-    stop,
-    setMessages: setCompletionMessages,
-    setInput,
-  } = useCompletion({
-    api: "/api/chat",
-    onFinish: (prompt, completion) => {
-      addActivity({ type: "response_received", details: "AI response finished." })
-    },
-    onError: (e) => {
-      setError(e)
-      addActivity({ type: "error", details: `AI Error: ${e.message}` })
-    },
-  })
+  const sendMessage = async (content: string) => {
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content,
+      timestamp: new Date().toISOString(),
+    }
 
-  const addMessage = useCallback(
-    (message: Message) => {
-      setMessages((prev) => [...prev, message])
-      setCompletionMessages((prev) => [...prev, message])
-    },
-    [setCompletionMessages],
-  )
+    setMessages((prev) => [...prev, userMessage])
+    setIsLoading(true)
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      if (!input) return
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        role: "user",
-        content: input,
-        createdAt: new Date(),
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: content,
+          history: messages,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to send message")
       }
-      addMessage(userMessage)
-      addActivity({ type: "message_sent", details: `User sent: "${input}"` })
-      handleAISubmit(e)
-    },
-    [input, addActivity, handleAISubmit, addMessage],
-  )
 
-  const handleNewChat = useCallback(() => {
+      const data = await response.json()
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: data.response,
+        timestamp: new Date().toISOString(),
+        model: data.model || "Gemini Pro",
+      }
+
+      setMessages((prev) => [...prev, assistantMessage])
+    } catch (error) {
+      console.error("Error sending message:", error)
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: "Sorry, I encountered an error. Please try again.",
+        timestamp: new Date().toISOString(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const clearMessages = () => {
     setMessages([])
-    setCompletionMessages([])
-    setInput("")
-    stop()
-    addActivity({ type: "session_reset", details: "New chat session started." })
-  }, [stop, addActivity, setCompletionMessages, setInput])
-
-  const handleDownloadSummary = useCallback(() => {
-    if (messages.length === 0) return
-    addActivity({ type: "export", details: "User downloaded chat summary." })
-    const doc = new jsPDF()
-    doc.setFontSize(10)
-    let y = 10
-    messages.forEach((msg) => {
-      const text = `${msg.role.charAt(0).toUpperCase() + msg.role.slice(1)} (${msg.createdAt.toLocaleTimeString()}): ${msg.content}`
-      const splitText = doc.splitTextToSize(text, 180)
-      if (y + splitText.length * 5 > 280) {
-        doc.addPage()
-        y = 10
-      }
-      doc.text(splitText, 10, y)
-      y += splitText.length * 5 + 5
-    })
-    doc.save("chat-summary.pdf")
-  }, [messages, addActivity])
+  }
 
   return {
     messages,
-    input,
     isLoading,
-    error,
-    handleInputChange,
-    handleSubmit,
-    addMessage,
-    handleNewChat,
-    handleDownloadSummary,
+    sendMessage,
+    clearMessages,
   }
 }

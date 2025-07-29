@@ -1,18 +1,35 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import type { ModalType } from "../types/chat"
+import { useState } from "react"
 
-export const useModalManager = () => {
-  const [activeModal, setActiveModal] = useState<ModalType>(null)
+interface ModalState {
+  isOpen: boolean
+  type: string | null
+}
 
-  const openModal = useCallback((modal: ModalType) => {
-    setActiveModal(modal)
-  }, [])
+export function useModalManager() {
+  const [modalState, setModalState] = useState<ModalState>({
+    isOpen: false,
+    type: null,
+  })
 
-  const closeModal = useCallback(() => {
-    setActiveModal(null)
-  }, [])
+  const openModal = (type: string) => {
+    setModalState({
+      isOpen: true,
+      type,
+    })
+  }
 
-  return { activeModal, openModal, closeModal }
+  const closeModal = () => {
+    setModalState({
+      isOpen: false,
+      type: null,
+    })
+  }
+
+  return {
+    modalState,
+    openModal,
+    closeModal,
+  }
 }
