@@ -5,33 +5,39 @@ import { useState, forwardRef, useImperativeHandle } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Youtube, Loader2, CheckCircle, AlertCircle, Play, Edit, FileCode, FileText } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Youtube,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  Play,
+  Edit,
+  FileCode,
+  FileText,
+  Sparkles,
+  Lightbulb,
+  ListChecks,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useChatContext } from "../context/ChatProvider"
 import { validateYoutubeUrl, getYoutubeEmbedUrl } from "@/lib/youtube"
 import { extractLearningObjectives, extractKeyTopics } from "@/lib/educational-gemini-service"
-import { EDUCATIONAL_APP_DEFINITIONS } from "@/lib/education-constants"
 
 interface VideoToAppProps {
   onAnalysisComplete?: (data: any) => void
   className?: string
-  videoUrl?: string
   onClose?: () => void
-  initialVideoUrl?: string
-  isExpanded?: boolean
-  onToggleExpand?: () => void
 }
 
 type LoadingState = "idle" | "validating" | "loading-spec" | "loading-code" | "ready" | "error"
 
 export const VideoToAppGenerator = forwardRef<{ getSpec: () => string; getCode: () => string }, VideoToAppProps>(
-  (
-    { onAnalysisComplete, className, videoUrl: initialUrl, onClose, initialVideoUrl, isExpanded, onToggleExpand },
-    ref,
-  ) => {
+  ({ onAnalysisComplete, className, onClose }, ref) => {
     const { addActivity } = useChatContext()
-    const [videoUrl, setVideoUrl] = useState(initialUrl || initialVideoUrl || "")
-    const [inputValue, setInputValue] = useState(initialUrl || initialVideoUrl || "")
+    const [videoUrl, setVideoUrl] = useState("")
+    const [inputValue, setInputValue] = useState("")
     const [loadingState, setLoadingState] = useState<LoadingState>("idle")
     const [error, setError] = useState<string | null>(null)
     const [spec, setSpec] = useState<string>("")
@@ -40,70 +46,44 @@ export const VideoToAppGenerator = forwardRef<{ getSpec: () => string; getCode: 
     const [editedSpec, setEditedSpec] = useState("")
     const [activeTab, setActiveTab] = useState("render")
     const [iframeKey, setIframeKey] = useState(0)
-
     const [learningObjectives, setLearningObjectives] = useState<string[]>([])
     const [keyTopics, setKeyTopics] = useState<string[]>([])
-    const [showEducationalMode, setShowEducationalMode] = useState(false)
 
-    // Expose methods to parent
-    useImperativeHandle(ref, () => ({
-      getSpec: () => spec,
-      getCode: () => code,
-    }))
+    useImperativeHandle(ref, () => ({ getSpec: () => spec, getCode: () => code }))
 
-    // Generate spec from video using real AI
     const generateSpecFromVideo = async (videoUrl: string): Promise<string> => {
       const response = await fetch("/api/video-to-app", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "generateSpec",
-          videoUrl: videoUrl,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "generateSpec", videoUrl }),
       })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `HTTP ${response.status}: Failed to generate spec from video`)
-      }
-
+      if (!response.ok) throw new Error("Failed to generate spec")
       const data = await response.json()
       return data.spec
     }
 
-    // Generate code from spec using real AI
     const generateCodeFromSpec = async (spec: string): Promise<string> => {
       const response = await fetch("/api/video-to-app", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "generateCode",
-          spec: spec,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "generateCode", spec }),
       })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `HTTP ${response.status}: Failed to generate code from spec`)
-      }
-
+      if (!response.ok) throw new Error("Failed to generate code")
       const data = await response.json()
       return data.code
     }
 
-    // Handle submit
     const handleSubmit = async () => {
       const url = inputValue.trim()
       if (!url) return
 
       setLoadingState("validating")
       setError(null)
+      setSpec("")
+      setCode("")
+      setLearningObjectives([])
+      setKeyTopics([])
 
-      // Validate URL
       const validation = await validateYoutubeUrl(url)
       if (!validation.isValid) {
         setError(validation.error || "Invalid YouTube URL")
@@ -115,333 +95,244 @@ export const VideoToAppGenerator = forwardRef<{ getSpec: () => string; getCode: 
       await generateContent(url)
     }
 
-    // Generate content using real AI
     const generateContent = async (url: string) => {
       try {
-        // Add activity
-        addActivity({
-          type: "video_processing",
-          title: "Analyzing YouTube Video",
-          description: "Generating interactive learning app with AI",
-          status: "in_progress",
-          progress: 0,
-        })
-
-        // Generate spec
+        addActivity({ type: "video_processing", title: "Analyzing YouTube Video", status: "in_progress" })
         setLoadingState("loading-spec")
         const generatedSpec = await generateSpecFromVideo(url)
         setSpec(generatedSpec)
+        setLearningObjectives(extractLearningObjectives(generatedSpec))
+        setKeyTopics(extractKeyTopics(generatedSpec))
 
-        const objectives = extractLearningObjectives(generatedSpec)
-        const topics = extractKeyTopics(generatedSpec)
-        setLearningObjectives(objectives)
-        setKeyTopics(topics)
-
-        // Generate code
         setLoadingState("loading-code")
         const generatedCode = await generateCodeFromSpec(generatedSpec)
         setCode(generatedCode)
         setLoadingState("ready")
         setIframeKey((prev) => prev + 1)
 
-        // Update activity
-        addActivity({
-          type: "video_complete",
-          title: "Learning App Generated",
-          description: "Interactive app created successfully with AI",
-          status: "completed",
-        })
-
-        // Call completion handler
-        if (onAnalysisComplete) {
-          onAnalysisComplete({
-            url,
-            spec: generatedSpec,
-            code: generatedCode,
-          })
-        }
+        addActivity({ type: "video_complete", title: "Learning App Generated", status: "completed" })
+        onAnalysisComplete?.({ url, spec: generatedSpec, code: generatedCode })
       } catch (err: any) {
-        console.error("Error generating content:", err)
         setError(err.message || "Failed to generate content")
         setLoadingState("error")
-
-        // Update activity with error
-        addActivity({
-          type: "video_processing",
-          title: "Video Processing Incomplete",
-          description: "Could not complete video processing",
-          status: "completed",
-        })
+        addActivity({ type: "video_processing", title: "Video Processing Failed", status: "error" })
       }
     }
 
-    // Handle spec edit
-    const handleSpecEdit = () => {
-      setEditedSpec(spec)
-      setIsEditingSpec(true)
-    }
-
-    // Handle spec save
     const handleSpecSave = async () => {
-      const trimmedSpec = editedSpec.trim()
-      if (trimmedSpec === spec) {
-        setIsEditingSpec(false)
-        return
-      }
-
       try {
         setLoadingState("loading-code")
         setError(null)
-        setSpec(trimmedSpec)
+        setSpec(editedSpec)
         setIsEditingSpec(false)
         setActiveTab("code")
-
-        // Regenerate code
-        const generatedCode = await generateCodeFromSpec(trimmedSpec)
+        const generatedCode = await generateCodeFromSpec(editedSpec)
         setCode(generatedCode)
         setLoadingState("ready")
         setIframeKey((prev) => prev + 1)
       } catch (err: any) {
-        console.error("Error regenerating code:", err)
         setError(err.message || "Failed to regenerate code")
         setLoadingState("error")
       }
     }
 
-    // Handle key press
     const handleKeyPress = (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" && loadingState === "idle") {
+      if (e.key === "Enter" && (loadingState === "idle" || loadingState === "error")) {
         handleSubmit()
       }
     }
 
+    const isLoading =
+      loadingState === "validating" || loadingState === "loading-spec" || loadingState === "loading-code"
+
     return (
-      <div className={cn("space-y-4", className)}>
-        {/* Input Section */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Youtube className="h-5 w-5 text-red-500" />
-            <h3 className="font-semibold">AI-Powered Video to Learning App</h3>
-          </div>
-          <div className="flex gap-2">
-            <Input
-              placeholder="Paste YouTube URL here..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              disabled={loadingState !== "idle" && loadingState !== "error"}
-              className="flex-1"
-            />
-            <Button
-              onClick={handleSubmit}
-              disabled={!inputValue || (loadingState !== "idle" && loadingState !== "error")}
-              className="gap-2"
-            >
-              {loadingState === "validating" ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Validating...
-                </>
-              ) : loadingState === "loading-spec" || loadingState === "loading-code" ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  AI Generating...
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4" />
-                  Generate with AI
-                </>
-              )}
-            </Button>
-          </div>
-          {error && (
-            <div className="flex items-center gap-2 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4" />
-              {error}
-            </div>
-          )}
-        </div>
+      <div className={cn("flex flex-col h-full", className)}>
+        <header className="flex items-center gap-3 p-4 border-b">
+          <Youtube className="h-6 w-6 text-red-500" />
+          <h2 className="text-lg font-semibold">AI Video to Learning App</h2>
+        </header>
 
-        {/* Video Preview */}
-        {videoUrl && (
-          <div className="aspect-video w-full overflow-hidden rounded-md bg-black">
-            <iframe
-              src={getYoutubeEmbedUrl(videoUrl)}
-              className="h-full w-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-        )}
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 overflow-y-auto">
+          {/* Left Column: Input & Analysis */}
+          <div className="flex flex-col gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">YouTube Video URL</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Paste YouTube URL here..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    disabled={isLoading}
+                    className="flex-1"
+                  />
+                  <Button onClick={handleSubmit} disabled={!inputValue || isLoading} className="gap-2">
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                    Generate
+                  </Button>
+                </div>
+                {error && (
+                  <div className="flex items-center gap-2 text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    {error}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-        {/* Educational Insights */}
-        {(learningObjectives.length > 0 || keyTopics.length > 0) && (
-          <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-blue-800 dark:text-blue-200 flex items-center gap-2">
-                🎯 Learning Analysis
-              </h4>
-              <Button variant="outline" size="sm" onClick={() => setShowEducationalMode(!showEducationalMode)}>
-                {showEducationalMode ? "Hide" : "Show"} Educational Apps
-              </Button>
-            </div>
-
-            {learningObjectives.length > 0 && (
-              <div className="mb-3">
-                <h5 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Learning Objectives:</h5>
-                <ul className="text-sm text-blue-600 dark:text-blue-400 list-disc list-inside space-y-1">
-                  {learningObjectives.slice(0, 3).map((objective, index) => (
-                    <li key={index}>{objective}</li>
-                  ))}
-                </ul>
+            {videoUrl && (
+              <div className="aspect-video w-full overflow-hidden rounded-lg bg-muted">
+                <iframe
+                  src={getYoutubeEmbedUrl(videoUrl)}
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
               </div>
             )}
 
-            {keyTopics.length > 0 && (
-              <div>
-                <h5 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Key Topics:</h5>
-                <div className="flex flex-wrap gap-2">
-                  {keyTopics.slice(0, 6).map((topic, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full"
-                    >
-                      {topic}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            {(learningObjectives.length > 0 || keyTopics.length > 0) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Lightbulb className="h-5 w-5 text-yellow-500" />
+                    AI Learning Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {learningObjectives.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                        <ListChecks className="h-4 w-4" />
+                        Learning Objectives
+                      </h3>
+                      <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                        {learningObjectives.slice(0, 3).map((obj, i) => (
+                          <li key={i}>{obj}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {keyTopics.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-sm mb-2">Key Topics</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {keyTopics.slice(0, 6).map((topic, i) => (
+                          <span key={i} className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-full">
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             )}
           </div>
-        )}
 
-        {/* Educational Apps Grid */}
-        {showEducationalMode && learningObjectives.length > 0 && (
-          <div className="border rounded-lg p-4">
-            <h4 className="font-semibold mb-3 flex items-center gap-2">🎓 Interactive Learning Apps</h4>
-            <div className="educational-app-grid">
-              {EDUCATIONAL_APP_DEFINITIONS.map((app) => (
-                <div
-                  key={app.id}
-                  className="educational-app-card"
-                  style={{ backgroundColor: app.color }}
-                  onClick={() => {
-                    addActivity({
-                      type: "event",
-                      title: `Launched ${app.name}`,
-                      description: `Started educational app: ${app.description}`,
-                      status: "completed",
-                    })
-                  }}
-                >
-                  <div className="educational-app-icon">{app.icon}</div>
-                  <div className="educational-app-name">{app.name}</div>
-                  <div className="educational-app-description">{app.description}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Content Area */}
-        {(loadingState !== "idle" || spec || code) && (
-          <div className="border-2 border-border rounded-lg overflow-hidden">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="h-[600px] flex flex-col">
-              <TabsList className="w-full justify-start rounded-none border-b">
-                <TabsTrigger value="render" className="gap-2">
-                  <CheckCircle className="h-4 w-4" />
-                  Render
-                </TabsTrigger>
-                <TabsTrigger value="code" className="gap-2">
-                  <FileCode className="h-4 w-4" />
-                  Code
-                </TabsTrigger>
-                <TabsTrigger value="spec" className="gap-2">
-                  <FileText className="h-4 w-4" />
-                  Spec
-                </TabsTrigger>
-              </TabsList>
-              <div className="flex-1 overflow-hidden">
-                {/* Render Tab */}
-                <TabsContent value="render" className="h-full m-0">
-                  {loadingState === "loading-spec" || loadingState === "loading-code" ? (
-                    <div className="flex flex-col items-center justify-center h-full">
-                      <Loader2 className="h-8 w-8 animate-spin mb-4" />
-                      <p className="text-muted-foreground">
-                        {loadingState === "loading-spec"
-                          ? "AI analyzing video content..."
-                          : "AI generating interactive app..."}
-                      </p>
-                    </div>
-                  ) : loadingState === "ready" && code ? (
-                    <iframe
-                      key={iframeKey}
-                      srcDoc={code}
-                      className="w-full h-full border-none"
-                      title="Generated App"
-                      sandbox="allow-scripts"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
-                      {error ? "Error occurred" : "Generate an app to see the preview"}
-                    </div>
-                  )}
-                </TabsContent>
-
-                {/* Code Tab */}
-                <TabsContent value="code" className="h-full m-0 p-4 overflow-auto">
-                  {code ? (
-                    <pre className="text-sm">
-                      <code>{code}</code>
-                    </pre>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
-                      No code generated yet
-                    </div>
-                  )}
-                </TabsContent>
-
-                {/* Spec Tab */}
-                <TabsContent value="spec" className="h-full m-0 p-4 overflow-auto">
-                  {spec ? (
-                    isEditingSpec ? (
-                      <div className="h-full flex flex-col gap-4">
-                        <textarea
-                          value={editedSpec}
-                          onChange={(e) => setEditedSpec(e.target.value)}
-                          className="flex-1 w-full p-4 font-mono text-sm border rounded-md resize-none"
-                          placeholder="Edit spec..."
-                        />
-                        <div className="flex gap-2">
-                          <Button onClick={handleSpecSave} className="gap-2">
-                            <CheckCircle className="h-4 w-4" />
-                            Save & Regenerate
-                          </Button>
-                          <Button variant="outline" onClick={() => setIsEditingSpec(false)}>
-                            Cancel
-                          </Button>
+          {/* Right Column: Generated App */}
+          <div className="flex flex-col">
+            {(isLoading || spec || code) && (
+              <Card className="flex-1 flex flex-col">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+                  <TabsList className="w-full justify-start rounded-none border-b">
+                    <TabsTrigger value="render" className="gap-2">
+                      <Play className="h-4 w-4" />
+                      Render
+                    </TabsTrigger>
+                    <TabsTrigger value="code" className="gap-2">
+                      <FileCode className="h-4 w-4" />
+                      Code
+                    </TabsTrigger>
+                    <TabsTrigger value="spec" className="gap-2">
+                      <FileText className="h-4 w-4" />
+                      Spec
+                    </TabsTrigger>
+                  </TabsList>
+                  <div className="flex-1 overflow-hidden relative">
+                    <TabsContent value="render" className="h-full m-0">
+                      {isLoading ? (
+                        <div className="flex flex-col items-center justify-center h-full bg-muted">
+                          <Loader2 className="h-8 w-8 animate-spin mb-4 text-primary" />
+                          <p className="text-muted-foreground">AI is building your app...</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {loadingState === "loading-spec" ? "Analyzing video..." : "Generating code..."}
+                          </p>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="h-full flex flex-col gap-4">
-                        <pre className="flex-1 text-sm whitespace-pre-wrap">{spec}</pre>
-                        <Button onClick={handleSpecEdit} className="gap-2 w-fit">
-                          <Edit className="h-4 w-4" />
-                          Edit Spec
-                        </Button>
-                      </div>
-                    )
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
-                      No spec generated yet
-                    </div>
-                  )}
-                </TabsContent>
-              </div>
-            </Tabs>
+                      ) : code ? (
+                        <iframe
+                          key={iframeKey}
+                          srcDoc={code}
+                          className="w-full h-full border-none"
+                          title="Generated App"
+                          sandbox="allow-scripts"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground bg-muted">
+                          {error ? "Error occurred" : "App preview will appear here"}
+                        </div>
+                      )}
+                    </TabsContent>
+                    <TabsContent value="code" className="h-full m-0 p-0 overflow-auto">
+                      {code ? (
+                        <pre className="text-xs p-4">
+                          <code>{code}</code>
+                        </pre>
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                          No code generated yet
+                        </div>
+                      )}
+                    </TabsContent>
+                    <TabsContent value="spec" className="h-full m-0 flex flex-col">
+                      {spec ? (
+                        isEditingSpec ? (
+                          <div className="h-full flex flex-col gap-2 p-4">
+                            <Textarea
+                              value={editedSpec}
+                              onChange={(e) => setEditedSpec(e.target.value)}
+                              className="flex-1 w-full font-mono text-xs resize-none"
+                            />
+                            <div className="flex gap-2">
+                              <Button onClick={handleSpecSave} className="gap-2">
+                                <CheckCircle className="h-4 w-4" />
+                                Save & Regenerate
+                              </Button>
+                              <Button variant="outline" onClick={() => setIsEditingSpec(false)}>
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="h-full flex flex-col gap-2 p-4">
+                            <pre className="flex-1 text-sm whitespace-pre-wrap overflow-auto">{spec}</pre>
+                            <Button
+                              onClick={() => {
+                                setEditedSpec(spec)
+                                setIsEditingSpec(true)
+                              }}
+                              className="gap-2 w-fit"
+                            >
+                              <Edit className="h-4 w-4" />
+                              Edit Spec
+                            </Button>
+                          </div>
+                        )
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                          No spec generated yet
+                        </div>
+                      )}
+                    </TabsContent>
+                  </div>
+                </Tabs>
+              </Card>
+            )}
           </div>
-        )}
+        </div>
       </div>
     )
   },
