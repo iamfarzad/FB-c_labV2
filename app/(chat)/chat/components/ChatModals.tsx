@@ -1,10 +1,10 @@
 "use client"
 
 import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
-import ScreenShareModal from "@/app/(chat)/chat/components/modals/ScreenShareModal"
-import Video2AppModal from "@/app/(chat)/chat/components/modals/Video2AppModal"
-import VoiceInputModal from "@/app/(chat)/chat/components/modals/VoiceInputModal"
-import WebcamModal from "@/app/(chat)/chat/components/modals/WebcamModal"
+import ScreenShareModal from "@/components/chat/modals/ScreenShareModal"
+import Video2AppModal from "@/components/chat/modals/Video2AppModal"
+import VoiceInputModal from "@/components/chat/modals/VoiceInputModal"
+import WebcamModal from "@/components/chat/modals/WebcamModal"
 
 export function ChatModals() {
   const {
