@@ -45,8 +45,8 @@ export const DesktopSidebar = ({
 
   // Responsive sidebar width with enhanced sizing
   const sidebarWidth = isTablet ? 300 : 360
-  const activeActivities = activities.filter(a => a.status === 'in_progress').length
-  const completedActivities = activities.filter(a => a.status === 'completed').length
+  const activeActivities = (activities || []).filter(a => a.status === 'in_progress').length
+  const completedActivities = (activities || []).filter(a => a.status === 'completed').length
 
   return (
     <>

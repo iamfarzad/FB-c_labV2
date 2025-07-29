@@ -7,7 +7,6 @@ import { useModalManager } from "@/app/(chat)/chat/hooks/useModalManager"
 import { useLeadCapture } from "@/app/(chat)/chat/hooks/useLeadCapture"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import { ChatLayout } from "@/components/chat/ChatLayout"
-import { DesktopSidebar } from "@/components/chat/sidebar/DesktopSidebar"
 import { ChatContainer } from "@/app/(chat)/chat/components/ChatContainer"
 import { ChatModals } from "@/app/(chat)/chat/components/ChatModals"
 
@@ -18,7 +17,12 @@ export default function ChatPage() {
   const { activeModal, openModal, closeModal } = useModalManager()
   const { showLeadCapture, handleLeadCaptureComplete } = useLeadCapture(messages, sessionId)
 
-  useKeyboardShortcuts({ openModal })
+  useKeyboardShortcuts({ 
+    onNewChat: clearChat,
+    onOpenVoice: () => openModal("voiceInput"),
+    onOpenCamera: () => openModal("webcam"),
+    onOpenScreenShare: () => openModal("screenShare")
+  })
 
   // Start demo session if not already started
   React.useEffect(() => {
@@ -29,11 +33,10 @@ export default function ChatPage() {
 
   return (
     <ChatLayout>
-      <DesktopSidebar clearChat={clearChat} activityLog={activityLog} />
       <ChatContainer
         messages={messages}
         isLoading={isLoading}
-        error={error}
+        error={error ? new Error(error) : undefined}
         onExampleQuery={(query) => sendMessage(query)}
         onRetry={() => sendMessage("")}
         input=""
@@ -44,9 +47,9 @@ export default function ChatPage() {
         }}
         onFileUpload={() => {}}
         onImageUpload={() => {}}
-        openModal={openModal}
+        openModal={(modal) => openModal(modal as any)}
         showLeadCapture={showLeadCapture}
-        onLeadCaptureComplete={handleLeadCaptureComplete}
+        onLeadCaptureComplete={() => handleLeadCaptureComplete({ name: "User", email: "user@example.com", engagementType: "chat" })}
         leadName=""
         onDownloadSummary={() => {}}
         activities={activityLog}
@@ -59,11 +62,25 @@ export default function ChatPage() {
         }}
         onCapture={(data) => {
           console.log("Capture data:", data)
-          addActivity({ type: "capture", status: "success", content: "Data captured" })
+          addActivity({ 
+            id: Date.now().toString(),
+            type: "user_action", 
+            status: "completed", 
+            title: "Data captured",
+            description: "User data was captured",
+            timestamp: Date.now()
+          })
         }}
         onAnalysis={(analysis) => {
           console.log("Analysis:", analysis)
-          addActivity({ type: "analysis", status: "success", content: analysis })
+          addActivity({ 
+            id: Date.now().toString(),
+            type: "doc_analysis", 
+            status: "completed", 
+            title: "Analysis completed",
+            description: "Document analysis was performed",
+            timestamp: Date.now()
+          })
         }}
       />
     </ChatLayout>

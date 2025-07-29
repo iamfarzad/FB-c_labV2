@@ -1,6 +1,7 @@
 import type React from "react"
 import { ChatProvider } from "./context/ChatProvider"
 import { ClientErrorBoundary } from "@/components/error-boundary-client"
+import { DemoSessionProvider } from "@/components/demo-session-manager"
 
 // Debug component to check environment variables - only client-safe ones
 function EnvDebug() {
@@ -18,7 +19,9 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
     <>
       <EnvDebug />
       <ClientErrorBoundary>
-        <ChatProvider>{children}</ChatProvider>
+        <DemoSessionProvider>
+          <ChatProvider>{children}</ChatProvider>
+        </DemoSessionProvider>
       </ClientErrorBoundary>
     </>
   )

@@ -185,7 +185,6 @@ export function useDemoSession() {
 export function DemoSessionStatus() {
   const { sessionId, sessionStatus, isLoading, refreshStatus, remainingTokens, remainingRequests, featureUsage } =
     useDemoSession()
-  const { addMessage } = useChatContext()
 
   if (!sessionId) {
     return (

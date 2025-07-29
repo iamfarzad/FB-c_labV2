@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- **Double Header Issue**: Removed duplicate `<Header />` and `<Footer />` components from `app/(site)/layout.tsx` to prevent double headers on marketing pages
+- **DemoSessionProvider Context Error**: Added `DemoSessionProvider` to `app/(chat)/chat/layout.tsx` to fix "useDemoSession must be used within a DemoSessionProvider" error in v0.dev
+- **Modal Debugging**: Added console logging to `useModalManager` to help debug voice modal opening issues
+
+### Changed
+- **Layout Structure**: Simplified site layout to rely on root layout for header/footer, reducing duplication
+
 ## [1.2.0] - 2025-01-XX
 
 ### Added
