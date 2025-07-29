@@ -1,9 +1,24 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
-import { Send, Paperclip, Smile, Mic, Camera, Plus, Keyboard, Sparkles, ImageIcon, FileText, Zap } from "lucide-react"
+import {
+  Send,
+  Paperclip,
+  Smile,
+  Mic,
+  Camera,
+  Plus,
+  Keyboard,
+  Sparkles,
+  ImageIcon,
+  FileText,
+  Zap,
+  BarChart,
+  Search,
+  DollarSign,
+  Calendar,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -47,12 +62,10 @@ export function ChatComposer({ onSendMessage, isLoading }: ChatComposerProps) {
   }, [message])
 
   const quickPrompts = [
-    "📊 Analyze my business metrics",
-    "🔍 Generate a lead research report",
-    "💰 Calculate ROI for my campaign",
-    "📅 Schedule a client meeting",
-    "📈 Show market trends",
-    "🎯 Create marketing strategy",
+    { text: "Analyze my business metrics", icon: BarChart },
+    { text: "Generate a lead research report", icon: Search },
+    { text: "Calculate ROI for my campaign", icon: DollarSign },
+    { text: "Schedule a client meeting", icon: Calendar },
   ]
 
   const commonEmojis = ["😊", "👍", "🎉", "💡", "🚀", "📊", "💰", "🎯", "📈", "🔥", "⭐", "✅", "❤️", "👏", "🙌", "💪"]
@@ -79,10 +92,11 @@ export function ChatComposer({ onSendMessage, isLoading }: ChatComposerProps) {
                 key={index}
                 variant="outline"
                 size="sm"
-                onClick={() => setMessage(prompt)}
+                onClick={() => setMessage(prompt.text)}
                 className="shrink-0 text-sm h-8 px-4 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 hover:scale-105 hover:shadow-sm font-medium"
               >
-                {prompt}
+                <prompt.icon className="h-4 w-4 mr-2 text-gray-400" />
+                {prompt.text}
               </Button>
             ))}
           </div>
