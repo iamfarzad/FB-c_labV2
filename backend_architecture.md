@@ -249,7 +249,3 @@ This document defines the architectural rules and compliance requirements for th
 8. Enhance file upload security
 9. Review and update RLS policies
 10. Set up monitoring and alerting
-
-### 6.4 Dependency Management
-- **Rule CD4.1**: Pin the `@google/genai` library to version `v1.10.0` in `package.json` and lock file.
-- **Rule CD4.2**: Regularly audit and update third-party dependencies for security and compatibility, following the project's dependency policy.
