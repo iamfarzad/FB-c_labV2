@@ -83,9 +83,9 @@ export function ChatSidebar() {
   })
 
   return (
-    <div className="w-80 bg-dark-900 text-white flex flex-col h-full border-r border-dark-700">
+    <div className="bg-dark-800 text-white flex flex-col h-full border-r border-dark-700">
       {/* Header */}
-      <div className="p-4 flex items-center justify-between">
+      <div className="p-4 flex items-center justify-between h-20 border-b border-dark-700">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />
           <h2 className="font-semibold text-lg">Chat History</h2>
@@ -97,51 +97,49 @@ export function ChatSidebar() {
       </div>
 
       {/* Search and Filters */}
-      <div className="px-4 pb-4 space-y-4">
+      <div className="px-4 py-4 space-y-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-600" />
           <Input
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-dark-800 border-dark-700 h-10"
+            className="pl-10 bg-dark-900 border-dark-700 h-10"
           />
         </div>
         <div className="flex gap-2">
           <Button
             onClick={() => setSelectedFilter("all")}
-            className={`h-8 px-3 text-sm font-semibold transition-all ${
+            className={`h-8 px-3 text-sm font-semibold transition-all rounded-md ${
               selectedFilter === "all"
                 ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                : "bg-dark-800 text-gray-300 hover:bg-dark-700"
+                : "bg-dark-700 text-gray-300 hover:bg-dark-600"
             }`}
           >
-            All <Badge className="ml-2 bg-dark-700 text-gray-300">5</Badge>
+            All <Badge className="ml-2 bg-dark-600 text-gray-300 px-1.5">5</Badge>
           </Button>
           <Button
             onClick={() => setSelectedFilter("starred")}
-            className={`h-8 px-3 text-sm font-semibold transition-all ${
+            className={`h-8 px-3 text-sm font-semibold transition-all rounded-md ${
               selectedFilter === "starred"
                 ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                : "bg-dark-800 text-gray-300 hover:bg-dark-700"
+                : "bg-dark-700 text-gray-300 hover:bg-dark-600"
             }`}
           >
-            Starred <Badge className="ml-2 bg-dark-700 text-gray-300">2</Badge>
+            Starred <Badge className="ml-2 bg-dark-600 text-gray-300 px-1.5">2</Badge>
           </Button>
           <Button
             onClick={() => setSelectedFilter("business")}
-            className={`h-8 px-3 text-sm font-semibold transition-all ${
+            className={`h-8 px-3 text-sm font-semibold transition-all rounded-md ${
               selectedFilter === "business"
                 ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                : "bg-dark-800 text-gray-300 hover:bg-dark-700"
+                : "bg-dark-700 text-gray-300 hover:bg-dark-600"
             }`}
           >
-            Business <Badge className="ml-2 bg-dark-700 text-gray-300">2</Badge>
+            Business <Badge className="ml-2 bg-dark-600 text-gray-300 px-1.5">2</Badge>
           </Button>
         </div>
       </div>
-
-      <div className="w-full border-b border-dark-700" />
 
       {/* Chat Sessions */}
       <ScrollArea className="flex-1">
@@ -150,7 +148,7 @@ export function ChatSidebar() {
             <div key={session.id} className="space-y-2 cursor-pointer group">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-2.5 h-2.5 ${categoryColors[session.category]} rounded-full`} />
+                  <div className={`w-2 h-2 ${categoryColors[session.category]} rounded-full`} />
                   <h3 className="font-medium text-sm text-gray-200 group-hover:text-white transition-colors">
                     {session.title} {session.emoji}
                   </h3>
@@ -162,7 +160,7 @@ export function ChatSidebar() {
                   <Clock className="h-3 w-3" />
                   <span>{session.timestamp}</span>
                 </div>
-                <Badge className="bg-dark-800 text-gray-300 text-xs font-normal border border-dark-700">
+                <Badge className="bg-dark-700 text-gray-300 text-xs font-normal border border-dark-600 px-2 py-0.5">
                   {session.messageCount} messages
                 </Badge>
               </div>
@@ -172,12 +170,12 @@ export function ChatSidebar() {
       </ScrollArea>
 
       {/* Footer */}
-      <div className="p-4 border-t border-dark-700">
-        <Button variant="ghost" className="w-full justify-start gap-3 text-gray-300 hover:text-white">
+      <div className="p-2 border-t border-dark-700">
+        <Button variant="ghost" className="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-dark-700">
           <History className="h-4 w-4" />
           <span className="text-sm">View All History</span>
         </Button>
-        <Button variant="ghost" className="w-full justify-start gap-3 text-gray-300 hover:text-white">
+        <Button variant="ghost" className="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-dark-700">
           <Settings className="h-4 w-4" />
           <span className="text-sm">Settings</span>
         </Button>

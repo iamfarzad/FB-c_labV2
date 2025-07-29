@@ -11,7 +11,7 @@ export function ChatPageLayout() {
         <ResizablePanel defaultSize={25} minSize={20} maxSize={30}>
           <ChatSidebar />
         </ResizablePanel>
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle className="bg-dark-700" />
         <ResizablePanel defaultSize={75}>
           <ChatPanel />
         </ResizablePanel>

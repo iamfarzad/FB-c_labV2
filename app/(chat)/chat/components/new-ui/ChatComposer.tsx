@@ -83,17 +83,16 @@ export function ChatComposer({ onSendMessage, isLoading }: ChatComposerProps) {
       {message === "" && (
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="h-4 w-4 text-blue-500" />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Quick Prompts</span>
+            <Sparkles className="h-4 w-4 text-blue-400" />
+            <h3 className="text-sm font-semibold text-gray-300">Quick Prompts</h3>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {quickPrompts.map((prompt, index) => (
+          <div className="flex gap-3">
+            {quickPrompts.map((prompt) => (
               <Button
-                key={index}
+                key={prompt.text}
                 variant="outline"
-                size="sm"
+                className="bg-dark-800 border-dark-700 text-gray-300 hover:bg-dark-700 hover:text-white h-9"
                 onClick={() => setMessage(prompt.text)}
-                className="shrink-0 text-sm h-8 px-4 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 hover:scale-105 hover:shadow-sm font-medium"
               >
                 <prompt.icon className="h-4 w-4 mr-2 text-gray-400" />
                 {prompt.text}

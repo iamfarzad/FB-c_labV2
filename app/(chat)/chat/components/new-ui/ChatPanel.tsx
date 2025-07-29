@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { BarChart2, Users } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BusinessToolbar } from "./BusinessToolbar"
@@ -12,7 +11,7 @@ const WelcomeCard = ({
   title,
   description,
 }: { icon: React.ElementType; title: string; description: string }) => (
-  <div className="bg-dark-800 p-6 rounded-lg border border-dark-700 flex flex-col items-start text-left">
+  <div className="bg-dark-800 p-6 rounded-lg border border-dark-700 flex flex-col items-start text-left hover:border-dark-600 transition-colors cursor-pointer">
     <div className="w-12 h-12 bg-dark-700 rounded-lg flex items-center justify-center mb-4">
       <Icon className="h-6 w-6 text-gray-300" />
     </div>
@@ -28,9 +27,9 @@ export function ChatPanel() {
       <div className="flex h-20 shrink-0 items-center justify-between border-b border-dark-700 px-8">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src="/placeholder.svg?width=48&height=48" alt="Acme Inc" />
-              <AvatarFallback>AC</AvatarFallback>
+            <Avatar className="h-12 w-12 border-2 border-dark-700">
+              <AvatarImage src="/placeholder.svg?width=48&height=48" alt="F.B/c Consulting" />
+              <AvatarFallback className="bg-dark-700">FB</AvatarFallback>
             </Avatar>
             <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-dark-900" />
           </div>
@@ -49,7 +48,7 @@ export function ChatPanel() {
         <BusinessToolbar />
 
         {/* Welcome Message */}
-        <div className="text-center text-gray-400">
+        <div className="text-center text-gray-400 max-w-3xl mx-auto">
           <p>
             Welcome to your Advanced Business AI. I can help with ROI calculation, lead research, data analysis,
             scheduling, and much more. Let's transform your business operations together! 🚀
@@ -57,7 +56,7 @@ export function ChatPanel() {
         </div>
 
         {/* Welcome Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           <WelcomeCard icon={BarChart2} title="ROI Analysis" description="Calculate returns and business metrics" />
           <WelcomeCard icon={Users} title="Lead Generation" description="Research and capture potential clients" />
         </div>

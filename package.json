@@ -87,7 +87,6 @@
     "pdfkit": "latest",
     "puppeteer": "latest",
     "react": "^19",
-    "react-bootstrap": "latest",
     "react-day-picker": "latest",
     "react-dom": "^19",
     "react-dropzone": "latest",

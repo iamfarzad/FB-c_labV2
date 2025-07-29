@@ -50,7 +50,7 @@ const tools = [
 
 const ToolCard = ({ tool }: { tool: (typeof tools)[0] }) => (
   <div
-    className={`flex-shrink-0 w-44 h-32 rounded-lg p-4 flex flex-col justify-between bg-gradient-to-br ${tool.color} cursor-pointer transition-transform hover:scale-105`}
+    className={`flex-shrink-0 w-40 h-28 rounded-lg p-4 flex flex-col justify-between bg-gradient-to-br ${tool.color} cursor-pointer transition-transform hover:scale-105`}
   >
     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
       <tool.icon className="h-5 w-5 text-white" />
@@ -68,7 +68,7 @@ export function BusinessToolbar() {
       <div className="flex items-center gap-3">
         <div className="w-2 h-2 bg-blue-500 rounded-full" />
         <h2 className="font-semibold text-lg">Business Tools</h2>
-        <Badge className="bg-dark-800 text-gray-300 border border-dark-700">{tools.length}</Badge>
+        <Badge className="bg-dark-800 text-gray-300 border border-dark-700 px-2">{tools.length}</Badge>
       </div>
       <div className="flex gap-4 overflow-x-auto pb-2 horizontal-scroll">
         {tools.map((tool) => (

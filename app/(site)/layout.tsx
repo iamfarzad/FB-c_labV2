@@ -1,13 +1,32 @@
 import type React from "react"
-import { cn } from "@/utils/cn"
-import { fontSans } from "@/utils/fonts"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "../globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
+  title: "F.B/c Consulting - AI-Powered Business Transformation",
+  description:
+    "Live, future-ready AI meets practical business transformation. We demonstrate the power of AI, focused on real business results and practical implementation.",
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
   return (
-    <html lang="en">
-      <head />
-      <body className={cn("min-h-screen bg-dark-900 font-sans antialiased text-gray-300", fontSans.variable)}>
-        <div className="dark">{children}</div>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} bg-dark-900 text-gray-200`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <Header />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   )
