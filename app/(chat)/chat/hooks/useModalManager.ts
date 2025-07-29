@@ -1,42 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 
-export type ModalType =
-  | "keyboardShortcuts"
-  | "voiceInput"
-  | "voiceOutput"
-  | "webcam"
-  | "screenShare"
-  | "video2App"
-  | "roiCalculator"
+export type ModalType = "screenShare" | "voiceInput" | "webcam"
 
 export const useModalManager = () => {
-  const [activeModal, setActiveModal] = useState<ModalType | null>(null)
-  const [voiceOutputData, setVoiceOutputData] = useState<{
-    textContent: string
-    voiceStyle?: string
-  } | null>(null)
+  const [openModals, setOpenModals] = useState<Set<ModalType>>(new Set())
 
-  const openModal = (modal: ModalType) => setActiveModal(modal)
-  const closeModal = () => setActiveModal(null)
+  const openModal = useCallback((modal: ModalType) => {
+    setOpenModals((prev) => new Set(prev).add(modal))
+  }, [])
 
-  const openVoiceOutputModal = (data: { textContent: string; voiceStyle?: string }) => {
-    setVoiceOutputData(data)
-    openModal("voiceOutput")
-  }
+  const closeModal = useCallback((modal: ModalType) => {
+    setOpenModals((prev) => {
+      const newSet = new Set(prev)
+      newSet.delete(modal)
+      return newSet
+    })
+  }, [])
 
-  const closeVoiceOutputModal = () => {
-    setVoiceOutputData(null)
-    closeModal()
-  }
+  const isModalOpen = useCallback((modal: ModalType) => openModals.has(modal), [openModals])
 
-  return {
-    activeModal,
-    openModal,
-    closeModal,
-    voiceOutputData,
-    openVoiceOutputModal,
-    closeVoiceOutputModal,
-  }
+  return { openModal, closeModal, isModalOpen }
 }

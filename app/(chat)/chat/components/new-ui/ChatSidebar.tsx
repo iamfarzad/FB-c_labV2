@@ -24,7 +24,6 @@ export function ChatSidebar({ activities, onNewChat }: ChatSidebarProps) {
       <div className="flex flex-1 flex-col min-h-0">
         <div className="p-4">
           <h3 className="text-sm font-medium text-muted-foreground">History</h3>
-          {/* Placeholder for chat history list */}
           <div className="mt-2 text-center text-sm text-muted-foreground py-4">No chat history yet.</div>
         </div>
         <Separator />

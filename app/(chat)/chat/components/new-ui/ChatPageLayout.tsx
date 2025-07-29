@@ -10,7 +10,7 @@ interface ChatPageLayoutProps {
 
 export function ChatPageLayout({ sidebar, chatPanel }: ChatPageLayoutProps) {
   return (
-    <ResizablePanelGroup direction="horizontal" className="h-screen w-full items-stretch">
+    <ResizablePanelGroup direction="horizontal" className="h-screen w-full items-stretch bg-background">
       <ResizablePanel defaultSize={25} minSize={20} maxSize={30} className="hidden md:block">
         {sidebar}
       </ResizablePanel>

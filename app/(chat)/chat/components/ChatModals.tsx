@@ -2,28 +2,17 @@
 
 import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
 import ScreenShareModal from "@/components/chat/modals/ScreenShareModal"
-import Video2AppModal from "@/components/chat/modals/Video2AppModal"
 import VoiceInputModal from "@/components/chat/modals/VoiceInputModal"
 import WebcamModal from "@/components/chat/modals/WebcamModal"
 
 export function ChatModals() {
-  const {
-    isScreenShareOpen,
-    closeScreenShare,
-    isVideo2AppOpen,
-    closeVideo2App,
-    isVoiceInputOpen,
-    closeVoiceInput,
-    isWebcamOpen,
-    closeWebcam,
-  } = useChatContext()
+  const { isModalOpen, closeModal } = useChatContext()
 
   return (
     <>
-      <ScreenShareModal isOpen={isScreenShareOpen} onClose={closeScreenShare} />
-      <Video2AppModal isOpen={isVideo2AppOpen} onClose={closeVideo2App} />
-      <VoiceInputModal isOpen={isVoiceInputOpen} onClose={closeVoiceInput} />
-      <WebcamModal isOpen={isWebcamOpen} onClose={closeWebcam} />
+      <ScreenShareModal isOpen={isModalOpen("screenShare")} onClose={() => closeModal("screenShare")} />
+      <VoiceInputModal isOpen={isModalOpen("voiceInput")} onClose={() => closeModal("voiceInput")} />
+      <WebcamModal isOpen={isModalOpen("webcam")} onClose={() => closeModal("webcam")} />
     </>
   )
 }
