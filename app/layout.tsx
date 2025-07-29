@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { cn } from "@/lib/utils"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -12,20 +14,43 @@ const fontSans = Inter({
 
 const fontDisplay = Plus_Jakarta_Sans({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-display",
   display: "swap",
 })
 
 const fontMono = JetBrains_Mono({
   subsets: ["latin"],
+  weight: ["400", "700"],
   variable: "--font-mono",
   display: "swap",
 })
 
 export const metadata: Metadata = {
-  title: "AI Automation Consultant | Farzad Bayat",
-  description:
-    "Expert AI consultant with 10,000+ hours experience. Custom AI automation, chatbots, and workflow optimization for businesses. No hype, just results that work.",
+  title: "F.B/C Design System",
+  description: "A minimal, modern, and mature design system.",
+  openGraph: {
+    title: "F.B/C Design System",
+    description: "A minimal, modern, and mature design system.",
+    url: "https://fbc.dev",
+    siteName: "F.B/C",
+    images: [
+      {
+        url: "/placeholder.svg?width=1200&height=630",
+        width: 1200,
+        height: 630,
+        alt: "F.B/C Design System",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "F.B/C Design System",
+    description: "A minimal, modern, and mature design system.",
+    images: ["/placeholder.svg?width=1200&height=630"],
+  },
     generator: 'v0.dev'
 }
 
@@ -44,7 +69,10 @@ export default function RootLayout({
           fontMono.variable,
         )}
       >
-        <main>{children}</main>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )
