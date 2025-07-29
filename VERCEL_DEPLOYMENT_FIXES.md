@@ -9,10 +9,10 @@ The commit `ae48887` (feat: implement comprehensive Vercel branch protection and
 #### **Problem**: TruffleHog Security Check Configuration
 - **Location**: `.github/workflows/deploy.yml` (lines 102-107)
 - **Issue**: The `trufflesecurity/trufflehog@main` action was configured with:
-  \`\`\`yaml
+  ```yaml
   base: ${{ github.event.before }}
   head: ${{ github.event.after }}
-  \`\`\`
+  ```
 - **Problem**: These variables are not always available, especially for direct pushes to main branch
 - **Impact**: Workflow failures when these variables are undefined
 
@@ -32,7 +32,7 @@ The commit `ae48887` (feat: implement comprehensive Vercel branch protection and
 ### **1. GitHub Actions Workflow Fixes**
 
 #### **Fixed**: TruffleHog Configuration
-\`\`\`yaml
+```yaml
 # Before (problematic)
 - name: Check for secrets in code
   uses: trufflesecurity/trufflehog@main
@@ -49,20 +49,20 @@ The commit `ae48887` (feat: implement comprehensive Vercel branch protection and
     base: ${{ github.event.before || 'HEAD~1' }}
     head: ${{ github.event.after || 'HEAD' }}
     fail: false
-\`\`\`
+```
 
 #### **Fixed**: Git History for Security Scanning
-\`\`\`yaml
+```yaml
 # Added to checkout action
 - uses: actions/checkout@v4
   with:
     fetch-depth: 0
-\`\`\`
+```
 
 ### **2. Vercel Configuration Fixes**
 
 #### **Fixed**: Removed Unsupported `protectionBypass`
-\`\`\`json
+```json
 // Before (problematic)
 "protectionBypass": {
   "main": {
@@ -73,7 +73,7 @@ The commit `ae48887` (feat: implement comprehensive Vercel branch protection and
 
 // After (removed)
 // This configuration has been removed to ensure compatibility
-\`\`\`
+```
 
 ## 📋 **Summary of Changes**
 
@@ -96,11 +96,11 @@ The commit `ae48887` (feat: implement comprehensive Vercel branch protection and
 ## ✅ **Verification**
 
 ### **Local Build Test**
-\`\`\`bash
+```bash
 pnpm install
 pnpm build
 # ✅ Build successful
-\`\`\`
+```
 
 ### **Configuration Validation**
 - ✅ Vercel configuration is valid
@@ -111,11 +111,11 @@ pnpm build
 ## 🚀 **Next Steps**
 
 1. **Commit and Push Fixes**
-   \`\`\`bash
+   ```bash
    git add .
    git commit -m "fix: resolve Vercel deployment issues from commit ae48887"
    git push origin main
-   \`\`\`
+   ```
 
 2. **Monitor Deployment**
    - Watch the next Vercel deployment

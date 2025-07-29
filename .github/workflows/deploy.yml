@@ -105,11 +105,6 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-<<<<<<< Current (Your changes)
-          base: ${{ github.event.before }}
-          head: ${{ github.event.after }} 
-=======
           base: ${{ github.event.before || 'HEAD~1' }}
           head: ${{ github.event.after || 'HEAD' }}
-          fail: false 
->>>>>>> Incoming (Background Agent changes)
+          fail: false
