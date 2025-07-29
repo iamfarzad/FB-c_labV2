@@ -7,8 +7,6 @@ const config = {
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
-    "./lib/**/*.{ts,tsx}",
-    "./hooks/**/*.{ts,tsx}",
     "*.{js,ts,jsx,tsx,mdx}",
   ],
   prefix: "",
@@ -22,9 +20,9 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", "sans-serif"],
-        display: ["var(--font-display)", "sans-serif"],
-        mono: ["var(--font-mono)", "monospace"],
+        sans: ["var(--font-sans)"],
+        display: ["var(--font-display)"],
+        mono: ["var(--font-mono)"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -60,16 +58,6 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        chart: {
-          primary: "hsl(var(--chart-primary))",
-          secondary: "hsl(var(--chart-secondary))",
-          success: "hsl(var(--chart-success))",
-          warning: "hsl(var(--chart-warning))",
-          error: "hsl(var(--chart-error))",
-        },
-        "orange-accent": "hsl(var(--color-orange-accent))",
-        "gunmetal": "hsl(var(--color-gunmetal))",
-        "light-silver": "hsl(var(--color-light-silver))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -85,19 +73,14 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        shine: {
-          from: { backgroundPosition: "200% 0" },
-          to: { backgroundPosition: "-200% 0" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        shine: "shine 6s linear infinite",
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [require("tailwindcss-animate")],
 } satisfies Config
 
 export default config
