@@ -1,54 +1,30 @@
 "use client"
 
-import type React from "react"
-import { ROICalculatorModal } from "./modals/ROICalculatorModal"
-import { ScreenShareModal } from "./modals/ScreenShareModal"
-import { Video2AppModal } from "./modals/Video2AppModal"
-import { VoiceInputModal } from "./modals/VoiceInputModal"
-import { VoiceOutputModal } from "./modals/VoiceOutputModal"
-import { WebcamModal } from "./modals/WebcamModal"
-import { LeadResearchModal } from "./LeadResearchModal"
-import { useModalManager } from "../hooks/useModalManager"
+import { useModalManager } from "@/app/(chat)/chat/hooks/useModalManager"
+import { ROICalculatorModal } from "@/components/chat/modals/ROICalculatorModal"
+import { ScreenShareModal } from "@/components/chat/modals/ScreenShareModal"
+import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
+import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
+import { VoiceOutputModal } from "@/components/chat/modals/VoiceOutputModal"
+import { WebcamModal } from "@/components/chat/modals/WebcamModal"
+import { LeadResearchModal } from "@/app/(chat)/chat/components/LeadResearchModal"
 
-interface ChatModalsProps {
-  onTransferToChat: (message: string) => void
-  onCapture?: (data: any) => void
-  onAnalysis?: (analysis: string) => void
-}
-
-export const ChatModals: React.FC<ChatModalsProps> = ({ onTransferToChat, onCapture, onAnalysis }) => {
-  const { modals, closeModal } = useModalManager()
+export function ChatModals() {
+  const { isModalOpen, activeModal, closeModal, modalData } = useModalManager()
 
   return (
     <>
-      <ROICalculatorModal isOpen={modals.roiCalculator} onClose={() => closeModal("roiCalculator")} />
-
-      <ScreenShareModal isOpen={modals.screenShare} onClose={() => closeModal("screenShare")} onAnalysis={onAnalysis} />
-
-      <Video2AppModal
-        isOpen={modals.video2App}
-        onClose={() => closeModal("video2App")}
-        onAnalysisComplete={onCapture}
+      <ROICalculatorModal isOpen={isModalOpen && activeModal === "roi-calculator"} onClose={closeModal} />
+      <ScreenShareModal isOpen={isModalOpen && activeModal === "screen-share"} onClose={closeModal} />
+      <Video2AppModal isOpen={isModalOpen && activeModal === "video-to-app"} onClose={closeModal} />
+      <VoiceInputModal isOpen={isModalOpen && activeModal === "voice-input"} onClose={closeModal} />
+      <VoiceOutputModal isOpen={isModalOpen && activeModal === "voice-output"} onClose={closeModal} />
+      <WebcamModal isOpen={isModalOpen && activeModal === "webcam"} onClose={closeModal} />
+      <LeadResearchModal
+        isOpen={isModalOpen && activeModal === "lead-research"}
+        onClose={closeModal}
+        leadId={modalData?.leadId as string | undefined}
       />
-
-      <VoiceInputModal
-        isOpen={modals.voiceInput}
-        onClose={() => closeModal("voiceInput")}
-        onTransferToChat={onTransferToChat}
-      />
-
-      <VoiceOutputModal isOpen={modals.voiceOutput} onClose={() => closeModal("voiceOutput")} />
-
-      <WebcamModal
-        isOpen={modals.webcam}
-        onClose={() => closeModal("webcam")}
-        onCapture={onCapture}
-        onAIAnalysis={onAnalysis}
-      />
-
-      <LeadResearchModal isOpen={modals.leadResearch} onClose={() => closeModal("leadResearch")} />
     </>
   )
 }
-
-export default ChatModals
