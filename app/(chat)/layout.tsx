@@ -1,19 +1,15 @@
-"use client"
-
 import type React from "react"
-import { ChatProvider } from "./chat/context/ChatProvider"
-import { ThemeProvider } from "@/components/theme-provider"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "F.B/c AI Assistant",
+  description: "Your next-generation AI consulting service and technology showcase.",
+}
 
 export default function ChatLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <ChatProvider>
-        <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-900">{children}</div>
-      </ChatProvider>
-    </ThemeProvider>
-  )
+  return <main>{children}</main>
 }
