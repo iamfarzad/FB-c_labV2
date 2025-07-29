@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react"
 
-export type ModalType = "screenShare" | "voiceInput" | "webcam"
+type ModalType = "screenShare" | "voiceInput" | "webcam"
 
 export const useModalManager = () => {
   const [openModals, setOpenModals] = useState<Set<ModalType>>(new Set())
@@ -19,7 +19,12 @@ export const useModalManager = () => {
     })
   }, [])
 
-  const isModalOpen = useCallback((modal: ModalType) => openModals.has(modal), [openModals])
+  const isModalOpen = useCallback(
+    (modal: ModalType) => {
+      return openModals.has(modal)
+    },
+    [openModals],
+  )
 
   return { openModal, closeModal, isModalOpen }
 }

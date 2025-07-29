@@ -1,61 +1,30 @@
 "use client"
-import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
-import { ChatComposer } from "./ChatComposer"
-import { EmptyState } from "@/app/(chat)/chat/components/EmptyState"
-import { ErrorState } from "@/app/(chat)/chat/components/ErrorState"
+
+import { useChatContext } from "../../context/ChatProvider"
 import { MessageList } from "@/app/(chat)/chat/components/MessageList"
-import { AIAvatar } from "@/components/chat/header/components/AIAvatar"
-import { ExportButton } from "@/components/chat/header/components/ExportButton"
-import { OnlineStatus } from "@/components/chat/header/components/OnlineStatus"
+import { EmptyState } from "@/app/(chat)/chat/components/EmptyState"
+import { ChatComposer } from "./ChatComposer"
+import { Button } from "@/components/ui/button"
 
 export function ChatPanel() {
-  const { messages, isLoading, error, handleDownloadSummary, addMessage, onRetry } = useChatContext()
-
-  const handleExampleQuery = (query: string) => {
-    addMessage({
-      id: Date.now().toString(),
-      role: "user",
-      content: query,
-      createdAt: new Date(),
-    })
-  }
-
-  const renderContent = () => {
-    if (error) {
-      return <ErrorState error={error} onRetry={onRetry} />
-    }
-    if (messages.length === 0 && !isLoading) {
-      return <EmptyState onExampleQuery={handleExampleQuery} />
-    }
-    return (
-      <MessageList
-        messages={messages}
-        isLoading={isLoading}
-        error={error}
-        onExampleQuery={handleExampleQuery}
-        onRetry={onRetry}
-      />
-    )
-  }
+  const { messages, isLoading, onRetry, error } = useChatContext()
 
   return (
-    <div className="flex h-screen flex-col bg-background">
-      <header className="flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
-        <div className="flex items-center gap-3">
-          <AIAvatar />
-          <div>
-            <p className="font-semibold">AI Assistant</p>
-            <OnlineStatus />
+    <div className="flex h-full flex-col">
+      <div className="flex-1 overflow-y-auto p-4">
+        {messages.length > 0 ? <MessageList messages={messages} /> : <EmptyState />}
+        {error && (
+          <div className="flex flex-col items-center justify-center text-center">
+            <p className="text-red-500">Something went wrong.</p>
+            <Button onClick={onRetry} variant="outline" className="mt-2 bg-transparent">
+              Retry
+            </Button>
           </div>
-        </div>
-        <ExportButton onClick={handleDownloadSummary} />
-      </header>
-      <div className="flex-1 overflow-hidden">{renderContent()}</div>
-      <footer className="border-t bg-background/80 backdrop-blur-sm p-4 md:p-6">
-        <div className="mx-auto max-w-4xl">
-          <ChatComposer />
-        </div>
-      </footer>
+        )}
+      </div>
+      <div className="border-t bg-background p-4">
+        <ChatComposer />
+      </div>
     </div>
   )
 }

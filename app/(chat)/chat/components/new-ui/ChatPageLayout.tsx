@@ -1,21 +1,24 @@
 "use client"
 
-import type React from "react"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
+import { ChatSidebar } from "./ChatSidebar"
+import { ChatPanel } from "./ChatPanel"
+import { useChatContext } from "../../context/ChatProvider"
 
-interface ChatPageLayoutProps {
-  sidebar: React.ReactNode
-  chatPanel: React.ReactNode
-}
+export function ChatPageLayout() {
+  const { activities, handleNewChat } = useChatContext()
 
-export function ChatPageLayout({ sidebar, chatPanel }: ChatPageLayoutProps) {
   return (
-    <ResizablePanelGroup direction="horizontal" className="h-screen w-full items-stretch bg-background">
-      <ResizablePanel defaultSize={25} minSize={20} maxSize={30} className="hidden md:block">
-        {sidebar}
-      </ResizablePanel>
-      <ResizableHandle withHandle className="hidden md:flex" />
-      <ResizablePanel defaultSize={75}>{chatPanel}</ResizablePanel>
-    </ResizablePanelGroup>
+    <div className="h-screen w-screen bg-background text-foreground overflow-hidden">
+      <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+        <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
+          <ChatSidebar activities={activities} onNewChat={handleNewChat} />
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={75}>
+          <ChatPanel />
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </div>
   )
 }

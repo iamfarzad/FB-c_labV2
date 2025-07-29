@@ -1,4 +1,4 @@
-export interface Message {
+export interface ChatMessage {
   id: string
   role: "user" | "assistant" | "system" | "function" | "data" | "tool"
   content: string
@@ -8,6 +8,8 @@ export interface Message {
   imageUrl?: string
   metadata?: Record<string, any>
 }
+
+export type { ChatMessage }
 
 export interface ActivityItem {
   id: string
@@ -52,17 +54,20 @@ export interface ActivityItem {
     | "conversation_ended"
     | "chat_message"
     | "processing"
+    | "message_sent"
+    | "new_chat"
+    | "export"
   title: string
   description: string
   status: "pending" | "in_progress" | "completed" | "failed"
-  timestamp: number
+  timestamp: Date
   duration?: number
   details?: string[]
   metadata?: Record<string, any>
 }
 
 export interface ChatState {
-  messages: Message[]
+  messages: ChatMessage[]
   isLoading: boolean
   error?: string
   sessionId: string

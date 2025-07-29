@@ -3,9 +3,9 @@
 import type React from "react"
 import { createContext, useContext, useState, useCallback } from "react"
 import { useChat } from "ai/react"
-import type { Message } from "ai"
 import { useModalManager } from "../hooks/useModalManager"
-import type { ActivityItem } from "../types/chat"
+import type { ActivityItem, Message } from "../types/chat"
+import { toast } from "sonner"
 
 interface ChatContextType {
   messages: Message[]
@@ -15,9 +15,7 @@ interface ChatContextType {
   isLoading: boolean
   error: Error | undefined
   activities: ActivityItem[]
-  addMessage: (message: Message) => void
   handleNewChat: () => void
-  handleDownloadSummary: () => void
   openModal: (modal: "screenShare" | "voiceInput" | "webcam") => void
   closeModal: (modal: "screenShare" | "voiceInput" | "webcam") => void
   isModalOpen: (modal: "screenShare" | "voiceInput" | "webcam") => boolean
@@ -34,13 +32,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     handleSubmit: originalHandleSubmit,
     isLoading,
     error,
-    append,
     reload,
     setMessages,
   } = useChat({
     api: "/api/chat",
     onError: (err) => {
-      console.error("Chat error:", err)
+      toast.error("An error occurred: " + err.message)
     },
   })
 
@@ -53,28 +50,21 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!input.trim()) return
     addActivity({ type: "message_sent", content: `User sent: "${input}"` })
     originalHandleSubmit(e)
-  }
-
-  const addMessage = (message: Message) => {
-    append(message)
   }
 
   const handleNewChat = useCallback(() => {
     setMessages([])
     addActivity({ type: "new_chat", content: "New chat session started." })
+    toast.success("New chat started")
   }, [setMessages, addActivity])
 
-  const handleDownloadSummary = useCallback(() => {
-    // Placeholder for summary download logic
-    alert("Downloading summary...")
-    addActivity({ type: "export", content: "Chat summary exported." })
-  }, [addActivity])
-
   const onRetry = useCallback(() => {
+    addActivity({ type: "tool_used", content: "Retrying last message." })
     reload()
-  }, [reload])
+  }, [reload, addActivity])
 
   const value = {
     messages,
@@ -84,9 +74,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     error,
     activities,
-    addMessage,
     handleNewChat,
-    handleDownloadSummary,
     openModal,
     closeModal,
     isModalOpen,
