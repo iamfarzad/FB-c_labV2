@@ -1,4 +1,7 @@
+"use client"
+
 import type React from "react"
+
 import { ChatProvider } from "./chat/context/ChatProvider"
 
 export default function ChatLayout({
@@ -6,5 +9,9 @@ export default function ChatLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <ChatProvider>{children}</ChatProvider>
+  return (
+    <ChatProvider>
+      <div className="h-screen overflow-hidden">{children}</div>
+    </ChatProvider>
+  )
 }

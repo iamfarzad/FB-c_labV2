@@ -2,7 +2,7 @@ export interface Message {
   id: string
   role: "user" | "assistant"
   content: string
-  timestamp: Date
+  timestamp: string
   model?: string
 }
 
@@ -14,10 +14,17 @@ export interface AIModel {
 
 export interface ActivityItem {
   id: string
-  type: "lead_research" | "roi_calculation" | "document_analysis" | "meeting_scheduled" | "file_upload"
+  type:
+    | "lead_research"
+    | "roi_calculation"
+    | "document_analysis"
+    | "meeting_scheduled"
+    | "file_upload"
+    | "tool_used"
+    | "message"
   title: string
   status: "in_progress" | "completed" | "failed"
-  timestamp: Date
+  timestamp: string
   details?: string
 }
 

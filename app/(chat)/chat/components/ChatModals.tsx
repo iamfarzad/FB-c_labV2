@@ -3,246 +3,165 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Calculator, Search, FileText, Users, Calendar, Upload, Monitor, Mic, Video } from "lucide-react"
 
 interface ChatModalsProps {
-  modals: {
-    roi: boolean
-    research: boolean
-    analysis: boolean
-    leads: boolean
-    meeting: boolean
-    upload: boolean
-    screen: boolean
-    voice: boolean
-    webcam: boolean
-  }
-  onClose: (modal: string) => void
+  activeModal: string | null
+  onClose: () => void
 }
 
-export function ChatModals({ modals, onClose }: ChatModalsProps) {
-  return (
-    <>
-      {/* ROI Calculator Modal */}
-      <Dialog open={modals.roi} onOpenChange={() => onClose("roi")}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Calculator className="h-5 w-5" />
-              ROI Calculator
-            </DialogTitle>
-          </DialogHeader>
+export function ChatModals({ activeModal, onClose }: ChatModalsProps) {
+  const renderModalContent = () => {
+    switch (activeModal) {
+      case "roi-calc":
+        return (
           <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Initial Investment</label>
-              <Input type="number" placeholder="Enter amount" />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="investment">Initial Investment</Label>
+                <Input id="investment" type="number" placeholder="10000" />
+              </div>
+              <div>
+                <Label htmlFor="returns">Expected Returns</Label>
+                <Input id="returns" type="number" placeholder="15000" />
+              </div>
             </div>
             <div>
-              <label className="text-sm font-medium">Current Value</label>
-              <Input type="number" placeholder="Enter current value" />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Time Period (months)</label>
-              <Input type="number" placeholder="Enter months" />
+              <Label htmlFor="timeframe">Timeframe (months)</Label>
+              <Input id="timeframe" type="number" placeholder="12" />
             </div>
             <Button className="w-full">Calculate ROI</Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        )
 
-      {/* Research Modal */}
-      <Dialog open={modals.research} onOpenChange={() => onClose("research")}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5" />
-              Lead Research
-            </DialogTitle>
-          </DialogHeader>
+      case "research":
+        return (
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Company/Industry</label>
-              <Input placeholder="Enter company name or industry" />
+              <Label htmlFor="company">Company Name</Label>
+              <Input id="company" placeholder="Enter company name" />
             </div>
             <div>
-              <label className="text-sm font-medium">Research Criteria</label>
-              <Textarea placeholder="Describe what you're looking for..." />
+              <Label htmlFor="industry">Industry</Label>
+              <Input id="industry" placeholder="Enter industry" />
+            </div>
+            <div>
+              <Label htmlFor="criteria">Research Criteria</Label>
+              <Textarea id="criteria" placeholder="What would you like to research?" />
             </div>
             <Button className="w-full">Start Research</Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        )
 
-      {/* Analysis Modal */}
-      <Dialog open={modals.analysis} onOpenChange={() => onClose("analysis")}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Document Analysis
-            </DialogTitle>
-          </DialogHeader>
+      case "analysis":
+        return (
           <div className="space-y-4">
-            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
-              <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Drop your documents here or click to upload</p>
-            </div>
-            <Button className="w-full">Analyze Documents</Button>
+            <Card>
+              <CardHeader>
+                <CardTitle>Document Analysis</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
+                  <p className="text-muted-foreground">Drop files here or click to upload</p>
+                  <Button variant="outline" className="mt-2 bg-transparent">
+                    Choose Files
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </DialogContent>
-      </Dialog>
+        )
 
-      {/* Leads Modal */}
-      <Dialog open={modals.leads} onOpenChange={() => onClose("leads")}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Lead Management
-            </DialogTitle>
-          </DialogHeader>
+      case "leads":
+        return (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm">Active Leads</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">24</div>
-                  <Badge variant="secondary">+3 this week</Badge>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm">Conversion Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">18%</div>
-                  <Badge variant="secondary">+2% this month</Badge>
-                </CardContent>
-              </Card>
+              <div>
+                <Label htmlFor="leadName">Lead Name</Label>
+                <Input id="leadName" placeholder="John Doe" />
+              </div>
+              <div>
+                <Label htmlFor="leadEmail">Email</Label>
+                <Input id="leadEmail" type="email" placeholder="john@company.com" />
+              </div>
             </div>
-            <Button className="w-full">View All Leads</Button>
+            <div>
+              <Label htmlFor="leadCompany">Company</Label>
+              <Input id="leadCompany" placeholder="Company Name" />
+            </div>
+            <div>
+              <Label htmlFor="leadNotes">Notes</Label>
+              <Textarea id="leadNotes" placeholder="Additional information..." />
+            </div>
+            <Button className="w-full">Save Lead</Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        )
 
-      {/* Meeting Modal */}
-      <Dialog open={modals.meeting} onOpenChange={() => onClose("meeting")}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Schedule Meeting
-            </DialogTitle>
-          </DialogHeader>
+      case "meeting":
+        return (
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Meeting Title</label>
-              <Input placeholder="Enter meeting title" />
+              <Label htmlFor="meetingTitle">Meeting Title</Label>
+              <Input id="meetingTitle" placeholder="Business Discussion" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="meetingDate">Date</Label>
+                <Input id="meetingDate" type="date" />
+              </div>
+              <div>
+                <Label htmlFor="meetingTime">Time</Label>
+                <Input id="meetingTime" type="time" />
+              </div>
             </div>
             <div>
-              <label className="text-sm font-medium">Date & Time</label>
-              <Input type="datetime-local" />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Attendees</label>
-              <Input placeholder="Enter email addresses" />
+              <Label htmlFor="meetingAttendees">Attendees</Label>
+              <Input id="meetingAttendees" placeholder="email1@company.com, email2@company.com" />
             </div>
             <Button className="w-full">Schedule Meeting</Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        )
 
-      {/* Upload Modal */}
-      <Dialog open={modals.upload} onOpenChange={() => onClose("upload")}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5" />
-              File Upload
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
-              <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Drop files here or click to browse</p>
-            </div>
-            <Button className="w-full">Upload Files</Button>
+      default:
+        return (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Tool interface coming soon...</p>
           </div>
-        </DialogContent>
-      </Dialog>
+        )
+    }
+  }
 
-      {/* Screen Share Modal */}
-      <Dialog open={modals.screen} onOpenChange={() => onClose("screen")}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Monitor className="h-5 w-5" />
-              Screen Sharing
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="bg-muted rounded-lg p-8 text-center">
-              <Monitor className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Click to start screen sharing</p>
-            </div>
-            <div className="flex gap-2">
-              <Button className="flex-1">Share Screen</Button>
-              <Button variant="outline" className="flex-1 bg-transparent">
-                Share Window
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+  const getModalTitle = () => {
+    switch (activeModal) {
+      case "roi-calc":
+        return "ROI Calculator"
+      case "research":
+        return "Lead Research"
+      case "analysis":
+        return "Document Analysis"
+      case "leads":
+        return "Lead Management"
+      case "meeting":
+        return "Schedule Meeting"
+      case "upload":
+        return "File Upload"
+      case "screen":
+        return "Screen Share"
+      default:
+        return "Tool"
+    }
+  }
 
-      {/* Voice Modal */}
-      <Dialog open={modals.voice} onOpenChange={() => onClose("voice")}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Mic className="h-5 w-5" />
-              Voice Input
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="bg-muted rounded-lg p-8 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
-                <Mic className="h-8 w-8 text-red-500" />
-              </div>
-              <p className="text-sm text-muted-foreground">Click to start recording</p>
-            </div>
-            <Button className="w-full">Start Recording</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Webcam Modal */}
-      <Dialog open={modals.webcam} onOpenChange={() => onClose("webcam")}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Video className="h-5 w-5" />
-              Webcam Capture
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="bg-muted rounded-lg aspect-video flex items-center justify-center">
-              <Video className="h-16 w-16 text-muted-foreground" />
-            </div>
-            <div className="flex gap-2">
-              <Button className="flex-1">Start Camera</Button>
-              <Button variant="outline" className="flex-1 bg-transparent">
-                Take Photo
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+  return (
+    <Dialog open={!!activeModal} onOpenChange={() => onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{getModalTitle()}</DialogTitle>
+        </DialogHeader>
+        {renderModalContent()}
+      </DialogContent>
+    </Dialog>
   )
 }

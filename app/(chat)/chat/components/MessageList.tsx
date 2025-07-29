@@ -23,6 +23,15 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
     scrollToBottom()
   }, [messages])
 
+  const formatTime = (timestamp: string) => {
+    try {
+      const date = new Date(timestamp)
+      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    } catch {
+      return "Now"
+    }
+  }
+
   if (messages.length === 0) {
     return (
       <div className="flex h-full items-center justify-center p-8">
@@ -83,7 +92,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                   {message.model || "AI"}
                 </Badge>
               )}
-              <span className="text-xs text-muted-foreground">{message.timestamp.toLocaleTimeString()}</span>
+              <span className="text-xs text-muted-foreground">{formatTime(message.timestamp)}</span>
             </div>
 
             <div
