@@ -15,10 +15,10 @@ export default function ChatPage() {
   const { messages, isLoading, error, sendMessage, clearChat, activityLog, addActivity } = useChatContext()
 
   const { sessionId, createSession } = useDemoSession()
-  const { isModalOpen, activeModal, openModal, closeModal } = useModalManager()
-  const { isLeadCaptureVisible, showLeadCapture, closeLeadCapture, handleLeadSubmit } = useLeadCapture()
+  const { activeModal, openModal, closeModal } = useModalManager()
+  const { showLeadCapture, handleLeadCaptureComplete } = useLeadCapture(messages, sessionId)
 
-  useKeyboardShortcuts(openModal)
+  useKeyboardShortcuts({ openModal })
 
   // Start demo session if not already started
   React.useEffect(() => {
@@ -34,19 +34,37 @@ export default function ChatPage() {
         messages={messages}
         isLoading={isLoading}
         error={error}
-        sendMessage={sendMessage}
+        onExampleQuery={(query) => sendMessage(query)}
+        onRetry={() => sendMessage("")}
+        input=""
+        handleInputChange={() => {}}
+        handleSubmit={(e) => {
+          e.preventDefault()
+          // Handle submit
+        }}
+        onFileUpload={() => {}}
+        onImageUpload={() => {}}
         openModal={openModal}
-        isLeadCaptureVisible={isLeadCaptureVisible}
         showLeadCapture={showLeadCapture}
-        closeLeadCapture={closeLeadCapture}
-        handleLeadSubmit={handleLeadSubmit}
-        addActivity={addActivity}
+        onLeadCaptureComplete={handleLeadCaptureComplete}
+        leadName=""
+        onDownloadSummary={() => {}}
+        activities={activityLog}
+        onNewChat={clearChat}
       />
       <ChatModals
-        isModalOpen={isModalOpen}
-        activeModal={activeModal}
-        closeModal={closeModal}
-        addActivity={addActivity}
+        onTransferToChat={(message) => {
+          console.log("Transfer to chat:", message)
+          sendMessage(message)
+        }}
+        onCapture={(data) => {
+          console.log("Capture data:", data)
+          addActivity({ type: "capture", status: "success", content: "Data captured" })
+        }}
+        onAnalysis={(analysis) => {
+          console.log("Analysis:", analysis)
+          addActivity({ type: "analysis", status: "success", content: analysis })
+        }}
       />
     </ChatLayout>
   )

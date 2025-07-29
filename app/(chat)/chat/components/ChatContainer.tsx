@@ -3,9 +3,9 @@
 import type React from "react"
 
 import { ChatHeader } from "./ChatHeader"
-import { ChatInput } from "./ChatInput"
+import ChatInput from "./ChatInput"
 import { MessageList } from "./MessageList"
-import { LeadCaptureFlow } from "@/components/chat/LeadCaptureFlow"
+import { LeadCaptureFlow } from "./LeadCaptureFlow"
 import type { Activity, Message } from "../types/chat"
 import { ErrorState } from "./ErrorState"
 import { EmptyState } from "./EmptyState"

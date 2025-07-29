@@ -3,20 +3,22 @@
 import type React from "react"
 import { createContext, useContext, useState, useCallback } from "react"
 import { useChatController } from "@/app/(chat)/chat/hooks/useChatController"
-import type { ActivityLog, ChatState } from "@/app/(chat)/chat/types/chat"
+import type { ActivityItem, ChatState } from "@/app/(chat)/chat/types/chat"
 
 interface ChatContextType extends ChatState {
-  activityLog: ActivityLog[]
-  addActivity: (activity: ActivityLog) => void
+  activityLog: ActivityItem[]
+  addActivity: (activity: ActivityItem) => void
+  sendMessage: (input: string, attachedFile?: { name: string; content: string }) => Promise<void>
+  clearChat: () => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
-  const [activityLog, setActivityLog] = useState<ActivityLog[]>([])
+  const [activityLog, setActivityLog] = useState<ActivityItem[]>([])
   const chatController = useChatController()
 
-  const addActivity = useCallback((activity: ActivityLog) => {
+  const addActivity = useCallback((activity: ActivityItem) => {
     setActivityLog((prev) => [...prev, activity])
   }, [])
 

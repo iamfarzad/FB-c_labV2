@@ -33,21 +33,9 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
   const [showTranscript, setShowTranscript] = useState(false)
 
   const {
-    isPlaying,
-    isPaused,
-    isLoading,
-    currentTime,
-    duration,
-    progress,
-    play,
-    pause,
-    stop,
-    seek,
-    setVolumeLevel,
-    setPlaybackSpeed,
-    error,
+    state: { isPlaying, isPaused, isLoading, currentTime, duration, error },
+    controls: { play, pause, stop, seek, setVolume: setVolumeLevel },
   } = useAudioPlayer({
-    src: audioUrl,
     autoPlay: false,
     onEnd: () => {
       toast({
@@ -58,7 +46,7 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
     onError: (error) => {
       toast({
         title: "Playback Error",
-        description: error.message,
+        description: error,
         variant: "destructive",
       })
     },
@@ -68,11 +56,6 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
   useEffect(() => {
     setVolumeLevel(volume / 100)
   }, [volume, setVolumeLevel])
-
-  // Update playback rate when slider changes
-  useEffect(() => {
-    setPlaybackSpeed(playbackRate)
-  }, [playbackRate, setPlaybackSpeed])
 
   const handlePlayPause = useCallback(() => {
     if (isPlaying) {
@@ -179,14 +162,15 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
       onClose={handleClose}
       title={title}
       description="AI-generated voice response with playback controls"
-      icon={<Volume2 className="h-6 w-6 text-primary" />}
       size="md"
-      theme="glass"
     >
       <div className="p-6 space-y-6">
         {/* Voice Orb Visualization */}
         <div className="flex justify-center">
-          <VoiceOrb isActive={isPlaying} amplitude={isPlaying ? 0.8 : 0.2} size={120} className="drop-shadow-lg" />
+          <VoiceOrb 
+            state={isLoading ? "generating" : isPlaying ? "speaking" : isPaused ? "paused" : "idle"}
+            onClick={handlePlayPause}
+          />
         </div>
 
         {/* Status Badge */}
@@ -199,7 +183,13 @@ export const VoiceOutputModal: React.FC<VoiceOutputModalProps> = ({
         {/* Progress Bar */}
         {audioUrl && duration > 0 && (
           <div className="space-y-2">
-            <Slider value={[progress]} onValueChange={handleSeek} max={100} step={0.1} className="w-full" />
+            <Slider 
+              value={[duration > 0 ? (currentTime / duration) * 100 : 0]} 
+              onValueChange={handleSeek} 
+              max={100} 
+              step={0.1} 
+              className="w-full" 
+            />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration)}</span>
