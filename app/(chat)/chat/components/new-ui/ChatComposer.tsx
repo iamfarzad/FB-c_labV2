@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useRef } from "react"
-import { Paperclip, Mic, SendHorizontalIcon as SendHoriz, Webcam, ScreenShare } from "lucide-react"
+import { Paperclip, Mic, SendHorizontal, Webcam, ScreenShare } from "lucide-react"
 import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -22,20 +22,20 @@ export function ChatComposer() {
   }
 
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={0}>
       <form
         ref={formRef}
         onSubmit={handleSubmit}
-        className="relative flex w-full items-start gap-2 rounded-lg border bg-background p-2"
+        className="relative flex w-full items-start gap-2 rounded-lg border bg-background p-2 shadow-sm"
       >
-        <div className="flex gap-1">
+        <div className="flex gap-0.5">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="shrink-0"
+                className="shrink-0 text-muted-foreground"
                 onClick={() => document.getElementById("file-input")?.click()}
                 disabled={isLoading}
               >
@@ -52,7 +52,7 @@ export function ChatComposer() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="shrink-0"
+                className="shrink-0 text-muted-foreground"
                 onClick={() => openModal("voiceInput")}
                 disabled={isLoading}
               >
@@ -62,25 +62,13 @@ export function ChatComposer() {
             </TooltipTrigger>
             <TooltipContent>Use Microphone</TooltipContent>
           </Tooltip>
-        </div>
-        <Textarea
-          ref={textareaRef}
-          value={input}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask me anything..."
-          className="min-h-[40px] flex-1 resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
-          rows={1}
-          disabled={isLoading}
-        />
-        <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="shrink-0"
+                className="shrink-0 text-muted-foreground"
                 onClick={() => openModal("webcam")}
                 disabled={isLoading}
               >
@@ -96,7 +84,7 @@ export function ChatComposer() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="shrink-0"
+                className="shrink-0 text-muted-foreground"
                 onClick={() => openModal("screenShare")}
                 disabled={isLoading}
               >
@@ -106,8 +94,20 @@ export function ChatComposer() {
             </TooltipTrigger>
             <TooltipContent>Share Screen</TooltipContent>
           </Tooltip>
-          <Button type="submit" size="icon" className="shrink-0" disabled={isLoading || !input}>
-            <SendHoriz className="h-5 w-5" />
+        </div>
+        <Textarea
+          ref={textareaRef}
+          value={input}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          placeholder="Ask anything..."
+          className="min-h-[44px] flex-1 resize-none border-0 bg-transparent p-2 shadow-none focus-visible:ring-0"
+          rows={1}
+          disabled={isLoading}
+        />
+        <div className="flex items-center self-end">
+          <Button type="submit" size="icon" className="shrink-0" disabled={isLoading || !input.trim()}>
+            <SendHorizontal className="h-5 w-5" />
             <span className="sr-only">Send</span>
           </Button>
         </div>

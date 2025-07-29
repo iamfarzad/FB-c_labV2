@@ -20,7 +20,7 @@
     --accent-foreground: 224 71.4% 4.1%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
-    --border: 215 20.2% 65.1%;
+    --border: 215 20.2% 90.1%;
     --input: 215 20.2% 65.1%;
     --ring: 224 71.4% 4.1%;
     --radius: 0.5rem;
@@ -55,5 +55,40 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .chat-bubble-user {
+    @apply bg-primary text-primary-foreground rounded-2xl rounded-br-none px-4 py-3;
+  }
+
+  .chat-bubble-assistant {
+    @apply bg-muted rounded-2xl rounded-bl-none px-4 py-3;
+  }
+}
+
+@layer utilities {
+  .chat-scroll-container {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+
+  .chat-scroll-container::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .chat-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .chat-scroll-container::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted));
+    border-radius: 3px;
+  }
+
+  .chat-scroll-container::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground));
   }
 }
