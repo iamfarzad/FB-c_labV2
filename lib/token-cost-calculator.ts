@@ -32,11 +32,6 @@ export const PROVIDER_PRICING: Record<string, Record<string, ProviderPricing>> =
       outputPrice: 0.3, // $0.30 per 1M output tokens
       currency: "USD",
     },
-    "gemini-2.5-flash-lite": {
-      inputPrice: 0.10, // $0.10 per 1M input tokens (40% audio cost reduction from preview)
-      outputPrice: 0.40, // $0.40 per 1M output tokens
-      currency: "USD",
-    },
     "gemini-2.5": {
       inputPrice: 1.25, // $1.25 per 1M input tokens
       outputPrice: 5.0, // $5.00 per 1M output tokens

@@ -11,7 +11,6 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "AI Automation Consultant | Farzad Bayat | 10,000+ Hours Experience",
   description: "Expert AI consultant with 10,000+ hours experience. Custom AI automation, chatbots, and workflow optimization for businesses. No hype, just results that work.",
-  keywords: ["AI consulting", "AI automation", "AI consultant", "business AI", "AI implementation"],
   openGraph: {
     title: "AI Automation Consultant | Farzad Bayat | 10,000+ Hours Experience",
     description: "Expert AI consultant with 10,000+ hours experience. Custom AI automation, chatbots, and workflow optimization for businesses.",

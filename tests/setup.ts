@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import React from 'react';
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -19,7 +20,7 @@ jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img {...props} alt={props.alt || ''} />;
+    return React.createElement('img', { ...props, alt: props.alt || '' });
   },
 }));
 
@@ -153,9 +154,15 @@ jest.mock('@/lib/supabase/client', () => ({
 }));
 
 // Mock AI services
-jest.mock('@/lib/ai', () => ({
-  generateResponse: jest.fn(() => Promise.resolve('AI response')),
-  generateStreamingResponse: jest.fn(() => Promise.resolve('Streaming AI response')),
+jest.mock('@/lib/unified-ai-service', () => ({
+  UnifiedAIService: jest.fn().mockImplementation(() => ({
+    generateResponse: jest.fn(() => Promise.resolve('AI response')),
+    generateStreamingResponse: jest.fn(() => Promise.resolve('Streaming AI response')),
+  })),
+  unifiedAIService: {
+    generateResponse: jest.fn(() => Promise.resolve('AI response')),
+    generateStreamingResponse: jest.fn(() => Promise.resolve('Streaming AI response')),
+  },
 }));
 
 // Mock toast notifications
@@ -168,12 +175,12 @@ jest.mock('@/hooks/use-toast', () => ({
 // Mock framer-motion for tests
 jest.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
-    form: ({ children, ...props }: any) => <form {...props}>{children}</form>,
-    textarea: ({ children, ...props }: any) => <textarea {...props}>{children}</textarea>,
+    div: ({ children, ...props }: any) => React.createElement('div', props, children),
+    button: ({ children, ...props }: any) => React.createElement('button', props, children),
+    form: ({ children, ...props }: any) => React.createElement('form', props, children),
+    textarea: ({ children, ...props }: any) => React.createElement('textarea', props, children),
   },
-  AnimatePresence: ({ children }: any) => <div>{children}</div>,
+  AnimatePresence: ({ children }: any) => React.createElement('div', {}, children),
   useMotionValue: jest.fn(() => ({ get: jest.fn(), set: jest.fn() })),
   useTransform: jest.fn(() => ({ get: jest.fn() })),
   useSpring: jest.fn(() => ({ get: jest.fn(), set: jest.fn() })),

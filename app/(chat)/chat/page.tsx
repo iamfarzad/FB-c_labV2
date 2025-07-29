@@ -1,88 +1,45 @@
 "use client"
 
-import React from "react"
+import { ChatPageLayout } from "./components/new-ui/ChatPageLayout"
+import { ChatSidebar } from "./components/new-ui/ChatSidebar"
+import { ChatPanel } from "./components/new-ui/ChatPanel"
+import { ChatModals } from "./components/ChatModals"
 import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
-import { useDemoSession } from "@/components/demo-session-manager"
-import { useModalManager } from "@/app/(chat)/chat/hooks/useModalManager"
-import { useLeadCapture } from "@/app/(chat)/chat/hooks/useLeadCapture"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
-import { ChatLayout } from "@/components/chat/ChatLayout"
-import { ChatContainer } from "@/app/(chat)/chat/components/ChatContainer"
-import { ChatModals } from "@/app/(chat)/chat/components/ChatModals"
 
 export default function ChatPage() {
-  const { messages, isLoading, error, sendMessage, clearChat, activityLog, addActivity } = useChatContext()
+  const { handleNewChat, handleDownloadSummary, openModal, activities, addMessage } = useChatContext()
 
-  const { sessionId, createSession } = useDemoSession()
-  const { activeModal, openModal, closeModal } = useModalManager()
-  const { showLeadCapture, handleLeadCaptureComplete } = useLeadCapture(messages, sessionId)
+  const handleTransferToChat = (content: string) => {
+    addMessage({
+      id: Date.now().toString(),
+      role: "user",
+      content: `Data from modal: ${content}`,
+      createdAt: new Date(),
+    })
+  }
 
-  useKeyboardShortcuts({ 
-    onNewChat: clearChat,
+  useKeyboardShortcuts({
+    onNewChat: handleNewChat,
+    onExportSummary: handleDownloadSummary,
+    onToggleSidebar: () => {},
+    onFocusInput: () => {},
     onOpenVoice: () => openModal("voiceInput"),
     onOpenCamera: () => openModal("webcam"),
-    onOpenScreenShare: () => openModal("screenShare")
+    onOpenScreenShare: () => openModal("screenShare"),
   })
 
-  // Start demo session if not already started
-  React.useEffect(() => {
-    if (!sessionId) {
-      createSession()
-    }
-  }, [sessionId, createSession])
-
   return (
-    <ChatLayout>
-      <ChatContainer
-        messages={messages}
-        isLoading={isLoading}
-        error={error ? new Error(error) : undefined}
-        onExampleQuery={(query) => sendMessage(query)}
-        onRetry={() => sendMessage("")}
-        input=""
-        handleInputChange={() => {}}
-        handleSubmit={(e) => {
-          e.preventDefault()
-          // Handle submit
-        }}
-        onFileUpload={() => {}}
-        onImageUpload={() => {}}
-        openModal={(modal) => openModal(modal as any)}
-        showLeadCapture={showLeadCapture}
-        onLeadCaptureComplete={() => handleLeadCaptureComplete({ name: "User", email: "user@example.com", engagementType: "chat" })}
-        leadName=""
-        onDownloadSummary={() => {}}
-        activities={activityLog}
-        onNewChat={clearChat}
+    <>
+      <ChatPageLayout
+        sidebar={<ChatSidebar activities={activities} onNewChat={handleNewChat} />}
+        chatPanel={<ChatPanel />}
       />
       <ChatModals
-        onTransferToChat={(message) => {
-          console.log("Transfer to chat:", message)
-          sendMessage(message)
-        }}
-        onCapture={(data) => {
-          console.log("Capture data:", data)
-          addActivity({ 
-            id: Date.now().toString(),
-            type: "user_action", 
-            status: "completed", 
-            title: "Data captured",
-            description: "User data was captured",
-            timestamp: Date.now()
-          })
-        }}
-        onAnalysis={(analysis) => {
-          console.log("Analysis:", analysis)
-          addActivity({ 
-            id: Date.now().toString(),
-            type: "doc_analysis", 
-            status: "completed", 
-            title: "Analysis completed",
-            description: "Document analysis was performed",
-            timestamp: Date.now()
-          })
-        }}
+        onTransferToChat={handleTransferToChat}
+        onCapture={(data) => console.log("Capture data:", data)}
+        onAnalysis={(analysis) => console.log("Analysis:", analysis)}
       />
-    </ChatLayout>
+    </>
   )
 }

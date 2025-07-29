@@ -203,23 +203,11 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429 });
     }
 
-    // Authentication check (allow anonymous access for public chat)
-    let auth: { success: boolean; userId?: string; error?: string };
-    
-    // Try authentication first, but allow anonymous access if it fails
-    auth = await authenticateRequest(req);
-    if (!auth.success) {
-      // Allow anonymous access for public chat functionality
-      auth = { success: true, userId: `anon-${Date.now()}-${Math.random().toString(36).substring(7)}`, error: undefined };
-      logConsoleActivity('info', 'Anonymous user accessing chat', { ip, correlationId, userId: auth.userId });
-    } else {
-      logConsoleActivity('info', 'Authenticated user accessing chat', { ip, correlationId, userId: auth.userId });
-    }
-
     // Get session ID from headers or cookies
     const sessionId = req.headers.get('x-demo-session-id') || req.cookies.get('demo-session-id')?.value;
 
     // Authentication check (optional for demo)
+    const auth = await authenticateRequest(req);
     const isAuthenticated = auth.success;
 
     // Parse and validate request

@@ -1,12 +1,12 @@
 "use client"
 
 import type React from "react"
-import { ROICalculatorModal } from "@/components/chat/modals/ROICalculatorModal"
-import { ScreenShareModal } from "@/components/chat/modals/ScreenShareModal"
-import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
-import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
-import { VoiceOutputModal } from "@/components/chat/modals/VoiceOutputModal"
-import { WebcamModal } from "@/components/chat/modals/WebcamModal"
+import { ROICalculatorModal } from "./modals/ROICalculatorModal"
+import { ScreenShareModal } from "./modals/ScreenShareModal"
+import { Video2AppModal } from "./modals/Video2AppModal"
+import { VoiceInputModal } from "./modals/VoiceInputModal"
+import { VoiceOutputModal } from "./modals/VoiceOutputModal"
+import { WebcamModal } from "./modals/WebcamModal"
 import { LeadResearchModal } from "./LeadResearchModal"
 import { useModalManager } from "../hooks/useModalManager"
 
@@ -17,36 +17,36 @@ interface ChatModalsProps {
 }
 
 export const ChatModals: React.FC<ChatModalsProps> = ({ onTransferToChat, onCapture, onAnalysis }) => {
-  const { activeModal, openModal, closeModal } = useModalManager()
+  const { modals, closeModal } = useModalManager()
 
   return (
     <>
-      <ROICalculatorModal isOpen={activeModal === "roiCalculator"} onClose={() => closeModal()} />
+      <ROICalculatorModal isOpen={modals.roiCalculator} onClose={() => closeModal("roiCalculator")} />
 
-      <ScreenShareModal isOpen={activeModal === "screenShare"} onClose={() => closeModal()} onAnalysis={onAnalysis} />
+      <ScreenShareModal isOpen={modals.screenShare} onClose={() => closeModal("screenShare")} onAnalysis={onAnalysis} />
 
       <Video2AppModal
-        isOpen={activeModal === "video2App"}
-        onClose={() => closeModal()}
+        isOpen={modals.video2App}
+        onClose={() => closeModal("video2App")}
         onAnalysisComplete={onCapture}
       />
 
       <VoiceInputModal
-        isOpen={activeModal === "voiceInput"}
-        onClose={() => closeModal()}
+        isOpen={modals.voiceInput}
+        onClose={() => closeModal("voiceInput")}
         onTransferToChat={onTransferToChat}
       />
 
-      <VoiceOutputModal isOpen={activeModal === "voiceOutput"} onClose={() => closeModal()} />
+      <VoiceOutputModal isOpen={modals.voiceOutput} onClose={() => closeModal("voiceOutput")} />
 
       <WebcamModal
-        isOpen={activeModal === "webcam"}
-        onClose={() => closeModal()}
+        isOpen={modals.webcam}
+        onClose={() => closeModal("webcam")}
         onCapture={onCapture}
         onAIAnalysis={onAnalysis}
       />
 
-      <LeadResearchModal isOpen={activeModal === "leadResearch"} onClose={() => closeModal()} />
+      <LeadResearchModal isOpen={modals.leadResearch} onClose={() => closeModal("leadResearch")} />
     </>
   )
 }

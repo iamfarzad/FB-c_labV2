@@ -10,7 +10,6 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "About Farzad Bayat - Self-Taught AI Consultant with 10,000+ Hours Experience",
   description: "Learn about Farzad Bayat, an expert AI consultant with 10,000+ hours of hands-on experience. From TV production to AI automation - discover his journey building practical AI solutions.",
-  keywords: ["Farzad Bayat", "AI consultant", "AI automation expert", "AI implementation", "business AI"],
   openGraph: {
     title: "About Farzad Bayat - Self-Taught AI Consultant with 10,000+ Hours Experience",
     description: "Learn about Farzad Bayat, an expert AI consultant with 10,000+ hours of hands-on experience. From TV production to AI automation.",
@@ -22,10 +21,10 @@ export const metadata: Metadata = {
 }
 
 const coreValues = [
-  { icon: Target, text: "Deliver real business value through AI automation, not hype" },
-  { icon: BookOpen, text: "Commit to continuous AI learning and innovation" },
-  { icon: Heart, text: "Uphold ethical and responsible AI consulting practices" },
-  { icon: MessageSquare, text: "Communicate transparently about AI implementation, always" },
+  { icon: Target, text: "Deliver real business value, not hype" },
+  { icon: BookOpen, text: "Commit to continuous learning" },
+  { icon: Heart, text: "Uphold ethical and responsible AI practices" },
+  { icon: MessageSquare, text: "Communicate transparently, always" },
 ]
 
 const skills = [
@@ -36,11 +35,11 @@ const skills = [
 ]
 
 const timeline = [
-  { year: 2020, milestone: "Began self-learning AI & automation, built Optix.io AI platform" },
-  { year: 2021, milestone: "Launched iWriter.ai for Norwegian SMEs - AI automation success" },
-  { year: 2022, milestone: "Developed 'Talk to Eve' AI for workplace mental wellness" },
-  { year: 2023, milestone: "Built ZingZang Lab (AI music app), expanded AI consulting services" },
-  { year: 2024, milestone: "Ran hands-on AI workshops, launched F.B AI Consulting" },
+  { year: 2020, milestone: "Began self-learning AI & automation, built Optix.io" },
+  { year: 2021, milestone: "Launched iWriter.ai for Norwegian SMEs" },
+  { year: 2022, milestone: "Developed 'Talk to Eve' for workplace mental wellness" },
+  { year: 2023, milestone: "Built ZingZang Lab (AI music app), expanded consulting" },
+  { year: 2024, milestone: "Ran hands-on AI workshops, launched F.B Consulting" },
 ]
 
 export default function AboutPage() {

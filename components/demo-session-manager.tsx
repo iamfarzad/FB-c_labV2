@@ -7,7 +7,6 @@ import { Progress } from "@/components/ui/progress"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, Info } from "lucide-react"
-import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
 
 interface DemoSessionContextType {
   sessionId: string | null
@@ -38,34 +37,24 @@ export function DemoSessionProvider({ children }: { children: React.ReactNode })
   const createSession = () => {
     const newSessionId = Math.random().toString(36).substring(2, 18)
     setSessionId(newSessionId)
-
-    // Store in sessionStorage for proper session isolation
     try {
       sessionStorage.setItem("demo-session-id", newSessionId)
     } catch (error) {
       console.error("Failed to store session ID:", error)
     }
-
-    // Call refreshStatus with the new sessionId directly
     refreshStatusWithId(newSessionId)
   }
 
   const refreshStatusWithId = async (sessionIdToUse: string) => {
     if (!sessionIdToUse) return
-
     try {
       setIsLoading(true)
       const response = await fetch(`/api/demo-status?sessionId=${sessionIdToUse}`)
-
       if (response.ok) {
         const data = await response.json()
         setSessionStatus(data)
-
-        // Update remaining tokens and requests
         setRemainingTokens(data.remainingTokens || 50000)
         setRemainingRequests(data.remainingRequests || 50)
-
-        // Update feature usage
         if (data.featureUsage) {
           const usage: Record<
             string,
@@ -102,8 +91,6 @@ export function DemoSessionProvider({ children }: { children: React.ReactNode })
     setRemainingTokens(50000)
     setRemainingRequests(50)
     setFeatureUsage({})
-
-    // Clear sessionStorage
     try {
       sessionStorage.removeItem("demo-session-id")
     } catch (error) {
@@ -124,7 +111,6 @@ export function DemoSessionProvider({ children }: { children: React.ReactNode })
     return limits[feature as keyof typeof limits] || { tokens: 5000, requests: 5 }
   }
 
-  // Load session on mount
   useEffect(() => {
     try {
       const storedSessionId = sessionStorage.getItem("demo-session-id")
@@ -140,7 +126,6 @@ export function DemoSessionProvider({ children }: { children: React.ReactNode })
     }
   }, [])
 
-  // Cleanup on unmount
   useEffect(() => {
     const handleBeforeUnload = () => {
       try {
@@ -149,7 +134,6 @@ export function DemoSessionProvider({ children }: { children: React.ReactNode })
         console.error("Failed to cleanup session:", error)
       }
     }
-
     window.addEventListener("beforeunload", handleBeforeUnload)
     return () => window.removeEventListener("beforeunload", handleBeforeUnload)
   }, [])

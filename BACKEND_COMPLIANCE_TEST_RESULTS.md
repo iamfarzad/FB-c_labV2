@@ -127,7 +127,7 @@
 ## 🛡️ Security Recommendations
 
 ### **Authentication & Authorization:**
-```typescript
+\`\`\`typescript
 // Add to all admin routes
 import { verifyToken } from '@/lib/auth';
 
@@ -138,10 +138,10 @@ export async function GET(request: Request) {
   }
   // ... rest of handler
 }
-```
+\`\`\`
 
 ### **Input Validation:**
-```typescript
+\`\`\`typescript
 // Add Zod validation
 import { z } from 'zod';
 
@@ -150,10 +150,10 @@ const leadSchema = z.object({
   name: z.string().min(1).max(100),
   company_name: z.string().optional()
 });
-```
+\`\`\`
 
 ### **Rate Limiting:**
-```typescript
+\`\`\`typescript
 // Add rate limiting middleware
 import rateLimit from 'express-rate-limit';
 
@@ -161,7 +161,7 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100 // limit each IP to 100 requests per windowMs
 });
-```
+\`\`\`
 
 ## 📈 Compliance Score
 

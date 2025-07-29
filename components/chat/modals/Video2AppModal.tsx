@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { X, Maximize2, Minimize2 } from "lucide-react"
-import { VideoToAppGenerator } from "@/app/(chat)/chat/components/VideoToAppGenerator"
+import { VideoToAppGenerator } from "@/components/video-to-app-generator"
 
 interface Video2AppModalProps {
   isOpen: boolean
