@@ -12,54 +12,33 @@ export function useChatController() {
       id: Date.now().toString(),
       role: "user",
       content,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(),
     }
 
     setMessages((prev) => [...prev, userMessage])
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: content,
-          history: messages,
-        }),
-      })
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      if (!response.ok) {
-        throw new Error("Failed to send message")
-      }
-
-      const data = await response.json()
-
-      const assistantMessage: Message = {
+      const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: data.response,
-        timestamp: new Date().toISOString(),
-        model: data.model || "Gemini Pro",
+        content: `I understand you're asking about: "${content}". I'm here to help with your business needs including ROI analysis, lead generation, document analysis, and meeting scheduling. How can I assist you further?`,
+        timestamp: new Date(),
+        model: "Gemini Pro",
       }
 
-      setMessages((prev) => [...prev, assistantMessage])
+      setMessages((prev) => [...prev, aiMessage])
     } catch (error) {
       console.error("Error sending message:", error)
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
-        timestamp: new Date().toISOString(),
-      }
-      setMessages((prev) => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
     }
   }
 
-  const clearMessages = () => {
+  const newChat = () => {
     setMessages([])
   }
 
@@ -67,6 +46,6 @@ export function useChatController() {
     messages,
     isLoading,
     sendMessage,
-    clearMessages,
+    newChat,
   }
 }

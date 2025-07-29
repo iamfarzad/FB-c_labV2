@@ -2,11 +2,10 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
+import { Send, Paperclip, Smile, Mic } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Send, Paperclip, Smile } from "lucide-react"
-import { useAutoResizeTextarea } from "@/hooks/ui/use-auto-resize-textarea"
 
 interface ChatComposerProps {
   onSendMessage: (message: string) => void
@@ -16,8 +15,6 @@ interface ChatComposerProps {
 export function ChatComposer({ onSendMessage, isLoading }: ChatComposerProps) {
   const [message, setMessage] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  useAutoResizeTextarea(textareaRef, message)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,37 +31,54 @@ export function ChatComposer({ onSendMessage, isLoading }: ChatComposerProps) {
     }
   }
 
+  // Auto-resize textarea
+  useEffect(() => {
+    const textarea = textareaRef.current
+    if (textarea) {
+      textarea.style.height = "auto"
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`
+    }
+  }, [message])
+
   return (
     <div className="p-4">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <div className="relative">
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <div className="flex-1 relative">
           <Textarea
             ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about ROI calculations, lead research, document analysis, or anything else..."
-            className="min-h-[60px] max-h-[200px] resize-none pr-12 py-3"
+            placeholder="Ask about ROI analysis, lead generation, document analysis, or schedule a meeting..."
+            className="min-h-[44px] max-h-[120px] resize-none pr-20"
             disabled={isLoading}
           />
-          <div className="absolute right-3 bottom-3 flex gap-1">
-            <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0">
+
+          <div className="absolute right-2 bottom-2 flex gap-1">
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" disabled={isLoading}>
               <Paperclip className="h-4 w-4" />
             </Button>
-            <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0">
+
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" disabled={isLoading}>
               <Smile className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">Press Enter to send, Shift+Enter for new line</div>
-          <Button type="submit" disabled={!message.trim() || isLoading} className="h-9 px-4">
-            <Send className="h-4 w-4 mr-2" />
-            {isLoading ? "Sending..." : "Send"}
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" size="icon" disabled={isLoading}>
+            <Mic className="h-4 w-4" />
+          </Button>
+
+          <Button type="submit" disabled={!message.trim() || isLoading} className="shrink-0">
+            <Send className="h-4 w-4" />
           </Button>
         </div>
       </form>
+
+      <div className="mt-2 text-xs text-muted-foreground text-center">
+        Press Enter to send, Shift+Enter for new line
+      </div>
     </div>
   )
 }

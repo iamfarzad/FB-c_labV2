@@ -22,12 +22,15 @@ export function ChatSidebar({ activities, onNewChat }: ChatSidebarProps) {
           <span className="sr-only">New Chat</span>
         </Button>
       </div>
+
       <div className="flex flex-1 flex-col min-h-0">
         <div className="p-4">
           <h3 className="text-sm font-medium text-muted-foreground">History</h3>
           <div className="mt-2 text-center text-sm text-muted-foreground py-4">No chat history yet.</div>
         </div>
+
         <Separator />
+
         <div className="flex-1 p-4 overflow-hidden">
           <h3 className="text-sm font-medium text-muted-foreground mb-2">Live Activity</h3>
           <ScrollArea className="h-full">
@@ -35,6 +38,7 @@ export function ChatSidebar({ activities, onNewChat }: ChatSidebarProps) {
           </ScrollArea>
         </div>
       </div>
+
       <div className="mt-auto border-t p-4">
         <Button variant="outline" className="w-full bg-transparent">
           <Trash2 className="mr-2 h-4 w-4" />
