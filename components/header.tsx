@@ -1,74 +1,22 @@
-"use client"
+import { Navbar, Nav } from "react-bootstrap"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
-import { Menu, Bot } from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { cn } from "@/lib/utils"
-
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/consulting", label: "Consulting" },
-  { href: "/about", label: "About" },
-  { href: "/workshop", label: "Workshop" },
-  { href: "/contact", label: "Contact" },
-]
-
-export default function Header() {
-  const pathname = usePathname()
-
-  const NavLinks = ({ className }: { className?: string }) => (
-    <nav className={cn("flex items-center gap-6 text-sm", className)}>
-      {navLinks.map(({ href, label }) => (
-        <Link
-          key={href}
-          href={href}
-          className={cn(
-            "transition-all hover:text-foreground",
-            pathname === href ? "text-primary font-semibold" : "text-muted-foreground",
-          )}
-        >
-          {label}
-        </Link>
-      ))}
-    </nav>
-  )
-
+const Header = () => {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-sm">
-      <div className="container flex h-16 items-center">
-        <Link href="/" className="flex items-center gap-2">
-          <Bot className="h-6 w-6 text-primary" />
-          <span className="font-bold uppercase font-display tracking-wider">F.B/C</span>
-        </Link>
-        <div className="hidden md:flex ml-10">
-          <NavLinks />
-        </div>
-        <div className="flex flex-1 items-center justify-end space-x-2">
-          <ThemeToggle />
-          <div className="md:hidden">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Open navigation menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right">
-                <div className="p-4 mt-6">
-                  <Link href="/" className="flex items-center gap-2 mb-8">
-                    <Bot className="h-6 w-6 text-primary" />
-                    <span className="font-bold uppercase font-display tracking-wider">F.B/C</span>
-                  </Link>
-                  <NavLinks className="flex-col items-start space-y-4" />
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-        </div>
-      </div>
-    </header>
+    <Navbar className="bg-dark-900 border-dark-800">
+      <Navbar.Brand href="#home">Brand</Navbar.Brand>
+      <Nav className="mr-auto">
+        <Nav.Link className="text-gray-400 hover:text-white" href="#home">
+          Home
+        </Nav.Link>
+        <Nav.Link className="text-gray-400 hover:text-white" href="#features">
+          Features
+        </Nav.Link>
+        <Nav.Link className="text-gray-400 hover:text-white" href="#pricing">
+          Pricing
+        </Nav.Link>
+      </Nav>
+    </Navbar>
   )
 }
+
+export default Header

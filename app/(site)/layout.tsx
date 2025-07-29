@@ -1,17 +1,14 @@
 import type React from "react"
-import Header from "@/components/header"
-import Footer from "@/components/footer"
+import { cn } from "@/utils/cn"
+import { fontSans } from "@/utils/fonts"
 
-export default function SiteLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="flex-grow">{children}</main>
-      <Footer />
-    </div>
+    <html lang="en">
+      <head />
+      <body className={cn("min-h-screen bg-dark-900 font-sans antialiased text-gray-300", fontSans.variable)}>
+        <div className="dark">{children}</div>
+      </body>
+    </html>
   )
 }

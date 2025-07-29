@@ -1,157 +1,112 @@
-import { PageHeader, PageShell } from "@/components/page-shell"
-import { Card, CardContent } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
+"use client"
+
+import type React from "react"
+
+import { Award, BookOpen, Cpu, Eye, ShieldCheck, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { Award, BookOpen, Heart, MessageSquare, Target } from "lucide-react"
-import type { Metadata } from "next"
 
-export const metadata: Metadata = {
-  title: "About Farzad Bayat - Self-Taught AI Consultant with 10,000+ Hours Experience",
-  description: "Learn about Farzad Bayat, an expert AI consultant with 10,000+ hours of hands-on experience. From TV production to AI automation - discover his journey building practical AI solutions.",
-  openGraph: {
-    title: "About Farzad Bayat - Self-Taught AI Consultant with 10,000+ Hours Experience",
-    description: "Learn about Farzad Bayat, an expert AI consultant with 10,000+ hours of hands-on experience. From TV production to AI automation.",
-    url: "https://farzadbayat.com/about",
-  },
-  alternates: {
-    canonical: "https://farzadbayat.com/about",
-  },
-}
+const FeatureCard = ({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: React.ElementType
+  title: string
+  description: string
+}) => (
+  <div className="bg-dark-800 p-6 rounded-xl border border-dark-700/50 transition-all hover:border-blue-500/50 hover:bg-dark-700/50">
+    <div className="flex items-center gap-4 mb-4">
+      <div className="w-12 h-12 bg-dark-700 rounded-lg flex items-center justify-center">
+        <Icon className="h-6 w-6 text-blue-400" />
+      </div>
+      <h3 className="text-xl font-bold text-white">{title}</h3>
+    </div>
+    <p className="text-gray-400 leading-relaxed">{description}</p>
+  </div>
+)
 
-const coreValues = [
-  { icon: Target, text: "Deliver real business value, not hype" },
-  { icon: BookOpen, text: "Commit to continuous learning" },
-  { icon: Heart, text: "Uphold ethical and responsible AI practices" },
-  { icon: MessageSquare, text: "Communicate transparently, always" },
-]
-
-const skills = [
-  { name: "AI Research & Implementation", value: 90 },
-  { name: "System Design & Architecture", value: 85 },
-  { name: "Problem Solving & Analysis", value: 95 },
-  { name: "Team Collaboration & Training", value: 90 },
-]
-
-const timeline = [
-  { year: 2020, milestone: "Began self-learning AI & automation, built Optix.io" },
-  { year: 2021, milestone: "Launched iWriter.ai for Norwegian SMEs" },
-  { year: 2022, milestone: "Developed 'Talk to Eve' for workplace mental wellness" },
-  { year: 2023, milestone: "Built ZingZang Lab (AI music app), expanded consulting" },
-  { year: 2024, milestone: "Ran hands-on AI workshops, launched F.B Consulting" },
-]
+const AudiencePill = ({ children }: { children: React.ReactNode }) => (
+  <div className="bg-dark-800 border border-dark-700 rounded-full px-4 py-2 text-center text-gray-300">{children}</div>
+)
 
 export default function AboutPage() {
   return (
-    <>
-      <PageShell>
-        <PageHeader
-          title="Self-Taught AI Consultant. Results-Focused. AI That Actually Works."
-          subtitle="I'm Farzad Bayat—AI consultant, builder, and systems thinker. I don't just talk about AI. I build, test, and deliver proven automation solutions."
-        />
-      </PageShell>
-
-      <PageShell>
-        <div className="grid md:grid-cols-3 gap-10 items-start">
-          <div className="md:col-span-2">
-            <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">My AI Automation Journey</h2>
-            <p className="mt-4 text-muted-foreground">
-              After 17 years creating and producing TV shows, documentaries, and commercials for major networks across
-              the globe, I found myself at a crossroads. I wanted to build something lasting—<strong>AI tools that actually help
-              people</strong> and deliver measurable business results.
-            </p>
-            <p className="mt-4 text-muted-foreground">
-              In 2020, I launched my first startup, Optix.io, and dove headfirst into the world of <strong>artificial intelligence and automation</strong>. It
-              was a hard reset: I had no formal tech background. I broke things, rebuilt them, and learned by
-              doing—starting with GPT-2. Since then, I've discovered what really works in <strong>AI implementation</strong>. My philosophy: you have to build
-              and break things yourself to truly understand them.
-            </p>
-          </div>
-          <div className="flex justify-center">
-            <Avatar className="w-48 h-48 border-4 border-border shadow-lg">
-              <AvatarImage src="/placeholder.svg?width=200&height=200" alt="Farzad Bayat - AI Automation Consultant with 10,000+ hours experience in artificial intelligence and business automation" />
-              <AvatarFallback>FB</AvatarFallback>
-            </Avatar>
-          </div>
-        </div>
-      </PageShell>
-
-      <PageShell className="bg-secondary">
-        <h2 className="text-center text-2xl font-bold tracking-tight text-primary sm:text-3xl">Core Values in AI Consulting</h2>
-        <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {coreValues.map((value) => (
-            <Card key={value.text} className="neu-card transition-all flex flex-col items-center justify-center p-8 text-center">
-              <CardContent className="p-6 text-center">
-                <value.icon className="mx-auto h-10 w-10 text-orange-accent" aria-hidden="true" />
-                <h3 className="mt-4 font-medium text-base">{value.text}</h3>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </PageShell>
-
-      <PageShell>
-        <div className="grid md:grid-cols-2 gap-10 items-center">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">My AI Expertise & Strengths</h2>
-            <div className="mt-6 space-y-4">
-              {skills.map((skill) => (
-                <div key={skill.name}>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-base font-medium text-primary">{skill.name}</span>
-                    <span className="text-sm font-medium text-orange-accent">{skill.value}%</span>
-                  </div>
-                  <Progress value={skill.value} className="[&>div]:bg-orange-accent" />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">Timeline & AI Milestones</h2>
-            <div className="mt-6 flow-root">
-              <ul className="-mb-8">
-                {timeline.map((event, eventIdx) => (
-                  <li key={event.year}>
-                    <div className="relative pb-8">
-                      {eventIdx !== timeline.length - 1 ? (
-                        <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-border" aria-hidden="true" />
-                      ) : null}
-                      <div className="relative flex space-x-3">
-                        <div>
-                          <span className="h-8 w-8 rounded-full bg-orange-accent/20 text-orange-accent flex items-center justify-center ring-8 ring-background">
-                            <Award className="h-5 w-5" aria-hidden="true" />
-                          </span>
-                        </div>
-                        <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
-                          <div>
-                            <h3 className="text-sm text-muted-foreground font-semibold">{event.year}</h3>
-                            <p className="font-medium text-primary">{event.milestone}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </PageShell>
-
-      <PageShell className="bg-secondary">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">Let's Connect & Discuss Your AI Needs</h2>
-          <p className="mt-4 max-w-xl mx-auto text-lg text-muted-foreground">
-            Ready for a direct path to working <strong>AI automation solutions</strong> in your business? Let's discuss your specific <strong>AI implementation needs</strong>.
+    <div className="w-full bg-dark-900 text-gray-300">
+      <main className="container mx-auto px-4 py-16 sm:py-24">
+        {/* Hero Section */}
+        <section className="text-center mb-24">
+          <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight">
+            Where Live AI Meets Practical Business Transformation
+          </h1>
+          <p className="max-w-3xl mx-auto text-lg md:text-xl text-gray-400 mb-8">
+            F.B/c Consulting is a next-generation AI consulting service and technology showcase founded by Farzad Bayat.
+            We demonstrate, not just discuss, the power of advanced AI for real business results.
           </p>
-          <div className="mt-8 flex items-center justify-center gap-x-6">
-            <Button asChild size="lg">
-              <Link href="/contact" title="Book free AI consultation call with expert consultant Farzad Bayat">Book a Free AI Consultation Call</Link>
-            </Button>
+          <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-6 text-lg">
+            Book a Free Discovery Workshop
+          </Button>
+        </section>
+
+        {/* What Makes F.B/c Unique Section */}
+        <section className="mb-24">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-12">
+            What Makes F.B/c Consulting Unique
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <FeatureCard
+              icon={Eye}
+              title="Live, Real-World Proof"
+              description="Experience our AI solving your problems in real-time with your data. No slides, no hypotheticals—just live, practical demonstrations."
+            />
+            <FeatureCard
+              icon={TrendingUp}
+              title="Business Value First"
+              description="Every solution revolves around tangible outcomes: reducing costs, increasing productivity, and improving customer experience, with clear ROI."
+            />
+            <FeatureCard
+              icon={Cpu}
+              title="Multi-Modal, Modern AI"
+              description="Powered solely by Google Gemini, we handle text, voice, vision, code, and video analysis under one unified, enterprise-grade platform."
+            />
+            <FeatureCard
+              icon={ShieldCheck}
+              title="Transparency & Trust"
+              description="A real-time activity panel shows you exactly how our AI works. We are privacy-first, storing only essential data and never full chat logs."
+            />
+            <FeatureCard
+              icon={BookOpen}
+              title="Hands-On Training & Consulting"
+              description="From free discovery workshops to bespoke AI integrations and team training, we provide hands-on guidance tailored to your needs."
+            />
+            <FeatureCard
+              icon={Award}
+              title="Immediate, Actionable Insights"
+              description="Every conversation ends with a branded PDF summary of insights, next steps, and clear ROI, creating high-credibility leads."
+            />
           </div>
-        </div>
-      </PageShell>
-    </>
+        </section>
+
+        {/* Who It's For Section */}
+        <section className="text-center mb-24">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">Who It's For</h2>
+          <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-4">
+            <AudiencePill>Fast-growing tech teams, scale-ups, and enterprises</AudiencePill>
+            <AudiencePill>Business leaders who want to see working AI before investing</AudiencePill>
+            <AudiencePill>Companies requiring private, trustworthy, and customizable AI</AudiencePill>
+            <AudiencePill>Teams seeking proof that the tech will work for them</AudiencePill>
+          </div>
+        </section>
+
+        {/* In Short Section */}
+        <section className="max-w-4xl mx-auto bg-dark-800 border border-dark-700 rounded-2xl p-8 md:p-12 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">In Short: Your Partner in Practical AI</h2>
+          <p className="text-lg text-gray-400">
+            F.B/c Consulting replaces theoretical sales pitches with hands-on, transparent demonstrations—delivering
+            actionable insights and automation for clients ready to see what advanced AI can actually do in their
+            business, today.
+          </p>
+        </section>
+      </main>
+    </div>
   )
 }
