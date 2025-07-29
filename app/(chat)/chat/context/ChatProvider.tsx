@@ -1,74 +1,165 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useCallback, useMemo } from "react"
-import { useChatController } from "../hooks/useChatController"
-import { useModalManager } from "../hooks/useModalManager"
-import type { Message, Activity } from "../types/chat"
-import { useDemoSession } from "@/components/demo-session-manager"
+
+import type { ReactNode } from "react"
+import { createContext, useContext, useState, useCallback } from "react"
+import type { Message } from "@/app/(chat)/chat/types/chat"
+import type { Activity } from "@/app/(chat)/chat/types/activity"
+import { useApiRequest } from "@/hooks/use-api-request"
+import { useToast } from "@/hooks/use-toast"
 
 interface ChatContextType {
   messages: Message[]
-  activities: Activity[]
-  input: string
-  isLoading: boolean
-  error: Error | null
-  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
-  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
   addMessage: (message: Message) => void
-  addActivity: (activity: Omit<Activity, "id" | "timestamp">) => void
-  handleNewChat: () => void
+  isLoading: boolean
+  error: string | null
+  handleSendMessage: (content: string, options?: { isRetry?: boolean }) => Promise<void>
+  onRetry: () => void
+  activities: Activity[]
+  addActivity: (activity: Activity) => void
+  isScreenShareOpen: boolean
+  openScreenShare: () => void
+  closeScreenShare: () => void
+  isVideo2AppOpen: boolean
+  openVideo2App: () => void
+  closeVideo2App: () => void
+  isVoiceInputOpen: boolean
+  openVoiceInput: () => void
+  closeVoiceInput: () => void
+  isWebcamOpen: boolean
+  openWebcam: () => void
+  closeWebcam: () => void
   handleDownloadSummary: () => void
-  modals: ReturnType<typeof useModalManager>["modals"]
-  openModal: ReturnType<typeof useModalManager>["openModal"]
-  closeModal: ReturnType<typeof useModalManager>["closeModal"]
-  closeAllModals: ReturnType<typeof useModalManager>["closeAllModals"]
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
-export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ChatProvider = ({ children }: { children: ReactNode }) => {
+  const [messages, setMessages] = useState<Message[]>([])
   const [activities, setActivities] = useState<Activity[]>([])
-  const [error, setError] = useState<Error | null>(null)
-  const { isSessionActive } = useDemoSession()
+  const { toast } = useToast()
 
-  const addActivity = useCallback(
-    (activity: Omit<Activity, "id" | "timestamp">) => {
-      if (!isSessionActive) return
-      const newActivity: Activity = {
-        ...activity,
+  const {
+    isLoading,
+    error,
+    execute: postMessage,
+  } = useApiRequest<any>({
+    showErrorToast: true,
+    errorMessage: "Failed to get response from AI",
+  })
+
+  const addMessage = useCallback((message: Message) => {
+    setMessages((prev) => [...prev, message])
+  }, [])
+
+  const addActivity = useCallback((activity: Activity) => {
+    setActivities((prev) => [activity, ...prev])
+  }, [])
+
+  const handleSendMessage = useCallback(
+    async (content: string, options?: { isRetry?: boolean }) => {
+      const userMessage: Message = {
         id: Date.now().toString(),
-        timestamp: new Date(),
+        role: "user",
+        content,
+        createdAt: new Date(),
       }
-      setActivities((prev) => [newActivity, ...prev])
+
+      if (!options?.isRetry) {
+        addMessage(userMessage)
+      }
+
+      const response = await postMessage("/api/chat", {
+        method: "POST",
+        body: JSON.stringify({ messages: [...messages, userMessage] }),
+      })
+
+      if (response) {
+        const aiMessage: Message = {
+          id: response.id || (Date.now() + 1).toString(),
+          role: "assistant",
+          content: response.content,
+          createdAt: new Date(),
+        }
+        addMessage(aiMessage)
+      }
     },
-    [isSessionActive],
+    [addMessage, postMessage, messages],
   )
 
-  const chatController = useChatController(addActivity)
-  const modalManager = useModalManager()
+  const onRetry = useCallback(() => {
+    const lastUserMessage = messages.findLast((m) => m.role === "user")
+    if (lastUserMessage) {
+      handleSendMessage(lastUserMessage.content, { isRetry: true })
+    }
+  }, [messages, handleSendMessage])
 
-  const handleNewChat = useCallback(() => {
-    // Implementation for handleNewChat
-  }, [])
+  // Modal states
+  const [isScreenShareOpen, setIsScreenShareOpen] = useState(false)
+  const [isVideo2AppOpen, setIsVideo2AppOpen] = useState(false)
+  const [isVoiceInputOpen, setIsVoiceInputOpen] = useState(false)
+  const [isWebcamOpen, setIsWebcamOpen] = useState(false)
 
-  const handleDownloadSummary = useCallback(() => {
-    // Implementation for handleDownloadSummary
-  }, [])
+  // Modal handlers
+  const openScreenShare = useCallback(() => setIsScreenShareOpen(true), [])
+  const closeScreenShare = useCallback(() => setIsScreenShareOpen(false), [])
+  const openVideo2App = useCallback(() => setIsVideo2AppOpen(true), [])
+  const closeVideo2App = useCallback(() => setIsVideo2AppOpen(false), [])
+  const openVoiceInput = useCallback(() => setIsVoiceInputOpen(true), [])
+  const closeVoiceInput = useCallback(() => setIsVoiceInputOpen(false), [])
+  const openWebcam = useCallback(() => setIsWebcamOpen(true), [])
+  const closeWebcam = useCallback(() => setIsWebcamOpen(false), [])
 
-  const value = useMemo(
-    () => ({
-      ...chatController,
-      activities,
-      addActivity,
-      error,
-      setError,
-      handleNewChat,
-      handleDownloadSummary,
-      ...modalManager,
-    }),
-    [chatController, activities, addActivity, error, modalManager],
-  )
+  const { execute: downloadSummary } = useApiRequest<Blob>({
+    showErrorToast: true,
+    errorMessage: "Failed to download summary",
+  })
+
+  const handleDownloadSummary = useCallback(async () => {
+    const blob = await downloadSummary("/api/export-summary", {
+      method: "POST",
+      body: JSON.stringify({ messages }),
+    })
+
+    if (blob) {
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "chat-summary.txt"
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+      toast({ title: "Success", description: "Chat summary downloaded." })
+    }
+  }, [messages, downloadSummary, toast])
+
+  const value = {
+    messages,
+    setMessages,
+    addMessage,
+    isLoading,
+    error,
+    handleSendMessage,
+    onRetry,
+    activities,
+    addActivity,
+    isScreenShareOpen,
+    openScreenShare,
+    closeScreenShare,
+    isVideo2AppOpen,
+    openVideo2App,
+    closeVideo2App,
+    isVoiceInputOpen,
+    openVoiceInput,
+    closeVoiceInput,
+    isWebcamOpen,
+    openWebcam,
+    closeWebcam,
+    handleDownloadSummary,
+  }
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
 }

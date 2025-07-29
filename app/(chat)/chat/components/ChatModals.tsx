@@ -1,30 +1,29 @@
 "use client"
 
-import { useModalManager } from "@/app/(chat)/chat/hooks/useModalManager"
-import { ROICalculatorModal } from "@/components/chat/modals/ROICalculatorModal"
-import { ScreenShareModal } from "@/components/chat/modals/ScreenShareModal"
-import { Video2AppModal } from "@/components/chat/modals/Video2AppModal"
-import { VoiceInputModal } from "@/components/chat/modals/VoiceInputModal"
-import { VoiceOutputModal } from "@/components/chat/modals/VoiceOutputModal"
-import { WebcamModal } from "@/components/chat/modals/WebcamModal"
-import { LeadResearchModal } from "@/app/(chat)/chat/components/LeadResearchModal"
+import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
+import ScreenShareModal from "@/app/(chat)/chat/components/modals/ScreenShareModal"
+import Video2AppModal from "@/app/(chat)/chat/components/modals/Video2AppModal"
+import VoiceInputModal from "@/app/(chat)/chat/components/modals/VoiceInputModal"
+import WebcamModal from "@/app/(chat)/chat/components/modals/WebcamModal"
 
 export function ChatModals() {
-  const { isModalOpen, activeModal, closeModal, modalData } = useModalManager()
+  const {
+    isScreenShareOpen,
+    closeScreenShare,
+    isVideo2AppOpen,
+    closeVideo2App,
+    isVoiceInputOpen,
+    closeVoiceInput,
+    isWebcamOpen,
+    closeWebcam,
+  } = useChatContext()
 
   return (
     <>
-      <ROICalculatorModal isOpen={isModalOpen && activeModal === "roi-calculator"} onClose={closeModal} />
-      <ScreenShareModal isOpen={isModalOpen && activeModal === "screen-share"} onClose={closeModal} />
-      <Video2AppModal isOpen={isModalOpen && activeModal === "video-to-app"} onClose={closeModal} />
-      <VoiceInputModal isOpen={isModalOpen && activeModal === "voice-input"} onClose={closeModal} />
-      <VoiceOutputModal isOpen={isModalOpen && activeModal === "voice-output"} onClose={closeModal} />
-      <WebcamModal isOpen={isModalOpen && activeModal === "webcam"} onClose={closeModal} />
-      <LeadResearchModal
-        isOpen={isModalOpen && activeModal === "lead-research"}
-        onClose={closeModal}
-        leadId={modalData?.leadId as string | undefined}
-      />
+      <ScreenShareModal isOpen={isScreenShareOpen} onClose={closeScreenShare} />
+      <Video2AppModal isOpen={isVideo2AppOpen} onClose={closeVideo2App} />
+      <VoiceInputModal isOpen={isVoiceInputOpen} onClose={closeVoiceInput} />
+      <WebcamModal isOpen={isWebcamOpen} onClose={closeWebcam} />
     </>
   )
 }

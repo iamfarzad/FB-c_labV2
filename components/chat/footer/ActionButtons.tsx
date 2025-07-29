@@ -1,77 +1,36 @@
 "use client"
 
-import React from "react"
-
+import { ScreenShare, Video, Mic, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Paperclip, ImageIcon, Mic, Video, ScreenShare, Calculator } from "lucide-react"
-import type { ModalType } from "@/app/(chat)/chat/hooks/useModalManager"
+import { useChatContext } from "@/app/(chat)/chat/context/ChatProvider"
 
-interface ActionButtonsProps {
-  onFileUpload: (file: File) => void
-  onImageUpload: (imageData: string, fileName: string) => void
-  openModal: (modal: ModalType) => void
-}
+export function ActionButtons() {
+  const { openScreenShare, openVideo2App, openVoiceInput, openWebcam } = useChatContext()
 
-export function ActionButtons({ onFileUpload, onImageUpload, openModal }: ActionButtonsProps) {
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const imageInputRef = React.useRef<HTMLInputElement>(null)
-
-  const handleFileClick = () => fileInputRef.current?.click()
-  const handleImageClick = () => imageInputRef.current?.click()
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      onFileUpload(file)
-    }
-  }
-
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        onImageUpload(reader.result as string, file.name)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const tooltips = [
-    { name: "Attach File", icon: Paperclip, onClick: handleFileClick },
-    { name: "Upload Image", icon: ImageIcon, onClick: handleImageClick },
-    { name: "Voice Input", icon: Mic, onClick: () => openModal("voiceInput") },
-    { name: "Video to App", icon: Video, onClick: () => openModal("videoToApp") },
-    { name: "Share Screen", icon: ScreenShare, onClick: () => openModal("screenShare") },
-    { name: "ROI Calculator", icon: Calculator, onClick: () => openModal("roiCalculator") },
+  const actions = [
+    { icon: ScreenShare, label: "Screen Share", onClick: openScreenShare },
+    { icon: Video, label: "Video to App", onClick: openVideo2App },
+    { icon: Mic, label: "Voice Input", onClick: openVoiceInput },
+    { icon: Camera, label: "Webcam", onClick: openWebcam },
   ]
 
   return (
-    <TooltipProvider>
-      <div className="flex items-center gap-1">
-        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" aria-hidden="true" />
-        <input
-          type="file"
-          accept="image/*"
-          ref={imageInputRef}
-          onChange={handleImageChange}
-          className="hidden"
-          aria-hidden="true"
-        />
-        {tooltips.map((tip) => (
-          <Tooltip key={tip.name}>
+    <div className="flex items-center gap-2">
+      <TooltipProvider>
+        {actions.map((action, index) => (
+          <Tooltip key={index}>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" onClick={tip.onClick} aria-label={tip.name}>
-                <tip.icon className="w-5 h-5 text-muted-foreground" />
+              <Button variant="ghost" size="icon" onClick={action.onClick} aria-label={action.label}>
+                <action.icon className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{tip.name}</p>
+              <p>{action.label}</p>
             </TooltipContent>
           </Tooltip>
         ))}
-      </div>
-    </TooltipProvider>
+      </TooltipProvider>
+    </div>
   )
 }
