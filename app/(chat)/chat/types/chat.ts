@@ -9,7 +9,18 @@ export interface ChatMessage {
   metadata?: Record<string, any>
 }
 
-export type { ChatMessage }
+export interface Message {
+  id: string
+  content: string
+  sender: "user" | "ai"
+  timestamp: Date
+  type?: "text" | "file" | "analysis"
+  imageUrl?: string
+  sources?: any[]
+  metadata?: Record<string, any>
+}
+
+export type { ChatMessage, Message }
 
 export interface ActivityItem {
   id: string
@@ -58,17 +69,22 @@ export interface ActivityItem {
     | "new_chat"
     | "export"
     | "message"
-  title: string
-  description: string
-  status: "pending" | "in_progress" | "completed" | "failed"
+    | "voice_input"
+    | "file_upload"
+    | "screen_share"
+    | "webcam_capture"
+  title?: string
+  description?: string
+  status?: "pending" | "in_progress" | "completed" | "failed"
   timestamp: string
   duration?: number
   details?: string[]
   metadata?: Record<string, any>
+  content?: string
 }
 
 export interface ChatState {
-  messages: ChatMessage[]
+  messages: (ChatMessage | Message)[]
   isLoading: boolean
   error?: string
   sessionId: string
@@ -90,4 +106,4 @@ export interface AIResponse {
   metadata?: Record<string, any>
 }
 
-export type ModalType = "voiceInput" | "webcam" | "screenShare" | "leadCapture" | "video2app" | null
+export type ModalType = "voiceInput" | "webcam" | "screenShare" | null
