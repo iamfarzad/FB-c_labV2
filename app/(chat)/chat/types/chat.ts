@@ -2,7 +2,7 @@ export interface ChatMessage {
   id: string
   role: "user" | "assistant" | "system" | "function" | "data" | "tool"
   content: string
-  createdAt: Date // Using the official, optional `createdAt` property from the AI SDK.
+  createdAt: Date
   sources?: any[]
   audioData?: string | null
   imageUrl?: string
@@ -14,10 +14,11 @@ export interface Message {
   content: string
   sender: "user" | "ai"
   timestamp: Date
-  type?: "text" | "file" | "analysis"
+  type?: "text" | "file" | "analysis" | "roi" | "lead" | "meeting"
+  imageUrl?: string
+  sources?: any[]
+  metadata?: Record<string, any>
 }
-
-export type { ChatMessage, Message }
 
 export interface ActivityItem {
   id: string
@@ -25,59 +26,28 @@ export interface ActivityItem {
     | "user_action"
     | "ai_request"
     | "ai_stream"
-    | "stream_chunk"
     | "tool_used"
-    | "google_search"
-    | "web_scrape"
-    | "doc_analysis"
-    | "memory_update"
-    | "grounding"
-    | "function_call"
-    | "image_upload"
-    | "image_capture"
+    | "roi_calculation"
+    | "lead_research"
+    | "document_analysis"
+    | "meeting_scheduled"
     | "voice_input"
-    | "voice_response"
+    | "webcam_capture"
     | "screen_share"
     | "file_upload"
-    | "lead_capture"
-    | "search"
-    | "link"
-    | "ai_thinking"
-    | "vision_analysis"
-    | "error"
-    | "generic"
-    | "database"
-    | "analyze"
-    | "generate"
-    | "complete"
-    | "conversation_started"
-    | "stage_transition"
-    | "research_integrated"
-    | "conversation_completed"
-    | "email_sent"
-    | "follow_up_created"
-    | "video_processing"
-    | "video_complete"
-    | "webhook_received"
-    | "conversation_ended"
-    | "chat_message"
-    | "processing"
-    | "message_sent"
+    | "modal_opened"
+    | "modal_closed"
     | "new_chat"
     | "export"
-    | "message"
-    | "voice_input"
-    | "file_upload"
-    | "screen_share"
-    | "webcam_capture"
+    | "error"
   title?: string
   description?: string
+  content: string
   status?: "pending" | "in_progress" | "completed" | "failed"
   timestamp: string
   duration?: number
   details?: string[]
   metadata?: Record<string, any>
-  content?: string
 }
 
 export interface ActiveFeatures {
@@ -96,6 +66,7 @@ export interface ChatState {
   isTyping: boolean
   activeFeatures: ActiveFeatures
   activeModal: ModalType | null
+  activities: ActivityItem[]
 }
 
 export interface StreamChunk {
@@ -112,4 +83,31 @@ export interface AIResponse {
   sources?: string[]
   audioData?: string | null
   metadata?: Record<string, any>
+}
+
+export interface BusinessTool {
+  id: string
+  name: string
+  icon: string
+  description: string
+  category: "analysis" | "generation" | "communication" | "media"
+  enabled: boolean
+}
+
+export interface ROICalculation {
+  investment: number
+  returns: number
+  timeframe: string
+  roi: number
+  recommendations: string[]
+}
+
+export interface LeadData {
+  id: string
+  name: string
+  email: string
+  company: string
+  status: "new" | "contacted" | "qualified" | "converted"
+  source: string
+  value: number
 }

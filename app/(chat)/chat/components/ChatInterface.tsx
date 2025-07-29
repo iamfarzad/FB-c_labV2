@@ -7,18 +7,19 @@ import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Mic,
-  Video,
-  Globe,
-  Smartphone,
-  Layers,
-  Zap,
-  ImageIcon,
-  Paperclip,
-  Plus,
-  ChevronDown,
-  User,
+  Monitor,
+  Upload,
+  Calculator,
+  Search,
+  FileText,
+  Users,
+  Calendar,
   Brain,
+  User,
   ArrowUp,
+  ChevronDown,
+  Camera,
+  Zap,
 } from "lucide-react"
 import { useChatContext } from "../context/ChatProvider"
 import type { Message } from "../types/chat"
@@ -28,7 +29,7 @@ interface ChatInterfaceProps {
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeConversationTitle = "Business Strategy" }) => {
-  const { messages, addMessage, isTyping, setIsTyping } = useChatContext()
+  const { messages, addMessage, isTyping, setIsTyping, openModal } = useChatContext()
   const [newMessage, setNewMessage] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -61,14 +62,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeConversation
     setNewMessage("")
     setIsTyping(true)
 
-    // Simulate AI response
+    // Simulate AI response with business context
     setTimeout(
       () => {
         const responses = [
-          "Thank you for your message. I'm analyzing your request and will provide a comprehensive response based on the information you've shared.",
-          "I understand your question. Let me break this down and provide you with actionable insights.",
-          "Great question! Based on current best practices and industry standards, here's what I recommend...",
-          "I can help you with that. Let me provide some detailed analysis and suggestions.",
+          "I'll analyze your business requirements and provide strategic insights. Let me process this information and generate actionable recommendations.",
+          "Based on your input, I can help with lead generation, ROI analysis, document processing, or strategic planning. What would you like to focus on?",
+          "I'm processing your request using our advanced AI models. I can provide business analysis, market research, or help with operational optimization.",
+          "Thank you for the details. I'll leverage our business intelligence tools to provide comprehensive insights and recommendations.",
         ]
 
         const randomResponse = responses[Math.floor(Math.random() * responses.length)]
@@ -101,12 +102,31 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeConversation
     })
   }
 
+  const handleToolClick = (tool: string) => {
+    switch (tool) {
+      case "voice":
+        openModal("voiceInput")
+        break
+      case "webcam":
+        openModal("webcam")
+        break
+      case "screen":
+        openModal("screenShare")
+        break
+      case "upload":
+        fileInputRef.current?.click()
+        break
+      default:
+        console.log(`${tool} tool clicked`)
+    }
+  }
+
   return (
     <div className="flex flex-col h-screen bg-white">
       {/* Header */}
       <div className="flex flex-col items-center justify-center py-8 px-4">
-        <div className="text-sm text-blue-500 mb-2">New Autonomous AI Coding Agent</div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Ask Blackbox AI Anything</h1>
+        <div className="text-sm text-blue-500 mb-2">Advanced Business AI Assistant</div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Ask Uniq AI Anything</h1>
       </div>
 
       {/* Messages Area */}
@@ -119,8 +139,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeConversation
                 className={`flex gap-3 ${message.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 {message.sender === "ai" && (
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 mt-1">
-                    <Brain className="w-4 h-4 text-gray-600" />
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-1">
+                    <Brain className="w-4 h-4 text-blue-600" />
                   </div>
                 )}
                 <div className={`max-w-[70%] ${message.sender === "user" ? "text-right" : "text-left"}`}>
@@ -148,8 +168,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeConversation
             ))}
             {isTyping && (
               <div className="flex gap-3 justify-start">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 mt-1">
-                  <Brain className="w-4 h-4 text-gray-600" />
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-1">
+                  <Brain className="w-4 h-4 text-blue-600" />
                 </div>
                 <div className="bg-gray-100 rounded-2xl px-4 py-3">
                   <div className="flex items-center gap-1">
@@ -183,7 +203,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeConversation
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={handleKeyPress}
-                  placeholder="Message Blackbox or @mention agent"
+                  placeholder="Ask about business strategy, ROI analysis, lead generation, or upload documents..."
                   className="min-h-[60px] max-h-32 resize-none border-0 bg-transparent text-base placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
                   disabled={isTyping}
                 />
@@ -191,88 +211,119 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeConversation
 
               {/* Right Side Controls */}
               <div className="flex items-center gap-2 shrink-0">
-                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-gray-100">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleToolClick("voice")}
+                  className="h-10 w-10 rounded-full hover:bg-gray-100"
+                  title="Voice Input"
+                >
                   <Mic className="w-5 h-5 text-gray-600" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-gray-100">
-                  <Video className="w-5 h-5 text-gray-600" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleToolClick("webcam")}
+                  className="h-10 w-10 rounded-full hover:bg-gray-100"
+                  title="Webcam Capture"
+                >
+                  <Camera className="w-5 h-5 text-gray-600" />
                 </Button>
                 <Button
                   onClick={handleSendMessage}
                   disabled={!newMessage.trim() || isTyping}
                   className="h-10 w-10 rounded-full bg-black hover:bg-gray-800 text-white disabled:opacity-40"
+                  title="Send Message"
                 >
                   <ArrowUp className="w-5 h-5" />
                 </Button>
               </div>
             </div>
 
-            {/* Bottom Toolbar */}
+            {/* Bottom Toolbar - Customized for Business Use Case */}
             <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
               <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={() => handleToolClick("roi")}
                   className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                  title="ROI Calculator"
                 >
-                  <Globe className="w-4 h-4 mr-2" />
-                  Auto
+                  <Calculator className="w-4 h-4 mr-2" />
+                  ROI Calc
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={() => handleToolClick("research")}
                   className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                  title="Lead Research"
                 >
-                  <Smartphone className="w-4 h-4 mr-2" />
-                  App Builder
+                  <Search className="w-4 h-4 mr-2" />
+                  Research
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={() => handleToolClick("analysis")}
                   className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                  title="Document Analysis"
                 >
-                  <Layers className="w-4 h-4 mr-2" />
-                  Deep Research
+                  <FileText className="w-4 h-4 mr-2" />
+                  Analysis
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={() => handleToolClick("leads")}
                   className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                  title="Lead Generation"
                 >
-                  <Zap className="w-4 h-4 mr-2" />
-                  Think
+                  <Users className="w-4 h-4 mr-2" />
+                  Leads
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={() => handleToolClick("meeting")}
                   className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                  title="Schedule Meeting"
                 >
-                  <ImageIcon className="w-4 h-4 mr-2" />
-                  Image Gen
-                  <ChevronDown className="w-3 h-3 ml-1" />
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Meeting
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => handleToolClick("upload")}
                   className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                  title="Upload Files"
                 >
-                  <Paperclip className="w-4 h-4 mr-2" />
+                  <Upload className="w-4 h-4 mr-2" />
                   Upload
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={() => handleToolClick("screen")}
                   className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                  title="Screen Share"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Multi-Panel
+                  <Monitor className="w-4 h-4 mr-2" />
+                  Screen
                 </Button>
               </div>
 
-              {/* Select Models Dropdown */}
-              <Button variant="ghost" size="sm" className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">
-                Select Models
+              {/* AI Models Dropdown */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                title="Select AI Model"
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                AI Models
                 <ChevronDown className="w-3 h-3 ml-1" />
               </Button>
             </div>
@@ -283,7 +334,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeConversation
             type="file"
             multiple
             className="hidden"
-            accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.jpg,.jpeg,.png"
+            accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.jpg,.jpeg,.png,.csv"
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                console.log("Files selected:", e.target.files)
+                // Handle file upload logic here
+              }
+            }}
           />
         </div>
       </div>
