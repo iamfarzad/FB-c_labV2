@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
+import { Bot } from "lucide-react"
 import Link from "next/link"
 
 export default function HomePage() {
@@ -13,11 +13,14 @@ export default function HomePage() {
           With over 10,000 hours of hands-on experience, I build custom AI solutions that streamline your business, not
           just create buzz. Let's build something real.
         </p>
-        <div className="mt-8 flex justify-center gap-4">
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Button asChild size="lg">
-            <Link href="/consulting">
-              Book a Free Consultation <ArrowRight className="ml-2 h-4 w-4" />
+            <Link href="/chat">
+              Chat with the AI <Bot className="ml-2 h-4 w-4" />
             </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link href="/consulting">Book a Free Consultation</Link>
           </Button>
           <Button asChild variant="outline" size="lg">
             <Link href="/workshop">View Workshops</Link>
