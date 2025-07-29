@@ -4,33 +4,39 @@ export interface Message {
   content: string
   timestamp: string
   model?: string
+  imageUrl?: string
+  sources?: Array<{
+    title: string
+    url: string
+  }>
+}
+
+export interface ActivityItem {
+  id: string
+  type:
+    | "message"
+    | "tool_used"
+    | "file_upload"
+    | "lead_research"
+    | "roi_calculation"
+    | "document_analysis"
+    | "meeting_scheduled"
+  title: string
+  status: "completed" | "failed" | "in_progress"
+  timestamp: string
+  details?: string
 }
 
 export interface AIModel {
   id: string
   name: string
   provider: string
-}
-
-export interface ActivityItem {
-  id: string
-  type:
-    | "lead_research"
-    | "roi_calculation"
-    | "document_analysis"
-    | "meeting_scheduled"
-    | "file_upload"
-    | "tool_used"
-    | "message"
-  title: string
-  status: "in_progress" | "completed" | "failed"
-  timestamp: string
-  details?: string
-}
-
-export interface ToolAction {
-  id: string
-  label: string
-  icon: string
   description?: string
+}
+
+export interface ChatState {
+  messages: Message[]
+  activities: ActivityItem[]
+  isLoading: boolean
+  activeModal: string | null
 }

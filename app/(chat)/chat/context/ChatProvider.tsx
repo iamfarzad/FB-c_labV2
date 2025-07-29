@@ -7,10 +7,13 @@ interface ChatContextType {
   messages: Message[]
   activities: ActivityItem[]
   isLoading: boolean
+  activeModal: string | null
   addMessage: (message: Message) => void
   addActivity: (activity: ActivityItem) => void
-  setLoading: (loading: boolean) => void
-  clearChat: () => void
+  setIsLoading: (loading: boolean) => void
+  openModal: (modal: string) => void
+  closeModal: () => void
+  clearMessages: () => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -19,22 +22,26 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [activeModal, setActiveModal] = useState<string | null>(null)
 
   const addMessage = (message: Message) => {
     setMessages((prev) => [...prev, message])
   }
 
   const addActivity = (activity: ActivityItem) => {
-    setActivities((prev) => [...prev, activity])
+    setActivities((prev) => [activity, ...prev])
   }
 
-  const setLoading = (loading: boolean) => {
-    setIsLoading(loading)
+  const openModal = (modal: string) => {
+    setActiveModal(modal)
   }
 
-  const clearChat = () => {
+  const closeModal = () => {
+    setActiveModal(null)
+  }
+
+  const clearMessages = () => {
     setMessages([])
-    setActivities([])
   }
 
   return (
@@ -43,10 +50,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         messages,
         activities,
         isLoading,
+        activeModal,
         addMessage,
         addActivity,
-        setLoading,
-        clearChat,
+        setIsLoading,
+        openModal,
+        closeModal,
+        clearMessages,
       }}
     >
       {children}
