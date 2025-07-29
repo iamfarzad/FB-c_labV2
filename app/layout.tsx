@@ -3,7 +3,6 @@ import type { Metadata } from "next"
 import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { cn } from "@/lib/utils"
-import Header from "@/components/header"
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -45,7 +44,6 @@ export default function RootLayout({
           fontMono.variable,
         )}
       >
-        <Header />
         <main>{children}</main>
       </body>
     </html>
