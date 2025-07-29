@@ -1,22 +1,16 @@
+import type React from "react"
 export interface Message {
-  id?: string
-  role: "user" | "assistant" | "system"
+  id: string
   content: string
-  timestamp?: Date
-  metadata?: any
+  sender: "user" | "ai"
+  timestamp: Date
+  type?: "text" | "file" | "analysis"
 }
 
-export interface ChatState {
-  messages: Message[]
-  isLoading: boolean
-  error: string | null
-}
-
-export interface LeadData {
-  name?: string
-  email?: string
-  company?: string
-  role?: string
-  interests?: string
-  engagementType: "demo" | "free-trial" | "sales-call"
+export interface Activity {
+  id: string
+  icon: React.ElementType
+  title: string
+  status: "in_progress" | "completed" | "failed"
+  timestamp: string
 }

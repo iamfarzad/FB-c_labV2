@@ -14,21 +14,23 @@ import {
   RefreshCw,
   Share,
   Edit3,
+  Brain,
 } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import type { Message } from "../types/chat"
 
 interface MessageListProps {
   messages: Message[]
   isLoading: boolean
+  isTyping: boolean
 }
 
-export function MessageList({ messages, isLoading }: MessageListProps) {
+export function MessageList({ messages, isLoading, isTyping }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
 
@@ -38,7 +40,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
 
   useEffect(() => {
     scrollToBottom()
-  }, [messages])
+  }, [messages, isTyping])
 
   const formatTime = (timestamp: string) => {
     try {
@@ -137,28 +139,25 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="max-w-4xl mx-auto p-6 space-y-8">
+    <ScrollArea className="h-full">
+      <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
         {messages.map((message, index) => (
           <div
             key={message.id}
-            className={`flex gap-4 group ${message.role === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex gap-4 group ${message.sender === "user" ? "justify-end" : "justify-start"}`}
           >
-            {message.role === "assistant" && (
-              <Avatar className="h-10 w-10 shrink-0 ring-2 ring-blue-500/20 shadow-sm">
-                <AvatarImage src="/placeholder-logo.svg" alt="AI Assistant" />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 text-white">
-                  <Bot className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
+            {message.sender === "ai" && (
+              <div className="w-8 h-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0 mt-1">
+                <Brain className="w-4 h-4 text-primary/70" />
+              </div>
             )}
 
             <div
-              className={`max-w-[75%] space-y-3 ${message.role === "user" ? "items-end" : "items-start"} flex flex-col`}
+              className={`max-w-[75%] space-y-3 ${message.sender === "user" ? "items-end" : "items-start"} flex flex-col`}
             >
               {/* Enhanced Message Header */}
               <div className="flex items-center gap-3">
-                {message.role === "assistant" && (
+                {message.sender === "ai" && (
                   <>
                     <Badge
                       variant="secondary"
@@ -187,7 +186,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
               {/* Enhanced Message Content with better emoji rendering */}
               <div
                 className={`relative group/message rounded-2xl px-5 py-4 shadow-sm transition-all duration-300 hover:shadow-md ${
-                  message.role === "user"
+                  message.sender === "user"
                     ? "bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white ml-12 shadow-lg"
                     : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 mr-12 hover:border-slate-300 dark:hover:border-slate-600"
                 }`}
@@ -199,7 +198,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                 {/* Enhanced Message Actions */}
                 <div
                   className={`absolute top-3 right-3 opacity-0 group-hover/message:opacity-100 transition-all duration-200 ${
-                    message.role === "user" ? "text-white/70" : ""
+                    message.sender === "user" ? "text-white/70" : ""
                   }`}
                 >
                   <TooltipProvider>
@@ -220,7 +219,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                         </TooltipContent>
                       </Tooltip>
 
-                      {message.role === "assistant" && (
+                      {message.sender === "ai" && (
                         <>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -285,13 +284,10 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
               </div>
             </div>
 
-            {message.role === "user" && (
-              <Avatar className="h-10 w-10 shrink-0 ring-2 ring-emerald-500/20 shadow-sm">
-                <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                <AvatarFallback className="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 text-white">
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
+            {message.sender === "user" && (
+              <div className="w-8 h-8 rounded-full bg-muted/30 border border-border/40 flex items-center justify-center shrink-0 mt-1">
+                <User className="w-4 h-4 text-muted-foreground" />
+              </div>
             )}
           </div>
         ))}
@@ -299,12 +295,9 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
         {/* Enhanced Loading State */}
         {isLoading && (
           <div className="flex gap-4 justify-start">
-            <Avatar className="h-10 w-10 shrink-0 ring-2 ring-blue-500/20 shadow-sm">
-              <AvatarImage src="/placeholder-logo.svg" alt="AI Assistant" />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 text-white">
-                <Bot className="h-5 w-5" />
-              </AvatarFallback>
-            </Avatar>
+            <div className="w-8 h-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0 mt-1">
+              <Brain className="w-4 h-4 text-primary/70" />
+            </div>
 
             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 mr-12 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
@@ -325,8 +318,29 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
           </div>
         )}
 
+        {isTyping && (
+          <div className="flex gap-4 justify-start">
+            <div className="w-8 h-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0 mt-1">
+              <Brain className="w-4 h-4 text-primary/70" />
+            </div>
+            <div className="bg-muted/50 border border-border/40 rounded-2xl px-5 py-4">
+              <div className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-pulse" />
+                <div
+                  className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-pulse"
+                  style={{ animationDelay: "0.2s" }}
+                />
+                <div
+                  className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-pulse"
+                  style={{ animationDelay: "0.4s" }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
-    </div>
+    </ScrollArea>
   )
 }
