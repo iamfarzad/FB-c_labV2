@@ -3,17 +3,19 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
 import { PageShell } from "@/components/page-shell"
-import { ArrowRight, Bot, Cpu, Zap } from "lucide-react"
+import { ArrowRight, Cpu, Zap } from "lucide-react"
 import { CtaSection } from "@/components/cta-section"
 import { cn } from "@/lib/utils"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "AI Automation Consultant | Farzad Bayat | 10,000+ Hours Experience",
-  description: "Expert AI consultant with 10,000+ hours experience. Custom AI automation, chatbots, and workflow optimization for businesses. No hype, just results that work.",
+  description:
+    "Expert AI consultant with 10,000+ hours experience. Custom AI automation, chatbots, and workflow optimization for businesses. No hype, just results that work.",
   openGraph: {
     title: "AI Automation Consultant | Farzad Bayat | 10,000+ Hours Experience",
-    description: "Expert AI consultant with 10,000+ hours experience. Custom AI automation, chatbots, and workflow optimization for businesses.",
+    description:
+      "Expert AI consultant with 10,000+ hours experience. Custom AI automation, chatbots, and workflow optimization for businesses.",
     url: "https://farzadbayat.com",
   },
   alternates: {
@@ -45,7 +47,8 @@ export default function HomePage() {
             </h1>
             <p className="mt-6 max-w-2xl mx-auto text-lg leading-8 text-muted-foreground text-balance font-medium">
               I'm Farzad Bayat—a self-taught AI consultant who spent 10,000+ hours figuring out what works so your
-              business doesn't have to. Specializing in <strong>custom AI automation</strong>, <strong>intelligent chatbots</strong>, and <strong>workflow optimization</strong>.
+              business doesn't have to. Specializing in <strong>custom AI automation</strong>,{" "}
+              <strong>intelligent chatbots</strong>, and <strong>workflow optimization</strong>.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button
@@ -53,16 +56,8 @@ export default function HomePage() {
                 size="lg"
                 className="bg-primary text-primary-foreground transition-all hover:bg-primary/90 shadow-lg hover:shadow-xl"
               >
-                <Link href="/contact" title="Book free AI automation consultation with expert consultant">Book a Free AI Consultation</Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="border-border bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-all"
-              >
-                <Link href="/chat" title="Try F.B/c AI assistant for business automation demo">
-                  Try F.B/c AI <Bot className="ml-2 h-4 w-4" aria-hidden="true" />
+                <Link href="/contact" title="Book free AI automation consultation with expert consultant">
+                  Book a Free AI Consultation
                 </Link>
               </Button>
             </div>
@@ -79,9 +74,12 @@ export default function HomePage() {
 
       <PageShell>
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">Why Choose Our AI Automation Services?</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+            Why Choose Our AI Automation Services?
+          </h2>
           <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-            10,000+ hours of real-world <strong>AI implementation experience</strong> since 2020. No theory, only proven <strong>business automation solutions</strong> that deliver measurable results.
+            10,000+ hours of real-world <strong>AI implementation experience</strong> since 2020. No theory, only proven{" "}
+            <strong>business automation solutions</strong> that deliver measurable results.
           </p>
           <Button asChild variant="link" className="mt-4 text-orange-accent hover:text-orange-accent/90">
             <Link href="/about" title="Read full story about AI consultant Farzad Bayat's experience">
@@ -103,9 +101,12 @@ export default function HomePage() {
 
         <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">Professional AI Services We Offer</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+              Professional AI Services We Offer
+            </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Custom <strong>AI solutions</strong> to integrate artificial intelligence into your business operations, from <strong>internal automation tools</strong> to comprehensive <strong>team training programs</strong>.
+              Custom <strong>AI solutions</strong> to integrate artificial intelligence into your business operations,
+              from <strong>internal automation tools</strong> to comprehensive <strong>team training programs</strong>.
             </p>
           </div>
           <div className="grid gap-6">
@@ -119,7 +120,10 @@ export default function HomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Custom <strong>internal copilots</strong>, <strong>intelligent chatbots</strong>, and <strong>workflow automation systems</strong> tailored to your business needs.</p>
+                <p className="text-muted-foreground">
+                  Custom <strong>internal copilots</strong>, <strong>intelligent chatbots</strong>, and{" "}
+                  <strong>workflow automation systems</strong> tailored to your business needs.
+                </p>
                 <Button asChild variant="link" className="p-0 h-auto mt-2 text-orange-accent">
                   <Link href="/consulting" title="Explore AI consulting services and automation solutions">
                     See AI Consulting Services <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
@@ -138,13 +142,9 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Practical <strong>AI training workshops</strong> for operations, marketing, product, and technical teams. Learn to implement <strong>AI tools</strong> effectively.
+                  Practical <strong>AI training workshops</strong> for operations, marketing, product, and technical
+                  teams. Learn to implement <strong>AI tools</strong> effectively.
                 </p>
-                <Button asChild variant="link" className="p-0 h-auto mt-2 text-orange-accent">
-                  <Link href="/workshop" title="Explore AI training workshops for business teams">
-                    Explore AI Training Workshops <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-                  </Link>
-                </Button>
               </CardContent>
             </Card>
           </div>
@@ -156,8 +156,6 @@ export default function HomePage() {
         subtitle="Let's identify the perfect AI use case for your business and get started with proven solutions."
         primaryCtaText="Book Your Free AI Consultation"
         primaryCtaLink="/contact"
-        secondaryCtaText="Try F.B/c AI"
-        secondaryCtaLink="/chat"
       />
     </>
   )

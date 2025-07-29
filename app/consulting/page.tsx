@@ -8,10 +8,12 @@ import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "AI Consulting Services - Custom Automation & Chatbot Development",
-  description: "Professional AI consulting services including custom chatbots, workflow automation, internal copilots, and AI implementation. Expert consultation with 10,000+ hours experience.",
+  description:
+    "Professional AI consulting services including custom chatbots, workflow automation, internal copilots, and AI implementation. Expert consultation with 10,000+ hours experience.",
   openGraph: {
     title: "AI Consulting Services - Custom Automation & Chatbot Development",
-    description: "Professional AI consulting services including custom chatbots, workflow automation, internal copilots, and AI implementation.",
+    description:
+      "Professional AI consulting services including custom chatbots, workflow automation, internal copilots, and AI implementation.",
     url: "https://farzadbayat.com/consulting",
   },
   alternates: {
@@ -51,7 +53,9 @@ export default function ConsultingPage() {
           />
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Button asChild size="lg">
-              <Link href="/contact" title="Book free AI consulting consultation to discuss your automation needs">Book a Free AI Consultation</Link>
+              <Link href="/contact" title="Book free AI consulting consultation to discuss your automation needs">
+                Book a Free AI Consultation
+              </Link>
             </Button>
           </div>
         </div>
@@ -68,7 +72,8 @@ export default function ConsultingPage() {
                 <h2>AI Consulting & Custom Automation</h2>
               </CardTitle>
               <CardDescription>
-                Hands-on help for companies that want to use <strong>AI automation</strong> to cut costs, save time, and improve accuracy with <strong>custom AI solutions</strong>.
+                Hands-on help for companies that want to use <strong>AI automation</strong> to cut costs, save time, and
+                improve accuracy with <strong>custom AI solutions</strong>.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -82,7 +87,9 @@ export default function ConsultingPage() {
                 ))}
               </ul>
               <Button asChild className="mt-6 w-full">
-                <Link href="/contact" title="Request custom AI consulting quote for your business automation needs">Request a Custom AI Quote</Link>
+                <Link href="/contact" title="Request custom AI consulting quote for your business automation needs">
+                  Request a Custom AI Quote
+                </Link>
               </Button>
             </CardContent>
           </Card>
@@ -94,7 +101,10 @@ export default function ConsultingPage() {
               <CardTitle className="text-2xl">
                 <h2>AI Workshops & Team Training</h2>
               </CardTitle>
-              <CardDescription>Teach your team how to use <strong>AI tools</strong> properly—and build real <strong>automation solutions</strong> with hands-on training.</CardDescription>
+              <CardDescription>
+                Teach your team how to use <strong>AI tools</strong> properly—and build real{" "}
+                <strong>automation solutions</strong> with hands-on training.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <h3 className="text-lg font-semibold mb-4 text-primary">Training Levels Available:</h3>
@@ -106,9 +116,6 @@ export default function ConsultingPage() {
                   </div>
                 ))}
               </div>
-              <Button asChild variant="outline" className="mt-6 w-full bg-transparent">
-                <Link href="/workshop" title="Join free AI workshop preview for business teams">Join Free AI Workshop Preview</Link>
-              </Button>
             </CardContent>
           </Card>
         </div>
@@ -116,16 +123,24 @@ export default function ConsultingPage() {
 
       <PageShell className="bg-secondary">
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">Ready to Transform Your Business with AI?</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+            Ready to Transform Your Business with AI?
+          </h2>
           <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-            Get started with proven <strong>AI automation solutions</strong> that deliver measurable results. From <strong>custom chatbots</strong> to <strong>workflow optimization</strong>, we'll help you implement AI that actually works.
+            Get started with proven <strong>AI automation solutions</strong> that deliver measurable results. From{" "}
+            <strong>custom chatbots</strong> to <strong>workflow optimization</strong>, we'll help you implement AI that
+            actually works.
           </p>
           <div className="mt-8 flex items-center justify-center gap-x-6">
             <Button asChild size="lg">
-              <Link href="/contact" title="Schedule AI consultation to discuss your business automation requirements">Schedule Your AI Consultation</Link>
+              <Link href="/contact" title="Schedule AI consultation to discuss your business automation requirements">
+                Schedule Your AI Consultation
+              </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href="/about" title="Learn more about AI consultant Farzad Bayat's experience and expertise">Learn About Our Expertise</Link>
+              <Link href="/about" title="Learn more about AI consultant Farzad Bayat's experience and expertise">
+                Learn About Our Expertise
+              </Link>
             </Button>
           </div>
         </div>
