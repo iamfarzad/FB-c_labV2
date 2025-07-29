@@ -203,10 +203,6 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429 });
     }
 
-<<<<<<< HEAD
-    // Get session ID from headers or cookies
-    const sessionId = req.headers.get('x-demo-session-id') || req.cookies.get('demo-session-id')?.value;
-=======
     // Authentication check (allow anonymous access for public chat)
     let auth: { success: boolean; userId?: string; error?: string };
     
@@ -219,10 +215,11 @@ export async function POST(req: NextRequest) {
     } else {
       logConsoleActivity('info', 'Authenticated user accessing chat', { ip, correlationId, userId: auth.userId });
     }
->>>>>>> origin/cursor/fix-website-chat-401-error-207c
+
+    // Get session ID from headers or cookies
+    const sessionId = req.headers.get('x-demo-session-id') || req.cookies.get('demo-session-id')?.value;
 
     // Authentication check (optional for demo)
-    const auth = await authenticateRequest(req);
     const isAuthenticated = auth.success;
 
     // Parse and validate request

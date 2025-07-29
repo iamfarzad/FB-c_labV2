@@ -21,6 +21,35 @@ export type ModelRequirements = {
   highVolume?: boolean         // High request volume
 }
 
+// Simple token estimation (rough approximation)
+export function estimateTokensForMessages(messages: any[]): number {
+  let totalTokens = 0
+  for (const message of messages) {
+    // Rough estimation: 1 token ≈ 4 characters
+    totalTokens += Math.ceil(message.content.length / 4)
+  }
+  return totalTokens
+}
+
+// Alias for backward compatibility
+export const estimateTokens = estimateTokensForMessages
+
+// Model selection for specific features
+export function selectModelForFeature(feature: string, estimatedTokens: number, hasSession: boolean): { model: string } {
+  // For demo sessions, use the default model
+  if (hasSession) {
+    return { model: config.ai.gemini.models.default }
+  }
+  
+  // For high token usage, prefer cost-effective model
+  if (estimatedTokens > 10000) {
+    return { model: config.ai.gemini.models.default }
+  }
+  
+  // For chat and other features, use default model
+  return { model: config.ai.gemini.models.default }
+}
+
 export class ModelSelector {
   /**
    * Select optimal Gemini model based on use case

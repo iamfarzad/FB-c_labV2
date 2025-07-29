@@ -18,7 +18,10 @@ export const useModalManager = () => {
     voiceStyle?: string
   } | null>(null)
 
-  const openModal = (modal: ModalType) => setActiveModal(modal)
+  const openModal = (modal: ModalType) => {
+    console.log("🔍 openModal called with:", modal, new Error().stack)
+    setActiveModal(modal)
+  }
   const closeModal = () => setActiveModal(null)
 
   const openVoiceOutputModal = (data: { textContent: string; voiceStyle?: string }) => {

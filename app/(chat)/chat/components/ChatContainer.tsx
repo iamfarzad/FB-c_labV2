@@ -2,7 +2,6 @@
 
 import type React from "react"
 
-import { ChatHeader } from "./ChatHeader"
 import ChatInput from "./ChatInput"
 import { MessageList } from "./MessageList"
 import { LeadCaptureFlow } from "./LeadCaptureFlow"
@@ -56,12 +55,6 @@ export function ChatContainer({
 }: ChatContainerProps) {
   return (
     <main className="flex-1 flex flex-col bg-background">
-      <ChatHeader
-        leadName={leadName}
-        onDownloadSummary={onDownloadSummary}
-        activities={activities}
-        onNewChat={onNewChat}
-      />
       <div className="flex-1 overflow-y-auto p-4">
         {error ? (
           <ErrorState onRetry={onRetry} />
