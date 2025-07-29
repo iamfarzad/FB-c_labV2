@@ -5,7 +5,21 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, Mic, MicOff, Upload, Video, Monitor, User, Brain } from "lucide-react"
+import {
+  Mic,
+  Video,
+  Globe,
+  Smartphone,
+  Layers,
+  Zap,
+  ImageIcon,
+  Paperclip,
+  Plus,
+  ChevronDown,
+  User,
+  Brain,
+  ArrowUp,
+} from "lucide-react"
 import { useChatContext } from "../context/ChatProvider"
 import type { Message } from "../types/chat"
 
@@ -14,8 +28,7 @@ interface ChatInterfaceProps {
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeConversationTitle = "Business Strategy" }) => {
-  const { messages, addMessage, isTyping, setIsTyping, activeFeatures, toggleFeature } = useChatContext()
-
+  const { messages, addMessage, isTyping, setIsTyping } = useChatContext()
   const [newMessage, setNewMessage] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -89,54 +102,37 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeConversation
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      {/* Minimalist Header */}
-      <div className="border-b border-border/60 bg-background/95 backdrop-blur-sm flex-shrink-0">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-primary rounded-full"></div>
-              <span className="text-foreground/90 text-sm tracking-wide">{activeConversationTitle}</span>
-              {(activeFeatures.video || activeFeatures.screen || activeFeatures.voice) && (
-                <div className="flex items-center gap-1 ml-2">
-                  {activeFeatures.video && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full opacity-80"></div>}
-                  {activeFeatures.screen && <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full opacity-80"></div>}
-                  {activeFeatures.voice && <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>}
-                </div>
-              )}
-            </div>
-
-            <div className="text-xs text-muted-foreground tracking-wider uppercase">AI Assistant</div>
-          </div>
-        </div>
+    <div className="flex flex-col h-screen bg-white">
+      {/* Header */}
+      <div className="flex flex-col items-center justify-center py-8 px-4">
+        <div className="text-sm text-blue-500 mb-2">New Autonomous AI Coding Agent</div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Ask Blackbox AI Anything</h1>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden px-4">
         <ScrollArea className="h-full">
-          <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+          <div className="max-w-4xl mx-auto space-y-6">
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex gap-4 group ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex gap-3 ${message.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 {message.sender === "ai" && (
-                  <div className="w-8 h-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0 mt-1">
-                    <Brain className="w-4 h-4 text-primary/70" />
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 mt-1">
+                    <Brain className="w-4 h-4 text-gray-600" />
                   </div>
                 )}
-                <div className={`max-w-[75%] ${message.sender === "user" ? "text-right" : "text-left"}`}>
+                <div className={`max-w-[70%] ${message.sender === "user" ? "text-right" : "text-left"}`}>
                   <div
-                    className={`inline-block rounded-2xl px-5 py-4 ${
-                      message.sender === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted/50 border border-border/40"
+                    className={`inline-block rounded-2xl px-4 py-3 ${
+                      message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-900"
                     }`}
                   >
                     <div className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</div>
                   </div>
                   <div
-                    className={`text-xs text-muted-foreground/60 mt-2 px-1 ${
+                    className={`text-xs text-gray-500 mt-1 px-1 ${
                       message.sender === "user" ? "text-right" : "text-left"
                     }`}
                   >
@@ -144,26 +140,26 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeConversation
                   </div>
                 </div>
                 {message.sender === "user" && (
-                  <div className="w-8 h-8 rounded-full bg-muted/30 border border-border/40 flex items-center justify-center shrink-0 mt-1">
-                    <User className="w-4 h-4 text-muted-foreground" />
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 mt-1">
+                    <User className="w-4 h-4 text-gray-600" />
                   </div>
                 )}
               </div>
             ))}
             {isTyping && (
-              <div className="flex gap-4 justify-start">
-                <div className="w-8 h-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0 mt-1">
-                  <Brain className="w-4 h-4 text-primary/70" />
+              <div className="flex gap-3 justify-start">
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 mt-1">
+                  <Brain className="w-4 h-4 text-gray-600" />
                 </div>
-                <div className="bg-muted/50 border border-border/40 rounded-2xl px-5 py-4">
+                <div className="bg-gray-100 rounded-2xl px-4 py-3">
                   <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-pulse" />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" />
                     <div
-                      className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-pulse"
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"
                       style={{ animationDelay: "0.2s" }}
                     />
                     <div
-                      className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-pulse"
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"
                       style={{ animationDelay: "0.4s" }}
                     />
                   </div>
@@ -175,83 +171,113 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeConversation
         </ScrollArea>
       </div>
 
-      {/* Minimalist Input Area */}
-      <div className="border-t border-border/60 bg-background/95 backdrop-blur-sm flex-shrink-0">
-        <div className="max-w-4xl mx-auto p-6">
-          {/* Feature Controls */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleFeature("voice")}
-                className={`h-8 px-3 text-xs rounded-full transition-all duration-200 ${
-                  activeFeatures.voice
-                    ? "bg-red-500/10 text-red-600 border border-red-500/20 hover:bg-red-500/15"
-                    : "hover:bg-muted/60 text-muted-foreground hover:text-foreground border border-transparent"
-                }`}
-              >
-                {activeFeatures.voice ? <MicOff className="w-3 h-3 mr-1.5" /> : <Mic className="w-3 h-3 mr-1.5" />}
-                Voice
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleFeature("video")}
-                className={`h-8 px-3 text-xs rounded-full transition-all duration-200 ${
-                  activeFeatures.video
-                    ? "bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/15"
-                    : "hover:bg-muted/60 text-muted-foreground hover:text-foreground border border-transparent"
-                }`}
-              >
-                <Video className="w-3 h-3 mr-1.5" />
-                Video
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleFeature("screen")}
-                className={`h-8 px-3 text-xs rounded-full transition-all duration-200 ${
-                  activeFeatures.screen
-                    ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/15"
-                    : "hover:bg-muted/60 text-muted-foreground hover:text-foreground border border-transparent"
-                }`}
-              >
-                <Monitor className="w-3 h-3 mr-1.5" />
-                Screen
+      {/* Input Area */}
+      <div className="p-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Main Input Container */}
+          <div className="relative bg-white border border-gray-200 rounded-2xl shadow-sm">
+            {/* Text Input */}
+            <div className="flex items-end p-4">
+              <div className="flex-1 mr-4">
+                <Textarea
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Message Blackbox or @mention agent"
+                  className="min-h-[60px] max-h-32 resize-none border-0 bg-transparent text-base placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+                  disabled={isTyping}
+                />
+              </div>
+
+              {/* Right Side Controls */}
+              <div className="flex items-center gap-2 shrink-0">
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-gray-100">
+                  <Mic className="w-5 h-5 text-gray-600" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-gray-100">
+                  <Video className="w-5 h-5 text-gray-600" />
+                </Button>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim() || isTyping}
+                  className="h-10 w-10 rounded-full bg-black hover:bg-gray-800 text-white disabled:opacity-40"
+                >
+                  <ArrowUp className="w-5 h-5" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Bottom Toolbar */}
+            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  <Globe className="w-4 h-4 mr-2" />
+                  Auto
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  <Smartphone className="w-4 h-4 mr-2" />
+                  App Builder
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  <Layers className="w-4 h-4 mr-2" />
+                  Deep Research
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  Think
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Image Gen
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  <Paperclip className="w-4 h-4 mr-2" />
+                  Upload
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Multi-Panel
+                </Button>
+              </div>
+
+              {/* Select Models Dropdown */}
+              <Button variant="ghost" size="sm" className="h-8 px-3 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">
+                Select Models
+                <ChevronDown className="w-3 h-3 ml-1" />
               </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              className="h-8 px-3 text-xs rounded-full hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-all duration-200"
-            >
-              <Upload className="w-3 h-3 mr-1.5" />
-              Attach
-            </Button>
           </div>
 
-          {/* Message Input */}
-          <div className="flex gap-3 items-end">
-            <div className="flex-1">
-              <Textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder="Type your message..."
-                className="min-h-[52px] max-h-32 resize-none rounded-2xl border-border/60 bg-muted/20 backdrop-blur-sm focus:bg-background/80 transition-all duration-200 px-4 py-4 text-sm leading-relaxed"
-                disabled={isTyping}
-              />
-            </div>
-            <Button
-              onClick={handleSendMessage}
-              disabled={!newMessage.trim() || isTyping}
-              className="h-12 w-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all duration-200 disabled:opacity-40 flex-shrink-0"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
           <input
             ref={fileInputRef}
             type="file"

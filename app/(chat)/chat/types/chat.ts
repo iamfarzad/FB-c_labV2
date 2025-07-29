@@ -15,9 +15,6 @@ export interface Message {
   sender: "user" | "ai"
   timestamp: Date
   type?: "text" | "file" | "analysis"
-  imageUrl?: string
-  sources?: any[]
-  metadata?: Record<string, any>
 }
 
 export type { ChatMessage, Message }
@@ -83,11 +80,22 @@ export interface ActivityItem {
   content?: string
 }
 
+export interface ActiveFeatures {
+  voice: boolean
+  video: boolean
+  screen: boolean
+}
+
+export type ModalType = "voiceInput" | "webcam" | "screenShare"
+
 export interface ChatState {
-  messages: (ChatMessage | Message)[]
+  messages: Message[]
   isLoading: boolean
   error?: string
   sessionId: string
+  isTyping: boolean
+  activeFeatures: ActiveFeatures
+  activeModal: ModalType | null
 }
 
 export interface StreamChunk {
@@ -105,5 +113,3 @@ export interface AIResponse {
   audioData?: string | null
   metadata?: Record<string, any>
 }
-
-export type ModalType = "voiceInput" | "webcam" | "screenShare" | null

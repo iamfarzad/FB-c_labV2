@@ -18,7 +18,7 @@ const VoiceInputModal = ({ open, onClose }: { open: boolean; onClose: () => void
         <div className="w-16 h-16 rounded-full bg-red-500/10 border-2 border-red-500/20 flex items-center justify-center">
           <Mic className="w-8 h-8 text-red-500" />
         </div>
-        <p className="text-center text-muted-foreground">Voice input functionality coming soon.</p>
+        <p className="text-center text-gray-600">Voice input functionality coming soon.</p>
         <Button onClick={onClose} variant="outline">
           Close
         </Button>
@@ -40,7 +40,7 @@ const WebcamModal = ({ open, onClose }: { open: boolean; onClose: () => void }) 
         <div className="w-16 h-16 rounded-full bg-blue-500/10 border-2 border-blue-500/20 flex items-center justify-center">
           <Video className="w-8 h-8 text-blue-500" />
         </div>
-        <p className="text-center text-muted-foreground">Webcam capture functionality coming soon.</p>
+        <p className="text-center text-gray-600">Webcam capture functionality coming soon.</p>
         <Button onClick={onClose} variant="outline">
           Close
         </Button>
@@ -62,7 +62,7 @@ const ScreenShareModal = ({ open, onClose }: { open: boolean; onClose: () => voi
         <div className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center">
           <Monitor className="w-8 h-8 text-emerald-500" />
         </div>
-        <p className="text-center text-muted-foreground">Screen share functionality coming soon.</p>
+        <p className="text-center text-gray-600">Screen share functionality coming soon.</p>
         <Button onClick={onClose} variant="outline">
           Close
         </Button>

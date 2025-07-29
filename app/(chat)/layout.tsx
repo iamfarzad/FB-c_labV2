@@ -1,16 +1,5 @@
-import type React from "react"
-import { ChatProvider } from "./chat/context/ChatProvider"
-import { Toaster } from "@/components/ui/sonner"
+import type { ReactNode } from "react"
 
-export default function ChatLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <ChatProvider>
-      {children}
-      <Toaster />
-    </ChatProvider>
-  )
+export default function ChatLayout({ children }: { children: ReactNode }) {
+  return <div className="h-screen bg-white">{children}</div>
 }
