@@ -4,33 +4,29 @@ import Link from "next/link"
 import { Check, Zap, Cpu } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
-import type { Metadata } from "next"
 
-export const metadata: Metadata = {
-  title: "AI Consulting Services - Custom Automation & Chatbot Development",
-  description: "Professional AI consulting services including custom chatbots, workflow automation, internal copilots, and AI implementation. Expert consultation with 10,000+ hours experience.",
+export const metadata = {
+  title: "AI Consulting Services & Automation Solutions | Farzad Bayat",
+  description: "Professional AI consulting services including chatbot development, workflow automation, and AI copilot implementation. 10,000+ hours of real-world AI experience.",
+  keywords: ["AI consulting services", "AI automation", "chatbot development", "AI copilot", "workflow automation", "AI implementation"],
   openGraph: {
-    title: "AI Consulting Services - Custom Automation & Chatbot Development",
-    description: "Professional AI consulting services including custom chatbots, workflow automation, internal copilots, and AI implementation.",
-    url: "https://farzadbayat.com/consulting",
-  },
-  alternates: {
-    canonical: "https://farzadbayat.com/consulting",
-  },
+    title: "AI Consulting Services & Automation Solutions | Farzad Bayat",
+    description: "Professional AI consulting services including chatbot development, workflow automation, and AI copilot implementation.",
+  }
 }
 
 const consultingServices = [
-  "Build internal chatbots connected to company data",
-  "Automate customer service, HR, and operations tasks",
-  "Design and deploy private/local AI copilots",
-  "Build lightweight MVPs and test automation ideas quickly",
-  "Debug, audit, or scale broken AI systems",
+  "Build intelligent AI chatbots connected to company data and systems",
+  "Automate customer service, HR, and operations tasks with AI",
+  "Design and deploy private/local AI copilots for your business",
+  "Build lightweight AI MVPs and test automation ideas quickly",
+  "Debug, audit, or scale broken AI systems and implementations",
 ]
 
 const workshopLevels = [
-  { level: "Basic Level", audience: "For non-tech teams (marketing, ops, HR)" },
-  { level: "Intermediate Level", audience: "For product, data, project leads" },
-  { level: "Advanced Level", audience: "For developers or technical leads" },
+  { level: "Basic AI Training", audience: "For non-tech teams (marketing, ops, HR) - AI fundamentals" },
+  { level: "Intermediate AI Implementation", audience: "For product, data, project leads - AI automation skills" },
+  { level: "Advanced AI Development", audience: "For developers or technical leads - AI system design" },
 ]
 
 export default function ConsultingPage() {
@@ -46,12 +42,12 @@ export default function ConsultingPage() {
         />
         <div className="relative z-10">
           <PageHeader
-            title="Professional AI Consulting Services That Deliver Results"
-            subtitle="Whether you need automation, a custom chatbot, or internal AI copilots, I help you build what actually works—no fluff, no theory, just proven AI solutions."
+            title="Professional AI Consulting Services That Deliver Real Results"
+            subtitle="Whether you need AI automation, custom chatbot development, or internal AI copilot implementation, I help you build AI solutions that actually work—no fluff, no theory."
           />
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Button asChild size="lg">
-              <Link href="/contact" title="Book free AI consulting consultation to discuss your automation needs">Book a Free AI Consultation</Link>
+              <Link href="/contact">Book Your Free AI Consultation</Link>
             </Button>
           </div>
         </div>
@@ -62,72 +58,49 @@ export default function ConsultingPage() {
           <Card className="neu-card transition-all">
             <CardHeader className="text-center">
               <div className="mx-auto w-fit p-3 bg-primary/10 rounded-md mb-2">
-                <Zap className="h-8 w-8 text-primary" aria-hidden="true" />
+                <Zap className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="text-2xl">
-                <h2>AI Consulting & Custom Automation</h2>
-              </CardTitle>
+              <CardTitle className="text-2xl">AI Consulting & Automation Services</CardTitle>
               <CardDescription>
-                Hands-on help for companies that want to use <strong>AI automation</strong> to cut costs, save time, and improve accuracy with <strong>custom AI solutions</strong>.
+                Hands-on AI consulting help for companies that want to use artificial intelligence to cut costs, save time, and improve accuracy through automation.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <h3 className="text-lg font-semibold mb-3 text-primary">Our AI Consulting Services Include:</h3>
               <ul className="space-y-3">
                 {consultingServices.map((service, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <Check className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" aria-hidden="true" />
+                    <Check className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
                     <span className="text-muted-foreground">{service}</span>
                   </li>
                 ))}
               </ul>
               <Button asChild className="mt-6 w-full">
-                <Link href="/contact" title="Request custom AI consulting quote for your business automation needs">Request a Custom AI Quote</Link>
+                <Link href="/contact">Request Your Custom AI Consulting Quote</Link>
               </Button>
             </CardContent>
           </Card>
           <Card className="neu-card transition-all">
             <CardHeader className="text-center">
               <div className="mx-auto w-fit p-3 bg-primary/10 rounded-md mb-2">
-                <Cpu className="h-8 w-8 text-primary" aria-hidden="true" />
+                <Cpu className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="text-2xl">
-                <h2>AI Workshops & Team Training</h2>
-              </CardTitle>
-              <CardDescription>Teach your team how to use <strong>AI tools</strong> properly—and build real <strong>automation solutions</strong> with hands-on training.</CardDescription>
+              <CardTitle className="text-2xl">AI Workshops & Team Training Programs</CardTitle>
+              <CardDescription>Teach your team how to use AI tools properly and build real AI automation solutions.</CardDescription>
             </CardHeader>
             <CardContent>
-              <h3 className="text-lg font-semibold mb-4 text-primary">Training Levels Available:</h3>
               <div className="space-y-4">
                 {workshopLevels.map(({ level, audience }) => (
                   <div key={level}>
-                    <h4 className="font-semibold text-base">{level}</h4>
+                    <h4 className="font-semibold">{level}</h4>
                     <p className="text-sm text-muted-foreground">{audience}</p>
                   </div>
                 ))}
               </div>
               <Button asChild variant="outline" className="mt-6 w-full bg-transparent">
-                <Link href="/workshop" title="Join free AI workshop preview for business teams">Join Free AI Workshop Preview</Link>
+                <Link href="/workshop">Join Free AI Training Preview</Link>
               </Button>
             </CardContent>
           </Card>
-        </div>
-      </PageShell>
-
-      <PageShell className="bg-secondary">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">Ready to Transform Your Business with AI?</h2>
-          <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-            Get started with proven <strong>AI automation solutions</strong> that deliver measurable results. From <strong>custom chatbots</strong> to <strong>workflow optimization</strong>, we'll help you implement AI that actually works.
-          </p>
-          <div className="mt-8 flex items-center justify-center gap-x-6">
-            <Button asChild size="lg">
-              <Link href="/contact" title="Schedule AI consultation to discuss your business automation requirements">Schedule Your AI Consultation</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/about" title="Learn more about AI consultant Farzad Bayat's experience and expertise">Learn About Our Expertise</Link>
-            </Button>
-          </div>
         </div>
       </PageShell>
     </>
