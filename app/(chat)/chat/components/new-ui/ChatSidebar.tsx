@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { ActivityList } from "@/components/chat/sidebar/components/ActivityList"
-import type { ActivityItem } from "@/app/(chat)/chat/types/chat"
+import type { ActivityItem } from "../../types/chat"
 
 interface ChatSidebarProps {
   activities: ActivityItem[]

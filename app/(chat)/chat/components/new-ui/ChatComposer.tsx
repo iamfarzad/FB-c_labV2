@@ -1,79 +1,53 @@
 "use client"
 
-import { SendHorizonal, Mic, Video, ScreenShare } from "lucide-react"
+import type React from "react"
+
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { useChatContext } from "../../context/ChatProvider"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Paperclip, Mic, CornerDownLeft } from "lucide-react"
 
-export function ChatComposer() {
-  const { input, handleInputChange, handleSubmit, isLoading, openModal } = useChatContext()
+interface ChatComposerProps {
+  onSend: (content: string) => void
+}
+
+export function ChatComposer({ onSend }: ChatComposerProps) {
+  const [inputValue, setInputValue] = useState("")
+
+  const handleSend = () => {
+    if (inputValue.trim()) {
+      onSend(inputValue)
+      setInputValue("")
+    }
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault()
+      handleSend()
+    }
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-start gap-4">
+    <div className="relative">
       <Textarea
-        value={input}
-        onChange={handleInputChange}
-        placeholder="Ask anything..."
-        className="flex-1 resize-none"
-        rows={1}
-        disabled={isLoading}
+        placeholder="Type your message here..."
+        className="w-full resize-none pr-32"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
       />
-      <TooltipProvider>
-        <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                disabled={isLoading}
-                onClick={() => openModal("voiceInput")}
-              >
-                <Mic className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Voice Input</p>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                disabled={isLoading}
-                onClick={() => openModal("webcam")}
-              >
-                <Video className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Webcam Input</p>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                disabled={isLoading}
-                onClick={() => openModal("screenShare")}
-              >
-                <ScreenShare className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Share Screen</p>
-            </TooltipContent>
-          </Tooltip>
-          <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-            <SendHorizonal className="h-5 w-5" />
-          </Button>
-        </div>
-      </TooltipProvider>
-    </form>
+      <div className="absolute bottom-2 right-2 flex items-center space-x-2">
+        <Button variant="ghost" size="icon">
+          <Paperclip className="h-5 w-5" />
+        </Button>
+        <Button variant="ghost" size="icon">
+          <Mic className="h-5 w-5" />
+        </Button>
+        <Button size="sm" onClick={handleSend}>
+          Send <CornerDownLeft className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
   )
 }

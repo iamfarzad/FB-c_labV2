@@ -2,7 +2,7 @@ export interface ChatMessage {
   id: string
   role: "user" | "assistant" | "system" | "function" | "data" | "tool"
   content: string
-  createdAt?: Date // Using the official, optional `createdAt` property from the AI SDK.
+  createdAt: Date // Using the official, optional `createdAt` property from the AI SDK.
   sources?: any[]
   audioData?: string | null
   imageUrl?: string
@@ -57,10 +57,11 @@ export interface ActivityItem {
     | "message_sent"
     | "new_chat"
     | "export"
+    | "message"
   title: string
   description: string
   status: "pending" | "in_progress" | "completed" | "failed"
-  timestamp: Date
+  timestamp: string
   duration?: number
   details?: string[]
   metadata?: Record<string, any>
@@ -88,3 +89,5 @@ export interface AIResponse {
   audioData?: string | null
   metadata?: Record<string, any>
 }
+
+export type ModalType = "voiceInput" | "webcam" | "screenShare" | "leadCapture" | "video2app" | null

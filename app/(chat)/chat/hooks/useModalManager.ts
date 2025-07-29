@@ -1,30 +1,18 @@
 "use client"
 
 import { useState, useCallback } from "react"
-
-type ModalType = "screenShare" | "voiceInput" | "webcam"
+import type { ModalType } from "../types/chat"
 
 export const useModalManager = () => {
-  const [openModals, setOpenModals] = useState<Set<ModalType>>(new Set())
+  const [activeModal, setActiveModal] = useState<ModalType>(null)
 
   const openModal = useCallback((modal: ModalType) => {
-    setOpenModals((prev) => new Set(prev).add(modal))
+    setActiveModal(modal)
   }, [])
 
-  const closeModal = useCallback((modal: ModalType) => {
-    setOpenModals((prev) => {
-      const newSet = new Set(prev)
-      newSet.delete(modal)
-      return newSet
-    })
+  const closeModal = useCallback(() => {
+    setActiveModal(null)
   }, [])
 
-  const isModalOpen = useCallback(
-    (modal: ModalType) => {
-      return openModals.has(modal)
-    },
-    [openModals],
-  )
-
-  return { openModal, closeModal, isModalOpen }
+  return { activeModal, openModal, closeModal }
 }

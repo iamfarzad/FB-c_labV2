@@ -1,87 +1,74 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useCallback } from "react"
-import { useChat } from "ai/react"
+import { createContext, useContext, useState, useCallback, useEffect } from "react"
 import { useModalManager } from "../hooks/useModalManager"
-import type { ActivityItem, Message } from "../types/chat"
-import { toast } from "sonner"
+import type { Message, ActivityItem, ModalType } from "../types/chat"
 
 interface ChatContextType {
   messages: Message[]
-  input: string
-  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
-  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void
-  isLoading: boolean
-  error: Error | undefined
   activities: ActivityItem[]
+  addMessage: (message: Message) => void
   handleNewChat: () => void
-  openModal: (modal: "screenShare" | "voiceInput" | "webcam") => void
-  closeModal: (modal: "screenShare" | "voiceInput" | "webcam") => void
-  isModalOpen: (modal: "screenShare" | "voiceInput" | "webcam") => boolean
-  onRetry: () => void
+  activeModal: ModalType
+  openModal: (modal: ModalType) => void
+  closeModal: () => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit: originalHandleSubmit,
-    isLoading,
-    error,
-    reload,
-    setMessages,
-  } = useChat({
-    api: "/api/chat",
-    onError: (err) => {
-      toast.error("An error occurred: " + err.message)
-    },
-  })
-
-  const { openModal, closeModal, isModalOpen } = useModalManager()
+  const [messages, setMessages] = useState<Message[]>([])
   const [activities, setActivities] = useState<ActivityItem[]>([])
+  const { activeModal, openModal, closeModal } = useModalManager()
 
-  const addActivity = useCallback((activity: Omit<ActivityItem, "id" | "timestamp">) => {
-    setActivities((prev) => [{ ...activity, id: Date.now().toString(), timestamp: new Date() }, ...prev])
+  const addMessage = useCallback((message: Message) => {
+    setMessages((prev) => [...prev, message])
+    setActivities((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        type: "message",
+        timestamp: new Date().toLocaleTimeString(),
+        description: `New message from ${message.role}`,
+      },
+    ])
   }, [])
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!input.trim()) return
-    addActivity({ type: "message_sent", content: `User sent: "${input}"` })
-    originalHandleSubmit(e)
-  }
 
   const handleNewChat = useCallback(() => {
     setMessages([])
-    addActivity({ type: "new_chat", content: "New chat session started." })
-    toast.success("New chat started")
-  }, [setMessages, addActivity])
+    setActivities([])
+  }, [])
 
-  const onRetry = useCallback(() => {
-    addActivity({ type: "tool_used", content: "Retrying last message." })
-    reload()
-  }, [reload, addActivity])
+  useEffect(() => {
+    // Initial welcome message
+    if (messages.length === 0) {
+      setMessages([
+        {
+          id: "1",
+          role: "assistant",
+          content: "Hello! How can I help you today?",
+          createdAt: new Date(),
+        },
+      ])
+    }
+  }, [messages.length])
 
-  const value = {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    error,
-    activities,
-    handleNewChat,
-    openModal,
-    closeModal,
-    isModalOpen,
-    onRetry,
-  }
-
-  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
+  return (
+    <ChatContext.Provider
+      value={{
+        messages,
+        activities,
+        addMessage,
+        handleNewChat,
+        activeModal,
+        openModal,
+        closeModal,
+      }}
+    >
+      {children}
+    </ChatContext.Provider>
+  )
 }
 
 export const useChatContext = () => {

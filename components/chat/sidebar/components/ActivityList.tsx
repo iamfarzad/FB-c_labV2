@@ -1,27 +1,28 @@
 "use client"
 
 import type { ActivityItem } from "@/app/(chat)/chat/types/chat"
-import { VerticalProcessChain } from "../../activity/VerticalProcessChain"
-import { cn } from "@/lib/utils"
-import { motion } from "framer-motion"
+import { MessageSquare, Paperclip, PenToolIcon as Tool } from "lucide-react"
 
-interface ActivityListProps {
-  activities: ActivityItem[]
-  onActivityClick: (activity: ActivityItem) => void
-  isTablet?: boolean
+const iconMap = {
+  message: <MessageSquare className="h-4 w-4" />,
+  tool_used: <Tool className="h-4 w-4" />,
+  file_upload: <Paperclip className="h-4 w-4" />,
 }
 
-export const ActivityList = ({ activities, onActivityClick, isTablet = false }: ActivityListProps) => {
+export function ActivityList({ activities }: { activities: ActivityItem[] }) {
+  if (activities.length === 0) {
+    return <div className="text-center text-sm text-muted-foreground">No activity yet.</div>
+  }
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3, delay: 0.2, ease: "easeOut" }}
-      className="flex-1 overflow-hidden flex items-center justify-center"
-    >
-      <div className={cn("w-full flex justify-center", isTablet && "px-2")}>
-        <VerticalProcessChain activities={activities} onActivityClick={onActivityClick} />
-      </div>
-    </motion.div>
+    <div className="space-y-2">
+      {activities.map((activity) => (
+        <div key={activity.id} className="flex items-center text-sm">
+          <div className="mr-2 text-muted-foreground">{iconMap[activity.type]}</div>
+          <div className="flex-1 truncate">{activity.description}</div>
+          <div className="ml-2 text-xs text-muted-foreground">{activity.timestamp}</div>
+        </div>
+      ))}
+    </div>
   )
 }
