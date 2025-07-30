@@ -1,158 +1,175 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
+import { v4 as uuidv4 } from "uuid"
+import { Bot, Sparkles, FileText, Search, DollarSign, ImageIcon, Video, Calendar } from "lucide-react"
 import type { Message, Activity } from "../types/chat"
-import { Bot, FileText, BarChart, Search, ImageIcon, Brain } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 
-const initialMessages: Message[] = []
-
-const sampleActivities: Activity[] = [
-  {
-    id: "1",
-    icon: Search,
-    title: "Lead Research",
-    status: "completed",
-    timestamp: new Date(Date.now() - 120000).toISOString(),
-    type: "lead_research",
-  },
-  {
-    id: "2",
-    icon: FileText,
-    title: "Analyzed 'Q2_Report.pdf'",
-    status: "completed",
-    timestamp: new Date(Date.now() - 90000).toISOString(),
-    type: "document_understanding",
-  },
-  {
-    id: "3",
-    icon: BarChart,
-    title: "Calculated ROI for Campaign X",
-    status: "failed",
-    timestamp: new Date(Date.now() - 60000).toISOString(),
-    type: "roi_calculation",
-  },
-]
-
-export const useChat = () => {
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
-  const [activities, setActivities] = useState<Activity[]>(sampleActivities)
+export function useChat() {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [currentActivity, setCurrentActivity] = useState<Activity | null>(null)
-  const [isActivityPanelOpen, setIsActivityPanelOpen] = useState(true)
+  const [activities, setActivities] = useState<Activity[]>([])
 
-  const sendMessage = (content: string) => {
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content,
-      timestamp: new Date().toISOString(),
-    }
-    setMessages((prev) => [...prev, userMessage])
-    setIsTyping(true)
-    setCurrentActivity({
-      id: "thinking-1",
-      icon: Brain,
-      title: "Thinking...",
-      status: "in_progress",
-      timestamp: new Date().toISOString(),
-      type: "thinking",
-    })
+  const addMessage = useCallback((message: Message) => {
+    setMessages((prevMessages) => [...prevMessages, message])
+  }, [])
 
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
+  const addActivity = useCallback((activity: Activity) => {
+    setActivities((prevActivities) => [...prevActivities, activity])
+    setCurrentActivity(activity)
+  }, [])
+
+  const updateActivityStatus = useCallback((id: string, status: Activity["status"]) => {
+    setActivities((prevActivities) =>
+      prevActivities.map((activity) => (activity.id === id ? { ...activity, status } : activity)),
+    )
+    setCurrentActivity((prevActivity) => (prevActivity?.id === id ? { ...prevActivity, status } : prevActivity))
+  }, [])
+
+  const sendMessage = useCallback(
+    async (text: string) => {
+      if (!text.trim()) return
+
+      const userMessage: Message = {
+        id: uuidv4(),
+        role: "user",
+        content: text,
+        timestamp: new Date().toISOString(),
+      }
+      addMessage(userMessage)
+      setInput("")
+      setIsLoading(true)
+      setIsTyping(true)
+
+      const thinkingActivityId = uuidv4()
+      addActivity({
+        id: thinkingActivityId,
+        icon: Sparkles,
+        title: "AI is thinking...",
+        status: "in_progress",
+        timestamp: new Date().toISOString(),
+        type: "thinking",
+      })
+
+      // Simulate AI response
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      const aiResponseContent = `Hello! You said: "${text}". I'm a mock AI assistant. How can I help you further?`
+      const aiMessage: Message = {
+        id: uuidv4(),
         role: "assistant",
-        content: `This is a simulated response to: "${content}". I can help with various tasks like analyzing documents, researching leads, or calculating ROI.`,
+        content: aiResponseContent,
         timestamp: new Date().toISOString(),
         model: "Gemini 2.5",
       }
+      addMessage(aiMessage)
+
+      updateActivityStatus(thinkingActivityId, "completed")
+      setIsLoading(false)
       setIsTyping(false)
       setCurrentActivity(null)
-      setMessages((prev) => [...prev, aiResponse])
-      setActivities((prev) => [
-        {
-          id: Date.now().toString(),
-          icon: Bot,
-          title: "Generated text response",
-          status: "completed",
-          timestamp: new Date().toISOString(),
-          type: "text_generation",
-        },
-        ...prev,
-      ])
-    }, 2500)
-  }
+    },
+    [addMessage, addActivity, updateActivityStatus],
+  )
 
-  const handleToolClick = (tool: string) => {
-    const toolActivityMap: { [key: string]: Activity } = {
-      "roi-analysis": {
-        id: Date.now().toString(),
-        icon: BarChart,
-        title: "Starting ROI Analysis...",
+  const handleToolClick = useCallback(
+    async (tool: string) => {
+      const toolActivityId = uuidv4()
+      let activityTitle = ""
+      let activityIcon: LucideIcon = Sparkles
+      let activityType: Activity["type"] = "tool_used"
+
+      switch (tool) {
+        case "roi-analysis":
+          activityTitle = "Performing ROI Analysis..."
+          activityIcon = DollarSign
+          activityType = "roi_calculation"
+          break
+        case "lead-research":
+          activityTitle = "Conducting Lead Research..."
+          activityIcon = Search
+          activityType = "lead_research"
+          break
+        case "document-upload":
+          activityTitle = "Uploading Document..."
+          activityIcon = FileText
+          activityType = "file_upload"
+          break
+        case "image-generation":
+          activityTitle = "Generating Image..."
+          activityIcon = ImageIcon
+          activityType = "image_generation"
+          break
+        case "video-sharing":
+          activityTitle = "Initiating Video Sharing..."
+          activityIcon = Video
+          activityType = "video_generation" // Using video_generation for video sharing for simplicity
+          break
+        case "screen-sharing":
+          activityTitle = "Initiating Screen Sharing..."
+          activityIcon = Video // Using video icon for screen sharing
+          activityType = "video_generation" // Using video_generation for screen sharing for simplicity
+          break
+        case "model-selection":
+          activityTitle = "Changing AI Model..."
+          activityIcon = Bot
+          activityType = "thinking" // Generic thinking for model change
+          break
+        case "meeting-scheduler":
+          activityTitle = "Scheduling Meeting..."
+          activityIcon = Calendar
+          activityType = "meeting_scheduled"
+          break
+        default:
+          activityTitle = `Using tool: ${tool}...`
+          activityIcon = Sparkles
+          activityType = "tool_used"
+      }
+
+      addActivity({
+        id: toolActivityId,
+        icon: activityIcon,
+        title: activityTitle,
         status: "in_progress",
         timestamp: new Date().toISOString(),
-        type: "roi_calculation",
-      },
-      "lead-research": {
-        id: Date.now().toString(),
-        icon: Search,
-        title: "Researching leads...",
-        status: "in_progress",
+        type: activityType,
+      })
+
+      setIsLoading(true)
+      setIsTyping(true)
+
+      await new Promise((resolve) => setTimeout(resolve, 3000)) // Simulate tool operation
+
+      const toolResponse: Message = {
+        id: uuidv4(),
+        role: "assistant",
+        content: `Successfully completed: ${activityTitle.replace("...", "")}`,
         timestamp: new Date().toISOString(),
-        type: "lead_research",
-      },
-      "image-generation": {
-        id: Date.now().toString(),
-        icon: ImageIcon,
-        title: "Generating image...",
-        status: "in_progress",
-        timestamp: new Date().toISOString(),
-        type: "image_generation",
-      },
-    }
+        model: "Gemini 2.5",
+      }
+      addMessage(toolResponse)
 
-    const activity = toolActivityMap[tool]
-    if (activity) {
-      setCurrentActivity(activity)
-      setActivities((prev) => [activity, ...prev])
-
-      setTimeout(() => {
-        setCurrentActivity(null)
-        setActivities((prev) =>
-          prev.map((a) =>
-            a.id === activity.id
-              ? {
-                  ...a,
-                  status: "completed",
-                  title: activity.title.replace("Starting ", "").replace("...", " complete"),
-                }
-              : a,
-          ),
-        )
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: `I have completed the ${tool} task.`,
-          timestamp: new Date().toISOString(),
-          model: "Gemini 2.5",
-        }
-        setMessages((prev) => [...prev, aiResponse])
-      }, 3000)
-    }
-  }
-
-  const toggleActivityPanel = () => {
-    setIsActivityPanelOpen((prev) => !prev)
-  }
+      updateActivityStatus(toolActivityId, "completed")
+      setIsLoading(false)
+      setIsTyping(false)
+      setCurrentActivity(null)
+    },
+    [addMessage, addActivity, updateActivityStatus],
+  )
 
   return {
     messages,
-    activities,
+    input,
+    setInput,
+    isLoading,
     isTyping,
     currentActivity,
-    isActivityPanelOpen,
+    activities,
     sendMessage,
     handleToolClick,
-    toggleActivityPanel,
   }
 }

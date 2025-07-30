@@ -1,10 +1,25 @@
 "use client"
 
-import { useState, useRef, type KeyboardEvent } from "react"
-import { Textarea } from "@/components/ui/textarea"
+import type React from "react"
+
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Send,
+  Paperclip,
+  DollarSign,
+  Search,
+  ImageIcon,
+  Video,
+  Camera,
+  ScreenShare,
+  Bot,
+  Calendar,
+  Upload,
+} from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Paperclip, Mic, CornerDownLeft, BarChart, Search, ImageIcon } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface ChatComposerProps {
   onSendMessage: (message: string) => void
@@ -14,87 +29,97 @@ interface ChatComposerProps {
 
 export function ChatComposer({ onSendMessage, onToolClick, isTyping }: ChatComposerProps) {
   const [message, setMessage] = useState("")
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleSend = () => {
-    if (message.trim() && !isTyping) {
-      onSendMessage(message.trim())
+    if (message.trim()) {
+      onSendMessage(message)
       setMessage("")
     }
   }
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault()
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
       handleSend()
     }
   }
 
   return (
-    <div className="border-t bg-background/95 p-4 backdrop-blur-sm shrink-0">
-      <div className="max-w-4xl mx-auto">
-        <div className="relative">
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask anything or type '/' for commands..."
-            className="w-full resize-none rounded-xl border-2 border-input bg-background py-3 pl-12 pr-20 shadow-sm focus:border-primary"
-            rows={1}
-            disabled={isTyping}
-          />
-          <div className="absolute left-4 top-1/2 -translate-y-1/2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+    <div className="relative p-4 border-t bg-background/95 backdrop-blur-sm">
+      <div className="max-w-4xl mx-auto flex items-end gap-2">
+        <DropdownMenu>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="shrink-0">
+                    <Paperclip className="w-5 h-5 text-muted-foreground" />
+                    <span className="sr-only">Attach files or use tools</span>
                   </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Attach files</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <Button onClick={handleSend} size="sm" disabled={!message.trim() || isTyping}>
-              Send
-              <CornerDownLeft className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TooltipProvider>
-              {[
-                { icon: BarChart, label: "ROI Analysis", tool: "roi-analysis" },
-                { icon: Search, label: "Lead Research", tool: "lead-research" },
-                { icon: ImageIcon, label: "Image Generation", tool: "image-generation" },
-                { icon: Mic, label: "Voice Input", tool: "voice-input" },
-              ].map(({ icon: Icon, label, tool }) => (
-                <Tooltip key={tool}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 bg-transparent"
-                      onClick={() => onToolClick(tool)}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="hidden sm:inline">{label}</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{label}</p>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
-            </TooltipProvider>
-          </div>
-          <p className="text-xs text-muted-foreground">Press Shift + Enter for new line</p>
-        </div>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>Attach files or use tools</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <DropdownMenuContent side="top" align="start" className="w-56">
+            <DropdownMenuItem onClick={() => onToolClick("roi-analysis")}>
+              <DollarSign className="mr-2 h-4 w-4" />
+              <span>ROI Analysis</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onToolClick("lead-research")}>
+              <Search className="mr-2 h-4 w-4" />
+              <span>Lead Research</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onToolClick("document-upload")}>
+              <Upload className="mr-2 h-4 w-4" />
+              <span>Document Upload</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onToolClick("image-generation")}>
+              <ImageIcon className="mr-2 h-4 w-4" />
+              <span>Image Generation</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onToolClick("video-sharing")}>
+              <Video className="mr-2 h-4 w-4" />
+              <span>Video Sharing</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onToolClick("screen-sharing")}>
+              <ScreenShare className="mr-2 h-4 w-4" />
+              <span>Screen Sharing</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onToolClick("webcam-access")}>
+              <Camera className="mr-2 h-4 w-4" />
+              <span>Webcam Access</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onToolClick("model-selection")}>
+              <Bot className="mr-2 h-4 w-4" />
+              <span>Model Selection</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onToolClick("meeting-scheduler")}>
+              <Calendar className="mr-2 h-4 w-4" />
+              <span>Meeting Scheduler</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Type your message..."
+          rows={1}
+          className="min-h-[40px] resize-none pr-12"
+          disabled={isTyping}
+        />
+        <Button
+          type="submit"
+          size="icon"
+          className="absolute right-6 bottom-6 h-8 w-8"
+          onClick={handleSend}
+          disabled={!message.trim() || isTyping}
+        >
+          <Send className="w-4 h-4" />
+          <span className="sr-only">Send message</span>
+        </Button>
       </div>
     </div>
   )

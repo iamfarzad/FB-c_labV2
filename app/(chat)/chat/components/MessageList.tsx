@@ -26,18 +26,23 @@ import type { Message } from "../types/chat"
 
 interface MessageListProps {
   messages: Message[]
+  isLoading: boolean
   isTyping: boolean
 }
 
-export function MessageList({ messages, isTyping }: MessageListProps) {
+export function MessageList({ messages, isLoading, isTyping }: MessageListProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
 
-  useEffect(() => {
+  const scrollToBottom = () => {
     const viewport = scrollAreaRef.current?.querySelector("div[data-radix-scroll-area-viewport]")
     if (viewport) {
       viewport.scrollTo({ top: viewport.scrollHeight, behavior: "smooth" })
     }
+  }
+
+  useEffect(() => {
+    scrollToBottom()
   }, [messages, isTyping])
 
   const formatTime = (timestamp: string) => {
@@ -59,22 +64,26 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
     }
   }
 
+  // Enhanced emoji rendering function
   const renderMessageContent = (content: string) => {
+    // Split content by emojis and render them with proper styling
     const emojiRegex = /(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/gu
     const parts = content.split(emojiRegex)
-    return parts.map((part, index) =>
-      emojiRegex.test(part) ? (
-        <span
-          key={index}
-          className="inline-block text-lg leading-none mx-0.5 align-middle"
-          style={{ fontFamily: "Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif" }}
-        >
-          {part}
-        </span>
-      ) : (
-        part
-      ),
-    )
+
+    return parts.map((part, index) => {
+      if (emojiRegex.test(part)) {
+        return (
+          <span
+            key={index}
+            className="inline-block text-lg leading-none mx-0.5 align-middle"
+            style={{ fontFamily: "Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif" }}
+          >
+            {part}
+          </span>
+        )
+      }
+      return part
+    })
   }
 
   if (messages.length === 0 && !isTyping) {
@@ -89,6 +98,7 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
               <Sparkles className="w-5 h-5 text-white" />
             </div>
           </div>
+
           <div className="space-y-4">
             <h3 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Welcome to Uniq AI</h3>
             <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
@@ -99,15 +109,16 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
               Let's transform your business operations together! 🚀
             </p>
           </div>
+
           <div className="grid grid-cols-2 gap-4 mt-10">
             {[
               { emoji: "📊", title: "ROI Analysis", desc: "Calculate returns and business metrics" },
               { emoji: "👥", title: "Lead Generation", desc: "Research and capture potential clients" },
               { emoji: "📈", title: "Document Analysis", desc: "Analyze business documents and reports" },
               { emoji: "📅", title: "Meeting Scheduler", desc: "Schedule and manage appointments" },
-            ].map((feature) => (
+            ].map((feature, index) => (
               <Card
-                key={feature.title}
+                key={index}
                 className="p-6 text-left hover:shadow-lg transition-all duration-300 border-slate-200 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-800 group cursor-pointer"
               >
                 <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">
@@ -118,10 +129,11 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
               </Card>
             ))}
           </div>
+
           <div className="pt-6">
             <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2">
               <Sparkles className="h-3 w-3" />
-              Start by typing a message or selecting a business tool
+              Start by typing a message or selecting a business tool above
             </p>
           </div>
         </div>
@@ -144,9 +156,11 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
                 </AvatarFallback>
               </Avatar>
             )}
+
             <div
               className={`max-w-[75%] space-y-3 ${message.role === "user" ? "items-end" : "items-start"} flex flex-col`}
             >
+              {/* Enhanced Message Header */}
               <div className="flex items-center gap-3">
                 {message.role === "assistant" && (
                   <>
@@ -157,7 +171,7 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
                       <Sparkles className="h-3 w-3 mr-1" />
                       {message.model || "AI Assistant"}
                     </Badge>
-                    {index === messages.length - 1 && !isTyping && (
+                    {index === messages.length - 1 && (
                       <Badge
                         variant="outline"
                         className="text-xs text-emerald-600 border-emerald-200 dark:text-emerald-400 dark:border-emerald-800 px-2 py-1"
@@ -173,6 +187,8 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
                   {formatTime(message.timestamp)}
                 </span>
               </div>
+
+              {/* Enhanced Message Content with better emoji rendering */}
               <div
                 className={`relative group/message rounded-2xl px-5 py-4 shadow-sm transition-all duration-300 hover:shadow-md ${
                   message.role === "user"
@@ -183,6 +199,8 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
                 <div className="text-sm leading-relaxed whitespace-pre-wrap">
                   {renderMessageContent(message.content)}
                 </div>
+
+                {/* Enhanced Message Actions */}
                 <div
                   className={`absolute top-3 right-3 opacity-0 group-hover/message:opacity-100 transition-all duration-200 ${
                     message.role === "user" ? "text-white/70" : ""
@@ -205,6 +223,7 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
                           <p>{copiedMessageId === message.id ? "Copied! ✅" : "Copy message"}</p>
                         </TooltipContent>
                       </Tooltip>
+
                       {message.role === "assistant" && (
                         <>
                           <Tooltip>
@@ -221,6 +240,7 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
                               <p>Good response 👍</p>
                             </TooltipContent>
                           </Tooltip>
+
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -235,6 +255,7 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
                               <p>Poor response 👎</p>
                             </TooltipContent>
                           </Tooltip>
+
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
@@ -247,13 +268,16 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-40">
                               <DropdownMenuItem className="gap-2">
-                                <RefreshCw className="h-3 w-3" /> Regenerate
+                                <RefreshCw className="h-3 w-3" />
+                                Regenerate
                               </DropdownMenuItem>
                               <DropdownMenuItem className="gap-2">
-                                <Edit3 className="h-3 w-3" /> Edit
+                                <Edit3 className="h-3 w-3" />
+                                Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem className="gap-2">
-                                <Share className="h-3 w-3" /> Share
+                                <Share className="h-3 w-3" />
+                                Share
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -264,6 +288,7 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
                 </div>
               </div>
             </div>
+
             {message.role === "user" && (
               <Avatar className="w-8 h-8 border shrink-0">
                 <AvatarFallback>
@@ -273,6 +298,35 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
             )}
           </div>
         ))}
+
+        {/* Enhanced Loading State */}
+        {isLoading && (
+          <div className="flex gap-4 justify-start">
+            <Avatar className="w-8 h-8 border">
+              <AvatarFallback>
+                <Bot className="w-5 h-5 text-muted-foreground" />
+              </AvatarFallback>
+            </Avatar>
+
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 mr-12 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <Badge
+                  variant="secondary"
+                  className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                >
+                  <Sparkles className="h-3 w-3 mr-1 animate-pulse" />
+                  Thinking...
+                </Badge>
+              </div>
+              <div className="flex gap-1.5">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+              </div>
+            </div>
+          </div>
+        )}
+
         {isTyping && (
           <div className="flex gap-4 justify-start">
             <Avatar className="w-8 h-8 border">

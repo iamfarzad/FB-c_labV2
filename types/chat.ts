@@ -2,8 +2,8 @@ import type { LucideIcon } from "lucide-react"
 
 export interface Message {
   id: string
-  role: "user" | "assistant" | "system"
   content: string
+  role: "user" | "assistant" | "system"
   timestamp: string
   model?: string
 }
