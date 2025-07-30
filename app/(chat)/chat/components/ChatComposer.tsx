@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Send, Mic, Video, Monitor, Upload, BarChart, Search, Zap, ImageIcon, Plus } from "lucide-react"
+import { Send, Mic, Video, Monitor, Upload, BarChart, Search, Zap, ImageIcon } from "lucide-react"
 
 interface ChatComposerProps {
   onSendMessage: (message: string) => void
@@ -64,7 +64,8 @@ export function ChatComposer({ onSendMessage, onToolClick, isTyping }: ChatCompo
               <ActionButton icon={Zap} label="Automate" onClick={() => onToolClick("Automation")} />
               <ActionButton icon={ImageIcon} label="Image Gen" onClick={() => onToolClick("Image Generation")} />
               <ActionButton icon={Upload} label="Upload" onClick={() => onToolClick("Document Upload")} />
-              <ActionButton icon={Plus} label="Multi-Panel" onClick={() => onToolClick("Multi-Panel")} />
+              {/* Removed the following line */}
+              {/* <ActionButton icon={Plus} label="Multi-Panel" onClick={() => onToolClick("Multi-Panel")} /> */}
               <ActionButton icon={Video} label="Video" onClick={() => onToolClick("Video Call")} />
               <ActionButton icon={Monitor} label="Screen" onClick={() => onToolClick("Screen Share")} />
             </div>
