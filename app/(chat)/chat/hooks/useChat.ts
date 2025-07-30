@@ -1,174 +1,156 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { v4 as uuidv4 } from "uuid"
-import { Bot, Sparkles, FileText, Search, DollarSign, ImageIcon, Video, Calendar } from "lucide-react"
-import type { Message, Activity } from "../types/chat"
-import type { LucideIcon } from "lucide-react"
+import { useState, useEffect } from "react"
+import type { Message, Activity } from "@/types/chat"
+import {
+  Brain,
+  FileText,
+  BarChart,
+  Search,
+  Zap,
+  ImageIcon,
+  Upload,
+  Video,
+  Monitor,
+  type LucideIcon,
+} from "lucide-react"
+
+const initialMessages: Message[] = [
+  {
+    id: "1",
+    content:
+      "Hello! I'm F.B/c AI. I can demonstrate advanced AI capabilities with your data in real-time. How can I help you achieve your business goals today?",
+    role: "assistant",
+    timestamp: new Date(Date.now() - 600000).toISOString(),
+  },
+]
+
+const initialActivities: Activity[] = [
+  {
+    id: "1",
+    icon: Brain,
+    title: "AI Initialized",
+    status: "completed",
+    timestamp: "10m ago",
+    type: "thinking",
+  },
+  {
+    id: "2",
+    icon: FileText,
+    title: "System prompt loaded",
+    status: "completed",
+    timestamp: "10m ago",
+    type: "long_context",
+  },
+]
 
 export function useChat() {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const [activities, setActivities] = useState<Activity[]>(initialActivities)
   const [isTyping, setIsTyping] = useState(false)
   const [currentActivity, setCurrentActivity] = useState<Activity | null>(null)
-  const [activities, setActivities] = useState<Activity[]>([])
 
-  const addMessage = useCallback((message: Message) => {
-    setMessages((prevMessages) => [...prevMessages, message])
-  }, [])
+  useEffect(() => {
+    const inProgressActivity = activities.find((a) => a.status === "in_progress")
+    setCurrentActivity(inProgressActivity || null)
+  }, [activities])
 
-  const addActivity = useCallback((activity: Activity) => {
-    setActivities((prevActivities) => [...prevActivities, activity])
-    setCurrentActivity(activity)
-  }, [])
+  const addActivity = (title: string, icon: LucideIcon, type: Activity["type"]) => {
+    const newActivity: Activity = {
+      id: Date.now().toString(),
+      icon,
+      title,
+      status: "in_progress",
+      timestamp: "Just now",
+      type,
+    }
+    setActivities((prev) => [newActivity, ...prev])
 
-  const updateActivityStatus = useCallback((id: string, status: Activity["status"]) => {
-    setActivities((prevActivities) =>
-      prevActivities.map((activity) => (activity.id === id ? { ...activity, status } : activity)),
+    // Simulate completion
+    setTimeout(
+      () => {
+        setActivities((prev) =>
+          prev.map((act) => (act.id === newActivity.id ? { ...act, status: "completed", timestamp: "1m ago" } : act)),
+        )
+      },
+      2000 + Math.random() * 2000,
     )
-    setCurrentActivity((prevActivity) => (prevActivity?.id === id ? { ...prevActivity, status } : prevActivity))
-  }, [])
+  }
 
-  const sendMessage = useCallback(
-    async (text: string) => {
-      if (!text.trim()) return
+  const sendMessage = (content: string) => {
+    if (!content.trim()) return
 
-      const userMessage: Message = {
-        id: uuidv4(),
-        role: "user",
-        content: text,
-        timestamp: new Date().toISOString(),
-      }
-      addMessage(userMessage)
-      setInput("")
-      setIsLoading(true)
-      setIsTyping(true)
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content,
+      role: "user",
+      timestamp: new Date().toISOString(),
+    }
+    setMessages((prev) => [...prev, userMessage])
+    setIsTyping(true)
+    addActivity("Processing input", Brain, "thinking")
 
-      const thinkingActivityId = uuidv4()
-      addActivity({
-        id: thinkingActivityId,
-        icon: Sparkles,
-        title: "AI is thinking...",
-        status: "in_progress",
-        timestamp: new Date().toISOString(),
-        type: "thinking",
-      })
-
-      // Simulate AI response
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      const aiResponseContent = `Hello! You said: "${text}". I'm a mock AI assistant. How can I help you further?`
-      const aiMessage: Message = {
-        id: uuidv4(),
+    // Simulate AI response
+    setTimeout(() => {
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: `Thank you for your message. Based on your query, I can perform an automated ROI calculation, conduct lead research, or analyze relevant documents. Which path would you like to explore?`,
         role: "assistant",
-        content: aiResponseContent,
         timestamp: new Date().toISOString(),
-        model: "Gemini 2.5",
       }
-      addMessage(aiMessage)
-
-      updateActivityStatus(thinkingActivityId, "completed")
-      setIsLoading(false)
+      setMessages((prev) => [...prev, aiResponse])
       setIsTyping(false)
-      setCurrentActivity(null)
-    },
-    [addMessage, addActivity, updateActivityStatus],
-  )
+      addActivity("Generated AI response", Brain, "text_generation")
+    }, 1500)
+  }
 
-  const handleToolClick = useCallback(
-    async (tool: string) => {
-      const toolActivityId = uuidv4()
-      let activityTitle = ""
-      let activityIcon: LucideIcon = Sparkles
-      let activityType: Activity["type"] = "tool_used"
+  const handleToolClick = (tool: string) => {
+    let icon: LucideIcon = Zap
+    let type: Activity["type"] = "tool_used"
 
-      switch (tool) {
-        case "roi-analysis":
-          activityTitle = "Performing ROI Analysis..."
-          activityIcon = DollarSign
-          activityType = "roi_calculation"
-          break
-        case "lead-research":
-          activityTitle = "Conducting Lead Research..."
-          activityIcon = Search
-          activityType = "lead_research"
-          break
-        case "document-upload":
-          activityTitle = "Uploading Document..."
-          activityIcon = FileText
-          activityType = "file_upload"
-          break
-        case "image-generation":
-          activityTitle = "Generating Image..."
-          activityIcon = ImageIcon
-          activityType = "image_generation"
-          break
-        case "video-sharing":
-          activityTitle = "Initiating Video Sharing..."
-          activityIcon = Video
-          activityType = "video_generation" // Using video_generation for video sharing for simplicity
-          break
-        case "screen-sharing":
-          activityTitle = "Initiating Screen Sharing..."
-          activityIcon = Video // Using video icon for screen sharing
-          activityType = "video_generation" // Using video_generation for screen sharing for simplicity
-          break
-        case "model-selection":
-          activityTitle = "Changing AI Model..."
-          activityIcon = Bot
-          activityType = "thinking" // Generic thinking for model change
-          break
-        case "meeting-scheduler":
-          activityTitle = "Scheduling Meeting..."
-          activityIcon = Calendar
-          activityType = "meeting_scheduled"
-          break
-        default:
-          activityTitle = `Using tool: ${tool}...`
-          activityIcon = Sparkles
-          activityType = "tool_used"
-      }
+    switch (tool) {
+      case "ROI Analysis":
+        icon = BarChart
+        type = "roi_calculation"
+        break
+      case "Lead Research":
+        icon = Search
+        type = "lead_research"
+        break
+      case "Image Generation":
+        icon = ImageIcon
+        type = "image_generation"
+        break
+      case "Document Upload":
+        icon = Upload
+        type = "file_upload"
+        break
+      case "Video Call":
+        icon = Video
+        type = "video_understanding"
+        break
+      case "Screen Share":
+        icon = Monitor
+        type = "video_understanding"
+        break
+    }
 
-      addActivity({
-        id: toolActivityId,
-        icon: activityIcon,
-        title: activityTitle,
-        status: "in_progress",
-        timestamp: new Date().toISOString(),
-        type: activityType,
-      })
+    addActivity(`Initiating ${tool}`, icon, type)
 
-      setIsLoading(true)
-      setIsTyping(true)
-
-      await new Promise((resolve) => setTimeout(resolve, 3000)) // Simulate tool operation
-
-      const toolResponse: Message = {
-        id: uuidv4(),
-        role: "assistant",
-        content: `Successfully completed: ${activityTitle.replace("...", "")}`,
-        timestamp: new Date().toISOString(),
-        model: "Gemini 2.5",
-      }
-      addMessage(toolResponse)
-
-      updateActivityStatus(toolActivityId, "completed")
-      setIsLoading(false)
-      setIsTyping(false)
-      setCurrentActivity(null)
-    },
-    [addMessage, addActivity, updateActivityStatus],
-  )
+    const toolMessage: Message = {
+      id: Date.now().toString(),
+      role: "assistant",
+      timestamp: new Date().toISOString(),
+      content: `Starting ${tool}. Please provide any relevant information or documents to proceed.`,
+    }
+    setMessages((prev) => [...prev, toolMessage])
+  }
 
   return {
     messages,
-    input,
-    setInput,
-    isLoading,
+    activities,
     isTyping,
     currentActivity,
-    activities,
     sendMessage,
     handleToolClick,
   }

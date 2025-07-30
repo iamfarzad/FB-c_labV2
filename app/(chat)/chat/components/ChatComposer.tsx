@@ -5,27 +5,28 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Send,
-  Paperclip,
-  DollarSign,
-  Search,
-  ImageIcon,
-  Video,
-  Camera,
-  ScreenShare,
-  Bot,
-  Calendar,
-  Upload,
-} from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Send, Mic, Video, Monitor, Upload, BarChart, Search, ImageIcon } from "lucide-react"
 
 interface ChatComposerProps {
   onSendMessage: (message: string) => void
   onToolClick: (tool: string) => void
   isTyping: boolean
 }
+
+const ActionButton = ({
+  icon: Icon,
+  label,
+  onClick,
+}: { icon: React.ElementType; label: string; onClick: () => void }) => (
+  <Button
+    variant="ghost"
+    className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground h-8 px-3"
+    onClick={onClick}
+  >
+    <Icon className="h-4 w-4" />
+    <span className="text-sm font-medium">{label}</span>
+  </Button>
+)
 
 export function ChatComposer({ onSendMessage, onToolClick, isTyping }: ChatComposerProps) {
   const [message, setMessage] = useState("")
@@ -37,7 +38,7 @@ export function ChatComposer({ onSendMessage, onToolClick, isTyping }: ChatCompo
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
       handleSend()
@@ -45,81 +46,40 @@ export function ChatComposer({ onSendMessage, onToolClick, isTyping }: ChatCompo
   }
 
   return (
-    <div className="relative p-4 border-t bg-background/95 backdrop-blur-sm">
-      <div className="max-w-4xl mx-auto flex items-end gap-2">
-        <DropdownMenu>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="shrink-0">
-                    <Paperclip className="w-5 h-5 text-muted-foreground" />
-                    <span className="sr-only">Attach files or use tools</span>
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent>Attach files or use tools</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <DropdownMenuContent side="top" align="start" className="w-56">
-            <DropdownMenuItem onClick={() => onToolClick("roi-analysis")}>
-              <DollarSign className="mr-2 h-4 w-4" />
-              <span>ROI Analysis</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onToolClick("lead-research")}>
-              <Search className="mr-2 h-4 w-4" />
-              <span>Lead Research</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onToolClick("document-upload")}>
-              <Upload className="mr-2 h-4 w-4" />
-              <span>Document Upload</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onToolClick("image-generation")}>
-              <ImageIcon className="mr-2 h-4 w-4" />
-              <span>Image Generation</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onToolClick("video-sharing")}>
-              <Video className="mr-2 h-4 w-4" />
-              <span>Video Sharing</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onToolClick("screen-sharing")}>
-              <ScreenShare className="mr-2 h-4 w-4" />
-              <span>Screen Sharing</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onToolClick("webcam-access")}>
-              <Camera className="mr-2 h-4 w-4" />
-              <span>Webcam Access</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onToolClick("model-selection")}>
-              <Bot className="mr-2 h-4 w-4" />
-              <span>Model Selection</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onToolClick("meeting-scheduler")}>
-              <Calendar className="mr-2 h-4 w-4" />
-              <span>Meeting Scheduler</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Type your message..."
-          rows={1}
-          className="min-h-[40px] resize-none pr-12"
-          disabled={isTyping}
-        />
-        <Button
-          type="submit"
-          size="icon"
-          className="absolute right-6 bottom-6 h-8 w-8"
-          onClick={handleSend}
-          disabled={!message.trim() || isTyping}
-        >
-          <Send className="w-4 h-4" />
-          <span className="sr-only">Send message</span>
-        </Button>
+    <div className="border-t border-border/60 bg-background/95 backdrop-blur-sm p-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-background border border-border rounded-2xl p-2 shadow-sm">
+          <Textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder="Message F.B/c AI or @mention an agent..."
+            className="w-full p-4 text-base bg-transparent border-none resize-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            disabled={isTyping}
+          />
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">
+            <div className="flex items-center gap-1 flex-wrap">
+              <ActionButton icon={BarChart} label="ROI Analysis" onClick={() => onToolClick("ROI Analysis")} />
+              <ActionButton icon={Search} label="Lead Research" onClick={() => onToolClick("Lead Research")} />
+              <ActionButton icon={ImageIcon} label="Image Gen" onClick={() => onToolClick("Image Generation")} />
+              <ActionButton icon={Upload} label="Upload" onClick={() => onToolClick("Document Upload")} />
+              <ActionButton icon={Video} label="Video" onClick={() => onToolClick("Video Call")} />
+              <ActionButton icon={Monitor} label="Screen" onClick={() => onToolClick("Screen Share")} />
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                <Mic className="h-5 w-5" />
+              </Button>
+              <Button
+                onClick={handleSend}
+                disabled={!message.trim() || isTyping}
+                className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

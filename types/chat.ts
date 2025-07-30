@@ -5,7 +5,6 @@ export interface Message {
   content: string
   role: "user" | "assistant" | "system"
   timestamp: string
-  model?: string
 }
 
 export interface Activity {

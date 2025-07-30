@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useEffect } from "react"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { MessageList } from "./MessageList"
 import { ChatComposer } from "./ChatComposer"
 import { DynamicActivityIndicator } from "./DynamicActivityIndicator"
@@ -19,7 +20,7 @@ export function ChatPanel({ messages, isTyping, currentActivity, sendMessage, ha
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector("div[data-radix-scroll-area-viewport]")
+      const viewport = scrollAreaRef.current.querySelector("div")
       if (viewport) {
         viewport.scrollTo({
           top: viewport.scrollHeight,
@@ -31,10 +32,10 @@ export function ChatPanel({ messages, isTyping, currentActivity, sendMessage, ha
 
   return (
     <div className="flex flex-col flex-1 h-full">
-      <div className="flex-1 overflow-hidden">
+      <ScrollArea className="flex-1" ref={scrollAreaRef}>
         <MessageList messages={messages} isTyping={isTyping} />
-      </div>
-      <div className="shrink-0 relative">
+      </ScrollArea>
+      <div className="shrink-0">
         <DynamicActivityIndicator activity={currentActivity} />
         <ChatComposer onSendMessage={sendMessage} onToolClick={handleToolClick} isTyping={isTyping} />
       </div>

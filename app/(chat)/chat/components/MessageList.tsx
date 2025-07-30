@@ -31,14 +31,11 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages, isLoading, isTyping }: MessageListProps) {
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
 
   const scrollToBottom = () => {
-    const viewport = scrollAreaRef.current?.querySelector("div[data-radix-scroll-area-viewport]")
-    if (viewport) {
-      viewport.scrollTo({ top: viewport.scrollHeight, behavior: "smooth" })
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   useEffect(() => {
@@ -86,7 +83,7 @@ export function MessageList({ messages, isLoading, isTyping }: MessageListProps)
     })
   }
 
-  if (messages.length === 0 && !isTyping) {
+  if (messages.length === 0) {
     return (
       <div className="flex h-full items-center justify-center p-8">
         <div className="text-center space-y-8 max-w-2xl">
@@ -142,15 +139,15 @@ export function MessageList({ messages, isLoading, isTyping }: MessageListProps)
   }
 
   return (
-    <ScrollArea className="h-full" ref={scrollAreaRef}>
+    <ScrollArea className="h-full">
       <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
         {messages.map((message, index) => (
           <div
             key={message.id}
-            className={`flex gap-4 group ${message.role === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex gap-4 group ${message.sender === "user" ? "justify-end" : "justify-start"}`}
           >
-            {message.role === "assistant" && (
-              <Avatar className="w-8 h-8 border shrink-0">
+            {message.sender === "ai" && (
+              <Avatar className="w-8 h-8 border">
                 <AvatarFallback>
                   <Bot className="w-5 h-5 text-muted-foreground" />
                 </AvatarFallback>
@@ -158,11 +155,11 @@ export function MessageList({ messages, isLoading, isTyping }: MessageListProps)
             )}
 
             <div
-              className={`max-w-[75%] space-y-3 ${message.role === "user" ? "items-end" : "items-start"} flex flex-col`}
+              className={`max-w-[75%] space-y-3 ${message.sender === "user" ? "items-end" : "items-start"} flex flex-col`}
             >
               {/* Enhanced Message Header */}
               <div className="flex items-center gap-3">
-                {message.role === "assistant" && (
+                {message.sender === "ai" && (
                   <>
                     <Badge
                       variant="secondary"
@@ -191,7 +188,7 @@ export function MessageList({ messages, isLoading, isTyping }: MessageListProps)
               {/* Enhanced Message Content with better emoji rendering */}
               <div
                 className={`relative group/message rounded-2xl px-5 py-4 shadow-sm transition-all duration-300 hover:shadow-md ${
-                  message.role === "user"
+                  message.sender === "user"
                     ? "bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white ml-12 shadow-lg"
                     : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 mr-12 hover:border-slate-300 dark:hover:border-slate-600"
                 }`}
@@ -203,7 +200,7 @@ export function MessageList({ messages, isLoading, isTyping }: MessageListProps)
                 {/* Enhanced Message Actions */}
                 <div
                   className={`absolute top-3 right-3 opacity-0 group-hover/message:opacity-100 transition-all duration-200 ${
-                    message.role === "user" ? "text-white/70" : ""
+                    message.sender === "user" ? "text-white/70" : ""
                   }`}
                 >
                   <TooltipProvider>
@@ -224,7 +221,7 @@ export function MessageList({ messages, isLoading, isTyping }: MessageListProps)
                         </TooltipContent>
                       </Tooltip>
 
-                      {message.role === "assistant" && (
+                      {message.sender === "ai" && (
                         <>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -289,8 +286,8 @@ export function MessageList({ messages, isLoading, isTyping }: MessageListProps)
               </div>
             </div>
 
-            {message.role === "user" && (
-              <Avatar className="w-8 h-8 border shrink-0">
+            {message.sender === "user" && (
+              <Avatar className="w-8 h-8 border">
                 <AvatarFallback>
                   <User className="w-5 h-5 text-muted-foreground" />
                 </AvatarFallback>
@@ -349,6 +346,8 @@ export function MessageList({ messages, isLoading, isTyping }: MessageListProps)
             </div>
           </div>
         )}
+
+        <div ref={messagesEndRef} />
       </div>
     </ScrollArea>
   )
