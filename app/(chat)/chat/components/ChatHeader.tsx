@@ -1,8 +1,7 @@
 "use client"
 
+import { PanelRightClose } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { PanelLeft, Bot, Settings, PanelRightOpen } from "lucide-react"
 import type { Activity } from "@/types/chat"
 
 interface ChatHeaderProps {
@@ -11,36 +10,23 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({ activities, onToggleActivityPanel }: ChatHeaderProps) {
+  const completedActivities = activities.filter((a) => a.status === "completed").length
+
   return (
-    <header className="flex items-center justify-between p-4 border-b border-border bg-background">
-      <div className="flex items-center gap-2">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <PanelLeft className="h-5 w-5" />
-              <span className="sr-only">Toggle Menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-80">
-            {/* Placeholder for a potential future mobile sidebar */}
-            <div className="p-4">
-              <h2 className="text-lg font-semibold">F.B/c Consulting</h2>
-            </div>
-          </SheetContent>
-        </Sheet>
-        <div className="flex items-center gap-2">
-          <Bot className="h-6 w-6 text-primary" />
-          <h1 className="text-lg font-semibold">F.B/c AI Assistant</h1>
+    <header className="flex h-16 items-center justify-between border-b border-border/60 bg-background/95 px-6 backdrop-blur-sm shrink-0">
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          <div className="w-3 h-3 bg-primary rounded-full" />
+          <div className="absolute top-0 left-0 w-3 h-3 bg-primary rounded-full animate-ping" />
         </div>
+        <h1 className="text-foreground/90 text-base tracking-wide font-semibold">F.B/c AI Consultation</h1>
       </div>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon">
-          <Settings className="h-5 w-5" />
-          <span className="sr-only">Settings</span>
-        </Button>
+      <div className="flex items-center gap-4">
+        <div className="text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">{completedActivities}</span> Activities Completed
+        </div>
         <Button variant="ghost" size="icon" onClick={onToggleActivityPanel} className="hidden md:inline-flex">
-          <PanelRightOpen className="h-5 w-5" />
-          <span className="sr-only">Toggle Activity Panel</span>
+          <PanelRightClose className="h-5 w-5" />
         </Button>
       </div>
     </header>

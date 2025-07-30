@@ -14,7 +14,6 @@ import {
   RefreshCw,
   Share,
   Edit3,
-  Brain,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -22,6 +21,7 @@ import { Card } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import type { Message } from "../types/chat"
 
 interface MessageListProps {
@@ -147,9 +147,11 @@ export function MessageList({ messages, isLoading, isTyping }: MessageListProps)
             className={`flex gap-4 group ${message.sender === "user" ? "justify-end" : "justify-start"}`}
           >
             {message.sender === "ai" && (
-              <div className="w-8 h-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0 mt-1">
-                <Brain className="w-4 h-4 text-primary/70" />
-              </div>
+              <Avatar className="w-8 h-8 border">
+                <AvatarFallback>
+                  <Bot className="w-5 h-5 text-muted-foreground" />
+                </AvatarFallback>
+              </Avatar>
             )}
 
             <div
@@ -285,9 +287,11 @@ export function MessageList({ messages, isLoading, isTyping }: MessageListProps)
             </div>
 
             {message.sender === "user" && (
-              <div className="w-8 h-8 rounded-full bg-muted/30 border border-border/40 flex items-center justify-center shrink-0 mt-1">
-                <User className="w-4 h-4 text-muted-foreground" />
-              </div>
+              <Avatar className="w-8 h-8 border">
+                <AvatarFallback>
+                  <User className="w-5 h-5 text-muted-foreground" />
+                </AvatarFallback>
+              </Avatar>
             )}
           </div>
         ))}
@@ -295,9 +299,11 @@ export function MessageList({ messages, isLoading, isTyping }: MessageListProps)
         {/* Enhanced Loading State */}
         {isLoading && (
           <div className="flex gap-4 justify-start">
-            <div className="w-8 h-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0 mt-1">
-              <Brain className="w-4 h-4 text-primary/70" />
-            </div>
+            <Avatar className="w-8 h-8 border">
+              <AvatarFallback>
+                <Bot className="w-5 h-5 text-muted-foreground" />
+              </AvatarFallback>
+            </Avatar>
 
             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 mr-12 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
@@ -320,9 +326,11 @@ export function MessageList({ messages, isLoading, isTyping }: MessageListProps)
 
         {isTyping && (
           <div className="flex gap-4 justify-start">
-            <div className="w-8 h-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0 mt-1">
-              <Brain className="w-4 h-4 text-primary/70" />
-            </div>
+            <Avatar className="w-8 h-8 border">
+              <AvatarFallback>
+                <Bot className="w-5 h-5 text-muted-foreground" />
+              </AvatarFallback>
+            </Avatar>
             <div className="bg-muted/50 border border-border/40 rounded-2xl px-5 py-4">
               <div className="flex items-center gap-1">
                 <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-pulse" />

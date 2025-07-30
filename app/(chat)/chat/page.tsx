@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useChat } from "../hooks/useChat"
+import { useChat } from "./hooks/useChat"
 import { ChatHeader } from "./components/ChatHeader"
 import { ChatPanel } from "./components/ChatPanel"
 import { ActivityPanel } from "./components/ActivityPanel"

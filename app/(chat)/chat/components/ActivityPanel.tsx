@@ -1,53 +1,45 @@
-import type { Activity } from "@/types/chat"
+"use client"
+
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Loader, XCircle } from "lucide-react"
+import type { Activity } from "@/types/chat"
+import { CheckCircle2, AlertCircle, Loader } from "lucide-react"
 
-const StatusIcon = ({ status }: { status: Activity["status"] }) => {
-  switch (status) {
-    case "completed":
-      return <CheckCircle className="h-3 w-3 text-green-500" />
-    case "in_progress":
-      return <Loader className="h-3 w-3 text-blue-500 animate-spin" />
-    case "failed":
-      return <XCircle className="h-3 w-3 text-red-500" />
-    default:
-      return null
-  }
+interface ActivityPanelProps {
+  activities: Activity[]
 }
 
-export function ActivityPanel({ activities }: { activities: Activity[] }) {
+const statusIcons = {
+  completed: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+  in_progress: <Loader className="h-4 w-4 animate-spin text-blue-500" />,
+  failed: <AlertCircle className="h-4 w-4 text-red-500" />,
+}
+
+export function ActivityPanel({ activities }: ActivityPanelProps) {
   return (
-    <aside className="flex flex-col h-full w-full bg-background border-l border-border">
-      <div className="p-4 border-b border-border">
-        <h2 className="text-lg font-semibold">AI Activity Panel</h2>
-        <p className="text-sm text-muted-foreground">Real-time AI actions</p>
+    <div className="h-full flex flex-col border-l border-border/60 bg-background/80">
+      <div className="p-4 border-b border-border/60 shrink-0">
+        <h2 className="font-semibold text-lg">AI Activity Log</h2>
+        <p className="text-sm text-muted-foreground">Real-time operational trace.</p>
       </div>
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
-          {activities.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">No recent AI activities.</p>
-          )}
           {activities.map((activity) => (
             <div key={activity.id} className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center shrink-0 mt-1">
-                <activity.icon className="h-4 w-4 text-muted-foreground" />
-              </div>
+              <div className="mt-1">{statusIcons[activity.status]}</div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">{activity.title}</p>
-                  <StatusIcon status={activity.status} />
+                  <p className="font-medium text-sm">{activity.title}</p>
+                  <p className="text-xs text-muted-foreground">{activity.timestamp}</p>
                 </div>
-                <p className="text-xs text-muted-foreground">{activity.timestamp}</p>
-                {activity.details && <p className="text-xs text-muted-foreground mt-1">{activity.details}</p>}
+                <Badge variant="outline" className="mt-1 font-mono text-xs">
+                  {activity.type}
+                </Badge>
               </div>
             </div>
           ))}
         </div>
       </ScrollArea>
-      <div className="p-4 border-t border-border">
-        <Badge variant="outline">Transparency & Trust</Badge>
-      </div>
-    </aside>
+    </div>
   )
 }

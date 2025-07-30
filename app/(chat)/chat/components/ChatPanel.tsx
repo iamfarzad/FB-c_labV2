@@ -20,10 +20,13 @@ export function ChatPanel({ messages, isTyping, currentActivity, sendMessage, ha
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({
-        top: scrollAreaRef.current.scrollHeight,
-        behavior: "smooth",
-      })
+      const viewport = scrollAreaRef.current.querySelector("div")
+      if (viewport) {
+        viewport.scrollTo({
+          top: viewport.scrollHeight,
+          behavior: "smooth",
+        })
+      }
     }
   }, [messages, isTyping])
 
