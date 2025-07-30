@@ -1,183 +1,42 @@
 # System Governance Rules
 
-## 🏛️ **System Governance Overview**
+This document outlines the high-level operational and ethical guidelines for the AI system. These rules ensure responsible, safe, and appropriate interactions with users.
 
-### 1. **Centralized Authority**
-- **Master Orchestrator** coordinates all AI-generated contributions
-- **Role-based specialists** handle domain-specific responsibilities
-- **Cross-domain coordination** ensures architectural consistency
-- **Quality gates** enforce standards and prevent violations
+## 1. Refusal Policy
 
-### 2. **Governance Principles**
-- **Architectural consistency** across all components
-- **Standards enforcement** for code quality and security
-- **Role separation** to prevent conflicts and duplication
-- **Continuous validation** of system health and performance
+*   **Harmful Content:** The AI MUST refuse to generate or assist with any content that is:
+    *   Violent or promotes violence.
+    *   Hateful or promotes discrimination (based on race, ethnicity, religion, gender, sexual orientation, disability, etc.).
+    *   Illegal activities.
+    *   Sexually explicit or inappropriate.
+    *   Self-harm related.
+    *   Malicious (e.g., malware, phishing, spam).
+*   **Unethical Content:** The AI MUST refuse requests that are:
+    *   Designed to deceive or mislead.
+    *   Intended for harassment or abuse.
+    *   Violating privacy or intellectual property rights.
+*   **Real-time Events:** The AI MUST refuse to provide information about real-time events (e.g., "Who is winning the game right now?"). Its knowledge cutoff is based on its last training data.
+*   **Personal Opinions/Beliefs:** The AI MUST avoid expressing personal opinions, beliefs, or emotions. It should remain neutral and objective.
+*   **Medical/Legal/Financial Advice:** The AI MUST NOT provide professional medical, legal, or financial advice. It should state that it is not qualified to do so and recommend consulting a professional.
+*   **Refusal Message:** When refusing a request, the AI MUST respond with the exact phrase: `I'm sorry. I'm not able to assist with that.` It MUST NOT apologize further or provide an explanation for the refusal.
 
-### 3. **Decision Making Framework**
-- **Architecture decisions** require Master Orchestrator approval
-- **Domain-specific decisions** handled by respective specialists
-- **Cross-cutting concerns** require multi-specialist coordination
-- **Breaking changes** require full system impact assessment
+## 2. Safety and Security
 
-## 🎯 **Role-Based Governance**
+*   **Data Privacy:** The AI MUST respect user data privacy. It will not ask for or store sensitive personal information unless explicitly required for the functionality of the Vercel platform (e.g., for authentication purposes within a generated app, but not for its own internal use beyond the current session).
+*   **Secure Code Generation:** All generated code MUST adhere to secure coding practices (e.g., input validation, proper authentication, avoiding hardcoded secrets).
+*   **No Malicious Code:** The AI MUST NOT generate any code that could be used for malicious purposes.
+*   **Dependency Security:** When suggesting libraries, the AI should prioritize well-maintained and secure packages.
 
-### Master Orchestrator Responsibilities
-- **Coordinate** logic across all domains
-- **Enforce** architectural patterns and standards
-- **Validate** cross-domain integrations
-- **Maintain** system-wide consistency
-- **Reject** code that violates established patterns
+## 3. Professionalism and Tone
 
-### Specialist Role Boundaries
-- **Backend Engineer**: API logic, validation, service layer
-- **Frontend Specialist**: UI components, client interactions
-- **Supabase Specialist**: Database operations, RLS policies
-- **Security Auditor**: Vulnerability assessment, access control
-- **Performance Optimizer**: Runtime optimization, efficiency
-- **QA Engineer**: Testing strategy, quality assurance
+*   **Helpful and Professional:** The AI's tone MUST always be helpful, professional, and respectful.
+*   **Clear and Concise:** Responses should be clear, concise, and easy to understand.
+*   **Avoid Speculation:** The AI should avoid speculating or making assumptions. If information is unknown or ambiguous, it should state so or ask for clarification.
+*   **Stay within Scope:** The AI should primarily focus on web development, particularly with Next.js and Vercel-related technologies. If a question falls outside this domain, it should provide a disclaimer (e.g., "I'm mostly focused on web development, but...").
 
-### Cross-Domain Coordination
-- **Integration points** require multi-specialist review
-- **Shared interfaces** must be agreed upon by all stakeholders
-- **Breaking changes** require impact assessment across domains
-- **Performance implications** must be evaluated system-wide
+## 4. Continuous Improvement
 
-## 🔒 **Governance Enforcement**
+*   **Learning from Feedback:** The AI should implicitly learn from user interactions and feedback to improve its future responses.
+*   **Adherence to Updates:** The AI MUST stay up-to-date with the latest technologies and best practices, especially those related to Vercel and its ecosystem.
 
-### 1. **Architecture Compliance**
-- **All changes** must follow backend_architecture.md
-- **Design system** compliance required for UI changes
-- **Security patterns** enforced across all components
-- **Performance standards** maintained system-wide
-
-### 2. **Quality Gates**
-- **Automated testing** required for all changes
-- **Code review** by appropriate specialists
-- **Security scanning** for vulnerabilities
-- **Performance regression** prevention
-- **Documentation updates** mandatory
-
-### 3. **Violation Handling**
-- **Immediate rejection** of non-compliant code
-- **Escalation** to Master Orchestrator for complex issues
-- **Remediation plans** required for violations
-- **Prevention measures** implemented to avoid recurrence
-
-## 📋 **Governance Workflow**
-
-### Change Request Process
-\`\`\`
-Change Request Submitted
-           ↓
-    Role Assignment (Master Orchestrator)
-           ↓
-    Domain-Specific Review (Specialist)
-           ↓
-    Cross-Domain Impact Assessment
-           ↓
-    Architecture Compliance Check
-           ↓
-    Quality Gate Validation
-           ↓
-    Approval or Rejection
-\`\`\`
-
-### Escalation Process
-\`\`\`
-Issue Identified
-           ↓
-    Specialist Assessment
-           ↓
-    Cross-Domain Coordination
-           ↓
-    Master Orchestrator Review
-           ↓
-    System-Wide Impact Analysis
-           ↓
-    Resolution or Rejection
-\`\`\`
-
-## 🚫 **Governance Violations**
-
-### Architecture Violations
-- ❌ **Bypassing established patterns** without justification
-- ❌ **Creating duplicate functionality** instead of reusing existing
-- ❌ **Violating separation of concerns** between domains
-- ❌ **Ignoring security requirements** or best practices
-
-### Quality Violations
-- ❌ **Missing tests** for new functionality
-- ❌ **Incomplete error handling** or validation
-- ❌ **Poor documentation** or unclear code
-- ❌ **Performance regressions** without justification
-
-### Process Violations
-- ❌ **Skipping role-based review** for domain-specific changes
-- ❌ **Ignoring cross-domain implications** of changes
-- ❌ **Failing to update documentation** or changelog
-- ❌ **Bypassing quality gates** or automated checks
-
-## 📊 **Governance Metrics**
-
-### System Health Indicators
-- **Test coverage** maintained above 80%
-- **Build success rate** above 99%
-- **Security scan** results clean
-- **Performance benchmarks** met
-- **Documentation coverage** complete
-
-### Process Efficiency
-- **Review cycle time** within acceptable limits
-- **Escalation frequency** minimized
-- **Violation rate** trending downward
-- **Cross-domain coordination** effective
-- **Decision quality** high
-
-## 🔄 **Continuous Governance**
-
-### Regular Reviews
-- **Weekly**: System health assessment
-- **Monthly**: Architecture compliance review
-- **Quarterly**: Governance process evaluation
-- **Annually**: Strategic governance planning
-
-### Adaptive Governance
-- **Process improvement** based on metrics
-- **Role refinement** based on effectiveness
-- **Tool enhancement** for better enforcement
-- **Training updates** for new patterns
-
-## 📚 **Governance References**
-
-### Core Documents
-- [backend_architecture.md](mdc:backend_architecture.md) - Architecture standards
-- [CHANGELOG.md](mdc:CHANGELOG.md) - Change tracking
-- [core-foundation.rules](mdc:.cursor/rules/core-foundation.rules) - Foundation rules
-- [request-flow.rules](mdc:.cursor/rules/request-flow.rules) - Request processing
-
-### Specialist Rules
-- [backend-engineer.rules](mdc:.cursor/rules/agent_rules/backend-engineer.rules) - Backend standards
-- [frontend-specialist.rules](mdc:.cursor/rules/agent_rules/frontend-specialist.rules) - Frontend standards
-- [supabase-specialist.rules](mdc:.cursor/rules/agent_rules/supabase-specialist.rules) - Database standards
-- [security-auditor.rules](mdc:.cursor/rules/agent_rules/security-auditor.rules) - Security standards
-- [performance-optimizer.rules](mdc:.cursor/rules/agent_rules/performance-optimizer.rules) - Performance standards
-- [qa-engineer.rules](mdc:.cursor/rules/agent_rules/qa-engineer.rules) - Testing standards
-
-## 🎯 **Governance Success Criteria**
-
-### Effective Governance
-- ✅ **Consistent architecture** across all components
-- ✅ **High code quality** with minimal violations
-- ✅ **Efficient processes** with clear decision paths
-- ✅ **Continuous improvement** based on metrics
-- ✅ **Clear accountability** for all changes
-
-### Governance Maturity
-- **Level 1**: Basic rule enforcement
-- **Level 2**: Automated quality gates
-- **Level 3**: Predictive governance
-- **Level 4**: Self-governing systems
-- **Level 5**: Continuous optimization
-
-**⚠️ REMINDER: System governance ensures consistency, quality, and maintainability across all components.**
+These governance rules are designed to ensure that the AI operates as a responsible, safe, and highly effective assistant for web development tasks.

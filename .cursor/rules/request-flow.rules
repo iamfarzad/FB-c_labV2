@@ -1,137 +1,54 @@
 # Request Flow Rules
 
-## 🔄 **Request Processing Workflow**
+This document outlines the standard operating procedure for the AI when processing a user request. This flow ensures a systematic and comprehensive approach to understanding, planning, executing, and delivering solutions.
 
-### 1. **Initial Request Analysis**
-- **Always analyze project structure first** before making any changes
-- **Check existing implementations** to avoid duplication
-- **Verify architectural compliance** with backend_architecture.md
-- **Review recent changes** in CHANGELOG.md
+## 1. Understand User Intent (`<Thinking>` - Initial Analysis)
 
-### 2. **Request Classification**
-- **Bug Fixes**: Require failing test reproduction
-- **Feature Requests**: Require integration plan and test strategy
-- **Refactoring**: Require performance impact assessment
-- **Security Issues**: Require immediate attention and audit trail
+*   **Read the Prompt:** Carefully read the entire user prompt, including any attached files, images, or URLs.
+*   **Identify Core Need:** Determine the primary goal or problem the user is trying to solve.
+*   **Extract Key Details:** Note specific requirements, constraints, technologies mentioned, and desired outcomes.
+*   **Consult Previous Chat Summary:** Review the `PreviousChatSummary` to understand the ongoing conversation, past decisions, and the current state of the project. This is crucial for context.
+*   **Identify Implicit Requirements:** Infer unstated needs (e.g., responsiveness, accessibility, security, performance) based on best practices and the project's nature.
 
-### 3. **Implementation Planning**
-- **Single Responsibility**: One change per request
-- **Backward Compatibility**: Maintain existing functionality
-- **Testing Strategy**: Plan unit, integration, and E2E tests
-- **Documentation**: Update relevant docs and changelog
+## 2. Plan the Solution (`<Thinking>` - Planning Phase)
 
-## 🛠️ **Development Workflow**
+*   **Break Down the Request:** Divide the user's request into smaller, manageable sub-tasks.
+*   **Determine Affected Areas:** Identify which parts of the project (frontend, backend, database, specific files/components) will be impacted.
+*   **Choose Technologies:** Select appropriate technologies, frameworks, and libraries based on the project's existing stack and best practices (e.g., Next.js App Router, Shadcn UI, Tailwind CSS, AI SDK).
+*   **Design the Architecture (if applicable):** For new features, outline the high-level architecture (e.g., new API routes, components, database schema changes).
+*   **Select Code Generation Strategy:** Decide whether to create new files, modify existing ones using `<QuickEdit>`, or use file actions (`<MoveFile>`, `<DeleteFile>`).
+*   **Consider Constraints:** Factor in any explicit constraints from the user or implicit constraints from the project context (e.g., no specific colors, performance targets).
+*   **Anticipate Challenges:** Think about potential issues or edge cases and how to address them.
+*   **Security & Performance Review:** Briefly consider security implications and performance optimizations during planning.
 
-### Phase 1: Analysis
-1. **Read relevant documentation**
-2. **Understand current implementation**
-3. **Identify potential conflicts**
-4. **Plan testing strategy**
+## 3. Generate/Modify Code (Execution Phase)
 
-### Phase 2: Implementation
-1. **Follow established patterns**
-2. **Write tests first (TDD)**
-3. **Implement error handling**
-4. **Add proper logging**
+*   **Create `<CodeProject>`:** Start a single `<CodeProject>` block with the appropriate `id` (maintaining consistency).
+*   **Implement Changes:**
+    *   For new files, provide the complete code content.
+    *   For modifications, use `<QuickEdit>` with clear, unambiguous instructions and the full code snippets to be added/replaced.
+    *   For file system operations, use `<MoveFile>` or `<DeleteFile>` components.
+*   **Ensure Completeness:** Provide all necessary imports, exports, and dependencies.
+*   **Adhere to Rules:** Strictly follow all `Core Foundation Rules` (MDX, Shadcn, Tailwind, A11y, etc.).
+*   **Self-Correction:** If an error is detected during generation, correct it immediately.
 
-### Phase 3: Validation
-1. **Run all tests**
-2. **Check performance impact**
-3. **Verify security compliance**
-4. **Update documentation**
+## 4. Explain the Solution (Communication Phase)
 
-### Phase 4: Integration
-1. **Create feature branch**
-2. **Submit PR with clear description**
-3. **Ensure CI passes**
-4. **Get code review approval**
+*   **Provide Context:** Briefly explain what the generated/modified code does and how it addresses the user's request.
+*   **Highlight Key Aspects:** Point out important design decisions, new functionalities, or significant changes.
+*   **Usage Instructions:** If necessary, provide brief instructions on how to use or integrate the new code.
+*   **Cite Sources:** Include citations for any domain knowledge or Vercel knowledge base entries used.
 
-## 🎯 **Request-Specific Rules**
+## 5. Suggest Next Steps (Engagement Phase)
 
-### Bug Fixes
-- **Requirement**: Failing test that reproduces the bug
-- **Process**: Fix → Test → Document → Review
-- **Validation**: Ensure no regressions introduced
+*   **Propose Follow-up Actions:** Suggest 3-5 relevant and actionable next steps using the `<Actions>` and `<Action>` components. These should directly relate to the completed task or logical next steps in the project.
 
-### Feature Requests
-- **Requirement**: Integration plan and test strategy
-- **Process**: Design → Implement → Test → Document
-- **Validation**: Full E2E testing required
+## 6. Final Review (`<Thinking>` - Before Sending)
 
-### Refactoring
-- **Requirement**: Performance impact assessment
-- **Process**: Analyze → Plan → Execute → Validate
-- **Validation**: No functional changes, performance maintained
+*   **Completeness Check:** Is the solution complete and does it address all parts of the request?
+*   **Correctness Check:** Is the code syntactically correct and logically sound?
+*   **Rule Compliance:** Does the response adhere to all core foundation rules, including output format, technology choices, and safety guidelines?
+*   **Clarity Check:** Is the explanation clear, concise, and easy to understand?
+*   **User Experience:** Is the overall response helpful and well-structured for the user?
 
-### Security Issues
-- **Requirement**: Immediate attention and audit trail
-- **Process**: Assess → Fix → Test → Deploy
-- **Validation**: Security scan and penetration testing
-
-## 📋 **Request Validation Checklist**
-
-### Before Starting Work
-- [ ] **Project structure analyzed** and understood
-- [ ] **Existing implementations checked** for duplication
-- [ ] **Architectural compliance verified**
-- [ ] **Recent changes reviewed** in CHANGELOG.md
-- [ ] **Testing strategy planned**
-- [ ] **Integration plan documented**
-
-### During Implementation
-- [ ] **Established patterns followed**
-- [ ] **Tests written first (TDD)**
-- [ ] **Error handling implemented**
-- [ ] **Proper logging added**
-- [ ] **Security considerations addressed**
-
-### Before Submission
-- [ ] **All tests passing**
-- [ ] **Performance impact assessed**
-- [ ] **Security compliance verified**
-- [ ] **Documentation updated**
-- [ ] **CHANGELOG.md updated**
-
-## 🚫 **Request Rejection Criteria**
-
-**REJECT** any request that:
-
-- ❌ **Lacks proper analysis** of project structure
-- ❌ **Duplicates existing functionality** without justification
-- ❌ **Violates architectural patterns** defined in backend_architecture.md
-- ❌ **Missing test strategy** or failing test reproduction
-- ❌ **No integration plan** for complex changes
-- ❌ **Performance impact not assessed** for refactoring
-- ❌ **Security implications not considered**
-- ❌ **Documentation updates not planned**
-
-## 🔄 **Request Flow Diagram**
-
-\`\`\`
-Request Received
-       ↓
-   Analyze Project Structure
-       ↓
-   Check Existing Implementations
-       ↓
-   Verify Architectural Compliance
-       ↓
-   Plan Testing Strategy
-       ↓
-   Implement Solution
-       ↓
-   Validate Changes
-       ↓
-   Update Documentation
-       ↓
-   Submit for Review
-\`\`\`
-
-## 📚 **Reference Documents**
-
-- [backend_architecture.md](mdc:backend_architecture.md) - Architecture compliance
-- [CHANGELOG.md](mdc:CHANGELOG.md) - Recent changes and current state
-- [file-tree.md](mdc:file-tree.md) - Project structure overview
-- [package.json](mdc:package.json) - Dependencies and scripts
-
-**⚠️ REMINDER: Always follow this request flow to ensure quality and consistency.**
+This structured request flow ensures that every interaction is handled efficiently, resulting in high-quality, well-explained, and actionable solutions.

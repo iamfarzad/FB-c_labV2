@@ -1,290 +1,57 @@
 # Gemini API Mocking Strategy
 
-## 🚨 **CRITICAL: Prevent API Cost Burning**
+This document outlines the strategy for mocking the Google Gemini API during development and testing. Mocking allows us to develop and test features that rely on Gemini without incurring API costs, hitting rate limits, or depending on external service availability.
 
-**MANDATORY**: All Gemini API endpoints MUST be mocked in development to prevent budget burning. The project experienced a 1,827% cost increase due to unchecked API calls.
+## 1. Goals
 
-## 🔧 **Implementation Requirements**
+*   **Cost Reduction:** Avoid unnecessary API calls to Gemini during development and automated testing.
+*   **Faster Development:** Eliminate network latency and external service dependencies for quicker feedback cycles.
+*   **Consistent Testing:** Ensure predictable responses for unit, integration, and E2E tests.
+*   **Offline Development:** Enable developers to work on AI-dependent features without an internet connection.
+*   **Error Simulation:** Easily simulate various API responses, including errors, rate limits, and unexpected data.
 
-### **1. Environment-Based Mocking**
+## 2. Approach
 
-**MANDATORY**: Use environment variable `ENABLE_GEMINI_MOCKING` to control API behavior:
+We will implement API route interception using Next.js Middleware to redirect requests intended for the actual Gemini API to local mock handlers.
 
-\`\`\`bash
-# .env.local - Development (MOCKING ENABLED)
-ENABLE_GEMINI_MOCKING=true
+### 2.1. Next.js Middleware (`middleware.ts`)
 
-# .env.production - Production (REAL API)
-ENABLE_GEMINI_MOCKING=false
-\`\`\`
+The `middleware.ts` file will be responsible for:
 
-### **2. Middleware Interception**
+*   **Environment Check:** Only enable mocking in `development` environments (controlled by `process.env.NODE_ENV`).
+*   **Feature Flag:** Use an environment variable (`ENABLE_GEMINI_MOCKING`) to explicitly enable/disable mocking.
+*   **Route Matching:** Identify API routes that interact with the Gemini API (e.g., `/api/chat`, `/api/analyze-image`).
+*   **Request Rewriting:** Rewrite the URL of matched requests to point to a corresponding mock API route (e.g., `/api/chat` -> `/api/mock/chat`).
 
-**MANDATORY**: Implement middleware to intercept Gemini API calls in development:
+**Example Middleware Logic:**
 
-\`\`\`typescript
+```typescript
 // middleware.ts
-export function middleware(req: NextRequest) {
-  if (process.env.NODE_ENV !== 'development') {
-    return NextResponse.next()
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function middleware(request: NextRequest) {
+  if (process.env.NODE_ENV !== 'development' || process.env.ENABLE_GEMINI_MOCKING !== 'true') {
+    return NextResponse.next();
   }
 
-  const enableMocking = process.env.ENABLE_GEMINI_MOCKING === 'true'
-  if (!enableMocking) {
-    return NextResponse.next()
-  }
-
-  // Intercept Gemini routes
   const geminiRoutes = [
     '/api/chat',
     '/api/gemini-live',
-    '/api/gemini-live-conversation',
-    '/api/analyze-image',
-    '/api/analyze-document',
-    '/api/analyze-screenshot',
-    '/api/video-to-app',
-    '/api/lead-research',
-    '/api/educational-content',
-    '/api/ai-stream',
-    '/api/export-summary'
-  ]
+    // ... other Gemini-dependent API routes
+  ];
 
-  const isGeminiRoute = geminiRoutes.some(route => 
-    req.nextUrl.pathname.startsWith(route)
-  )
+  const isGeminiRoute = geminiRoutes.some(route => request.nextUrl.pathname.startsWith(route));
 
   if (isGeminiRoute) {
-    const mockUrl = req.nextUrl.clone()
-    mockUrl.pathname = '/api/mock' + req.nextUrl.pathname
-    return NextResponse.rewrite(mockUrl)
+    const mockUrl = request.nextUrl.clone();
+    mockUrl.pathname = '/api/mock' + request.nextUrl.pathname; // Prepend /api/mock
+    console.log(`🟠 Mocking Gemini API: ${request.nextUrl.pathname} -> ${mockUrl.pathname}`);
+    return NextResponse.rewrite(mockUrl);
   }
 
-  return NextResponse.next()
-}
-\`\`\`
-
-### **3. Mock API Structure**
-
-**MANDATORY**: Create mock endpoints under `/api/mock/` directory:
-
-\`\`\`
-app/api/mock/
-├── chat/
-│   └── route.ts
-├── gemini-live/
-│   └── route.ts
-├── gemini-live-conversation/
-│   └── route.ts
-├── analyze-image/
-│   └── route.ts
-├── analyze-document/
-│   └── route.ts
-├── lead-research/
-│   └── route.ts
-└── status/
-    └── route.ts
-\`\`\`
-
-### **4. Mock Response Standards**
-
-**MANDATORY**: All mock responses must include:
-
-\`\`\`typescript
-// Required mock response structure
-{
-  success: true,
-  content: '[MOCK] Response content...',
-  correlationId: string,
-  responseTime: number,
-  mock: true, // Always include this flag
-  timestamp: new Date().toISOString()
-}
-\`\`\`
-
-### **5. Realistic Mock Data**
-
-**MANDATORY**: Provide realistic mock responses that match expected API behavior:
-
-\`\`\`typescript
-// Mock response examples
-const MOCK_RESPONSES = {
-  chat: (message: string) => 
-    `[MOCK] Thank you for your message: "${message.substring(0, 50)}...". I'm here to help with your business needs.`,
-  
-  tts: (prompt: string) => 
-    `[MOCK TTS] ${prompt?.substring(0, 100)}... This is a development mock response.`,
-  
-  imageAnalysis: (type: string) => 
-    type === 'webcam' 
-      ? '[MOCK] I can see a person in front of a computer screen. The environment appears to be a home office setup.'
-      : '[MOCK] I can see a screenshot showing what appears to be a business application or website.',
-  
-  documentAnalysis: () => ({
-    summary: '[MOCK] This appears to be a business document containing important information.',
-    keyInsights: ['Business process documentation identified', 'Potential automation opportunities detected'],
-    recommendations: ['Consider AI automation for repetitive tasks', 'Implement process optimization strategies']
-  })
-}
-\`\`\`
-
-### **6. Simulated Processing Delays**
-
-**MANDATORY**: Include realistic delays to simulate API processing:
-
-\`\`\`typescript
-const MOCK_DELAYS = {
-  chat: 1000,
-  tts: 800,
-  imageAnalysis: 1200,
-  documentAnalysis: 1500,
-  leadResearch: 2000,
-  videoProcessing: 3000
+  return NextResponse.next();
 }
 
-// Usage in mock endpoints
-await new Promise(resolve => setTimeout(resolve, MOCK_DELAYS.chat))
-\`\`\`
-
-### **7. Mock Configuration File**
-
-**MANDATORY**: Create [lib/mock-config.ts](mdc:lib/mock-config.ts) for centralized mock configuration:
-
-\`\`\`typescript
-export const MOCK_CONFIG = {
-  enabled: process.env.NODE_ENV === 'development' && process.env.ENABLE_GEMINI_MOCKING === 'true',
-  
-  delays: {
-    chat: 1000,
-    tts: 800,
-    imageAnalysis: 1200,
-    documentAnalysis: 1500,
-    leadResearch: 2000,
-    videoProcessing: 3000
-  },
-  
-  responses: {
-    // Mock response templates
-  }
-}
-
-export function logMockActivity(endpoint: string, correlationId: string) {
-  console.log(`🟠 [MOCK] ${endpoint} called with correlation ID: ${correlationId}`)
-}
-\`\`\`
-
-### **8. Mock Status Endpoint**
-
-**MANDATORY**: Create `/api/mock/status` endpoint to verify mock status:
-
-\`\`\`typescript
-// app/api/mock/status/route.ts
-export async function GET() {
-  return NextResponse.json({
-    mockEnabled: MOCK_CONFIG.enabled,
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString(),
-    mockedEndpoints: [
-      '/api/chat',
-      '/api/gemini-live',
-      '/api/gemini-live-conversation',
-      '/api/analyze-image',
-      '/api/analyze-document',
-      '/api/analyze-screenshot',
-      '/api/video-to-app',
-      '/api/lead-research',
-      '/api/educational-content',
-      '/api/ai-stream',
-      '/api/export-summary'
-    ]
-  })
-}
-\`\`\`
-
-## 🎯 **Usage Guidelines**
-
-### **Development Workflow**
-
-1. **Always enable mocking in development**:
-   \`\`\`bash
-   ENABLE_GEMINI_MOCKING=true
-   \`\`\`
-
-2. **Test mock responses**:
-   \`\`\`bash
-   curl http://localhost:3000/api/mock/status
-   \`\`\`
-
-3. **Verify UI behavior with mocks** before enabling real API
-
-### **Production Deployment**
-
-1. **Disable mocking in production**:
-   \`\`\`bash
-   ENABLE_GEMINI_MOCKING=false
-   \`\`\`
-
-2. **Monitor API costs** after deployment
-
-3. **Use staging environment** for final testing with real API
-
-## 🚫 **Prohibited Patterns**
-
-### **Security Violations**
-- ❌ No hardcoded API keys in mock responses
-- ❌ No real API calls in development mode
-- ❌ No sensitive data in mock responses
-
-### **Performance Violations**
-- ❌ No excessive delays (>5 seconds)
-- ❌ No blocking operations in mock endpoints
-- ❌ No real database calls in mocks
-
-### **Code Quality Violations**
-- ❌ No mock responses without `mock: true` flag
-- ❌ No missing correlation IDs
-- ❌ No inconsistent response formats
-
-## ✅ **Compliance Checklist**
-
-Before any Gemini API endpoint can be deployed:
-
-- [ ] **Mock endpoint created** under `/api/mock/`
-- [ ] **Middleware interception** implemented
-- [ ] **Environment variable** configured
-- [ ] **Realistic delays** included
-- [ ] **Mock flag** added to responses
-- [ ] **Correlation IDs** included
-- [ ] **Status endpoint** created
-- [ ] **UI testing** completed with mocks
-- [ ] **Cost monitoring** enabled
-
-## 📊 **Cost Prevention Metrics**
-
-Track and maintain:
-- **Development API Calls**: 0 (all mocked)
-- **Production API Calls**: Monitored and budgeted
-- **Mock Response Time**: <2 seconds average
-- **UI Test Coverage**: 100% with mock responses
-- **Budget Compliance**: Zero development costs
-
-## 🔄 **Testing Strategy**
-
-### **Mock Testing**
-1. **Unit tests** for mock endpoints
-2. **Integration tests** with mock responses
-3. **UI tests** using mock data
-4. **Performance tests** with mock delays
-
-### **Real API Testing**
-1. **Staging environment** only
-2. **Limited test data** to minimize costs
-3. **Budget monitoring** during testing
-4. **Rollback plan** if costs exceed limits
-
----
-
-**Remember**: Quality and cost control over speed. Every Gemini API call must be mocked in development to prevent budget burning.
-description:
-globs:
-alwaysApply: false
----
+export const config = {
+  matcher: ['/api/:path*'], // Apply middleware to all /api routes
+};

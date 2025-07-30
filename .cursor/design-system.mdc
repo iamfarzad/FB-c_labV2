@@ -1,33 +1,107 @@
----
-description: "Frontend Design System & Style Guide"
-alwaysApply: true
-globs:
-  - "**/*"
----
+# Design System Documentation
 
-# Frontend Design System & Style Guide
+This document outlines the principles, components, and guidelines for our application's design system. It aims to ensure consistency, efficiency, and a high-quality user experience across all our products.
 
-All UI and frontend code must strictly follow the canonical design system and style guide as defined in [frontend_design.md](mdc:frontend_design.md).
+## 1. Principles
 
-**Key requirements:**
-- Use only design tokens for color, spacing, typography, border radius, and shadows as defined in [frontend_design.md](mdc:frontend_design.md) and [DESIGN.md](mdc:DESIGN.md).
-- Reference all color and font variables via CSS custom properties or Tailwind config. No hard-coded hex/rgb values or inline font-family in components.
-- Use Tailwind's spacing and border radius scale mapped to tokens.
-- Follow the accessibility, responsive, and ARIA guidelines in [frontend_design.md](mdc:frontend_design.md).
-- All interactive elements must have visible focus states using the accent color.
-- Use only approved component patterns (e.g., .btn-primary, .card-minimal, etc.) and avoid arbitrary values in Tailwind classes.
-- All changes to design tokens or style rules require UI owner approval as per [DESIGN.md](mdc:DESIGN.md).
+*   **Consistency:** Maintain a unified look and feel across all interfaces to reduce cognitive load and improve usability.
+*   **Modularity:** Components are self-contained, reusable, and composable, allowing for flexible and efficient development.
+*   **Accessibility:** Design and build with accessibility in mind, ensuring our products are usable by everyone, regardless of ability.
+*   **Responsiveness:** Components and layouts adapt seamlessly to various screen sizes and devices.
+*   **Scalability:** The system is designed to grow and evolve with our product, accommodating new features and technologies.
+*   **Clarity:** User interfaces should be intuitive and easy to understand, guiding users through their tasks effectively.
 
-**References:**
-- [frontend_design.md](mdc:frontend_design.md) (canonical design system)
-- [DESIGN.md](mdc:DESIGN.md) (token source, change policy)
-- [Tailwind CSS Docs](https://tailwindcss.com/docs)
-- [Shadcn UI](https://ui.shadcn.com/)
+## 2. Core Elements
 
-**Violations:**
-- No inline styles for color, font, or spacing
-- No hard-coded hex/rgb values in components
-- No arbitrary values in Tailwind classes (e.g., `text-[#ff5b04]`)
-- No direct font-family in component files
+### 2.1. Typography
 
-All PRs must pass style lint and visual regression tests. For any questions, consult the design system documentation or UI owner.
+*   **Font Family:** Inter (or similar sans-serif for readability)
+*   **Headings:**
+    *   H1: `text-4xl` (e.g., `font-bold`, `tracking-tight`)
+    *   H2: `text-3xl`
+    *   H3: `text-2xl`
+    *   H4: `text-xl`
+*   **Body Text:** `text-base` (e.g., `leading-relaxed`)
+*   **Small Text:** `text-sm`, `text-xs`
+*   **Font Weights:** Regular, Medium, Semibold, Bold
+
+### 2.2. Color Palette
+
+Our color palette is designed to be modern, professional, and accessible.
+
+*   **Primary:** `hsl(222.2 47.4% 11.2%)` (Dark Blue/Slate - `background` in `tailwind.config.ts`)
+    *   Used for main interactive elements, branding.
+*   **Accent/Secondary:** `hsl(210 40% 96.1%)` (Light Gray - `foreground` in `tailwind.config.ts`)
+    *   Used for secondary actions, highlights.
+*   **Text:** `hsl(215 20.2% 65.1%)` (Muted Gray - `muted-foreground` in `tailwind.config.ts`)
+    *   For body text, labels.
+*   **Background:** `hsl(0 0% 100%)` (White - `background` in `tailwind.config.ts`)
+    *   Main background color.
+*   **Border:** `hsl(214.3 31.8% 91.4%)` (Light Gray - `border` in `tailwind.config.ts`)
+    *   For separators, outlines.
+*   **Destructive:** `hsl(0 84.2% 60.2%)` (Red)
+    *   For error states, dangerous actions.
+
+*(Note: Specific HSL values are from `tailwind.config.ts` and represent shadcn/ui defaults, which we adhere to.)*
+
+### 2.3. Spacing
+
+We use a consistent 4-pixel grid for all spacing (margins, paddings, gaps).
+
+*   `space-x-1` (4px)
+*   `space-y-2` (8px)
+*   `p-4` (16px)
+*   `gap-3` (12px)
+
+### 2.4. Iconography
+
+*   **Library:** Lucide React
+*   **Usage:** Icons should be used to enhance comprehension, not replace text. Maintain consistent sizing and color.
+
+### 2.5. Imagery
+
+*   **Placeholders:** Use `/placeholder.svg?height={height}&width={width}&query={query}` for development.
+*   **Production:** Optimize images for web (compression, appropriate formats like WebP).
+*   **Alt Text:** Always provide descriptive `alt` text for accessibility.
+
+## 3. Components (Shadcn/ui)
+
+We primarily use [shadcn/ui](https://ui.shadcn.com/) as our component library, which is built on Tailwind CSS and Radix UI. This provides a solid foundation for accessible and customizable components.
+
+**Key Components Used:**
+
+*   **Buttons:** `Button` (various `variant` and `size` props)
+*   **Cards:** `Card`, `CardHeader`, `CardContent`, `CardFooter`, `CardTitle`, `CardDescription`
+*   **Forms:** `Input`, `Textarea`, `Label`, `Checkbox`, `RadioGroup`, `Select`
+*   **Navigation:** `Sheet` (for mobile menus), `DropdownMenu`
+*   **Feedback:** `Toast` (via `useToast` hook), `AlertDialog`
+*   **Layout:** `ResizablePanelGroup`, `Separator`
+*   **Data Display:** `Avatar`, `Badge`, `Table`
+*   **Modals:** `Dialog` (for general modals), `Sheet` (for side drawers)
+
+**Customizations:**
+
+*   We extend shadcn/ui components with additional Tailwind CSS classes for specific styling needs.
+*   Custom components are built using Radix UI primitives when shadcn/ui doesn't offer a suitable solution.
+
+## 4. Layouts
+
+*   **Responsive Design:** All layouts are built with a mobile-first approach, using Tailwind's responsive utility classes (e.g., `sm:`, `md:`, `lg:`).
+*   **Container:** `container` class with `mx-auto` for consistent content width.
+*   **Flexbox & Grid:** Used extensively for flexible and robust layouts.
+
+## 5. Accessibility (A11y)
+
+*   **Semantic HTML:** Use appropriate HTML5 elements (e.g., `main`, `header`, `nav`, `button`).
+*   **ARIA Attributes:** Apply ARIA roles and attributes where native HTML semantics are insufficient (e.g., `aria-label`, `aria-live`).
+*   **Keyboard Navigation:** Ensure all interactive elements are keyboard accessible and have clear focus states.
+*   **Color Contrast:** Maintain sufficient color contrast ratios for text and interactive elements.
+*   **Screen Reader Support:** Use `sr-only` for visually hidden text that provides context for screen readers.
+
+## 6. Development Workflow
+
+*   **Tailwind CSS:** Utility-first CSS framework for rapid styling.
+*   **ESLint & Prettier:** Enforce code style and quality.
+*   **Storybook (Future):** Potentially for isolated component development and documentation.
+
+This design system serves as a living guide, evolving with our product and user needs. Adherence to these guidelines ensures a cohesive and delightful experience for our users.

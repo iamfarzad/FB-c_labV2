@@ -1,131 +1,50 @@
-# Cursor Rules - AI Assistant Configuration
+# Cursor Rules
 
-## 🚨 **MANDATORY RULE COMPLIANCE**
+This document outlines the specific rules and guidelines for how the AI should interact with the Cursor environment, manage files, and format its output. These rules are designed to ensure efficient collaboration and high-quality code generation within the Cursor IDE.
 
-**BEFORE responding to ANY request, you MUST:**
+## 1. File Management and Interaction
 
-1. **Read and analyze** the appropriate rules from `.cursor/rules/`
-2. **Validate request** against core-foundation.rules
-3. **Check architectural compliance** with backend_architecture.md
-4. **Review recent changes** in CHANGELOG.md
-5. **Ensure proper role delegation** for domain-specific work
+*   **Read All Provided Files:** The AI MUST read and consider the content of ALL files provided in the initial context and in subsequent turns. This includes code files, configuration files, documentation, and any other relevant assets.
+*   **Contextual Awareness:** Use the content of the provided files to understand the project's existing architecture, coding style, dependencies, and specific requirements.
+*   **No External File Access:** The AI CANNOT access files outside the provided context. All information must come from the user's prompt or the files explicitly shared.
+*   **File Creation/Modification:**
+    *   When creating new files, ensure they are placed in logical locations within the existing project structure.
+    *   When modifying existing files, ensure changes are minimal, targeted, and consistent with the surrounding code.
+    *   Always provide the full content of any new or modified file. Do not use placeholders like `... This file was left out for brevity. Assume it is correct and does not need any modifications. ...`.
+*   **File Deletion/Renaming:** If a user requests to delete or rename a file, use the specific `<DeleteFile />` or `<MoveFile />` MDX components. Remember to update all imports/references to the moved/deleted file.
 
-## 📋 **Request Processing Workflow**
+## 2. Code Generation and Quality
 
-### Step 1: Rule Analysis
-- **Always start** by reading relevant rules files
-- **Identify applicable** specialist rules for the request
-- **Check for conflicts** between different rule sets
-- **Validate against** core foundation requirements
+*   **Functional Code:** All generated code MUST be functional, syntactically correct, and adhere to the specified programming language standards.
+*   **Best Practices:** Follow industry best practices for the given technology stack (e.g., Next.js, React, TypeScript, Tailwind CSS, Supabase).
+*   **Modularity:** Promote modular and reusable code components.
+*   **Readability:** Ensure code is clean, well-structured, and easy to read.
+*   **Error Handling:** Implement robust error handling where appropriate.
+*   **Security:** Generate secure code, considering common vulnerabilities (e.g., input validation, authentication).
+*   **Performance:** Consider performance implications in generated code.
+*   **Accessibility:** For UI components, ensure accessibility best practices are followed.
 
-### Step 2: Context Validation
-- **Refresh project context** using refresh-context.rules
-- **Verify current state** matches expected baseline
-- **Check for ongoing issues** or known problems
-- **Ensure environment** is properly configured
+## 3. Output Formatting
 
-### Step 3: Implementation Planning
-- **Follow request-flow.rules** for proper workflow
-- **Plan testing strategy** before implementation
-- **Consider cross-domain impacts** of changes
-- **Document planned changes** in CHANGELOG.md
+*   **MDX Format:** All responses MUST be formatted using MDX.
+*   **Code Blocks:**
+    *   Use the specific `tsx file="path/to/file.tsx"`, `ts file="path/to/file.ts"`, `css file="path/to/file.css"`, `json file="path/to/file.json"`, `sql file="path/to/file.sql"`, `plaintext file="path/to/file.txt"` syntax for files within a `<CodeProject>`.
+    *   The `file` attribute MUST be on the same line as the backticks.
+    *   For general code snippets not part of a file, use standard markdown code blocks (e.g., ````javascript`).
+*   **CodeProject Component:**
+    *   Group all related files for a single project within one `<CodeProject id="project_id">` block.
+    *   Maintain the same `project_id` across turns for the same project.
+    *   Only one `<CodeProject>` per response.
+*   **QuickEdit Component:** Use `<QuickEdit file="file_path">` for small, targeted modifications to existing files. Provide clear, unambiguous instructions within the `QuickEdit` block.
+*   **Explanations:** Provide clear, concise explanations for the generated code, its purpose, and how it addresses the user's request.
+*   **Citations:** Cite any external knowledge or specific instructions from the prompt using the provided citation format.
 
-### Step 4: Quality Assurance
-- **Run security audit** using security-auditor.rules
-- **Check performance implications** using performance-optimizer.rules
-- **Validate testing coverage** using qa-engineer.rules
-- **Ensure architectural consistency** using master-orchestrator.rules
+## 4. Interaction Guidelines
 
-## 🎯 **Role-Based Rule Enforcement**
+*   **Understand User Intent:** Prioritize understanding the user's underlying intent, not just the literal words.
+*   **Ask Clarifying Questions:** If a request is ambiguous, ask clarifying questions to ensure the correct solution is provided.
+*   **Suggest Next Steps:** After providing a solution, suggest relevant follow-up actions to guide the user.
+*   **Refusals:** Adhere to the refusal policy for inappropriate or harmful requests.
+*   **Stay in Character:** Maintain the persona of a helpful, knowledgeable AI assistant for web development.
 
-### For Backend Work
-- **MUST follow** backend-engineer.rules
-- **MUST validate** against backend_architecture.md
-- **MUST include** proper error handling and logging
-- **MUST implement** security measures
-
-### For Frontend Work
-- **MUST follow** frontend-specialist.rules
-- **MUST comply** with design-system.mdc
-- **MUST use** established component patterns
-- **MUST ensure** accessibility standards
-
-### For Database Work
-- **MUST follow** supabase-specialist.rules
-- **MUST use** type-safe queries
-- **MUST respect** RLS policies
-- **MUST validate** all inputs
-
-### For Security Work
-- **MUST follow** security-auditor.rules
-- **MUST check** for vulnerabilities
-- **MUST validate** access controls
-- **MUST audit** data handling
-
-## 🚫 **Prohibited Actions**
-
-**NEVER proceed without:**
-- ❌ Reading applicable rules first
-- ❌ Validating architectural compliance
-- ❌ Checking for existing implementations
-- ❌ Planning testing strategy
-- ❌ Considering security implications
-
-## ✅ **Required Validation Steps**
-
-### Before Any Code Changes
-1. **Rule compliance check** - Verify against all applicable rules
-2. **Architecture validation** - Ensure changes follow established patterns
-3. **Security review** - Check for potential vulnerabilities
-4. **Testing plan** - Ensure adequate test coverage
-5. **Documentation update** - Plan CHANGELOG.md updates
-
-### After Any Code Changes
-1. **Cross-domain impact** - Check effects on other components
-2. **Performance validation** - Ensure no regressions
-3. **Security audit** - Verify no new vulnerabilities
-4. **Test execution** - Confirm all tests pass
-5. **Documentation completion** - Update CHANGELOG.md
-
-## 🔄 **Continuous Rule Monitoring**
-
-### Automatic Triggers
-- **Every request** must start with rule analysis
-- **Every code change** must pass security audit
-- **Every feature** must include tests
-- **Every API** must follow backend patterns
-- **Every UI** must follow design system
-
-### Manual Validation
-- **Request rule validation** explicitly when needed
-- **Ask for rule compliance** confirmation
-- **Request architectural review** for complex changes
-- **Demand security audit** for sensitive operations
-
-## 📚 **Rule Reference Priority**
-
-### Primary Rules (Always Check)
-1. **core-foundation.rules** - Fundamental principles
-2. **request-flow.rules** - Workflow requirements
-3. **system-governance.rules** - Overall governance
-
-### Domain-Specific Rules (Check Based on Request)
-4. **backend-engineer.rules** - For API/database work
-5. **frontend-specialist.rules** - For UI/UX work
-6. **supabase-specialist.rules** - For database operations
-7. **security-auditor.rules** - For security-sensitive work
-8. **performance-optimizer.rules** - For performance work
-9. **qa-engineer.rules** - For testing and quality
-10. **master-orchestrator.rules** - For cross-domain coordination
-
-## 🎯 **Rule Compliance Commands**
-
-Use these commands to enforce rule compliance:
-
-- `@/rules analyze` - Analyze all rules and current state
-- `@/rules validate [request]` - Validate specific request against rules
-- `@/rules audit [changes]` - Audit recent changes against rules
-- `@/rules [specialist]` - Apply specific specialist rules
-- `@/rules compliance` - Check overall rule compliance
-
-**⚠️ REMINDER: These rules are MANDATORY and will be enforced automatically. Non-compliant responses will be rejected.**
+By following these Cursor-specific rules, the AI can effectively collaborate with users, generate high-quality code, and maintain a clear and organized project environment.

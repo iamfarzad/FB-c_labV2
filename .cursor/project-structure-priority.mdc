@@ -1,204 +1,90 @@
----
-description: "Project Structure & Priority Guidelines"
-alwaysApply: true
-globs:
-  - "**/*"
----
+# Project Structure and Priority Analysis
 
+This document outlines the current project structure, identifies key areas, and proposes a priority order for development and refactoring based on common web application patterns and the provided file list.
 
-# Project Structure & Priority Guidelines
+## 1. Current Project Structure Overview
 
-## 🎯 **MANDATORY: Always Analyze Project Structure First**
+The project appears to be a Next.js application with a strong emphasis on AI-powered chat and lead generation, featuring:
 
-**BEFORE making any changes, you MUST:**
-1. **Read [file-tree.md](mdc:file-tree.md) completely** - Understand the current architecture
-2. **Check [backend_architecture.md](mdc:backend_architecture.md)** - Verify compliance with backend rules
-3. **Review [CHANGELOG.md](mdc:CHANGELOG.md)** - Understand recent changes and current state
-4. **Analyze existing patterns** - Follow established conventions
+*   **`app/` directory:** Utilizes the Next.js App Router for routing, layouts, and API routes.
+    *   `app/(chat)/chat/`: Core chat application, likely including UI components, hooks, and types.
+    *   `app/api/`: Backend API routes, including admin, AI integrations (Gemini), lead capture, meetings, and various tools.
+    *   `app/admin/`: Admin dashboard pages and login.
+    *   `app/(site)/`: Public-facing website pages (home, about, contact).
+*   **`components/` directory:** Houses reusable React components, including Shadcn UI components (`components/ui/`) and custom components (e.g., `components/admin/`, `components/chat/`).
+*   **`hooks/` directory:** Contains custom React hooks for encapsulating logic and state.
+*   **`lib/` directory:** Core utility functions, services, and business logic (e.g., `supabase`, `auth`, `lead-manager`, `model-selector`).
+*   **`scripts/` directory:** Various Node.js and SQL scripts for database migrations, testing, and development utilities.
+*   **`supabase/` directory:** Supabase-specific configurations and database migrations.
+*   **`tests/` directory:** Comprehensive test suite (unit, integration, E2E).
+*   **`types/` directory:** Global TypeScript type definitions.
+*   **Documentation (`.md`, `.mdc` files):** Extensive documentation covering AI models, backend architecture, design, testing, etc.
 
-## 🏗️ **Project Architecture Overview**
+## 2. Key Areas and Their Interdependencies
 
-### **Core Structure**
-\`\`\`
-FB-c_labV2/
-├── app/                    # Next.js App Router
-│   ├── api/               # API Routes (RESTful endpoints)
-│   ├── chat/              # Main chat interface
-│   └── globals.css        # Global styles
-├── components/            # React components
-│   ├── chat/             # Chat-specific components
-│   ├── ui/               # Shadcn UI components
-│   └── providers/        # Context providers
-├── lib/                  # Core libraries and services
-│   ├── supabase/         # Database client
-│   ├── unified-ai-service.ts  # Main AI service
-│   └── validation.ts     # Input validation
-├── hooks/                # Custom React hooks
-├── tests/                # Test suite
-└── scripts/              # Utility scripts
-\`\`\`
+1.  **AI Chat Core (`app/(chat)/chat/`, `app/api/chat`, `lib/conversation-state-manager`, `lib/model-selector`):** This is the central functionality. It relies heavily on API routes, state management, and AI model integration.
+2.  **Lead Generation System (`app/(chat)/chat/components/lead-capture/`, `app/api/lead-capture`, `lib/lead-manager`, `lib/lead-management`):** Integrates with the chat to capture and manage lead data.
+3.  **Admin Dashboard (`app/admin/`, `app/api/admin/`, `components/admin/`, `lib/auth`):** Provides monitoring and management tools, requiring robust authentication and data access.
+4.  **Authentication & Security (`lib/auth`, `middleware.ts`, `lib/api-security`):** Cross-cutting concern, fundamental for all protected routes and data.
+5.  **Database (`lib/supabase/`, `supabase/migrations/`, `scripts/`):** Underpins almost all persistent data.
+6.  **Tooling & Integrations (`app/api/tools/`, `lib/services/tool-service`, various modal/card components):** Extends AI capabilities with specific actions (e.g., ROI calculation, screen share).
+7.  **UI/UX (`components/`, `app/(site)/`, `app/(chat)/chat/components/new-ui/`):** Frontend presentation layer, including a planned "new-ui" overhaul.
+8.  **Observability (`lib/server-activity-logger`, `lib/token-usage-logger`, `components/admin/AIPerformanceMetrics`, `components/admin/RealTimeActivity`):** Critical for monitoring system health, performance, and costs.
+9.  **Testing (`tests/`, `scripts/run-tests.sh`):** Ensures correctness and stability.
 
-## 🚫 **Prevention Rules**
+## 3. Priority Order for Development/Refactoring
 
-### **Duplicate Code Prevention**
-- **Check existing implementations** before creating new components
-- **Search for similar functionality** in `lib/` and `components/`
-- **Use existing patterns** from similar components
-- **Avoid reinventing** already solved problems
+Based on the current state and common development practices, here's a proposed priority order:
 
-### **API Route Prevention**
-- **Single AI endpoint**: Use `/api/ai` for all AI operations
-- **No duplicate routes**: Check existing API routes before creating new ones
-- **Follow RESTful patterns**: Use proper HTTP methods and status codes
-- **Consistent error handling**: Use standardized error responses
+### Priority 1: Core Functionality & Stability (Foundational)
 
-### **Technology Stack Enforcement**
-- **AI Model**: Gemini 2.5 Flash (primary) / Gemini 1.5 Flash (fallback)
-- **Database**: Supabase with PostgreSQL
-- **Frontend**: Next.js 14+ with App Router
-- **UI**: Shadcn UI + Tailwind CSS
-- **State**: React hooks + Context API
-- **Testing**: Jest + Playwright
+*   **Authentication & Authorization (`lib/auth`, `middleware.ts`, `app/admin/login/page.tsx`):**
+    *   **Reason:** Absolutely critical for any secure application. Ensure admin and user authentication is robust and correctly implemented across all protected routes.
+    *   **Action:** Verify JWT handling, role-based access, and middleware configuration.
+*   **Database Schema & RLS (`supabase/migrations/`, `lib/supabase/server.ts`):**
+    *   **Reason:** Data integrity and security are paramount. Incorrect RLS can lead to data breaches.
+    *   **Action:** Review and test all RLS policies, ensure migrations are idempotent and correctly applied.
+*   **Core AI Chat Flow (`app/api/chat/route.ts`, `lib/conversation-state-manager.ts`, `app/(chat)/chat/page.tsx`):**
+    *   **Reason:** This is the primary value proposition. Ensure the chat interaction is stable, responsive, and correctly integrates with Gemini.
+    *   **Action:** Focus on message sending, AI response streaming, and basic conversation state management.
+*   **Error Handling & Logging (`app/error.tsx`, `lib/server-activity-logger.ts`):**
+    *   **Reason:** Essential for debugging, monitoring, and providing a good user experience during failures.
+    *   **Action:** Ensure comprehensive logging for all API routes and graceful error display on the frontend.
 
-## 🔍 **Error Prevention Checklist**
+### Priority 2: Essential Features & Performance
 
-### **Before Any Code Change:**
-- [ ] **Architecture compliance** - Follows backend_architecture.md rules
-- [ ] **No duplicate functionality** - Checked existing implementations
-- [ ] **Proper error handling** - Try/catch blocks and user feedback
-- [ ] **Type safety** - TypeScript types defined
-- [ ] **Testing strategy** - Unit/integration tests planned
-- [ ] **Performance impact** - No unnecessary re-renders or API calls
-- [ ] **Security considerations** - Input validation and sanitization
-- [ ] **Documentation** - Code comments and changelog updates
+*   **Lead Generation Integration (`app/api/lead-capture/route.ts`, `lib/lead-manager.ts`, `app/(chat)/chat/components/LeadCaptureFlow.tsx`):**
+    *   **Reason:** Directly tied to business value. Ensure lead data is captured and managed effectively.
+    *   **Action:** Verify the flow from UI to backend, data persistence, and lead research integration.
+*   **AI Model Selection & Token Usage (`lib/model-selector.ts`, `lib/token-usage-logger.ts`):**
+    *   **Reason:** Critical for cost control and performance optimization of AI interactions.
+    *   **Action:** Refine model selection logic, ensure accurate token tracking and budget enforcement.
+*   **Basic UI Responsiveness & Accessibility:**
+    *   **Reason:** Ensures the application is usable across devices and for all users.
+    *   **Action:** Address major layout issues on different screen sizes and implement basic accessibility (e.g., alt text, semantic HTML).
 
-### **Before API Changes:**
-- [ ] **Authentication** - JWT token validation implemented
-- [ ] **Rate limiting** - 20 requests/minute per IP
-- [ ] **Input validation** - Zod schemas for all inputs
-- [ ] **Error responses** - Consistent error format
-- [ ] **Logging** - Structured logging with correlation IDs
-- [ ] **CORS** - Proper origin restrictions
-- [ ] **Environment variables** - No hardcoded secrets
+### Priority 3: Enhancements & Admin Tools
 
-### **Before UI Changes:**
-- [ ] **Design system compliance** - Follows frontend_design.md
-- [ ] **Responsive design** - Mobile-first approach
-- [ ] **Accessibility** - ARIA labels and keyboard navigation
-- [ ] **Performance** - Lazy loading and code splitting
-- [ ] **State management** - Proper React patterns
-- [ ] **Error boundaries** - Graceful error handling
+*   **Admin Dashboard Core (`app/admin/page.tsx`, `components/admin/AdminDashboard.tsx`):**
+    *   **Reason:** Provides necessary insights and control for administrators.
+    *   **Action:** Implement key metrics display (AI performance, analytics, leads list).
+*   **Tool Integrations (e.g., `VideoToAppGenerator`, `ScreenShare`):**
+    *   **Reason:** Adds significant value to the AI consultation.
+    *   **Action:** Ensure these tools function correctly and integrate seamlessly with the chat.
+*   **Real-time Activity Monitoring (`components/admin/RealTimeActivity.tsx`, `lib/server-activity-logger.ts`):**
+    *   **Reason:** Provides operational visibility.
+    *   **Action:** Ensure activity logs are correctly captured and displayed in real-time.
 
-## 📋 **Priority Guidelines**
+### Priority 4: UI Overhaul & Advanced Features
 
-### **High Priority (Fix Immediately)**
-1. **Security vulnerabilities** - Authentication, authorization, data protection
-2. **Critical bugs** - System crashes, data loss, major functionality broken
-3. **Performance issues** - Response times > 2 seconds, memory leaks
-4. **Compliance violations** - Backend architecture rules, security standards
+*   **New UI Components (`app/(chat)/chat/components/new-ui/*`):**
+    *   **Reason:** Represents a significant design update. Should be tackled once core functionality is stable.
+    *   **Action:** Implement the new chat layout, sidebar, and composer.
+*   **Advanced AI Features (e.g., `gemini-live-conversation`, `educational-content`):**
+    *   **Reason:** Adds depth to the AI capabilities.
+    *   **Action:** Develop and integrate these more complex AI interactions.
+*   **Comprehensive Testing & Optimization:**
+    *   **Reason:** Continuous improvement.
+    *   **Action:** Expand test coverage, conduct performance profiling, and optimize for production.
 
-### **Medium Priority (Plan and Implement)**
-1. **Feature enhancements** - New functionality, improved UX
-2. **Code quality** - Refactoring, technical debt reduction
-3. **Testing improvements** - Coverage gaps, new test scenarios
-4. **Documentation** - API docs, user guides, code comments
-
-### **Low Priority (Nice to Have)**
-1. **UI polish** - Minor styling improvements, animations
-2. **Performance optimization** - Micro-optimizations, caching
-3. **Developer experience** - Tooling improvements, development workflows
-
-## 🔧 **Development Workflow**
-
-### **1. Analysis Phase**
-- Read relevant documentation
-- Understand current implementation
-- Identify potential conflicts
-- Plan testing strategy
-
-### **2. Implementation Phase**
-- Follow established patterns
-- Write tests first (TDD)
-- Implement error handling
-- Add proper logging
-
-### **3. Validation Phase**
-- Run all tests
-- Check performance impact
-- Verify security compliance
-- Update documentation
-
-### **4. Integration Phase**
-- Create feature branch
-- Submit PR with clear description
-- Ensure CI passes
-- Get code review approval
-
-## 📚 **Reference Documentation**
-
-### **Core Architecture**
-- [backend_architecture.md](mdc:backend_architecture.md) - Backend design principles
-- [frontend_design.md](mdc:frontend_design.md) - Frontend design system
-- [DESIGN.md](mdc:DESIGN.md) - Design tokens and guidelines
-- [CHANGELOG.md](mdc:CHANGELOG.md) - Recent changes and current state
-
-### **API Documentation**
-- [app/api/](mdc:app/api/) - All API routes
-- [lib/unified-ai-service.ts](mdc:lib/unified-ai-service.ts) - Main AI service
-- [lib/validation.ts](mdc:lib/validation.ts) - Input validation schemas
-
-### **Component Library**
-- [components/ui/](mdc:components/ui/) - Shadcn UI components
-- [components/chat/](mdc:components/chat/) - Chat-specific components
-- [hooks/](mdc:hooks/) - Custom React hooks
-
-### **Testing & Quality**
-- [tests/](mdc:tests/) - Test suite
-- [scripts/](mdc:scripts/) - Utility scripts
-- [jest.config.cjs](mdc:jest.config.cjs) - Jest configuration
-- [playwright.config.ts](mdc:playwright.config.ts) - E2E test configuration
-
-## ⚠️ **Common Pitfalls to Avoid**
-
-### **Architecture Violations**
-- ❌ Creating duplicate API routes instead of using `/api/ai`
-- ❌ Bypassing authentication or validation
-- ❌ Hardcoding configuration values
-- ❌ Ignoring error handling requirements
-
-### **Code Quality Issues**
-- ❌ Copy-pasting code instead of creating reusable components
-- ❌ Not following TypeScript best practices
-- ❌ Missing proper error boundaries
-- ❌ Ignoring performance implications
-
-### **Testing Gaps**
-- ❌ Not writing tests for new features
-- ❌ Ignoring existing test patterns
-- ❌ Not testing error conditions
-- ❌ Missing integration tests for API changes
-
-### **Documentation Neglect**
-- ❌ Not updating CHANGELOG.md
-- ❌ Missing code comments
-- ❌ Not documenting breaking changes
-- ❌ Ignoring API documentation updates
-
-## 🎯 **Success Criteria**
-
-A successful change should:
-- ✅ **Follow established patterns** and conventions
-- ✅ **Maintain system stability** and performance
-- ✅ **Include proper testing** and error handling
-- ✅ **Update documentation** and changelog
-- ✅ **Pass all CI checks** and code reviews
-- ✅ **Improve user experience** or system reliability
-
----
-
-**Remember**: Quality over speed. Every change should make the system better, not just different.
-
-alwaysApply: true
-globs:
-  - "**/*"
----
+This prioritization helps in building a stable foundation before layering on more complex features and design changes.

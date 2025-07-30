@@ -1,186 +1,37 @@
 # Refresh Context Rules
 
-## 🔄 **Context Maintenance Strategy**
+This rule set defines when and how the AI should refresh its understanding of the project context. Maintaining an up-to-date context is crucial for providing accurate and relevant responses, especially in a multi-turn conversation where the project state can evolve.
 
-### 1. **Project State Awareness**
-- **Always check current project state** before making changes
-- **Review recent commits** to understand latest changes
-- **Verify environment setup** and dependencies
-- **Check for ongoing issues** or known problems
+## 1. Triggers for Context Refresh:
 
-### 2. **Context Refresh Triggers**
-- **After long periods** of inactivity (>1 hour)
-- **Before complex changes** or refactoring
-- **When switching between** different features or modules
-- **After dependency updates** or environment changes
-- **When encountering errors** or unexpected behavior
+The AI MUST refresh its understanding of the project context under the following conditions:
 
-### 3. **Context Validation**
-- **Verify file structure** matches expected layout
-- **Check configuration files** for recent changes
-- **Validate environment variables** are properly set
-- **Confirm test suite** is in working state
+*   **New User Request:** Every new user prompt should trigger a re-evaluation of the current project state.
+*   **Code Modifications:** If the user explicitly asks to modify existing code, the AI must re-read the affected files and update its internal representation of those files.
+*   **File System Changes:** If the user requests to add, delete, or rename files, the AI must update its understanding of the project's file structure.
+*   **Attachment Uploads:** When the user provides new files (e.g., images, text files, code snippets) as attachments, the AI must integrate this new information into its context.
+*   **Explicit Request:** If the user explicitly asks the AI to "refresh its context" or "re-read the project," the AI should perform a full re-evaluation.
+*   **Ambiguity/Uncertainty:** If the AI detects ambiguity in the user's request that could be resolved by a more current understanding of the project, it should initiate a context refresh.
+*   **Version Revert/Fork:** When the user reverts to a previous version or forks the project, the AI must load the state of that specific version as its new context.
 
-## 📋 **Context Refresh Checklist**
+## 2. How to Refresh Context:
 
-### Project Structure Validation
-- [ ] **File tree structure** matches expected layout
-- [ ] **Key directories** exist and are accessible
-- [ ] **Configuration files** are present and valid
-- [ ] **Dependencies** are properly installed
-- [ ] **Environment setup** is complete
+Upon a trigger, the AI should perform the following steps:
 
-### Code State Verification
-- [ ] **Recent changes** in CHANGELOG.md reviewed
-- [ ] **Current branch** is correct and up-to-date
-- [ ] **No uncommitted changes** that could conflict
-- [ ] **Test suite** passes without errors
-- [ ] **Build process** completes successfully
+*   **Re-read Provided Files:** Access and parse the content of all files explicitly provided in the current turn or referenced in the `PreviousChatSummary`.
+*   **Synthesize Changes:** Compare the current state of files with any modifications requested by the user in the current turn.
+*   **Update Internal Representation:** Update its internal data structures that represent the project's file system, code content, and component relationships.
+*   **Re-evaluate Dependencies:** Re-assess how different parts of the codebase interact, especially if core files (e.g., `package.json`, `tsconfig.json`, `middleware.ts`, `app/layout.tsx`) have changed.
+*   **Re-run Analysis (if necessary):** If significant architectural or configuration files have changed, re-run internal analyses (e.g., backend architecture compliance, design system adherence) to ensure consistency.
+*   **Identify Gaps/Inconsistencies:** Actively look for any new inconsistencies or missing pieces that arise from the updated context.
 
-### Environment Check
-- [ ] **Environment variables** are properly configured
-- [ ] **Database connections** are working
-- [ ] **External services** are accessible
-- [ ] **Development server** can start without errors
-- [ ] **Dependencies** are compatible and up-to-date
+## 3. Impact on Responses:
 
-## 🔍 **Context Analysis Process**
+A refreshed context enables the AI to:
 
-### Step 1: Project Overview
-1. **Read project documentation** (README.md, CHANGELOG.md)
-2. **Review architecture files** (backend_architecture.md)
-3. **Check current state** of key components
-4. **Identify recent changes** and their impact
+*   **Generate Accurate Code:** Ensure generated code is compatible with the current project structure and existing code.
+*   **Provide Relevant Advice:** Offer suggestions that are tailored to the actual state of the project.
+*   **Avoid Redundancy:** Prevent regenerating files or code that already exist or are no longer needed.
+*   **Catch Errors Proactively:** Identify potential issues (e.g., broken imports, conflicting styles) before generating code.
 
-### Step 2: Codebase Analysis
-1. **Scan for recent modifications** in key files
-2. **Check for breaking changes** or deprecations
-3. **Verify integration points** between components
-4. **Review error logs** or known issues
-
-### Step 3: Environment Validation
-1. **Test development setup** (pnpm dev)
-2. **Verify database connectivity**
-3. **Check external service integrations**
-4. **Validate configuration** and environment variables
-
-### Step 4: Context Documentation
-1. **Update understanding** of current state
-2. **Note any changes** from expected baseline
-3. **Document dependencies** or constraints
-4. **Record context** for future reference
-
-## 🚨 **Context Refresh Warnings**
-
-### High Priority Triggers
-- **Build failures** or compilation errors
-- **Test suite failures** or regressions
-- **Environment variable changes**
-- **Dependency updates** or conflicts
-- **Database schema changes**
-
-### Medium Priority Triggers
-- **New feature additions**
-- **Refactoring of existing code**
-- **Configuration changes**
-- **Documentation updates**
-- **Performance optimizations**
-
-### Low Priority Triggers
-- **Minor bug fixes**
-- **Documentation improvements**
-- **Code style changes**
-- **Comment updates**
-- **Minor UI adjustments**
-
-## 🔄 **Context Refresh Workflow**
-
-\`\`\`
-Context Refresh Triggered
-           ↓
-    Read Project Documentation
-           ↓
-    Review Recent Changes
-           ↓
-    Validate Environment Setup
-           ↓
-    Check Codebase State
-           ↓
-    Update Context Understanding
-           ↓
-    Document Current State
-           ↓
-    Proceed with Request
-\`\`\`
-
-## 📚 **Context Sources**
-
-### Primary Sources
-- [CHANGELOG.md](mdc:CHANGELOG.md) - Recent changes and current state
-- [backend_architecture.md](mdc:backend_architecture.md) - Architecture overview
-- [package.json](mdc:package.json) - Dependencies and scripts
-- [README.md](mdc:README.md) - Project overview and setup
-
-### Secondary Sources
-- [file-tree.md](mdc:file-tree.md) - Project structure
-- [DESIGN.md](mdc:DESIGN.md) - Design system and tokens
-- [frontend_design.md](mdc:frontend_design.md) - Frontend guidelines
-- [commit_history_domain_sorted.txt](mdc:commit_history_domain_sorted.txt) - Git history
-
-### Validation Sources
-- Test results and coverage reports
-- Build logs and error messages
-- Environment configuration files
-- Database migration files
-
-## 🚫 **Context Refresh Anti-Patterns**
-
-### ❌ Don't Skip Context Refresh
-- **When switching between** major features
-- **After environment changes** or updates
-- **When encountering errors** or unexpected behavior
-- **Before making complex changes**
-
-### ❌ Don't Assume Context
-- **Always verify** current state before proceeding
-- **Don't rely on** outdated information
-- **Check for changes** that might affect your work
-- **Validate assumptions** about project state
-
-### ❌ Don't Ignore Warnings
-- **Pay attention to** build warnings or errors
-- **Address dependency** conflicts immediately
-- **Fix environment** issues before proceeding
-- **Resolve test failures** before making changes
-
-## 📊 **Context Health Metrics**
-
-### Good Context Health
-- ✅ **All tests passing**
-- ✅ **Build completes successfully**
-- ✅ **Environment properly configured**
-- ✅ **Dependencies up-to-date**
-- ✅ **Documentation current**
-
-### Poor Context Health
-- ❌ **Test failures or regressions**
-- ❌ **Build errors or warnings**
-- ❌ **Environment misconfiguration**
-- ❌ **Outdated dependencies**
-- ❌ **Stale documentation**
-
-## 🔄 **Continuous Context Maintenance**
-
-### Regular Checks
-- **Daily**: Review recent changes and test suite
-- **Weekly**: Update dependencies and check for conflicts
-- **Monthly**: Review architecture and documentation
-- **Before releases**: Full context validation
-
-### Automated Validation
-- **CI/CD pipeline** validates context automatically
-- **Pre-commit hooks** check for common issues
-- **Automated testing** ensures context consistency
-- **Dependency scanning** identifies potential conflicts
-
-**⚠️ REMINDER: Always maintain fresh context to ensure accurate and effective responses.**
+By strictly adhering to these context refresh rules, the AI can maintain a dynamic and accurate understanding of the user's project, leading to more effective and helpful interactions.

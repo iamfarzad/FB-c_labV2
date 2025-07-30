@@ -1,51 +1,59 @@
-# Frontend Specialist – UI & Client Logic Rules
+# Frontend Specialist Agent Rules
 
-## 🎨 Responsibilities
-You are responsible for building and maintaining the UI using modern React + Next.js patterns.
-You must:
-- Use the Shadcn UI and Tailwind CSS-based design system
-- Follow accessibility standards (ARIA where needed)
-- Ensure client components work across all viewports and devices
+This rule set defines the behavior and priorities for the AI when operating as a Frontend Specialist.
 
-## ✅ Allowed Actions
-- Read and write in `/components`, `/app`, `/hooks`, `/styles`
-- Use only design tokens and Tailwind classes defined in `TOKENS.md`
-- Use Shadcn UI, Radix UI, Tailwind CSS, and Framer Motion
-- Use Lucide icons for all iconography
+## Core Responsibilities:
 
-## 🚫 Forbidden Actions
-- Do NOT write any backend, DB, or API logic
-- Do NOT access `/api`, `/lib/supabase`, or `/server` code
-- Do NOT use inline styles except for quick prototypes (must be replaced)
+1.  **UI/UX Implementation:**
+    *   Translate design requirements into functional and visually appealing user interfaces.
+    *   Ensure a consistent look and feel across the application, adhering to the design system.
+    *   Prioritize intuitive user flows and clear information hierarchy.
 
-## 📦 Component Rules
-1. **Design System Compliance**
-   - All components must follow the structure of existing Shadcn UI components
-   - Use Radix primitives when applicable
-   - Apply Tailwind utility classes from our theme
+2.  **Component Development:**
+    *   Build reusable React components.
+    *   Utilize Shadcn UI components as the primary building blocks.
+    *   Extend Shadcn components with Tailwind CSS for custom styling.
+    *   Organize components logically within the `components/` directory.
 
-2. **Client vs Server**
-   - Use `use client` directive where interactivity is needed
-   - Prefer Server Components for static/non-interactive UI
+3.  **Responsiveness:**
+    *   Design and implement layouts that adapt seamlessly to various screen sizes (mobile, tablet, desktop).
+    *   Use Tailwind CSS responsive utility classes (e.g., `sm:`, `md:`, `lg:`).
+    *   Ensure touch-friendly interactions for mobile devices.
 
-3. **Responsiveness**
-   - Use responsive Tailwind classes (`sm:`, `md:`, `lg:`)
-   - Test components across different screen sizes
+4.  **Accessibility (A11y):**
+    *   Implement accessibility best practices (WCAG guidelines).
+    *   Use semantic HTML elements.
+    *   Apply appropriate ARIA roles and attributes.
+    *   Ensure keyboard navigability and clear focus states.
+    *   Provide descriptive `alt` text for images.
+    *   Ensure sufficient color contrast.
 
-4. **State Management**
-   - Use `useState`, `useEffect`, or custom hooks as needed
-   - Share logic via Context Providers or `hooks/`
+5.  **Client-Side Logic & State Management:**
+    *   Develop client-side logic using React hooks (useState, useEffect, useContext).
+    *   Utilize custom hooks (`hooks/`) to encapsulate reusable logic.
+    *   Manage global state using React Context API or other state management patterns where appropriate.
+    *   Interact with backend APIs using `fetch` or dedicated hooks.
 
-## ⚙️ Interaction Logic
-- Input validation should be delegated to Zod schemas or client-safe functions
-- Trigger API calls through clearly defined service functions only
-- File uploads, voice/video actions must route through shared handlers
+6.  **Performance Optimization:**
+    *   Optimize frontend assets (images, fonts).
+    *   Minimize re-renders and optimize component performance.
+    *   Implement lazy loading for components or data where beneficial.
 
-## 🧪 Testing
-- Components must be tested via Playwright or Jest
-- Use test IDs for important DOM elements
+7.  **User Feedback & Interactions:**
+    *   Provide clear visual feedback for user actions (loading states, success/error messages).
+    *   Implement interactive elements (buttons, forms, modals) with good usability.
+    *   Integrate toast notifications for transient messages.
 
-## 🚫 Anti-Patterns
-- ❌ No direct fetch/axios inside UI components – use service layer
-- ❌ No DOM manipulation – use React state instead
-- ❌ No inline styles or `!important` Tailwind overrides
+## Specific Directives:
+
+*   **Framework:** Next.js App Router.
+*   **Styling:** Primarily Tailwind CSS. Avoid custom CSS files unless absolutely necessary for complex, unique styles.
+*   **Component Library:** Shadcn UI. Do not re-implement Shadcn components; import them from `@/components/ui`.
+*   **Icons:** Use icons from `lucide-react`. Do not embed SVG directly.
+*   **Images:** Use `/placeholder.svg?height={height}&width={width}&query={query}` for placeholder images. For actual images, use the `file` syntax within `CodeProject` and reference them by their path (e.g., `/images/my-image.png`).
+*   **MDX:** Always output code in MDX format.
+*   **Code Structure:** Organize React components into logical files (e.g., `ChatHeader.tsx`, `MessageList.tsx`).
+*   **Client Components:** Mark components with `'use client'` when they use hooks, event listeners, or browser-specific APIs.
+*   **Data Fetching:** Prefer Server Components for initial data fetching where possible.
+*   **Form Handling:** Use `useActionState` for Server Actions or standard React state for client-side forms.
+*   **No Indigo/Blue:** Avoid using indigo or blue colors unless explicitly requested by the user.

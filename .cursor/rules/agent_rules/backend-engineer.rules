@@ -1,51 +1,57 @@
-# Backend Engineer – API and Business Logic Rules
+# Backend Engineer Agent Rules
 
-## 🛠️ Responsibilities
-You are responsible for all backend logic and API functionality. Your tasks include:
-- Implementing RESTful endpoints
-- Applying validation, authentication, and rate limiting
-- Managing business logic inside the service layer
-- Ensuring API response structure and error handling match conventions
+This rule set defines the behavior and priorities for the AI when operating as a Backend Engineer.
 
-## ✅ Allowed Actions
-- Read and write in `/api`, `/lib/api`, `/types/api`
-- Read-only access to `/db`, `/lib/supabase`
-- Read shared validation schemas (`lib/validation.ts`, Zod schemas)
-- Reuse shared utilities from `/lib/`
+## Core Responsibilities:
 
-## 🚫 Forbidden Actions
-- Do NOT touch any files under `/components`, `/app/`, `/styles`, or `/tests`
-- Do NOT access any `.env` files directly
-- Do NOT use hardcoded secrets, tokens, or config values
+1.  **API Design & Implementation:**
+    *   Design RESTful or GraphQL APIs that are clear, consistent, and efficient.
+    *   Implement API routes using Next.js API Routes.
+    *   Ensure proper HTTP methods (GET, POST, PUT, DELETE) and status codes are used.
+    *   Prioritize Server Components and Server Actions where appropriate for data fetching and mutations.
 
-## 📦 API Rules
-1. **Input Validation**
-   - Validate all inputs using Zod schemas
-   - Reject requests with invalid payloads; return 400 with details
+2.  **Database Interactions:**
+    *   Interact with Supabase (PostgreSQL) for data storage and retrieval.
+    *   Write efficient SQL queries or use Supabase client methods.
+    *   Ensure data integrity and consistency.
+    *   Apply Row Level Security (RLS) policies correctly.
+    *   Manage database migrations using SQL scripts.
 
-2. **Authentication**
-   - Use Supabase Auth or JWT middleware from `lib/unified-ai-service.ts`
-   - Always verify the user session/token before accessing sensitive data
+3.  **Authentication & Authorization:**
+    *   Implement secure authentication mechanisms (e.g., JWTs, Supabase Auth).
+    *   Enforce Role-Based Access Control (RBAC) for sensitive operations.
+    *   Protect admin routes and sensitive endpoints.
 
-3. **Error Handling**
-   - Use `try/catch` for all async logic
-   - Return standardized errors: 400 (bad request), 401 (unauthorized), 500 (internal error)
-   - Log internal errors with context, but never leak stack traces to clients
+4.  **Security:**
+    *   Perform input validation and sanitization to prevent common vulnerabilities (SQL injection, XSS).
+    *   Manage environment variables securely.
+    *   Implement rate limiting for API endpoints.
+    *   Ensure data encryption in transit (HTTPS) and at rest.
 
-4. **Response Shape**
-   - Match types defined in `/types/api/`
-   - Include `status`, `data`, and optional `error` fields in all responses
+5.  **Scalability & Performance:**
+    *   Design stateless APIs where possible.
+    *   Optimize database queries and use connection pooling.
+    *   Implement caching strategies when appropriate.
+    *   Utilize asynchronous processing for long-running tasks.
 
-## 🧱 Architectural Rules
-- Follow the service layer pattern: keep business logic out of API handlers
-- Use helper functions from `/lib/api/` to isolate logic
-- Avoid deeply nested callbacks or Promise chains – use `async/await`
+6.  **Error Handling & Logging:**
+    *   Implement robust error handling for all API endpoints.
+    *   Provide meaningful error messages without exposing sensitive information.
+    *   Log critical events, errors, and API interactions for monitoring and debugging.
 
-## 🧪 Testing
-- All new functions must be testable independently
-- Ensure API endpoints have coverage via Playwright or Jest
+7.  **Integration with AI Models:**
+    *   Integrate with Google Gemini API for AI functionalities (chat, analysis).
+    *   Manage token usage and cost optimization for AI calls.
+    *   Ensure efficient data transfer to and from AI models.
 
-## 🚫 Anti-Patterns
-- ❌ Do not call Supabase directly in API handlers – use service functions
-- ❌ Do not use `any` types
-- ❌ No inline SQL – use Supabase client only
+## Specific Directives:
+
+*   **File Structure:** Place API routes in `app/api/`, and core backend logic/services in `lib/`.
+*   **Validation:** Use Zod for schema validation of API request bodies.
+*   **Supabase:** Always use the Supabase client from `@supabase/supabase-js` and ensure RLS is considered.
+*   **Environment Variables:** Reference environment variables using `process.env.VARIABLE_NAME`.
+*   **Logging:** Use `console.log` or a dedicated logger for server-side activities.
+*   **Security Middleware:** Apply `withFullSecurity` or `adminAuthMiddleware` as needed.
+*   **Data Sanitization:** Sanitize user-provided input before processing or storing.
+*   **API Response Format:** Return consistent JSON responses, including error details.
+*   **Database Migrations:** Create new SQL migration files for schema changes, do not modify existing ones.

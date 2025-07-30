@@ -1,17 +1,115 @@
----
-description: "Backend Architecture Reference"
-alwaysApply: true
-globs:
-  - "**/*"
----
-# Backend Architecture Reference
+# Backend Architecture Overview
 
-For all backend-related tasks, design, and code changes, always follow the architecture, conventions, and best practices described in [backend_architecture.md](mdc:backend_architecture.md).
+This document outlines the core components and design principles of our backend architecture, focusing on scalability, security, and maintainability.
 
-- This includes API design, data models, error handling, security, scalability, and deployment.
-- Any deviation from the documented architecture must be justified and documented.
-- Use [backend_architecture.md](mdc:backend_architecture.md) as the single source of truth for backend system structure and policies.
-description:
-globs:
-alwaysApply: false
----
+## 1. Core Principles
+
+*   **Serverless First:** Leverage serverless functions (Next.js API Routes) for scalable, cost-effective, and maintenance-free operations.
+*   **API-Centric:** All functionalities exposed via well-defined RESTful or GraphQL APIs.
+*   **Security by Design:** Implement security measures at every layer, from authentication to data storage.
+*   **Modularity:** Break down functionality into small, independent modules for easier development and testing.
+*   **Observability:** Comprehensive logging, monitoring, and tracing to understand system behavior and troubleshoot issues.
+*   **Cost Optimization:** Efficient resource utilization, especially for AI model interactions and database queries.
+
+## 2. Technology Stack
+
+*   **Framework:** Next.js (API Routes for backend logic)
+*   **Database:** Supabase (PostgreSQL with Realtime, Auth, Storage)
+*   **Authentication:** Supabase Auth, JWTs for session management
+*   **AI Integration:** Google Gemini API (via `@google/generative-ai` or similar SDK)
+*   **Real-time Communication:** Supabase Realtime, potentially WebSockets for specific features (e.g., live audio/video streams)
+*   **File Storage:** Vercel Blob / Supabase Storage
+*   **Email Service:** Resend
+*   **Validation:** Zod
+*   **Logging:** Console logging, integrated with Vercel Logs and potentially external logging services.
+
+## 3. Key Components & Their Responsibilities
+
+### 3.1. Next.js API Routes (`/app/api/*`)
+
+*   **Purpose:** Serve as the entry points for all client-side requests and external integrations.
+*   **Responsibilities:**
+    *   **Request Handling:** Receive and parse incoming HTTP requests.
+    *   **Validation:** Validate request payloads using Zod schemas.
+    *   **Authentication & Authorization:** Verify user identity and permissions using JWTs and Supabase Auth.
+    *   **Business Logic Orchestration:** Coordinate calls to various service layers (e.g., `LeadManager`, `MediaService`, `MeetingScheduler`).
+    *   **AI Interaction:** Interface with Google Gemini API for chat, analysis, and content generation.
+    *   **Data Persistence:** Interact with Supabase for database operations.
+    *   **Error Handling:** Catch and respond to errors gracefully, providing meaningful error messages.
+    *   **Logging:** Log request details, errors, and key events.
+    *   **Rate Limiting:** Protect against abuse and ensure fair usage.
+
+### 3.2. Supabase
+
+*   **Purpose:** Provides a robust, scalable, and secure backend-as-a-service.
+*   **Components Used:**
+    *   **PostgreSQL Database:** Primary data store for leads, activities, user data, etc.
+        *   **Row Level Security (RLS):** Crucial for multi-tenant data isolation and security.
+        *   **Database Migrations:** Managed via `supabase/migrations` for schema evolution.
+    *   **Supabase Auth:** Handles user registration, login, and session management.
+    *   **Supabase Realtime:** Enables real-time updates for chat activities, admin dashboards, etc.
+    *   **Supabase Storage:** For storing user-uploaded files (e.g., documents, images).
+
+### 3.3. Service Layer (`/lib/services/*` or `/lib/*`)
+
+*   **Purpose:** Encapsulate specific business logic and interactions with external services. Promotes modularity and testability.
+*   **Key Services:**
+    *   **`LeadManager` (`/lib/lead-manager.ts`):** Manages lead lifecycle, conversation stages, lead data persistence, and lead research.
+    *   **`ConversationStateManager` (`/lib/conversation-state-manager.ts`):** Manages the state of ongoing AI conversations, including message history, context, and stage transitions.
+    *   **`MediaService` (`/lib/media/MediaService.ts`):** Handles media processing (e.g., image analysis, video transcription) and interaction with Vercel Blob/Supabase Storage.
+    *   **`MeetingScheduler` (`/lib/meeting-scheduler.ts`):** Integrates with calendar APIs (e.g., Google Calendar) for booking consultations.
+    *   **`EmailService` (`/lib/email-service.ts`):** Manages sending transactional and marketing emails via Resend.
+    *   **`GroundedSearchService` (`/lib/grounded-search-service.ts`):** Performs web searches to provide real-time context for AI responses.
+    *   **`TokenUsageLogger` (`/lib/token-usage-logger.ts`):** Tracks and logs AI token consumption for cost management and analytics.
+    *   **`ServerActivityLogger` (`/lib/server-activity-logger.ts`):** Logs various server-side activities for monitoring and auditing.
+    *   **`ModelSelector` (`/lib/model-selector.ts`):** Dynamically selects the appropriate AI model based on feature, token count, and cost considerations.
+
+### 3.4. Utility & Helper Modules (`/lib/utils/*`, `/lib/validation.ts`, etc.)
+
+*   **Purpose:** Provide common functions, types, and configurations used across the backend.
+*   **Examples:**
+    *   `lib/utils.ts`: General utility functions.
+    *   `lib/validation.ts`: Centralized Zod schemas for API request validation.
+    *   `lib/api-security.ts`: Security-related decorators or functions (e.g., `withFullSecurity`).
+    *   `lib/config.ts`: Environment-specific configurations.
+
+## 4. Data Flow (Example: Chat Interaction)
+
+1.  **Client Request:** User sends a message from the frontend to `/api/chat`.
+2.  **Middleware:** `middleware.ts` handles admin authentication and Gemini API mocking (in development).
+3.  **API Route (`/api/chat/route.ts`):**
+    *   Receives the request.
+    *   Performs rate limiting based on IP.
+    *   Authenticates the user (if logged in).
+    *   Validates the message payload.
+    *   Calls `ConversationStateManager` to update conversation state and get AI response.
+    *   Calls `ModelSelector` to choose the optimal Gemini model.
+    *   Interacts with Google Gemini API.
+    *   Streams the AI response back to the client.
+    *   Logs AI processing and token usage via `ServerActivityLogger` and `TokenUsageLogger`.
+    *   Updates lead data in Supabase via `LeadManager`.
+4.  **`ConversationStateManager`:**
+    *   Manages message history and current conversation stage.
+    *   Delegates to `LeadManager` for stage-specific processing (e.g., extracting lead info).
+    *   May trigger `GroundedSearchService` for real-time web research if needed.
+5.  **Supabase:** Persists conversation messages, lead data, and activity logs.
+6.  **Client Update:** Receives streamed AI response and updates the chat UI.
+
+## 5. Security Considerations
+
+*   **JWTs:** Securely signed and short-lived.
+*   **RLS:** Enforced on all sensitive tables in Supabase.
+*   **Input Validation:** Prevents injection attacks.
+*   **Environment Variables:** All secrets managed via Vercel Environment Variables.
+*   **HTTPS:** All communication is encrypted.
+*   **Rate Limiting:** Prevents abuse and DoS attacks.
+*   **Error Handling:** Generic error messages to prevent information disclosure.
+
+## 6. Scalability Considerations
+
+*   **Serverless Functions:** Automatically scale based on demand.
+*   **Supabase:** Managed service designed for high scalability.
+*   **Stateless APIs:** Minimize server-side state for easier scaling.
+*   **Asynchronous Operations:** Offload long-running tasks to background processes or queues.
+
+This architecture provides a robust foundation for our AI-powered business consulting platform, designed for performance, security, and future expansion.

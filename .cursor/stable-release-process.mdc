@@ -1,263 +1,65 @@
----
-description: "Stable Release Process & Testing Requirements"
-alwaysApply: true
-globs:
-  - "**/*"
----
+# Stable Release Process
 
-# Stable Release Process & Testing Requirements
+This document outlines the process for achieving stable releases of our application, ensuring high quality, reliability, and a smooth deployment experience.
 
-## 🚨 **MANDATORY REQUIREMENTS**
+## 1. Development Phase
 
-When generating changelog entries or proposing code changes, you MUST enforce these requirements:
+*   **Feature Branching:** All new features, bug fixes, and improvements are developed on dedicated feature branches, branched off `main`.
+*   **Code Reviews:** All code changes must undergo a thorough code review by at least one other developer. Reviews focus on:
+    *   Code quality and adherence to coding standards.
+    *   Correctness and functionality.
+    *   Performance implications.
+    *   Security vulnerabilities.
+    *   Test coverage.
+    *   Documentation updates.
+*   **Unit & Integration Tests:** Developers write comprehensive unit and integration tests for their changes.
+    *   Tests must pass locally before pushing to the remote.
+    *   Minimum code coverage targets are enforced (e.g., 80%).
+*   **Local Testing:** Developers perform thorough local testing of their features.
 
-### 1. **Automated Testing Requirement**
-- **Every new feature** requires a corresponding automated test
-- **Every bug fix** requires a test that reproduces the bug
-- **Test coverage** must be maintained or improved
-- **Integration tests** required for API changes
-- **E2E tests** required for user-facing features
+## 2. Pre-Merge Phase
 
-### 2. **Database & API Migration Requirements**
-- **Migration script** required for any schema change
-- **Rollback script** required for every migration
-- **API versioning** required for breaking changes
-- **Backward compatibility** must be maintained where possible
-- **Migration testing** in staging environment required
+*   **CI/CD Pipeline Execution:** Upon pushing to a feature branch, the CI/CD pipeline automatically runs:
+    *   **Linting & Formatting:** ESLint, Prettier, Stylelint checks.
+    *   **Type Checking:** TypeScript compilation.
+    *   **Automated Tests:** Unit, integration, and E2E tests.
+    *   **Security Scans:** Dependency vulnerability scans.
+    *   **Compliance Checks:** Automated checks against backend architecture compliance checklist.
+*   **E2E Tests:** Critical end-to-end user flows are tested using Playwright.
+    *   These tests run against a staging environment or a mocked environment (for AI interactions).
+*   **Visual Regression Tests:** (If implemented) Visual tests ensure UI changes do not introduce unintended visual regressions.
+*   **Documentation Updates:** All relevant documentation (README, API docs, design docs, changelog) is updated.
 
-### 3. **Branch Protection Rules**
-- **Main branch locked** - no direct commits allowed
-- **Feature branches required** - all work must go through named branches
-- **Pull request reviews** - minimum 1 approval required
-- **Status checks** - all tests must pass before merge
-- **Squash merging** - clean commit history maintained
+## 3. Staging Deployment
 
-### 4. **CI/CD Pipeline Requirements**
-- **Automated test suite** runs on every PR
-- **Build verification** - ensure code compiles and builds
-- **Linting checks** - code style and quality standards
-- **Security scanning** - dependency and code vulnerability checks
-- **Performance regression** - prevent performance degradation
+*   **Automated Staging Deployment:** Once all CI/CD checks pass and code review is approved, the feature branch is merged into a `develop` or `staging` branch. This triggers an automated deployment to a dedicated staging environment.
+*   **Manual QA & User Acceptance Testing (UAT):**
+    *   The QA team performs comprehensive manual testing on the staging environment.
+    *   Key stakeholders and product owners conduct UAT to ensure features meet business requirements.
+    *   Any bugs or issues found are reported and prioritized for immediate fixes.
+*   **Performance Testing:** Load and stress tests are conducted on staging for critical paths.
+*   **Security Audits:** (Periodic) Manual security audits or penetration tests are performed on the staging environment.
 
-### 5. **Integration & Testing Plans**
-- **Step-by-step integration plan** required for all changes
-- **Testing strategy** must be documented
-- **Rollback procedures** clearly defined
-- **Monitoring requirements** specified
-- **Success criteria** explicitly defined
+## 4. Release Candidate (RC) Creation
 
-### 6. **Pull Request Guidelines**
-- **One isolated change per PR** - no mixed feature sets
-- **Clear description** of what and why
-- **Screenshots/videos** for UI changes
-- **Test instructions** for reviewers
-- **Breaking change notes** prominently displayed
+*   **Branching for RC:** Once UAT is complete and all known critical bugs are resolved on staging, a release candidate branch (e.g., `release/vX.Y.Z`) is created from `develop`/`staging`.
+*   **Final CI/CD Run:** The RC branch undergoes a final, full CI/CD pipeline run.
+*   **Zero Known Critical Bugs:** No critical or high-priority bugs should exist in the RC.
 
-### 7. **Test-Driven Development**
-- **Failing test first** - write test that reproduces issue
-- **Red-Green-Refactor** cycle followed
-- **Test coverage reports** included in PR
-- **Performance benchmarks** for performance changes
-- **Load testing** for high-traffic features
+## 5. Production Deployment
 
-## 🔍 **VALIDATION CHECKLIST**
+*   **Approval:** Deployment to production requires explicit approval from product owner and engineering lead.
+*   **Automated Production Deployment:** The RC branch is merged into `main`. This triggers an automated deployment to the production environment (e.g., Vercel production deployment).
+*   **Monitoring & Rollback:**
+    *   Immediate post-deployment monitoring of logs, performance metrics, and error rates.
+    *   A clear rollback plan is in place in case of critical issues.
+    *   Vercel's instant rollbacks are leveraged.
+*   **Announcement:** Communicate the new release to relevant internal and external stakeholders.
 
-Before approving any change, verify:
+## 6. Post-Release Monitoring & Feedback
 
-- [ ] **Automated test exists** and passes
-- [ ] **Migration scripts** created and tested
-- [ ] **Rollback plan** documented and tested
-- [ ] **Feature branch** used (not main)
-- [ ] **CI pipeline** passes all checks
-- [ ] **Integration plan** documented
-- [ ] **Single change** per PR
-- [ ] **Failing test reference** provided
-- [ ] **Breaking changes** clearly marked
-- [ ] **Documentation updated** accordingly
+*   **Continuous Monitoring:** Ongoing monitoring of production environment for performance, errors, and security.
+*   **User Feedback:** Collect and analyze user feedback for continuous improvement.
+*   **Incident Response:** Follow the incident response plan for any production issues.
 
-## 🚫 **REJECTION CRITERIA**
-
-**REJECT** any proposal that:
-
-- ❌ Lacks corresponding automated tests
-- ❌ Missing migration/rollback scripts
-- ❌ Attempts direct main branch commits
-- ❌ Fails CI pipeline checks
-- ❌ No clear integration plan
-- ❌ Multiple unrelated changes
-- ❌ No failing test reference
-- ❌ No CI job failure reference
-- ❌ Missing documentation updates
-- ❌ No performance impact assessment
-
-## 📋 **CHANGELOG REQUIREMENTS**
-
-When updating [CHANGELOG.md](mdc:CHANGELOG.md):
-
-- **Version bump** follows semantic versioning
-- **Breaking changes** clearly marked with ⚠️
-- **Migration notes** included for schema changes
-- **Test coverage** mentioned for new features
-- **Performance impact** documented
-- **Rollback instructions** provided if needed
-
-## 🧪 **TESTING FRAMEWORK**
-
-Reference existing test patterns in:
-- [tests/](mdc:tests/) - Unit and integration tests
-- [scripts/test-*.ts](mdc:scripts/) - Automated test scripts
-- [playwright.config.ts](mdc:playwright.config.ts) - E2E test configuration
-- [jest.config.cjs](mdc:jest.config.cjs) - Unit test configuration
-
-## 🔄 **RELEASE PROCESS**
-
-1. **Feature Development** → Feature branch with tests
-2. **Code Review** → PR with passing CI
-3. **Integration Testing** → Staging environment validation
-4. **Performance Testing** → Load and stress testing
-5. **Security Review** → Vulnerability scanning
-6. **Documentation** → Update docs and changelog
-7. **Release** → Tagged release with migration scripts
-8. **Monitoring** → Post-release performance tracking
-
-## 📊 **QUALITY METRICS**
-
-Track and maintain:
-- **Test Coverage**: Minimum 80% for new code
-- **Build Success Rate**: 99%+ CI pass rate
-- **Performance**: No regression in response times
-- **Security**: Zero high/critical vulnerabilities
-- **Documentation**: 100% API documentation coverage
-- **Migration Success**: 100% successful deployments
-
----
-
-**Remember**: Quality and stability over speed. Every change must be tested, documented, and reversible.
-# Stable Release Process & Testing Requirements
-
-## 🚨 **MANDATORY REQUIREMENTS**
-
-When generating changelog entries or proposing code changes, you MUST enforce these requirements:
-
-### 1. **Automated Testing Requirement**
-- **Every new feature** requires a corresponding automated test
-- **Every bug fix** requires a test that reproduces the bug
-- **Test coverage** must be maintained or improved
-- **Integration tests** required for API changes
-- **E2E tests** required for user-facing features
-
-### 2. **Database & API Migration Requirements**
-- **Migration script** required for any schema change
-- **Rollback script** required for every migration
-- **API versioning** required for breaking changes
-- **Backward compatibility** must be maintained where possible
-- **Migration testing** in staging environment required
-
-### 3. **Branch Protection Rules**
-- **Main branch locked** - no direct commits allowed
-- **Feature branches required** - all work must go through named branches
-- **Pull request reviews** - minimum 1 approval required
-- **Status checks** - all tests must pass before merge
-- **Squash merging** - clean commit history maintained
-
-### 4. **CI/CD Pipeline Requirements**
-- **Automated test suite** runs on every PR
-- **Build verification** - ensure code compiles and builds
-- **Linting checks** - code style and quality standards
-- **Security scanning** - dependency and code vulnerability checks
-- **Performance regression** - prevent performance degradation
-
-### 5. **Integration & Testing Plans**
-- **Step-by-step integration plan** required for all changes
-- **Testing strategy** must be documented
-- **Rollback procedures** clearly defined
-- **Monitoring requirements** specified
-- **Success criteria** explicitly defined
-
-### 6. **Pull Request Guidelines**
-- **One isolated change per PR** - no mixed feature sets
-- **Clear description** of what and why
-- **Screenshots/videos** for UI changes
-- **Test instructions** for reviewers
-- **Breaking change notes** prominently displayed
-
-### 7. **Test-Driven Development**
-- **Failing test first** - write test that reproduces issue
-- **Red-Green-Refactor** cycle followed
-- **Test coverage reports** included in PR
-- **Performance benchmarks** for performance changes
-- **Load testing** for high-traffic features
-
-## 🔍 **VALIDATION CHECKLIST**
-
-Before approving any change, verify:
-
-- [ ] **Automated test exists** and passes
-- [ ] **Migration scripts** created and tested
-- [ ] **Rollback plan** documented and tested
-- [ ] **Feature branch** used (not main)
-- [ ] **CI pipeline** passes all checks
-- [ ] **Integration plan** documented
-- [ ] **Single change** per PR
-- [ ] **Failing test reference** provided
-- [ ] **Breaking changes** clearly marked
-- [ ] **Documentation updated** accordingly
-
-## 🚫 **REJECTION CRITERIA**
-
-**REJECT** any proposal that:
-
-- ❌ Lacks corresponding automated tests
-- ❌ Missing migration/rollback scripts
-- ❌ Attempts direct main branch commits
-- ❌ Fails CI pipeline checks
-- ❌ No clear integration plan
-- ❌ Multiple unrelated changes
-- ❌ No failing test reference
-- ❌ No CI job failure reference
-- ❌ Missing documentation updates
-- ❌ No performance impact assessment
-
-## 📋 **CHANGELOG REQUIREMENTS**
-
-When updating [CHANGELOG.md](mdc:CHANGELOG.md):
-
-- **Version bump** follows semantic versioning
-- **Breaking changes** clearly marked with ⚠️
-- **Migration notes** included for schema changes
-- **Test coverage** mentioned for new features
-- **Performance impact** documented
-- **Rollback instructions** provided if needed
-
-## 🧪 **TESTING FRAMEWORK**
-
-Reference existing test patterns in:
-- [tests/](mdc:tests/) - Unit and integration tests
-- [scripts/test-*.ts](mdc:scripts/) - Automated test scripts
-- [playwright.config.ts](mdc:playwright.config.ts) - E2E test configuration
-- [jest.config.cjs](mdc:jest.config.cjs) - Unit test configuration
-
-## 🔄 **RELEASE PROCESS**
-
-1. **Feature Development** → Feature branch with tests
-2. **Code Review** → PR with passing CI
-3. **Integration Testing** → Staging environment validation
-4. **Performance Testing** → Load and stress testing
-5. **Security Review** → Vulnerability scanning
-6. **Documentation** → Update docs and changelog
-7. **Release** → Tagged release with migration scripts
-8. **Monitoring** → Post-release performance tracking
-
-## 📊 **QUALITY METRICS**
-
-Track and maintain:
-- **Test Coverage**: Minimum 80% for new code
-- **Build Success Rate**: 99%+ CI pass rate
-- **Performance**: No regression in response times
-- **Security**: Zero high/critical vulnerabilities
-- **Documentation**: 100% API documentation coverage
-- **Migration Success**: 100% successful deployments
-
----
-
-**Remember**: Quality and stability over speed. Every change must be tested, documented, and reversible.
+This structured release process ensures that only thoroughly tested and validated code reaches production, minimizing risks and maximizing application stability.
