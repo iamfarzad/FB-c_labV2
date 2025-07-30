@@ -1,33 +1,63 @@
 "use client"
 
-import { PanelRightClose } from "lucide-react"
+import { Bot, MessageSquare, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { Activity } from "@/types/chat"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
+import { useChatContext } from "../context/ChatProvider" // Import useChatContext
+import { useSidebar } from "@/components/ui/sidebar" // Import useSidebar
 
-interface ChatHeaderProps {
-  activities: Activity[]
-  onToggleActivityPanel: () => void
-}
+export function ChatHeader() {
+  const { activities } = useChatContext() // Get activities from context
+  const { toggleSidebar } = useSidebar() // Use useSidebar hook for toggling
 
-export function ChatHeader({ activities, onToggleActivityPanel }: ChatHeaderProps) {
-  const completedActivities = activities.filter((a) => a.status === "completed").length
+  // Calculate completed activities count
+  const completedActivitiesCount = activities.filter((activity) => activity.status === "completed").length
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border/60 bg-background/95 px-6 backdrop-blur-sm shrink-0">
-      <div className="flex items-center gap-3">
-        <div className="relative">
-          <div className="w-3 h-3 bg-primary rounded-full" />
-          <div className="absolute top-0 left-0 w-3 h-3 bg-primary rounded-full animate-ping" />
-        </div>
-        <h1 className="text-foreground/90 text-base tracking-wide font-semibold">F.B/c AI Consultation</h1>
+    <header className="flex h-16 items-center gap-4 border-b bg-background px-6">
+      <div className="flex items-center gap-2">
+        <Bot className="h-6 w-6 text-primary" />
+        <h1 className="text-lg font-semibold">F.B/c AI Consultation</h1>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">{completedActivities}</span> Activities Completed
-        </div>
-        <Button variant="ghost" size="icon" onClick={onToggleActivityPanel} className="hidden md:inline-flex">
-          <PanelRightClose className="h-5 w-5" />
-        </Button>
+
+      <div className="ml-auto flex items-center gap-4">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative h-8 w-8"
+                onClick={toggleSidebar} // Use toggleSidebar from hook
+              >
+                <MessageSquare className="h-5 w-5" />
+                {completedActivitiesCount > 0 && (
+                  <Badge className="absolute -right-2 -top-2 h-5 w-5 flex items-center justify-center rounded-full p-0 text-xs">
+                    {completedActivitiesCount}
+                  </Badge>
+                )}
+                <span className="sr-only">Activities</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>AI Activity Log</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Settings</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem>Support</DropdownMenuItem>
+            <DropdownMenuItem>Logout</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )

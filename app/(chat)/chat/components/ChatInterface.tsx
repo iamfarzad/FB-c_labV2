@@ -1,35 +1,67 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useEffect } from "react" // Add useEffect import
 import { ChatSidebar } from "./new-ui/ChatSidebar"
 import { ChatPanel } from "./new-ui/ChatPanel"
 import { ChatModals } from "./ChatModals"
+import { useChatContext } from "../context/ChatProvider" // Import useChatContext
 import type { Message, ActivityItem } from "../types/chat"
 
 export function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [activities, setActivities] = useState<ActivityItem[]>([
-    {
-      id: "1",
-      type: "lead_research",
-      title: "Lead Research Completed",
-      status: "completed",
-      timestamp: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago
-      details: "Researched 15 potential leads in the tech sector with high conversion potential",
-    },
-    {
-      id: "2",
-      type: "roi_calculation",
-      title: "ROI Analysis in Progress",
-      status: "in_progress",
-      timestamp: new Date(Date.now() - 60000).toISOString(), // 1 minute ago
-      details: "Calculating returns for Q4 marketing campaign across multiple channels",
-    },
-  ])
-  const [isLoading, setIsLoading] = useState(false)
-  const [activeModal, setActiveModal] = useState<string | null>(null)
+  const {
+    messages,
+    activities,
+    isLoading,
+    activeModal,
+    addMessage,
+    addActivity,
+    setIsLoading,
+    openModal,
+    closeModal,
+    clearMessages,
+  } = useChatContext() // Use context here
 
-  const handleSendMessage = useCallback(async (content: string) => {
+  // Initialize activities if needed, or fetch from server
+  useEffect(() => {
+    if (activities.length === 0) {
+      // Only initialize if empty
+      addActivity({
+        id: "1",
+        type: "lead_research",
+        title: "Lead Research Completed",
+        status: "completed",
+        timestamp: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago
+        details: "Researched 15 potential leads in the tech sector with high conversion potential",
+      })
+      addActivity({
+        id: "2",
+        type: "roi_calculation",
+        title: "ROI Analysis in Progress",
+        status: "in_progress",
+        timestamp: new Date(Date.now() - 60000).toISOString(), // 1 minute ago
+        details: "Calculating returns for Q4 marketing campaign across multiple channels",
+      })
+      addActivity({
+        id: "3", // Add more initial activities to match screenshot
+        type: "document_analysis",
+        title: "AI Initialized",
+        status: "completed",
+        timestamp: new Date(Date.now() - 600000).toISOString(), // 10 minutes ago
+        details: "Core AI models loaded for optimal performance",
+      })
+      addActivity({
+        id: "4",
+        type: "message",
+        title: "System prompt loaded",
+        status: "completed",
+        timestamp: new Date(Date.now() - 600000).toISOString(), // 10 minutes ago
+        details: "Loaded long_context prompt",
+      })
+    }
+  }, [activities.length, addActivity])
+
+  const handleSendMessage = async (content: string) => {
+    // Removed useCallback, now uses context
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -37,8 +69,8 @@ export function ChatInterface() {
       timestamp: new Date().toISOString(),
     }
 
-    setMessages((prev) => [...prev, userMessage])
-    setIsLoading(true)
+    addMessage(userMessage) // Use context's addMessage
+    setIsLoading(true) // Use context's setIsLoading
 
     // Add activity
     const activity: ActivityItem = {
@@ -49,7 +81,7 @@ export function ChatInterface() {
       timestamp: new Date().toISOString(),
       details: content.slice(0, 50) + (content.length > 50 ? "..." : ""),
     }
-    setActivities((prev) => [activity, ...prev])
+    addActivity(activity) // Use context's addActivity
 
     // Simulate AI response
     setTimeout(() => {
@@ -69,8 +101,8 @@ export function ChatInterface() {
         timestamp: new Date().toISOString(),
         model: "Gemini Pro",
       }
-      setMessages((prev) => [...prev, aiMessage])
-      setIsLoading(false)
+      addMessage(aiMessage) // Use context's addMessage
+      setIsLoading(false) // Use context's setIsLoading
 
       // Add AI response activity
       const aiActivity: ActivityItem = {
@@ -81,12 +113,13 @@ export function ChatInterface() {
         timestamp: new Date().toISOString(),
         details: "Generated intelligent response using Gemini Pro model",
       }
-      setActivities((prev) => [aiActivity, ...prev])
+      addActivity(aiActivity) // Use context's addActivity
     }, 1500)
-  }, [])
+  }
 
-  const handleNewChat = useCallback(() => {
-    setMessages([])
+  const handleNewChat = () => {
+    // Removed useCallback, now uses context
+    clearMessages() // Use context's clearMessages
     const activity: ActivityItem = {
       id: Date.now().toString(),
       type: "message",
@@ -95,23 +128,21 @@ export function ChatInterface() {
       timestamp: new Date().toISOString(),
       details: "Started a new conversation session",
     }
-    setActivities((prev) => [activity, ...prev])
-  }, [])
+    addActivity(activity) // Use context's addActivity
+  }
 
-  const handleToolClick = useCallback((tool: string) => {
-    setActiveModal(tool)
+  const handleToolClick = (tool: string) => {
+    // Removed useCallback, now uses context
+    openModal(tool) // Use context's openModal
 
     // Add activity for tool usage
     const toolNames: Record<string, string> = {
-      "roi-calc": "ROI Calculator",
-      research: "Lead Research",
-      analysis: "Document Analysis",
-      leads: "Lead Management",
-      meeting: "Meeting Scheduler",
-      upload: "File Upload",
-      screen: "Screen Share",
-      voice: "Voice Input",
-      webcam: "Webcam Capture",
+      "ROI Analysis": "ROI Calculator", // Update keys to match button labels
+      "Lead Research": "Lead Research",
+      "Image Generation": "Image Generation",
+      "Document Upload": "Document Upload",
+      "Video Call": "Video Call",
+      "Screen Share": "Screen Share",
     }
 
     const activity: ActivityItem = {
@@ -122,24 +153,33 @@ export function ChatInterface() {
       timestamp: new Date().toISOString(),
       details: `Accessing ${toolNames[tool] || tool} functionality`,
     }
-    setActivities((prev) => [activity, ...prev])
-  }, [])
+    addActivity(activity) // Use context's addActivity
+  }
 
-  const handleCloseModal = useCallback(() => {
+  const handleCloseModal = () => {
+    // Removed useCallback, now uses context
     if (activeModal) {
       // Update the last activity to completed when modal closes
-      setActivities((prev) =>
-        prev.map((activity, index) =>
-          index === 0 && activity.status === "in_progress" ? { ...activity, status: "completed" } : activity,
-        ),
-      )
+      // This logic will be simpler with context management or a dedicated activity update function
+      // For now, let's keep it in ChatInterface to quickly get it working
+      addActivity({
+        // Add a new activity for modal closure instead of directly modifying previous
+        id: Date.now().toString(),
+        type: "tool_used",
+        title: `${activeModal} Closed`,
+        status: "completed",
+        timestamp: new Date().toISOString(),
+        details: `Closed ${activeModal} functionality`,
+      })
     }
-    setActiveModal(null)
-  }, [activeModal])
+    closeModal() // Use context's closeModal
+  }
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
-      <div className="w-80 shrink-0">
+      <div className="shrink-0">
+        {" "}
+        {/* Removed w-80 as Sidebar handles its own width */}
         <ChatSidebar activities={activities} onNewChat={handleNewChat} />
       </div>
 
