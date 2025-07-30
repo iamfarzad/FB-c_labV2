@@ -61,8 +61,6 @@ export function ChatComposer({ onSendMessage, onToolClick, isTyping }: ChatCompo
             <div className="flex items-center gap-1 flex-wrap">
               <ActionButton icon={BarChart} label="ROI Analysis" onClick={() => onToolClick("ROI Analysis")} />
               <ActionButton icon={Search} label="Lead Research" onClick={() => onToolClick("Lead Research")} />
-              {/* Removed the following line */}
-              {/* <ActionButton icon={Zap} label="Automate" onClick={() => onToolClick("Automation")} /> */}
               <ActionButton icon={ImageIcon} label="Image Gen" onClick={() => onToolClick("Image Generation")} />
               <ActionButton icon={Upload} label="Upload" onClick={() => onToolClick("Document Upload")} />
               <ActionButton icon={Video} label="Video" onClick={() => onToolClick("Video Call")} />

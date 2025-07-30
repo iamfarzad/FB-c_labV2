@@ -11,6 +11,8 @@ const StatusIcon = ({ status }: { status: Activity["status"] }) => {
       return <Loader className="h-3 w-3 text-blue-500 animate-spin" />
     case "failed":
       return <XCircle className="h-3 w-3 text-red-500" />
+    default:
+      return null
   }
 }
 
@@ -23,6 +25,9 @@ export function ActivityPanel({ activities }: { activities: Activity[] }) {
       </div>
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
+          {activities.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">No recent AI activities.</p>
+          )}
           {activities.map((activity) => (
             <div key={activity.id} className="flex items-start gap-3">
               <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center shrink-0 mt-1">
@@ -34,6 +39,7 @@ export function ActivityPanel({ activities }: { activities: Activity[] }) {
                   <StatusIcon status={activity.status} />
                 </div>
                 <p className="text-xs text-muted-foreground">{activity.timestamp}</p>
+                {activity.details && <p className="text-xs text-muted-foreground mt-1">{activity.details}</p>}
               </div>
             </div>
           ))}
