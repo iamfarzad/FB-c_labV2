@@ -2,9 +2,10 @@ import type { LucideIcon } from "lucide-react"
 
 export interface Message {
   id: string
-  content: string
   role: "user" | "assistant" | "system"
+  content: string
   timestamp: string
+  model?: string
 }
 
 export interface Activity {

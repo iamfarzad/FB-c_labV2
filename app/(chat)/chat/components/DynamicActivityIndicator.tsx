@@ -1,8 +1,7 @@
 "use client"
 
 import { AnimatePresence, motion } from "framer-motion"
-import type { Activity } from "@/types/chat"
-import { Loader } from "lucide-react"
+import type { Activity } from "../types/chat"
 
 interface DynamicActivityIndicatorProps {
   activity: Activity | null
@@ -10,7 +9,7 @@ interface DynamicActivityIndicatorProps {
 
 export function DynamicActivityIndicator({ activity }: DynamicActivityIndicatorProps) {
   return (
-    <div className="h-8 flex justify-center items-center px-4">
+    <div className="h-10 px-6">
       <AnimatePresence>
         {activity && activity.status === "in_progress" && (
           <motion.div
@@ -18,10 +17,10 @@ export function DynamicActivityIndicator({ activity }: DynamicActivityIndicatorP
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.3 }}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground bg-muted rounded-full"
+            className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-background rounded-full py-1.5 px-4 border"
           >
-            <Loader className="h-3 w-3 animate-spin" />
-            <span>{activity.title}...</span>
+            <activity.icon className="h-4 w-4 animate-spin" />
+            <span>{activity.title}</span>
           </motion.div>
         )}
       </AnimatePresence>
