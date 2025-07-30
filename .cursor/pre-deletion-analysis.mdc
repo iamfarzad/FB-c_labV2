@@ -1,56 +1,28 @@
-# Pre-Deletion Analysis: `app/(chat)/chat/components/LeadCaptureFlow.tsx`
+---
+description: "Pre-Deletion Analysis Requirement"
+alwaysApply: true
+globs:
+  - "**/*"
+---
 
-This document analyzes the `LeadCaptureFlow.tsx` component to determine its dependencies and impact before considering its deletion or refactoring.
+# Pre-Deletion Analysis Requirement
 
-## Component Overview
+**When deleting or refactoring any file**, Cursor AI must:
 
-`LeadCaptureFlow.tsx` appears to be a client-side React component responsible for managing a multi-step lead capture process within the chat interface. It uses `useState` for managing the current step and `useLeadCapture` hook for handling lead data. It conditionally renders `LeadCaptureHeader`, `LeadCaptureForm`, and `LeadCaptureTerms` based on the current step.
+1. **Show where each deleted symbol is used**  
+   - Run a dependency scan (e.g. `grep -R 'filename' .`) and list all import sites.
+2. **Map old functionality to new code**  
+   - For every deleted function/class, include a code snippet of its replacement or migration in the new file.
+3. **Include a summary table**  
+   - A 2-column markdown table: Deleted File → Kept/Replaced In.
+4. **Run CI checks**  
+   - Simulate an import/build step to prove no missing-module errors.
+5. **Require sign-off**  
+   - Only allow the deletion if all usages are covered and tests still pass.
 
-## Dependencies and Usage
+**Rejection criteria:**  
+- Any deletion without the above analysis block.  
+- Any missing mapping for a deleted symbol.  
+- Any build-or-import failures after the change.
 
-1.  **Imports:**
-    *   `useState` from `react`
-    *   `LeadCaptureHeader` from `./lead-capture/LeadCaptureHeader`
-    *   `LeadCaptureForm` from `./lead-capture/LeadCaptureForm`
-    *   `LeadCaptureTerms` from `./lead-capture/LeadCaptureTerms`
-    *   `useLeadCapture` from `../../hooks/useLeadCapture`
-    *   `LeadCaptureStep` from `../../types/lead-capture`
-
-2.  **Exported by:**
-    *   It is exported as `LeadCaptureFlow`.
-
-3.  **Used by:**
-    *   Based on the file path `app/(chat)/chat/components/LeadCaptureFlow.tsx`, it is highly probable that this component is rendered within the main chat page (`app/(chat)/chat/page.tsx`) or a parent component that orchestrates the chat UI.
-    *   It might be conditionally rendered based on whether lead information has been captured for the current session.
-
-## Impact of Deletion/Refactoring
-
-### Direct Impact
-
-*   **Removal of Lead Capture UI:** Deleting this component would remove the entire lead capture user interface from the application.
-*   **Broken References:** Any component that imports and uses `LeadCaptureFlow` would break, leading to compilation errors or runtime crashes. This would likely include `app/(chat)/chat/page.tsx` or `app/(chat)/chat/components/ChatInterface.tsx` (if it exists).
-*   **Loss of Lead Capture Functionality:** The application would no longer be able to guide users through a structured lead capture process. The `useLeadCapture` hook and its associated API calls (`/api/lead-capture`) would become orphaned or unused unless their functionality is integrated elsewhere.
-
-### Indirect Impact
-
-*   **Backend API (`/api/lead-capture`):** The API route for lead capture would become unused if no other part of the frontend triggers it.
-*   **Supabase Tables:** The `leads` table (or similar) in Supabase, populated by the lead capture process, would no longer receive new entries from the frontend.
-*   **User Experience:** If lead capture is a critical business requirement, its removal would significantly impact the user onboarding or data collection strategy.
-*   **Admin Dashboard:** Features in the admin dashboard that rely on captured lead data (e.g., `LeadsList.tsx`, `InteractionAnalytics.tsx`) would no longer receive fresh data.
-
-## Recommendation
-
-**Do NOT delete `LeadCaptureFlow.tsx` without a clear replacement strategy.**
-
-If the goal is to remove lead capture functionality, then:
-1.  **Confirm Business Requirements:** Ensure that lead capture is no longer a necessary feature.
-2.  **Remove References:** Identify and remove all imports and usages of `LeadCaptureFlow` from parent components (e.g., `app/(chat)/chat/page.tsx`).
-3.  **Consider Backend Impact:** Decide whether the `/api/lead-capture` route and associated `LeadManager` logic should also be removed or repurposed.
-4.  **Update Documentation:** Reflect the change in relevant documentation (e.g., `README.md`, `__Complete Lead Generation System Documentation &.md`).
-
-If the goal is to refactor or improve the lead capture flow, consider:
-*   Integrating its steps directly into the main chat flow if it's a seamless part of the conversation.
-*   Using a different UI pattern (e.g., a non-modal form, a sidebar component).
-*   Ensuring the `useLeadCapture` hook and backend logic remain intact and are correctly integrated with the new UI.
-
-**Conclusion:** `LeadCaptureFlow.tsx` is a central component for lead generation. Its deletion would have significant functional and data-related consequences. Proceed with caution and a clear plan.
+With this in place, Cursor AI can no longer nuke files without first showing you exactly how it's preserving or replacing their behavior. That should stop the "rules → chaos" cycle.

@@ -1,94 +1,216 @@
-# Backend Architecture Compliance Checklist
+---
+description: "Backend Architecture Compliance Rules"
+alwaysApply: true
+globs:
+  - "**/*"
+---
+# Backend Architecture Compliance Rules
 
-This checklist ensures that our backend architecture adheres to security, performance, scalability, and maintainability best practices. It should be reviewed at key stages of development and before deployment.
+**⚠️ ENFORCEMENT NOTICE: All rules in this document are mandatory. Our CI/CD pipelines and code reviews will automatically reject any code that deviates. Any violation must be fixed before merge.**
 
-## I. Security Compliance
+## 🔒 Security Rules (MANDATORY)
 
-*   **Authentication & Authorization:**
-    *   [x] All API endpoints require authentication unless explicitly public.
-    *   [x] JWTs are used for session management, with proper signing and expiration.
-    *   [x] Role-Based Access Control (RBAC) is implemented for sensitive operations.
-    *   [x] Admin routes are protected by a dedicated admin authentication middleware.
-    *   [x] User passwords are never stored in plain text (use bcrypt or similar hashing).
-    *   [x] Rate limiting is applied to authentication endpoints to prevent brute-force attacks.
+### Authentication & Authorization
+- **Rule S1.1**: All API endpoints MUST implement proper authentication
+- **Rule S1.2**: Use JWT tokens with secure expiration times (max 24 hours)
+- **Rule S1.3**: Implement role-based access control (RBAC) for admin endpoints
+- **Rule S1.4**: Validate all user inputs and sanitize data
+- **Rule S1.5**: Use HTTPS for all communications
+- **Rule S1.6**: Implement rate limiting on all endpoints
+- **Rule S1.7**: Store sensitive data encrypted at rest
 
-*   **Data Protection:**
-    *   [x] All sensitive data is encrypted at rest (database, file storage).
-    *   [x] All data in transit is encrypted (HTTPS/TLS 1.2+).
-    *   [x] Input validation and sanitization are performed on all incoming data to prevent XSS, SQL injection, etc.
-    *   [x] SQL queries use parameterized statements or ORMs to prevent SQL injection.
-    *   [x] Environment variables for secrets are properly managed and not hardcoded.
-    *   [x] Supabase Row Level Security (RLS) is correctly configured and enforced for all sensitive tables.
+### API Security
+- **Rule S2.1**: Validate webhook signatures for all external integrations
+- **Rule S2.2**: Implement CORS policies with specific origins
+- **Rule S2.3**: Use environment variables for all secrets and API keys
+- **Rule S2.4**: Implement request size limits
+- **Rule S2.5**: Log all authentication attempts and failures
 
-*   **API Security:**
-    *   [x] API endpoints are protected against common OWASP Top 10 vulnerabilities.
-    *   [x] CORS policies are correctly configured to allow only authorized origins.
-    *   [x] Sensitive information is not exposed in API responses (e.g., stack traces, internal errors).
-    *   [x] Proper error handling is implemented to avoid information leakage.
+### Data Security
+- **Rule S3.1**: Encrypt PII data in transit and at rest
+- **Rule S3.2**: Implement data retention policies
+- **Rule S3.3**: Use prepared statements to prevent SQL injection
+- **Rule S3.4**: Implement audit logging for data access
 
-*   **Logging & Monitoring:**
-    *   [x] Security-relevant events (login attempts, access denials) are logged.
-    *   [x] Logs are stored securely and are accessible for auditing.
+## 📊 Performance Rules (MANDATORY)
 
-## II. Performance & Scalability Compliance
+### Response Times
+- **Rule P1.1**: API endpoints MUST respond within 2 seconds
+- **Rule P1.2**: Database queries MUST complete within 500ms
+- **Rule P1.3**: File uploads MUST complete within 30 seconds
+- **Rule P1.4**: Implement connection pooling
 
-*   **Database Optimization:**
-    *   [x] Database queries are optimized (e.g., proper indexing, efficient joins).
-    *   [x] N+1 query problems are identified and resolved.
-    *   [x] Connection pooling is used for database connections.
-    *   [x] Supabase Realtime is used judiciously to avoid over-fetching or unnecessary subscriptions.
+### Caching
+- **Rule P2.1**: Cache frequently accessed data
+- **Rule P2.2**: Implement cache invalidation strategies
+- **Rule P2.3**: Use CDN for static assets
+- **Rule P2.4**: Cache database query results
 
-*   **API Efficiency:**
-    *   [x] API responses are optimized for size (e.g., only return necessary data).
-    *   [x] Caching strategies are implemented where appropriate (e.g., Redis, CDN).
-    *   [x] Asynchronous processing is used for long-running tasks (e.g., background jobs, queues).
-    *   [x] AI model selection is optimized for cost and performance based on feature requirements.
+## 🔍 Observability Rules (MANDATORY)
 
-*   **Scalability:**
-    *   [x] Stateless API endpoints where possible.
-    *   [x] Services are designed for horizontal scaling.
-    *   [x] Load balancing considerations are in place.
-    *   [x] Serverless functions are used for burstable or event-driven workloads.
+### Logging
+- **Rule O2.1**: Use structured logging (JSON format)
+- **Rule O2.2**: Include correlation IDs in all logs
+- **Rule O2.3**: Log at appropriate levels (info, warn, error)
+- **Rule O2.4**: Implement log aggregation
 
-## III. Maintainability & Reliability Compliance
+### Monitoring
+- **Rule O1.1**: Monitor all API endpoints
+- **Rule O1.2**: Track error rates and response times
+- **Rule O1.3**: Monitor database performance
+- **Rule O1.4**: Implement health checks
 
-*   **Code Quality:**
-    *   [x] Code adheres to established coding standards (ESLint, Prettier).
-    *   [x] Comprehensive unit and integration tests are written for critical logic.
-    *   [x] Code is modular and follows separation of concerns.
-    *   [x] Clear and concise documentation for complex modules and APIs.
+## 🏗️ Code Architecture Rules (MANDATORY)
 
-*   **Error Handling & Resilience:**
-    *   [x] Graceful error handling for all API endpoints.
-    *   [x] Circuit breakers or retry mechanisms for external service calls.
-    *   [x] Robust logging for debugging and operational insights.
-    *   [x] Monitoring and alerting are configured for critical errors and performance deviations.
+### API Design
+- **Rule AV2.1**: Use RESTful principles
+- **Rule AV2.2**: Implement consistent error handling
+- **Rule AV2.3**: Use standard HTTP status codes
+- **Rule AV2.4**: Provide comprehensive documentation
 
-*   **Deployment & Operations:**
-    *   [x] Infrastructure as Code (IaC) principles are followed (e.x. Vercel config).
-    *   [x] CI/CD pipelines are configured for automated testing and deployment.
-    *   [x] Rollback procedures are defined and tested.
-    *   [x] Environment-specific configurations are managed securely.
+### Modular Design
+- **Rule MD1.1**: Break large functions into focused modules
+- **Rule MD1.2**: Separate concerns (auth, validation, business logic)
+- **Rule MD1.3**: Use dependency injection where appropriate
+- **Rule MD1.4**: Implement proper error boundaries
 
-*   **Dependency Management:**
-    *   [x] Dependencies are regularly updated to address security vulnerabilities and performance improvements.
-    *   [x] Dependency versions are pinned to ensure consistent builds.
+## 🧪 Testing Rules (MANDATORY)
 
-## IV. AI-Specific Compliance
+### Code Coverage
+- **Rule T1.1**: Maintain 80% code coverage minimum
+- **Rule T1.2**: Test all business logic
+- **Rule T1.3**: Mock external dependencies
+- **Rule T1.4**: Test error conditions
 
-*   **Model Management:**
-    *   [x] AI model versions are tracked and managed.
-    *   [x] Model inputs and outputs are logged for auditing and debugging.
-    *   [x] Mechanisms for A/B testing or gradual rollout of new models.
+### Integration Testing
+- **Rule T2.1**: Test API endpoints
+- **Rule T2.2**: Test database operations
+- **Rule T2.3**: Test external integrations
+- **Rule T2.4**: Test authentication flows
 
-*   **Cost Management:**
-    *   [x] Token usage is tracked and logged for all AI interactions.
-    *   [x] Budget enforcement mechanisms are in place for AI API calls.
-    *   [x] Cost-effective models are prioritized where appropriate.
+## 🔧 Implementation Standards
 
-*   **Ethical AI:**
-    *   [x] Considerations for bias, fairness, and transparency are integrated into AI development.
-    *   [x] Data used for AI training is ethically sourced and compliant with privacy regulations.
-    *   [x] Human oversight is considered for critical AI-driven decisions.
+### Error Handling Pattern
+\`\`\`typescript
+// MANDATORY: Use this pattern for all API endpoints
+export async function POST(req: NextRequest) {
+  const startTime = Date.now();
+  const correlationId = logActivity('info', 'Request started');
+  
+  try {
+    // 1. Rate limiting check
+    if (!checkRateLimit(ip, 20, 60000)) {
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429 });
+    }
 
-This checklist is a living document and will be updated as our architecture evolves and new best practices emerge.
+    // 2. Authentication check
+    const auth = await authenticateRequest(req);
+    if (!auth.success) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401 });
+    }
+
+    // 3. Input validation
+    const validation = validateRequest(schema, data);
+    if (!validation.success) {
+      return new Response(JSON.stringify({ error: 'Validation failed' }), { status: 400 });
+    }
+
+    // 4. Business logic
+    const result = await processRequest(validation.data);
+
+    // 5. Success response with correlation ID
+    return new Response(JSON.stringify(result), {
+      headers: { 'X-Correlation-ID': correlationId }
+    });
+  } catch (error) {
+    logActivity('error', 'API error', { correlationId, error: error.message });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+  }
+}
+\`\`\`
+
+### Logging Pattern
+\`\`\`typescript
+// MANDATORY: Use structured logging
+function logActivity(level: 'info' | 'error' | 'warn', message: string, metadata: any = {}) {
+  const correlationId = Math.random().toString(36).substring(7);
+  console.log(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    level,
+    message,
+    correlationId,
+    ...metadata
+  }));
+  return correlationId;
+}
+\`\`\`
+
+### Rate Limiting Pattern
+\`\`\`typescript
+// MANDATORY: Implement rate limiting (use Redis in production)
+function checkRateLimit(identifier: string, limit: number = 20, windowMs: number = 60000): boolean {
+  // Implementation must be distributed (Redis) for production
+  // In-memory Map is only acceptable for development
+}
+\`\`\`
+
+## 🚫 Prohibited Patterns
+
+### Security Violations
+- ❌ Hardcoded secrets or API keys
+- ❌ No input validation
+- ❌ No authentication on API endpoints
+- ❌ No rate limiting
+- ❌ No error handling
+- ❌ No logging
+
+### Performance Violations
+- ❌ Synchronous database operations in API routes
+- ❌ No connection pooling
+- ❌ No caching strategies
+- ❌ Large monolithic functions (>100 lines)
+- ❌ No timeout handling
+
+### Code Quality Violations
+- ❌ No TypeScript types
+- ❌ No error boundaries
+- ❌ No input sanitization
+- ❌ No structured logging
+- ❌ No correlation IDs
+
+## 📋 Compliance Checklist
+
+Before any API endpoint can be merged, verify:
+
+- [ ] Authentication implemented (Rule S1.1)
+- [ ] Rate limiting implemented (Rule S1.6)
+- [ ] Input validation and sanitization (Rule S1.4)
+- [ ] Structured logging with correlation IDs (Rule O2.1, O2.2)
+- [ ] Proper error handling with HTTP status codes (Rule AV2.2, AV2.3)
+- [ ] Environment variables for secrets (Rule S2.3)
+- [ ] Response time under 2 seconds (Rule P1.1)
+- [ ] Modular code structure (Rule MD1.1, MD1.2)
+- [ ] Tests written with 80% coverage (Rule T1.1)
+
+## 🔄 Review Process
+
+1. **Automated Checks**: CI/CD will validate all rules
+2. **Manual Review**: Code reviewers must verify compliance
+3. **Security Scan**: Automated security scanning required
+4. **Performance Test**: Load testing for critical endpoints
+5. **Documentation**: All changes must be documented in [CHANGELOG.md](mdc:CHANGELOG.md)
+
+## 📚 Reference Documents
+
+- [backend_architecture.md](mdc:backend_architecture.md) - Detailed architecture specifications
+- [CHANGELOG.md](mdc:CHANGELOG.md) - Change tracking and compliance updates
+- [package.json](mdc:package.json) - Dependency management and scripts
+
+**⚠️ REMINDER: These rules are MANDATORY and will be enforced automatically. Non-compliant code will be rejected.**
+---
+description: "Apply to all backend source files"
+globs:
+  - "app/api/**"
+  - "lib/**"
+alwaysApply: true
+---

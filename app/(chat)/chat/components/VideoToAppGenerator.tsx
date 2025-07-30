@@ -19,18 +19,11 @@ import {
   Sparkles,
   Lightbulb,
   ListChecks,
-  Info,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useChatContext } from "../context/ChatProvider"
 import { validateYoutubeUrl, getYoutubeEmbedUrl } from "@/lib/youtube"
 import { extractLearningObjectives, extractKeyTopics } from "@/lib/educational-gemini-service"
-import {
-  Tooltip, // Added Tooltip
-  TooltipContent, // Added TooltipContent
-  TooltipProvider, // Added TooltipProvider
-  TooltipTrigger, // Added TooltipTrigger
-} from "@/components/ui/tooltip"
 
 interface VideoToAppProps {
   onAnalysisComplete?: (data: any) => void
@@ -157,19 +150,6 @@ export const VideoToAppGenerator = forwardRef<{ getSpec: () => string; getCode: 
         <header className="flex items-center gap-3 p-4 border-b">
           <Youtube className="h-6 w-6 text-red-500" />
           <h2 className="text-lg font-semibold">AI Video to Learning App</h2>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" className="ml-auto gap-1 bg-transparent">
-                  <Info className="h-4 w-4" />
-                  V2A
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Generate a learning application from a YouTube video.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </header>
 
         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 overflow-y-auto">

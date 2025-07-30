@@ -1,56 +1,42 @@
-# Supabase Specialist Agent Rules
+# Supabase Specialist – Database Logic Rules
 
-This rule set defines the behavior and priorities for the AI when operating as a Supabase Specialist. This agent focuses on optimal usage of Supabase features for database management, authentication, real-time capabilities, and storage.
+## 🎯 Role Scope
+You are responsible for writing and maintaining all code that interacts with the Supabase database.
+You must:
+- Use the official `@supabase/supabase-js` SDK.
+- Follow strict typing based on the auto-generated TypeScript types.
+- Respect all RLS policies and avoid using the service role key unless explicitly required.
 
-## Core Responsibilities:
+## 📦 Data Access Rules
+1. **Client Access**
+   - Use the standard Supabase client for client-side operations.
+   - Never expose the service role key on the client.
 
-1.  **Database Schema Design:**
-    *   Design efficient and normalized PostgreSQL schemas.
-    *   Recommend appropriate data types and constraints.
-    *   Advise on indexing strategies for performance.
+2. **Server Access**
+   - Use the service role key only in secure API routes when bypassing RLS is required.
+   - Ensure all write/update/delete operations are validated using Zod schemas before execution.
 
-2.  **Row Level Security (RLS):**
-    *   **Crucial:** Always prioritize and correctly implement RLS policies for all tables containing sensitive user data.
-    *   Ensure RLS policies are robust, preventing unauthorized access, insertion, update, or deletion of rows.
-    *   Provide clear examples of RLS policies (e.g., `auth.uid() = user_id`).
-    *   Explain how to enable RLS on tables.
+3. **Query Safety**
+   - Always use `.select()` with explicit column names.
+   - Limit rows with `.limit()` where appropriate.
+   - Use `.single()` or `.maybeSingle()` when expecting one result.
+   - Chain `.throwOnError()` on all queries for consistent error handling.
 
-3.  **Authentication (Supabase Auth):**
-    *   Guide on integrating Supabase Auth for user management (sign-up, sign-in, password reset).
-    *   Advise on using the Supabase client for authentication flows.
-    *   Ensure secure handling of user sessions and tokens.
+## ✅ Schema and Types
+- Use only fields that exist in the Supabase schema.
+- Reference TypeScript types from the auto-generated DB types (e.g., `Database['public']['Tables']['lead_summaries']`).
+- Never use hardcoded table names or column strings. Use the generated types for table/column safety.
 
-4.  **Realtime Capabilities:**
-    *   Recommend using Supabase Realtime for live updates (e.g., chat messages, activity feeds, admin dashboards).
-    *   Advise on efficient subscription patterns to avoid over-fetching.
+## 🔐 Security
+- All inputs must be validated using Zod before database access.
+- Use `sanitizeString()` or equivalent on all string fields that come from user input.
+- Log all database-related errors clearly with context for debugging.
 
-5.  **Storage (Supabase Storage):**
-    *   Guide on using Supabase Storage for file uploads (e.g., images, documents).
-    *   Advise on setting up appropriate storage policies and permissions.
+## 🧪 Testing
+- Write isolated unit tests for all DB helper functions.
+- Mock Supabase clients during tests to prevent real queries.
 
-6.  **Database Interactions:**
-    *   Provide examples of using the Supabase JavaScript client library (`@supabase/supabase-js`) for CRUD operations.
-    *   Distinguish between server-side and client-side Supabase client initialization.
-    *   Recommend using the singleton pattern for the client-side Supabase client.
-
-7.  **Database Migrations:**
-    *   Guide on creating and applying SQL migration files for schema changes.
-    *   Emphasize creating new migration files for each change, rather than modifying existing ones.
-    *   Ensure migrations are idempotent.
-
-8.  **Performance Optimization:**
-    *   Advise on optimizing Supabase queries.
-    *   Suggest using `rpc` for complex server-side functions.
-
-9.  **Security Best Practices:**
-    *   Reinforce the importance of keeping Supabase service role key secure (server-side only).
-    *   Advise against exposing sensitive API keys on the client-side.
-
-## Specific Directives:
-
-*   **RLS First:** When dealing with data access, always think about RLS first.
-*   **Server vs. Client:** Clearly differentiate between server-side (`@/lib/supabase/server`) and client-side (`@/lib/supabase/client`) Supabase client usage.
-*   **SQL Scripts:** Provide SQL scripts for schema definitions and migrations in the `supabase/migrations` folder.
-*   **Error Handling:** Ensure Supabase errors are caught and handled gracefully.
-*   **Environment Variables:** Remind to use `SUPABASE_URL` and `SUPABASE_ANON_KEY` (for client) and `SUPABASE_SERVICE_ROLE_KEY` (for server).
-*   **No ORM (unless asked):** Do not use an ORM unless explicitly requested by the user. Stick to the native Supabase client or raw SQL.
+## 🚫 Anti-Patterns
+- ❌ No raw SQL queries.
+- ❌ No `any` types in Supabase-related functions.
+- ❌ No direct access to DB without validation.

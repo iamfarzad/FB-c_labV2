@@ -1,68 +1,190 @@
 # Core Foundation Rules
 
-This document outlines the fundamental rules and constraints that govern the AI's behavior and output across all interactions. These rules are paramount and must be adhered to in every response.
+## 🏗️ **MANDATORY: Always Analyze Project Structure First**
 
-## 1. Output Format and Structure
+**BEFORE making any changes, you MUST:**
+1. **Read [file-tree.md](mdc:file-tree.md) completely** - Understand the current architecture
+2. **Check [backend_architecture.md](mdc:backend_architecture.md)** - Verify compliance with backend rules
+3. **Review [CHANGELOG.md](mdc:CHANGELOG.md)** - Understand recent changes and current state
+4. **Analyze existing patterns** - Follow established conventions
 
-*   **MDX Format:** All responses MUST be in MDX format. This includes code blocks, explanations, and any other content.
-*   **CodeProject:**
-    *   All React components and full-stack Next.js apps MUST be grouped inside a single `` block.
-    *   Only one `` block per response.
-    *   Maintain the same `id` for the `` across related turns unless starting a completely new project.
-*   **File Structure:**
-    *   Use `tsx file="file_path"` for React components.
-    *   Use `ts file="file_path"` for TypeScript files.
-    *   Use `css file="file_path"` for CSS files.
-    *   Use `json file="file_path"` for JSON files.
-    *   Use `sql file="file_path"` for SQL files.
-    *   Use `plaintext file="file_path"` for generic text files.
-    *   Use `ext file="file_path" url="[BLOB_URL]"` for binary assets (images, videos, etc.).
-    *   File paths MUST use kebab-case (e.g., `login-form.tsx`).
-    *   The `file` attribute MUST be on the same line as the backticks.
-*   **No Placeholders:** NEVER use placeholder comments like "... This file was left out for brevity. Assume it is correct and does not need any modifications. ..." in the final output. Always provide the full, complete content of any file that is part of the `` or being edited.
-*   **QuickEdit:** Use ````file_path file="file_path"
-[v0-no-op-code-block-prefix]>` for small modifications (1-20 lines, 1-3 steps) to existing code blocks. For larger changes or new files, provide the complete code. All changes for a file MUST be within a single `<QuickEdit>` block.
-*   **File Actions:** Use `<DeleteFile file="file_path" />` and `<MoveFile from="old_path" to="new_path" />` for file system operations. Remember to fix all imports when moving files.
+## 🚨 **MANDATORY REQUIREMENTS**
 
-## 2. Technology Stack and Best Practices
+When generating changelog entries or proposing code changes, you MUST enforce these requirements:
 
-*   **Next.js App Router:** Default to Next.js App Router for all web projects unless explicitly specified otherwise.
-*   **React Server Components:** Prioritize Server Components for data fetching and rendering where applicable. Mark client components with `'use client'`.
-*   **Shadcn UI:**
-    *   Prioritize using components from `shadcn/ui`.
-    *   DO NOT output the source code for `shadcn/ui` components (e.g., `components/ui/button.tsx`). Instead, import them from `@/components/ui`.
-    *   Only provide custom implementations if existing components cannot fulfill requirements.
-    *   Shadcn components can be modified via `<QuickEdit>` even if their source is not present in the Code Project.
-*   **Tailwind CSS:** Use Tailwind CSS for styling.
-    *   Hardcode colors directly in `tailwind.config.js` if a custom palette is needed, otherwise use Shadcn defaults.
-    *   DO NOT use indigo or blue colors unless specified by the user.
-*   **Lucide React Icons:** ALWAYS use icons from `lucide-react`. DO NOT output `<svg>` elements directly.
-*   **Placeholder Images:** Use `/placeholder.svg?height={height}&width={width}&query={query}` for placeholder images. HARD CODE the query in the URL.
-*   **Assets/Binaries:** Use `ext file="path/to/file.ext" url="[BLOB_URL]"` syntax for non-text files. Reference them in code using their file path (e.g., `/images/dashboard.png`), NOT the blob URL.
-*   **Accessibility:** Implement accessibility best practices (semantic HTML, ARIA roles, alt text, responsive design, keyboard navigation).
-*   **Environment Variables:** Use provided environment variables (e.g., `SUPABASE_URL`). Note that `NEXT_PUBLIC_` prefix is required for client-side usage.
-*   **AI SDK:** Use `ai` and `@ai-sdk` for AI integrations. Avoid other AI libraries unless explicitly requested. Do not use `runtime = 'edge'` with AI SDK API routes.
-*   **Supabase:** Use `createClient` from `@supabase/supabase-js`. Use singleton pattern for client-side. Create separate server/client clients. No ORM unless asked.
-*   **Neon:** Use `@neondatabase/serverless` and `neon(...)`.
-*   **Upstash:** Uses `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
-*   **xAI/Groq/Fal/DeepInfra:** Use respective environment variables and AI SDK models.
+### 1. **Automated Testing Requirement**
+- **Every new feature** requires a corresponding automated test
+- **Every bug fix** requires a test that reproduces the bug
+- **Test coverage** must be maintained or improved
+- **Integration tests** required for API changes
+- **E2E tests** required for user-facing features
 
-## 3. Interaction and Communication
+### 2. **Database & API Migration Requirements**
+- **Migration script** required for any schema change
+- **Rollback script** required for every migration
+- **API versioning** required for breaking changes
+- **Backward compatibility** must be maintained where possible
+- **Migration testing** in staging environment required
 
-*   **Clarity:** Provide clear, unambiguous instructions and explanations.
-*   **Conciseness:** Be concise but comprehensive.
-*   **Citations:** Cite all domain knowledge and Vercel knowledge base entries using `[^index]` or `[^vercel_knowledge_base]`.
-*   **Thinking Process:** Use `<Thinking>` tags to outline the thought process before generating code.
-*   **Refusals:** Respond with `I'm sorry. I'm not able to assist with that.` for harmful/unethical requests, without apology or explanation.
-*   **Follow-up Actions:** Suggest 3-5 relevant follow-up actions using `<Actions>` and `<Action>` components.
-*   **Diagrams:** Use Mermaid for diagrams.
-*   **Math:** Use LaTeX wrapped in double dollar signs `$$...$$`.
+### 3. **Branch Protection Rules**
+- **Main branch locked** - no direct commits allowed
+- **Feature branches required** - all work must go through named branches
+- **Pull request reviews** - minimum 1 approval required
+- **Status checks** - all tests must pass before merge
+- **Squash merging** - clean commit history maintained
 
-## 4. Project Context and State
+### 4. **CI/CD Pipeline Requirements**
+- **Automated test suite** runs on every PR
+- **Build verification** - ensure code compiles and builds
+- **Linting checks** - code style and quality standards
+- **Security scanning** - dependency and code vulnerability checks
+- **Performance regression** - prevent performance degradation
 
-*   **Current Project:** Always operate within the context of the "Uniq website creation" workspace.
-*   **Previous Chat Summary:** Refer to the `PreviousChatSummary` to understand the conversation history and current project state.
-*   **Existing Files:** Assume default Next.js/Shadcn files exist and do not regenerate them unless modifying. Focus on new files or specific edits.
-*   **Maintain Project ID:** Ensure the `id` attribute of the `<CodeProject>` component remains consistent across turns for the same project.
+## 🛠️ **Development Workflow Rules (MANDATORY)**
 
-By adhering to these core foundation rules, the AI ensures consistent, high-quality, and contextually relevant responses that align with Vercel's best practices.
+### Process Management
+- **Rule D1.1**: ALWAYS check for existing development processes before starting `pnpm dev`
+- **Rule D1.2**: Use `lsof -ti:3000` to check if port 3000 is in use
+- **Rule D1.3**: Kill existing processes on port 3000 before starting new dev server
+- **Rule D1.4**: Use `pkill -f "next dev"` to terminate all Next.js dev processes
+- **Rule D1.5**: Check for multiple terminal sessions running dev servers
+
+### Development Server Management
+- **Rule D2.1**: Only ONE development server should run at a time
+- **Rule D2.2**: Use `pnpm dev:check` script to verify no conflicts
+- **Rule D2.3**: Implement process locking mechanism for dev server
+- **Rule D2.4**: Clear terminal and show clear status before starting dev server
+
+### Port Conflict Resolution
+- **Rule D3.1**: If port 3000 is occupied, identify and terminate the process
+- **Rule D3.2**: Use `netstat -tulpn | grep :3000` to find process using port
+- **Rule D3.3**: Implement automatic port detection and switching if needed
+- **Rule D3.4**: Show clear error messages when port conflicts occur
+
+## 🔒 Security Rules (MANDATORY)
+
+### Authentication & Authorization
+- **Rule S1.1**: All API endpoints MUST implement proper authentication
+- **Rule S1.2**: Use JWT tokens with secure expiration times (max 24 hours)
+- **Rule S1.3**: Implement role-based access control (RBAC) for admin endpoints
+- **Rule S1.4**: Validate all user inputs and sanitize data
+- **Rule S1.5**: Use HTTPS for all communications
+- **Rule S1.6**: Implement rate limiting on all endpoints
+- **Rule S1.7**: Store sensitive data encrypted at rest
+
+### API Security
+- **Rule S2.1**: Validate webhook signatures for all external integrations
+- **Rule S2.2**: Implement CORS policies with specific origins
+- **Rule S2.3**: Use environment variables for all secrets and API keys
+- **Rule S2.4**: Implement request size limits
+- **Rule S2.5**: Log all authentication attempts and failures
+
+## 📊 Performance Rules (MANDATORY)
+
+### Response Times
+- **Rule P1.1**: API endpoints MUST respond within 2 seconds
+- **Rule P1.2**: Database queries MUST complete within 500ms
+- **Rule P1.3**: File uploads MUST complete within 30 seconds
+- **Rule P1.4**: Implement connection pooling
+
+### Caching
+- **Rule P2.1**: Cache frequently accessed data
+- **Rule P2.2**: Implement cache invalidation strategies
+- **Rule P2.3**: Use CDN for static assets
+- **Rule P2.4**: Cache database query results
+
+## 🔍 Observability Rules (MANDATORY)
+
+### Logging
+- **Rule O2.1**: Use structured logging (JSON format)
+- **Rule O2.2**: Include correlation IDs in all logs
+- **Rule O2.3**: Log at appropriate levels (info, warn, error)
+- **Rule O2.4**: Implement log aggregation
+
+### Monitoring
+- **Rule O1.1**: Monitor all API endpoints
+- **Rule O1.2**: Track error rates and response times
+- **Rule O1.3**: Monitor database performance
+- **Rule O1.4**: Implement health checks
+
+## 🏗️ Code Architecture Rules (MANDATORY)
+
+### API Design
+- **Rule AV2.1**: Use RESTful principles
+- **Rule AV2.2**: Implement consistent error handling
+- **Rule AV2.3**: Use standard HTTP status codes
+- **Rule AV2.4**: Provide comprehensive documentation
+
+### Modular Design
+- **Rule MD1.1**: Break large functions into focused modules
+- **Rule MD1.2**: Separate concerns (auth, validation, business logic)
+- **Rule MD1.3**: Use dependency injection where appropriate
+- **Rule MD1.4**: Implement proper error boundaries
+
+## 🧪 Testing Rules (MANDATORY)
+
+### Code Coverage
+- **Rule T1.1**: Maintain 80% code coverage minimum
+- **Rule T1.2**: Test all business logic
+- **Rule T1.3**: Mock external dependencies
+- **Rule T1.4**: Test error conditions
+
+### Integration Testing
+- **Rule T2.1**: Test API endpoints
+- **Rule T2.2**: Test database operations
+- **Rule T2.3**: Test external integrations
+- **Rule T2.4**: Test authentication flows
+
+## 🚫 Prohibited Patterns
+
+### Security Violations
+- ❌ Hardcoded secrets or API keys
+- ❌ No input validation
+- ❌ No authentication on API endpoints
+- ❌ No rate limiting
+- ❌ No error handling
+- ❌ No logging
+
+### Performance Violations
+- ❌ Synchronous database operations in API routes
+- ❌ No connection pooling
+- ❌ No caching strategies
+- ❌ Large monolithic functions (>100 lines)
+- ❌ No timeout handling
+
+### Code Quality Violations
+- ❌ No TypeScript types
+- ❌ No error boundaries
+- ❌ No input sanitization
+- ❌ No structured logging
+- ❌ No correlation IDs
+
+## 📋 Compliance Checklist
+
+Before any API endpoint can be merged, verify:
+
+- [ ] Authentication implemented (Rule S1.1)
+- [ ] Rate limiting implemented (Rule S1.6)
+- [ ] Input validation and sanitization (Rule S1.4)
+- [ ] Structured logging with correlation IDs (Rule O2.1, O2.2)
+- [ ] Proper error handling with HTTP status codes (Rule AV2.2, AV2.3)
+- [ ] Environment variables for secrets (Rule S2.3)
+- [ ] Response time under 2 seconds (Rule P1.1)
+- [ ] Modular code structure (Rule MD1.1, MD1.2)
+- [ ] Tests written with 80% coverage (Rule T1.1)
+
+## 🔄 Review Process
+
+1. **Automated Checks**: CI/CD will validate all rules
+2. **Manual Review**: Code reviewers must verify compliance
+3. **Security Scan**: Automated security scanning required
+4. **Performance Test**: Load testing for critical endpoints
+5. **Documentation**: All changes must be documented in [CHANGELOG.md](mdc:CHANGELOG.md)
+
+## 📚 Reference Documents
+
+- [backend_architecture.md](mdc:backend_architecture.md) - Detailed architecture specifications
+- [CHANGELOG.md](mdc:CHANGELOG.md) - Change tracking and compliance updates
+- [package.json](mdc:package.json) - Dependency management and scripts
+
+**⚠️ REMINDER: These rules are MANDATORY and will be enforced automatically. Non-compliant code will be rejected.**

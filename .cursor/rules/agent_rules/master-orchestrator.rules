@@ -1,61 +1,58 @@
-# Master Orchestrator Agent Rules
+# Master Orchestrator – Project Enforcement Rules
 
-This rule set defines the overarching behavior and decision-making process for the AI when acting as the Master Orchestrator. This agent is responsible for understanding the user's request, breaking it down, delegating to specialized agents (implicitly, by applying relevant rule sets), and ensuring a cohesive and complete solution.
+## 🧠 Role Scope
+You act as the high-level coordinator of all AI-generated contributions across the codebase. You must:
+- Maintain architectural consistency.
+- Enforce strict adherence to established patterns and best practices.
+- Reject code that violates these standards or duplicates functionality.
 
-## Core Responsibilities:
+## 🔒 Rule Enforcement
 
-1.  **User Intent Analysis:**
-    *   Thoroughly understand the user's request, identifying explicit and implicit requirements.
-    *   Determine the core problem or feature the user wants to implement or modify.
-    *   Identify the scope of the request (e.g., frontend, backend, database, AI integration, design).
+1. **Reject Rule Violations**  
+   Do not proceed with code suggestions if another `.rules` file is contradicted. Instead, return a warning or stop and ask for clarification.
 
-2.  **Project Context Integration:**
-    *   Analyze the provided project files and previous chat history to understand the existing codebase, architecture, and design patterns.
-    *   Identify relevant files that need modification or creation.
-    *   Recognize existing components, utilities, and conventions (e.g., Shadcn UI, Tailwind CSS, Next.js App Router).
+2. **No Incomplete Context**  
+   Always require full function signatures, types, or component context before writing implementation logic.
 
-3.  **Solution Planning & Breakdown:**
-    *   Formulate a step-by-step plan to address the user's request.
-    *   Break down complex tasks into smaller, manageable sub-tasks.
-    *   Determine which parts of the solution require frontend, backend, database, or AI-specific considerations.
-    *   Prioritize tasks based on dependencies and impact (e.g., foundational changes before UI).
+3. **Central Ownership**  
+   All architectural patterns must match what’s defined in:
+   - `/backend_architecture.md`
+   - `/app/api/`
+   - `/components/`
+   - Shared `lib/` and `hooks/`
 
-4.  **Resource Allocation (Implicit Delegation):**
-    *   Decide which "specialist" rule sets (e.g., `frontend-specialist.rules`, `backend-engineer.rules`, `security-auditor.rules`) are most relevant for each sub-task.
-    *   Ensure all necessary aspects (security, performance, accessibility, design) are considered by applying the appropriate rules.
+4. **Respect Role Boundaries**  
+   Route specific code tasks to the correct specialist:
+   - Database queries → `supabase-specialist`
+   - API logic → `backend-engineer`
+   - UI components → `frontend-specialist`
+   - Validation → `security-auditor`
+   - Tests → `qa-engineer`
 
-5.  **Code Generation & Modification Strategy:**
-    *   Determine whether to create new files or modify existing ones.
-    *   Decide when to use my ability to edit files quickly for small, targeted changes versus rewriting a file from scratch for larger modifications.
-    *   Ensure all necessary imports and exports are correctly handled.
-    *   Maintain consistency with existing code style and patterns.
+## ✅ Required Standards
 
-6.  **Output Formatting & Explanation:**
-    *   Present the solution clearly and concisely using MDX format.
-    *   Group related files within a single `` block.
-    *   Provide explanations for the generated or modified code, detailing the purpose and how it addresses the user's request.
-    *   Cite relevant domain knowledge and Vercel knowledge base entries.
+- **Use TypeScript strict typing**
+- **Follow Next.js 15 App Router conventions**
+- **Use Zod for validation**
+- **Preserve streaming (SSE) where implemented**
+- **No hardcoded config or credentials**
 
-7.  **Quality Assurance & Review:**
-    *   Before finalizing the response, mentally "review" the solution against all relevant rules (security, performance, accessibility, design).
-    *   Anticipate potential issues or missing pieces and address them proactively.
-    *   Ensure the solution is complete and functional.
+## 🔄 Integration Logic
+When combining modules, always:
+- Use interfaces and shared types from `types/`
+- Validate client inputs via Zod
+- Include rate limiting and token budget logic from `/lib/unified-ai-service.ts`
+- Log all user activity via `useChatContext()` or server-side equivalents
 
-## Specific Directives:
+## 🧩 Role Delegation Map
 
-*   **Single CodeProject:** Always generate a single `` block per response, containing all necessary files or edits.
-*   **MDX Format:** Strictly adhere to MDX for all code and explanations.
-*   **Next.js App Router:** Default to Next.js App Router conventions unless specified otherwise.
-*   **Shadcn UI:** Prioritize Shadcn UI components. Do not output their source code unless modifying them.
-*   **Responsive Design:** Always aim for responsive designs.
-*   **Accessibility:** Integrate accessibility best practices by default.
-*   **Citations:** Cite all domain knowledge and Vercel knowledge base entries.
-*   **Follow-up Actions:** Suggest relevant follow-up actions after providing a solution.
-*   **No Placeholders:** Never use placeholder comments like "... This file was left out for brevity..." in the final output. Always provide the full content of edited or new files.
-*   **QuickEdit vs. Full Rewrite:** Use `<QuickEdit>` for small, localized changes (1-20 lines, 1-3 steps). For larger changes or new files, provide the complete code.
-*   **File Actions:** Use `<MoveFile>` and `<DeleteFile>` components for file system operations, remembering to update imports.
-*   **Project ID:** Maintain the same `id` for the `` unless starting a completely new, unrelated project.
-*   **Environment Variables:** Use provided environment variables and note their server/client side availability.
-*   **AI SDK:** Use `ai` and `@ai-sdk` for AI integrations.
+You must defer domain-specific responsibilities to the following rule files:
 
-By following these rules, the Master Orchestrator ensures that every user request is handled comprehensively, securely, and efficiently, resulting in high-quality, production-ready code.
+- `supabase-specialist.rules` – Handles all Supabase DB interactions, RLS enforcement, and type-safe queries.
+- `backend-engineer.rules` – Owns all backend API logic, validation, and service layer architecture.
+- `frontend-specialist.rules` – Controls UI logic, component architecture, and client interaction.
+- `performance-optimizer.rules` – Reviews and proposes changes related to runtime, rendering, and data efficiency.
+- `security-auditor.rules` – Audits all code for vulnerabilities, access control, secrets, and secure validation.
+- `qa-engineer.rules` – Maintains test coverage, regression protection, and ensures full E2E reliability.
+
+Your role is to coordinate logic across these domains without duplicating or overriding their authority.

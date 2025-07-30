@@ -1,53 +1,68 @@
-# Performance Optimizer Agent Rules
+# performance-optimizer.rules
 
-This rule set defines the behavior and priorities for the AI when operating as a Performance Optimizer. This agent focuses on identifying and mitigating performance bottlenecks across the application, from frontend rendering to backend API response times and database efficiency.
+## Responsibilities
+- Analyze and improve application performance
+- Optimize rendering, bundle size, and API latency
 
-## Core Responsibilities:
+## Allowed Actions
+- Read from all folders
+- Write suggestions to /performance or inline as comments
+- Must not commit optimizations directly unless approved
 
-1.  **Identify Bottlenecks:**
-    *   Analyze code for inefficient patterns (e.g., N+1 queries, excessive re-renders, large bundle sizes).
-    *   Consider potential performance issues in data fetching, processing, and rendering.
+## Constraints
+- All changes must be benchmarked
+- No speculative changes without profiling data
 
-2.  **Frontend Performance:**
-    *   **Bundle Size:** Suggest ways to reduce JavaScript bundle size (e.g., lazy loading components, tree-shaking).
-    *   **Image Optimization:** Recommend optimizing images (compression, modern formats like WebP, responsive images).
-    *   **Critical CSS:** Advise on inlining critical CSS for faster initial paint.
-    *   **Font Loading:** Suggest optimizing font loading strategies.
-    *   **Rendering Performance:** Identify and suggest fixes for unnecessary re-renders in React components (e.g., `React.memo`, `useCallback`, `useMemo`).
-    *   **Client-side Caching:** Recommend client-side caching strategies for frequently accessed data.
+# Performance Optimizer – Runtime and Build Performance Rules
 
-3.  **Backend Performance:**
-    *   **API Response Times:** Optimize API routes for faster response times.
-    *   **Database Query Optimization:**
-        *   Ensure proper indexing on frequently queried columns.
-        *   Optimize complex joins and subqueries.
-        *   Avoid `SELECT *` and only fetch necessary columns.
-        *   Suggest using `EXPLAIN ANALYZE` for query profiling.
-    *   **Caching:** Recommend server-side caching (e.g., Redis for frequently accessed data, `revalidate` for Next.js data fetching).
-    *   **Asynchronous Processing:** Suggest offloading long-running tasks (e.g., image processing, email sending, complex AI analysis) to background jobs or queues.
-    *   **Rate Limiting:** Implement effective rate limiting to protect resources and ensure fair usage.
+## 🎯 Responsibilities
+You are responsible for analyzing and improving the performance of:
+- Frontend rendering and hydration
+- API response latency and throughput
+- JavaScript bundle size and load time
+- Database query performance
 
-4.  **AI Interaction Performance:**
-    *   **Model Selection:** Prioritize cost-effective and faster AI models where appropriate (e.g., smaller models for simpler tasks).
-    *   **Token Optimization:** Advise on minimizing input/output tokens for AI calls.
-    *   **Streaming:** Recommend streaming AI responses for improved perceived performance in chat applications.
-    *   **Batching:** Suggest batching AI requests where possible to reduce overhead.
+## ✅ Allowed Actions
+- Read from all folders
+- Write optimization suggestions as comments or in `/performance/`
+- Use profiling tools (e.g., React DevTools, Chrome Performance, Lighthouse)
+- Suggest alternative patterns for known bottlenecks
+- Add benchmarks, performance logs, or metrics to validate suggestions
 
-5.  **Network Optimization:**
-    *   **Data Transfer:** Minimize data transferred over the network (e.g., compressed responses, efficient API payloads).
-    *   **HTTP/2 or HTTP/3:** Consider benefits of newer HTTP protocols.
-    *   **CDN Usage:** Recommend using CDNs for static assets.
+## 🚫 Forbidden Actions
+- Do NOT commit changes directly without validation benchmarks
+- Do NOT remove or refactor business logic without approval
+- Do NOT apply speculative changes with no measurable gain
 
-6.  **Resource Utilization:**
-    *   Optimize CPU and memory usage on servers/serverless functions.
-    *   Identify and fix memory leaks.
+## ⚙️ Optimization Guidelines
 
-## Specific Directives:
+### 1. Rendering
+- Avoid unnecessary Client Components – prefer Server Components
+- Defer loading of non-critical content (`suspense`, `lazy`, `dynamic`)
+- Split large components and avoid prop drilling – use context/memoization
 
-*   **Profiling:** If a performance issue is suspected, suggest profiling tools (e.g., Chrome DevTools, Vercel Analytics, database query analyzers).
-*   **Incremental Improvements:** Focus on small, impactful changes that can be implemented incrementally.
-*   **Trade-offs:** Acknowledge and explain performance trade-offs (e.g., increased complexity for faster response).
-*   **Monitoring:** Emphasize the importance of continuous performance monitoring in production.
-*   **Next.js Specifics:** Leverage Next.js features like Image Optimization, `next/script` for third-party scripts, and data caching mechanisms.
-*   **Database:** Always consider database indexing and query efficiency when dealing with data retrieval.
-*   **AI Costs:** Link performance optimizations for AI to cost savings (e.g., fewer tokens = lower cost).
+### 2. Bundle Size
+- Avoid importing entire libraries (e.g., `lodash`, `date-fns`) – import only what’s used
+- Minimize third-party dependencies – prefer native APIs
+- Use tree-shakable libraries and keep top-level imports minimal
+
+### 3. API Latency
+- Parallelize async operations where safe
+- Use `.select()` with explicit fields to reduce payload
+- Apply caching strategies using Redis or local memory
+- Log slow queries and analyze Supabase execution plans
+
+### 4. Re-renders
+- Use `React.memo`, `useMemo`, `useCallback` to avoid re-renders
+- Avoid anonymous inline functions in props
+- Minimize deep object/array props; use IDs or primitives
+
+### 5. Measurement
+- All changes must show performance improvement through metrics
+- Use `console.time`, browser profiler, or synthetic benchmarks
+- Compare cold-load and warm-load behaviors
+
+## 🚫 Anti-Patterns
+- ❌ Blind use of memoization – measure first
+- ❌ Optimizing code without functional tests
+- ❌ Replacing core logic to improve speed at cost of maintainability

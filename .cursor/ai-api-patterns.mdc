@@ -1,30 +1,230 @@
-# AI API Patterns
+---
+description: "AI API Patterns & Chat Implementation Standards"
+alwaysApply: true
+globs:
+  - "**/*"
+---
 
-This document outlines common API patterns for integrating AI models into our applications, focusing on best practices for performance, scalability, and maintainability.
 
-## 1. Request-Response Pattern (Synchronous)
+# AI API Patterns & Chat Implementation Standards
 
-**Description:** The most straightforward pattern where a client sends a request to the AI service and waits for a complete response. Suitable for tasks with low latency requirements and predictable output sizes.
+**⚠️ ENFORCEMENT NOTICE: These patterns are mandatory for all AI-related API endpoints. Violations will cause runtime errors and security issues.**
 
-**Use Cases:**
-*   Short text generation (e.g., single sentence completion, quick summaries)
-*   Image classification
-*   Simple data extraction
+## 🤖 AI SDK Usage Rules
 
-**Pros:**
-*   Simple to implement.
-*   Immediate feedback for the user.
+### SDK Selection (MANDATORY)
+- **Rule AI1.1**: Use `@google/genai` v1.10.0 exclusively for all AI-related code.
+- **Rule AI1.2**: Remove any references to `@google/generative-ai`; it must not appear in code, configs, or docs.
+- **Rule AI1.3**: Pin `@google/genai` to version `1.10.0` in `package.json` and lock file; do not update without explicit approval.
+- **Rule AI1.4**: Ensure `@google/genai` is the only generative AI SDK dependency; verify via automated CI checks.
 
-**Cons:**
-*   Can block the client if the AI processing takes too long.
-*   Not suitable for long-running tasks or streaming data.
+### Chat Session Implementation
+\`\`\`typescript
+// MANDATORY: Use this pattern for chat endpoints
+import { Client, types, GoogleSearch } from '@google/genai';
 
-**Example (Conceptual):**
-```typescript
-// Client
-const response = await fetch('/api/ai/generate-text', {
-  method: 'POST',
-  body: JSON.stringify({ prompt: 'Write a short slogan for a tech company.' })
+class GeminiClient {
+  private client: Client;
+  private model: string;
+
+  constructor(apiKey: string) {
+    this.client = new Client({ apiKey, vertexai: true, project: 'fbconsulting-6225f', location: 'global' });
+    this.model = 'gemini-2.5-flash';
+  }
+
+  async startChatSession(systemPrompt: string): Promise<any> {
+    return this.client.startChatSession({
+      model: this.model,
+      tools: [ types.Tool({ google_search: new GoogleSearch() }) ],
+      systemInstruction: systemPrompt,
+      generationConfig: {
+        responseMimeType: 'text/plain',
+      },
+    });
+  }
+
+  async countTokens(text: string): Promise<number> {
+    try {
+      // Note: Adjust token counting logic as needed for the new SDK
+      // Placeholder: fallback to length based estimation
+      return Math.ceil(text.length / 4);
+    } catch (error) {
+      return Math.ceil(text.length / 4); // Fallback
+    }
+  }
+}
+\`\`\`
+
+## 🔧 Web Grounding Implementation
+
+### Current Limitations
+- **Rule WG1.1**: `googleSearchRetrieval` tool is NOT supported in current SDK
+- **Rule WG1.2**: `enterpriseWebSearch` tool is NOT supported in current SDK
+- **Rule WG1.3**: `urlContext` tool works ONLY for specific URL grounding
+- **Rule WG1.4**: Web grounding requires CSE (Custom Search Engine) setup
+
+### Proper Tool Configuration
+\`\`\`typescript
+// ❌ WRONG - These will cause "Unknown name" errors
+const tools = [
+  { enterpriseWebSearch: {} },     // ❌ Not supported
+  { googleSearchRetrieval: {} },   // ❌ Not supported
+];
+
+// ✅ CORRECT - Use only supported tools
+const tools = [
+  { urlContext: {} }  // ✅ Works for URL grounding
+];
+
+// ✅ CORRECT - No tools for basic chat
+const tools = [];  // ✅ Basic chat without grounding
+\`\`\`
+
+### Environment Variables Required
+\`\`\`bash
+# MANDATORY for web grounding
+GEMINI_API_KEY=your_gemini_api_key
+GOOGLE_CSE_API_KEY=your_custom_search_api_key  # Optional
+GOOGLE_CSE_ID=your_custom_search_engine_id     # Optional
+\`\`\`
+
+## 📡 Streaming Response Standards
+
+### SSE (Server-Sent Events) Pattern
+\`\`\`typescript
+// MANDATORY: Use this pattern for streaming responses
+function createSSEStream(responseText: string): ReadableStream {
+  return new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder();
+      try {
+        const chunks = responseText.match(/.{1,100}/g) || [responseText];
+        
+        for (const chunk of chunks) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`));
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        
+        controller.close(); // ✅ Standard SSE - no "done" event
+      } catch (error) {
+        controller.error(error);
+      }
+    },
+  });
+}
+
+// MANDATORY: Proper headers for SSE
+return new Response(stream, {
+  headers: { 
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'X-Correlation-ID': correlationId,
+    'X-Response-Time': `${Date.now() - startTime}ms`
+  },
 });
-const data = await response.json();
-console.log(data.slogan); // "Innovate. Connect. Thrive."
+\`\`\`
+
+## 🔐 Authentication Integration
+
+### JWT Token Validation
+\`\`\`typescript
+// MANDATORY: Authentication middleware for AI endpoints
+async function authenticateRequest(req: NextRequest): Promise<{ success: boolean; userId?: string; error?: string }> {
+  try {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return { success: false, error: 'Missing or invalid authorization header' };
+    }
+
+    const token = authHeader.substring(7);
+    const supabase = getSupabase();
+    
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      return { success: false, error: 'Invalid or expired token' };
+    }
+
+    return { success: true, userId: user.id };
+  } catch (error) {
+    return { success: false, error: 'Authentication service unavailable' };
+  }
+}
+\`\`\`
+
+## 📝 Input Validation & Sanitization
+
+### Message Validation
+\`\`\`typescript
+// MANDATORY: Validate all AI inputs
+import { chatRequestSchema, validateRequest, sanitizeString } from '@/lib/validation';
+
+const validation = validateRequest(chatRequestSchema, rawData);
+if (!validation.success) {
+  return new Response(JSON.stringify({
+    error: 'Validation failed',
+    details: validation.errors
+  }), { status: 400 });
+}
+
+// MANDATORY: Sanitize all user inputs
+const sanitizedMessages = messages.map((message: Message) => ({
+  ...message,
+  content: sanitizeString(message.content)
+}));
+\`\`\`
+
+## 🚫 Prohibited AI Patterns
+
+### Security Violations
+- ❌ No authentication on AI endpoints
+- ❌ No input sanitization
+- ❌ Hardcoded API keys
+- ❌ No rate limiting on AI requests
+- ❌ No error handling for AI failures
+
+### SDK Violations
+- ❌ Using unsupported tools (`enterpriseWebSearch`, `googleSearchRetrieval`)
+- ❌ Mixing SDK versions
+- ❌ No fallback for token counting
+- ❌ No error handling for SDK failures
+
+### Performance Violations
+- ❌ No streaming for long responses
+- ❌ No timeout handling
+- ❌ No graceful degradation
+- ❌ Large monolithic AI functions
+
+## ✅ Compliance Checklist for AI Endpoints
+
+Before any AI endpoint can be merged:
+
+- [ ] Uses correct SDK version (`@google/generative-ai` v0.24.1)
+- [ ] Implements proper authentication (JWT tokens)
+- [ ] Validates and sanitizes all inputs
+- [ ] Uses structured logging with correlation IDs
+- [ ] Implements rate limiting (20 req/min)
+- [ ] Uses supported tools only (no `enterpriseWebSearch`)
+- [ ] Implements proper error handling
+- [ ] Uses SSE for streaming responses
+- [ ] Includes correlation IDs in responses
+- [ ] Documents all environment variables
+- [ ] Tests error conditions and fallbacks
+
+## 🔄 AI Endpoint Review Process
+
+1. **SDK Compatibility**: Verify SDK version and API usage
+2. **Security Review**: Authentication, validation, sanitization
+3. **Performance Test**: Response times and streaming
+4. **Error Handling**: Test failure scenarios
+5. **Documentation**: Update [CHANGELOG.md](mdc:CHANGELOG.md)
+
+## 📚 Reference Files
+
+- [app/api/chat/route.ts](mdc:app/api/chat/route.ts) - Reference implementation
+- [lib/validation.ts](mdc:lib/validation.ts) - Input validation schemas
+- [lib/token-cost-calculator.ts](mdc:lib/token-cost-calculator.ts) - Cost tracking
+- [backend_architecture.md](mdc:backend_architecture.md) - Overall architecture rules
+
+**⚠️ REMINDER: These patterns prevent runtime errors and security vulnerabilities. Non-compliant AI code wi
