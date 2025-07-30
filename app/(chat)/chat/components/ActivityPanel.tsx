@@ -18,7 +18,7 @@ const StatusIcon = ({ status }: { status: Activity["status"] }) => {
 
 export function ActivityPanel({ activities }: { activities: Activity[] }) {
   return (
-    <aside className="hidden md:flex flex-col w-80 bg-background border-r border-border">
+    <aside className="flex flex-col h-full w-full bg-background border-l border-border">
       <div className="p-4 border-b border-border">
         <h2 className="text-lg font-semibold">AI Activity Panel</h2>
         <p className="text-sm text-muted-foreground">Real-time AI actions</p>

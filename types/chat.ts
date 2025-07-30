@@ -42,7 +42,7 @@ export interface ActivityItem {
   status: "completed" | "failed" | "in_progress"
   timestamp: string
   details?: string
-  icon: LucideIcon // Added icon property
+  icon: LucideIcon
 }
 
 export interface AIModel {
@@ -59,4 +59,4 @@ export interface ChatState {
   activeModal: string | null
 }
 
-export interface Activity extends ActivityItem {} // Alias for clarity in ActivityPanel
+export interface Activity extends ActivityItem {}
