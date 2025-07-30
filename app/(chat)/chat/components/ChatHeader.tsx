@@ -1,63 +1,57 @@
 "use client"
 
-import { Bot, MessageSquare, Menu } from "lucide-react"
+import { PanelLeft, LayoutPanelLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
 import { useChatContext } from "../context/ChatProvider" // Import useChatContext
-import { useSidebar } from "@/components/ui/sidebar" // Import useSidebar
 
-export function ChatHeader() {
+interface ChatHeaderProps {
+  onToggleActivityPanel: () => void
+}
+
+export function ChatHeader({ onToggleActivityPanel }: ChatHeaderProps) {
   const { activities } = useChatContext() // Get activities from context
-  const { toggleSidebar } = useSidebar() // Use useSidebar hook for toggling
 
-  // Calculate completed activities count
+  // Calculate completed activities
   const completedActivitiesCount = activities.filter((activity) => activity.status === "completed").length
 
   return (
-    <header className="flex h-16 items-center gap-4 border-b bg-background px-6">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-700 bg-slate-900 px-4 text-slate-50">
       <div className="flex items-center gap-2">
-        <Bot className="h-6 w-6 text-primary" />
-        <h1 className="text-lg font-semibold">F.B/c AI Consultation</h1>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="-ml-1 h-7 w-7 text-slate-400 hover:bg-slate-800 hover:text-slate-50"
+          onClick={() => {
+            // This button would typically toggle the main sidebar, which is handled by SidebarTrigger
+            // For now, it can be a placeholder or removed if the main sidebar is always open
+            // or if the toggle is handled by the Sidebar component itself.
+            // Since ChatSidebar is now a direct child of ChatInterface, it manages its own collapse.
+            // This button might be for a different sidebar or a mobile menu.
+          }}
+        >
+          <PanelLeft className="h-4 w-4" />
+          <span className="sr-only">Toggle Sidebar</span>
+        </Button>
+        <Separator orientation="vertical" className="mr-2 h-4 bg-slate-700" />
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-green-500" />
+          <span className="font-semibold">F.B/c AI Consultation</span>
+        </div>
       </div>
-
-      <div className="ml-auto flex items-center gap-4">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative h-8 w-8"
-                onClick={toggleSidebar} // Use toggleSidebar from hook
-              >
-                <MessageSquare className="h-5 w-5" />
-                {completedActivitiesCount > 0 && (
-                  <Badge className="absolute -right-2 -top-2 h-5 w-5 flex items-center justify-center rounded-full p-0 text-xs">
-                    {completedActivitiesCount}
-                  </Badge>
-                )}
-                <span className="sr-only">Activities</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>AI Activity Log</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Settings</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem>Support</DropdownMenuItem>
-            <DropdownMenuItem>Logout</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <span>{completedActivitiesCount} Activities Completed</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-slate-400 hover:bg-slate-800 hover:text-slate-50"
+          onClick={onToggleActivityPanel}
+        >
+          <LayoutPanelLeft className="h-4 w-4" />
+          <span className="sr-only">Toggle Activity Panel</span>
+        </Button>
       </div>
     </header>
   )

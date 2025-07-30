@@ -1,215 +1,196 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, PanelRightClose, Search, Star, Clock } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { SidebarGroupAction } from "@/components/ui/sidebar"
+import { Plus, Home, Inbox, Calendar, Settings, ChevronDown, User2, ChevronUp } from "lucide-react"
+
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarRail,
-  SidebarHeader as ShadcnSidebarHeader, // Renamed to avoid conflict
+  SidebarSeparator,
+  SidebarFooter,
+  SidebarInput,
 } from "@/components/ui/sidebar"
-import type { ActivityItem } from "../../types/chat"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { useChatContext } from "../../context/ChatProvider"
+import { ActivityPanel } from "../ActivityPanel" // Import ActivityPanel
 
-interface ChatSession {
-  id: string
-  title: string
-  timestamp: string
-  messageCount: number
-  isStarred?: boolean
-  category: "analysis" | "strategy" | "review" | "prep" | "general"
-  emoji: string
-}
-
-interface ChatSidebarProps {
-  activities: ActivityItem[]
-  onNewChat: () => void
-}
-
-const mockChatSessions: ChatSession[] = [
+// Menu items.
+const mainItems = [
   {
-    id: "1",
-    title: "ROI Analysis for Q4 Campaign",
-    timestamp: "2 hours ago",
-    messageCount: 12,
-    isStarred: true,
-    category: "analysis",
-    emoji: "🇮🇹", // Note: This was in the screenshot, might be a placeholder
+    title: "Home",
+    url: "#",
+    icon: Home,
   },
   {
-    id: "2",
-    title: "Lead Generation Strategy Discussion",
-    timestamp: "Yesterday",
-    messageCount: 8,
-    category: "strategy",
-    emoji: "🎯",
+    title: "Inbox",
+    url: "#",
+    icon: Inbox,
   },
   {
-    id: "3",
-    title: "Market Research Report Review",
-    timestamp: "2 days ago",
-    messageCount: 15,
-    isStarred: true,
-    category: "review",
-    emoji: "📈",
+    title: "Calendar",
+    url: "#",
+    icon: Calendar,
   },
   {
-    id: "4",
-    title: "Client Meeting Preparation",
-    timestamp: "3 days ago",
-    messageCount: 6,
-    category: "prep",
-    emoji: "✅",
-  },
-  {
-    id: "5",
-    title: "General Business Questions",
-    timestamp: "1 week ago",
-    messageCount: 4,
-    category: "general",
-    emoji: "💡",
+    title: "Settings",
+    url: "#",
+    icon: Settings,
   },
 ]
 
-const categoryColors: Record<ChatSession["category"], string> = {
-  analysis: "bg-purple-500",
-  strategy: "bg-blue-500",
-  review: "bg-purple-500",
-  prep: "bg-green-500",
-  general: "bg-teal-500",
+const projects = [
+  {
+    name: "Project Alpha",
+    url: "#",
+    icon: Home,
+  },
+  {
+    name: "Project Beta",
+    url: "#",
+    icon: Inbox,
+  },
+  {
+    name: "Project Gamma",
+    url: "#",
+    icon: Calendar,
+  },
+]
+
+interface ChatSidebarProps {
+  activities: any[] // Activities are now passed from ChatInterface, but ChatPanel will consume context
+  onNewChat: () => void
 }
 
-export function ChatSidebar({ activities, onNewChat }: ChatSidebarProps) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedFilter, setSelectedFilter] = useState<"all" | "starred" | "business">("all")
-
-  const filteredSessions = mockChatSessions.filter((session) => {
-    const matchesSearch = session.title.toLowerCase().includes(searchQuery.toLowerCase())
-    if (selectedFilter === "all") return matchesSearch
-    if (selectedFilter === "starred") return matchesSearch && session.isStarred
-    if (selectedFilter === "business") return matchesSearch // Assuming 'business' is a category group
-    return matchesSearch
-  })
+export function ChatSidebar({ onNewChat }: ChatSidebarProps) {
+  const { activities } = useChatContext() // Use activities from context
 
   return (
-    <Sidebar collapsible="offcanvas" side="right" className="bg-background/95">
-      <ShadcnSidebarHeader className="flex flex-col items-center justify-center p-4">
-        {/* The sidebar title is handled by ActivityPanel header, so this can be empty or used for other global sidebar elements */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-foreground md:hidden absolute top-4 left-4"
-          onClick={onNewChat}
-        >
-          <PanelRightClose className="h-5 w-5" />
-          <span className="sr-only">Close Activity Log</span>
+    <Sidebar className="bg-slate-900 text-slate-50" collapsible="offcanvas">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton>
+                  Select Workspace
+                  <ChevronDown className="ml-auto" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-[--radix-popper-anchor-width]">
+                <DropdownMenuItem>
+                  <span>Acme Inc</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <span>Acme Corp.</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <SidebarInput
+          placeholder="Search..."
+          className="bg-slate-800 text-slate-50 placeholder:text-slate-400 focus-visible:ring-slate-500"
+        />
+        <Button onClick={onNewChat} className="w-full justify-start bg-slate-700 text-slate-50 hover:bg-slate-600">
+          <Plus className="mr-2 h-4 w-4" /> New Chat
         </Button>
-      </ShadcnSidebarHeader>
-      <SidebarContent className="p-0">
-        {" "}
-        {/* Remove padding here as ActivityPanel handles it */}
-        <div className="bg-dark-800 text-white flex flex-col h-full border-l border-dark-700">
-          {/* Header */}
-          <div className="p-4 flex items-center justify-between h-20 border-b border-dark-700">
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />
-              <h2 className="font-semibold text-lg">Chat History</h2>
-            </div>
-            <Button
-              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold h-9"
-              onClick={onNewChat}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New
-            </Button>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="px-4 py-4 space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-600" />
-              <Input
-                placeholder="Search conversations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-dark-900 border-dark-700 h-10"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setSelectedFilter("all")}
-                className={`h-8 px-3 text-sm font-semibold transition-all rounded-md ${
-                  selectedFilter === "all"
-                    ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                    : "bg-dark-700 text-gray-300 hover:bg-dark-600"
-                }`}
-              >
-                All <Badge className="ml-2 bg-dark-600 text-gray-300 px-1.5">5</Badge>
-              </Button>
-              <Button
-                onClick={() => setSelectedFilter("starred")}
-                className={`h-8 px-3 text-sm font-semibold transition-all rounded-md ${
-                  selectedFilter === "starred"
-                    ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                    : "bg-dark-700 text-gray-300 hover:bg-dark-600"
-                }`}
-              >
-                Starred <Badge className="ml-2 bg-dark-600 text-gray-300 px-1.5">2</Badge>
-              </Button>
-              <Button
-                onClick={() => setSelectedFilter("business")}
-                className={`h-8 px-3 text-sm font-semibold transition-all rounded-md ${
-                  selectedFilter === "business"
-                    ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                    : "bg-dark-700 text-gray-300 hover:bg-dark-600"
-                }`}
-              >
-                Business <Badge className="ml-2 bg-dark-600 text-gray-300 px-1.5">2</Badge>
-              </Button>
-            </div>
-          </div>
-
-          {/* Chat Sessions */}
-          <ScrollArea className="flex-1">
-            <div className="p-4 space-y-4">
-              {filteredSessions.map((session) => (
-                <div key={session.id} className="space-y-2 cursor-pointer group">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 ${categoryColors[session.category]} rounded-full`} />
-                      <h3 className="font-medium text-sm text-gray-200 group-hover:text-white transition-colors">
-                        {session.title} {session.emoji}
-                      </h3>
-                      {session.isStarred && <Star className="h-3.5 w-3.5 text-yellow-400 fill-current" />}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between pl-5">
-                    <div className="flex items-center gap-2 text-xs text-dark-600">
-                      <Clock className="h-3 w-3" />
-                      <span>{session.timestamp}</span>
-                    </div>
-                    <Badge className="bg-dark-700 text-gray-300 text-xs font-normal border border-dark-600 px-2 py-0.5">
-                      {session.messageCount} messages
-                    </Badge>
-                  </div>
-                </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <a href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               ))}
-            </div>
-          </ScrollArea>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-          {/* Footer */}
-          <SidebarFooter className="border-t border-border/60 p-4 flex justify-between items-center">
-            <Button onClick={onNewChat} variant="outline" className="w-full justify-start gap-2 bg-transparent">
-              <Plus className="h-4 w-4" />
-              New Chat
-            </Button>
-          </SidebarFooter>
-        </div>
+        <SidebarSeparator className="bg-slate-700" />
+
+        <Collapsible defaultOpen className="group/collapsible">
+          <SidebarGroup>
+            <SidebarGroupLabel asChild>
+              <CollapsibleTrigger className="w-full">
+                Projects
+                <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+              </CollapsibleTrigger>
+            </SidebarGroupLabel>
+            <SidebarGroupAction title="Add Project">
+              <Plus /> <span className="sr-only">Add Project</span>
+            </SidebarGroupAction>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {projects.map((project) => (
+                    <SidebarMenuItem key={project.name}>
+                      <SidebarMenuButton asChild>
+                        <a href={project.url}>
+                          <project.icon />
+                          <span>{project.name}</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
+
+        <SidebarSeparator className="bg-slate-700" />
+
+        {/* Activity Log section, now integrated directly */}
+        <SidebarGroup>
+          <SidebarGroupLabel>AI Activity Log</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <ActivityPanel /> {/* Render ActivityPanel here */}
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton>
+                  <User2 /> Username
+                  <ChevronUp className="ml-auto" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
+                <DropdownMenuItem>
+                  <span>Account</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <span>Billing</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <span>Sign out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   )

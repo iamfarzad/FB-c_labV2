@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect } from "react" // Add useEffect import
+import { useEffect } from "react"
 import { ChatSidebar } from "./new-ui/ChatSidebar"
 import { ChatPanel } from "./new-ui/ChatPanel"
 import { ChatModals } from "./ChatModals"
-import { useChatContext } from "../context/ChatProvider" // Import useChatContext
+import { useChatContext } from "../context/ChatProvider"
 import type { Message, ActivityItem } from "../types/chat"
 
 export function ChatInterface() {
@@ -19,7 +19,7 @@ export function ChatInterface() {
     openModal,
     closeModal,
     clearMessages,
-  } = useChatContext() // Use context here
+  } = useChatContext()
 
   // Initialize activities if needed, or fetch from server
   useEffect(() => {
@@ -61,7 +61,6 @@ export function ChatInterface() {
   }, [activities.length, addActivity])
 
   const handleSendMessage = async (content: string) => {
-    // Removed useCallback, now uses context
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -69,8 +68,8 @@ export function ChatInterface() {
       timestamp: new Date().toISOString(),
     }
 
-    addMessage(userMessage) // Use context's addMessage
-    setIsLoading(true) // Use context's setIsLoading
+    addMessage(userMessage)
+    setIsLoading(true)
 
     // Add activity
     const activity: ActivityItem = {
@@ -81,7 +80,7 @@ export function ChatInterface() {
       timestamp: new Date().toISOString(),
       details: content.slice(0, 50) + (content.length > 50 ? "..." : ""),
     }
-    addActivity(activity) // Use context's addActivity
+    addActivity(activity)
 
     // Simulate AI response
     setTimeout(() => {
@@ -101,8 +100,8 @@ export function ChatInterface() {
         timestamp: new Date().toISOString(),
         model: "Gemini Pro",
       }
-      addMessage(aiMessage) // Use context's addMessage
-      setIsLoading(false) // Use context's setIsLoading
+      addMessage(aiMessage)
+      setIsLoading(false)
 
       // Add AI response activity
       const aiActivity: ActivityItem = {
@@ -113,13 +112,12 @@ export function ChatInterface() {
         timestamp: new Date().toISOString(),
         details: "Generated intelligent response using Gemini Pro model",
       }
-      addActivity(aiActivity) // Use context's addActivity
+      addActivity(aiActivity)
     }, 1500)
   }
 
   const handleNewChat = () => {
-    // Removed useCallback, now uses context
-    clearMessages() // Use context's clearMessages
+    clearMessages()
     const activity: ActivityItem = {
       id: Date.now().toString(),
       type: "message",
@@ -128,12 +126,11 @@ export function ChatInterface() {
       timestamp: new Date().toISOString(),
       details: "Started a new conversation session",
     }
-    addActivity(activity) // Use context's addActivity
+    addActivity(activity)
   }
 
   const handleToolClick = (tool: string) => {
-    // Removed useCallback, now uses context
-    openModal(tool) // Use context's openModal
+    openModal(tool)
 
     // Add activity for tool usage
     const toolNames: Record<string, string> = {
@@ -153,17 +150,13 @@ export function ChatInterface() {
       timestamp: new Date().toISOString(),
       details: `Accessing ${toolNames[tool] || tool} functionality`,
     }
-    addActivity(activity) // Use context's addActivity
+    addActivity(activity)
   }
 
   const handleCloseModal = () => {
-    // Removed useCallback, now uses context
     if (activeModal) {
-      // Update the last activity to completed when modal closes
-      // This logic will be simpler with context management or a dedicated activity update function
-      // For now, let's keep it in ChatInterface to quickly get it working
+      // Add a new activity for modal closure instead of directly modifying previous
       addActivity({
-        // Add a new activity for modal closure instead of directly modifying previous
         id: Date.now().toString(),
         type: "tool_used",
         title: `${activeModal} Closed`,
@@ -172,14 +165,12 @@ export function ChatInterface() {
         details: `Closed ${activeModal} functionality`,
       })
     }
-    closeModal() // Use context's closeModal
+    closeModal()
   }
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
-      <div className="shrink-0">
-        {" "}
-        {/* Removed w-80 as Sidebar handles its own width */}
+      <div className="w-80 shrink-0">
         <ChatSidebar activities={activities} onNewChat={handleNewChat} />
       </div>
 
