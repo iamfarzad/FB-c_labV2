@@ -4,11 +4,11 @@ import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Send, Camera, Mic, Paperclip, Play, Calculator, Monitor, Plus, X, Sparkles, Zap, FileText, Image as ImageIcon } from "lucide-react"
+import { Send, Camera, Mic, Paperclip, Play, Calculator, Monitor, Plus, X, Sparkles, Zap, FileText, Image as ImageIcon, ChevronDown } from "lucide-react"
 import { useToast } from '@/hooks/use-toast'
-import { useAutoResizeTextarea } from "@/hooks/ui/use-auto-resize-textarea"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface ChatFooterProps {
   input: string
@@ -56,46 +56,23 @@ export function ChatFooter({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const { textareaRef: finalInputRef, adjustHeight } = useAutoResizeTextarea({
-    minHeight: 52,
-    maxHeight: 160
-  })
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
       e.preventDefault()
       if (input.trim() && !isLoading) {
         handleSubmit(e as any)
-        setShowToolMenu(false)
       }
     }
     if (e.key === 'Escape') {
-      setShowToolMenu(false)
+      e.currentTarget.blur()
     }
   }
-
-  // Auto-resize when input changes
-  useEffect(() => {
-    adjustHeight()
-  }, [input, adjustHeight])
-
-  // Close tool menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element
-      if (showToolMenu && !target.closest('[data-tool-menu]')) {
-        setShowToolMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showToolMenu])
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file && onFileUpload) {
       onFileUpload(file)
-      setShowToolMenu(false)
     }
     if (event.target) {
       event.target.value = ''
@@ -109,7 +86,6 @@ export function ChatFooter({
       reader.onload = (e) => {
         const result = e.target?.result as string
         onImageUpload(result, file.name)
-        setShowToolMenu(false)
       }
       reader.readAsDataURL(file)
     }
@@ -121,7 +97,6 @@ export function ChatFooter({
   const handleVoiceInput = useCallback(() => {
     if (setShowVoiceModal) {
       setShowVoiceModal(true)
-      setShowToolMenu(false)
     } else if (onVoiceTranscript) {
       toast({
         title: "Voice Input",
@@ -134,39 +109,34 @@ export function ChatFooter({
   const handleWebcamCapture = useCallback(() => {
     if (setShowWebcamModal) {
       setShowWebcamModal(true)
-      setShowToolMenu(false)
     }
   }, [setShowWebcamModal])
 
   const handleScreenShare = useCallback(() => {
     if (setShowScreenShareModal) {
       setShowScreenShareModal(true)
-      setShowToolMenu(false)
     }
   }, [setShowScreenShareModal])
 
   const handleVideo2App = useCallback(() => {
-    if (setShowVideo2AppModal) {
-      setShowVideo2AppModal(true)
-      setShowToolMenu(false)
-    }
-  }, [setShowVideo2AppModal])
+    window.open('/video-learning-tool', '_blank')
+  }, [])
 
   const handleROICalculator = useCallback(() => {
     if (setShowROICalculatorModal) {
       setShowROICalculatorModal(true)
-      setShowToolMenu(false)
     }
   }, [setShowROICalculatorModal])
 
-  const toolButtons = [
+  // Upload tools for dropdown
+  const uploadTools = [
     {
       icon: FileText,
       label: "Upload Document",
       description: "PDF, DOC, TXT files",
       onClick: () => fileInputRef.current?.click(),
       disabled: !onFileUpload,
-      color: "from-blue-500 to-blue-600"
+      color: "text-blue-500"
     },
     {
       icon: ImageIcon,
@@ -174,11 +144,15 @@ export function ChatFooter({
       description: "JPG, PNG, GIF files",
       onClick: () => imageInputRef.current?.click(),
       disabled: !onImageUpload,
-      color: "from-green-500 to-green-600"
-    },
+      color: "text-green-500"
+    }
+  ]
+
+  // Main visible tools (reduced from 7 to 5 + dropdown)
+  const toolButtons = [
     {
       icon: Mic,
-      label: "Voice Input",
+      label: "Voice",
       description: "Speak your message",
       onClick: handleVoiceInput,
       disabled: !setShowVoiceModal && !onVoiceTranscript,
@@ -205,7 +179,7 @@ export function ChatFooter({
       label: "Video to App",
       description: "Convert video to app",
       onClick: handleVideo2App,
-      disabled: !setShowVideo2AppModal,
+      disabled: false,
       color: "from-orange-500 to-orange-600"
     },
     {
@@ -225,7 +199,7 @@ export function ChatFooter({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="border-t border-border/30 bg-card/80 backdrop-blur-2xl relative z-20"
+      className="relative z-20"
     >
       {/* Enhanced background with subtle animation */}
       <motion.div
@@ -238,105 +212,8 @@ export function ChatFooter({
         className="absolute inset-0 pointer-events-none"
       />
 
-      <div className="max-w-4xl mx-auto p-4 relative z-10">
-        <form onSubmit={handleSubmit} className="flex items-end gap-3">
-          {/* Enhanced Tool Menu Button */}
-          <div className="relative" data-tool-menu>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400 }}
-            >
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className={cn(
-                  "shrink-0 w-12 h-12 rounded-xl border-border/30 backdrop-blur-sm transition-all duration-300",
-                  showToolMenu 
-                    ? "bg-accent/10 border-accent/30 text-accent" 
-                    : "hover:bg-accent/5 hover:border-accent/20"
-                )}
-                onClick={() => setShowToolMenu(!showToolMenu)}
-                disabled={isLoading}
-              >
-                <motion.div
-                  animate={{ rotate: showToolMenu ? 45 : 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {showToolMenu ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                </motion.div>
-              </Button>
-            </motion.div>
-
-            {/* Enhanced Tool Menu Dropdown */}
-            <AnimatePresence>
-              {showToolMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute bottom-full left-0 mb-3 bg-card/95 backdrop-blur-2xl border border-border/30 rounded-2xl shadow-2xl p-3 z-50 min-w-[320px]"
-                >
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/20">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-accent" />
-                      <span className="font-semibold text-sm text-foreground">AI Tools</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">Choose an option</span>
-                  </div>
-
-                  {/* Tool Grid */}
-                  <div className="grid grid-cols-2 gap-2">
-                    {toolButtons.map((tool, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05, duration: 0.2 }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className={cn(
-                            "h-auto p-3 flex flex-col items-start gap-2 text-left w-full rounded-xl",
-                            "hover:bg-accent/5 border border-transparent hover:border-accent/20",
-                            "transition-all duration-200 group",
-                            tool.disabled && "opacity-50 cursor-not-allowed"
-                          )}
-                          onClick={tool.onClick}
-                          disabled={tool.disabled || isLoading}
-                        >
-                          <div className="flex items-center gap-2 w-full">
-                            <div className={cn(
-                              "w-8 h-8 rounded-lg bg-gradient-to-r flex items-center justify-center shadow-sm",
-                              "group-hover:shadow-md transition-shadow",
-                              tool.color
-                            )}>
-                              <tool.icon className="w-4 h-4 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-xs text-foreground truncate">
-                                {tool.label}
-                              </div>
-                              <div className="text-xs text-muted-foreground truncate">
-                                {tool.description}
-                              </div>
-                            </div>
-                          </div>
-                        </Button>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6 relative z-10">
+        <form onSubmit={handleSubmit}>
           {/* Hidden File Inputs */}
           <input
             ref={fileInputRef}
@@ -353,20 +230,96 @@ export function ChatFooter({
             className="hidden"
           />
 
-          {/* Enhanced Main Input Area */}
-          <div className="flex-1 relative">
-            <motion.div
-              animate={{
-                borderColor: isFocused ? "hsl(var(--accent))" : "hsl(var(--border))",
-                boxShadow: isFocused 
-                  ? "0 0 0 3px hsl(var(--accent) / 0.1)" 
-                  : "0 1px 3px rgba(0,0,0,0.1)"
-              }}
-              transition={{ duration: 0.2 }}
-              className="relative rounded-2xl border bg-card/50 backdrop-blur-sm overflow-hidden"
-            >
+          {/* Clean Input Container with Tool Pills Only */}
+          <motion.div
+            animate={{
+              borderColor: isFocused ? "hsl(var(--accent))" : "hsl(var(--border))",
+              boxShadow: isFocused 
+                ? "0 0 0 3px hsl(var(--accent) / 0.1)" 
+                : "0 1px 3px rgba(0,0,0,0.1)"
+            }}
+            transition={{ duration: 0.2 }}
+            className="relative rounded-2xl border bg-card/50 backdrop-blur-sm overflow-hidden"
+          >
+            {/* Tool Pills Row */}
+            <div className="flex items-center gap-1.5 px-3 pt-2.5 pb-1.5 border-b border-border/10">
+              {/* Upload Dropdown */}
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "h-8 px-3 rounded-full border border-border/30 bg-muted/40",
+                        "hover:bg-accent/10 hover:border-accent/30 text-xs font-medium",
+                        "transition-all duration-200 whitespace-nowrap"
+                      )}
+                      disabled={isLoading}
+                    >
+                      <Plus className="w-3 h-3 mr-1.5" />
+                      Upload
+                      <ChevronDown className="w-3 h-3 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    {uploadTools.map((tool, index) => (
+                      <DropdownMenuItem
+                        key={index}
+                        onClick={tool.onClick}
+                        disabled={tool.disabled}
+                        className="gap-3 cursor-pointer"
+                      >
+                        <tool.icon className={`w-4 h-4 ${tool.color}`} />
+                        <div className="flex flex-col">
+                          <span className="font-medium">{tool.label}</span>
+                          <span className="text-xs text-muted-foreground">{tool.description}</span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </motion.div>
+
+              {/* Main Tool Pills */}
+              {toolButtons.map((tool, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: (index + 1) * 0.05, duration: 0.2 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "h-8 px-3 rounded-full border border-border/30 bg-muted/40",
+                      "hover:bg-accent/10 hover:border-accent/30 text-xs font-medium",
+                      "transition-all duration-200 whitespace-nowrap",
+                      tool.disabled && "opacity-50 cursor-not-allowed"
+                    )}
+                    onClick={tool.onClick}
+                    disabled={tool.disabled || isLoading}
+                  >
+                    <tool.icon className="w-3 h-3 mr-1.5" />
+                    {tool.label.replace(' Input', '').replace(' Capture', '')}
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Input Area - Clean without duplicate buttons */}
+            <div className="relative">
               <Textarea
-                ref={finalInputRef}
+                ref={textareaRef}
                 value={input}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
@@ -375,14 +328,45 @@ export function ChatFooter({
                 onCompositionStart={() => setIsComposing(true)}
                 onCompositionEnd={() => setIsComposing(false)}
                 placeholder="Ask anything about AI automation, business analysis, or upload a document..."
-                className={cn(
-                  "resize-none min-h-[52px] max-h-40 border-0 bg-transparent",
-                  "focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                  "placeholder:text-muted-foreground/60 text-sm leading-relaxed",
-                  "px-4 py-3"
-                )}
+                                  className={cn(
+                    "resize-none min-h-[48px] max-h-36 border-0 bg-transparent",
+                    "focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0",
+                    "placeholder:text-muted-foreground/60 text-sm leading-relaxed",
+                    "pl-3 pr-12 py-2.5" // Optimized padding for better spacing
+                  )}
                 disabled={isLoading}
               />
+
+              {/* Right Send Button Only */}
+              <motion.div
+                className="absolute right-3 bottom-3"
+                whileHover={{ scale: canSend ? 1.05 : 1 }}
+                whileTap={{ scale: canSend ? 0.95 : 1 }}
+                transition={{ type: "spring", stiffness: 400 }}
+              >
+                <Button
+                  type="submit"
+                  size="icon"
+                  className={cn(
+                    "w-8 h-8 rounded-lg transition-all duration-300",
+                    canSend
+                      ? "bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent/80 shadow-md hover:shadow-lg text-accent-foreground"
+                      : "bg-muted/50 text-muted-foreground cursor-not-allowed"
+                  )}
+                  disabled={!canSend}
+                >
+                  <motion.div
+                    animate={isLoading ? { rotate: 360 } : { rotate: 0 }}
+                    transition={isLoading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}
+                  >
+                    {isLoading ? (
+                      <Zap className="w-4 h-4" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </motion.div>
+                </Button>
+              </motion.div>
 
               {/* Input Enhancement Overlay */}
               {isFocused && (
@@ -393,37 +377,7 @@ export function ChatFooter({
                   className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-accent/5 pointer-events-none rounded-2xl"
                 />
               )}
-            </motion.div>
-          </div>
-
-          {/* Enhanced Send Button */}
-          <motion.div
-            whileHover={{ scale: canSend ? 1.05 : 1 }}
-            whileTap={{ scale: canSend ? 0.95 : 1 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <Button
-              type="submit"
-              size="icon"
-              className={cn(
-                "shrink-0 w-12 h-12 rounded-xl transition-all duration-300",
-                canSend
-                  ? "bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent/80 shadow-lg hover:shadow-xl text-accent-foreground"
-                  : "bg-muted/50 text-muted-foreground cursor-not-allowed"
-              )}
-              disabled={!canSend}
-            >
-              <motion.div
-                animate={isLoading ? { rotate: 360 } : { rotate: 0 }}
-                transition={isLoading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}
-              >
-                {isLoading ? (
-                  <Zap className="w-5 h-5" />
-                ) : (
-                  <Send className="w-5 h-5" />
-                )}
-              </motion.div>
-            </Button>
+            </div>
           </motion.div>
         </form>
 

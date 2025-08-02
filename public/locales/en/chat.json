@@ -1,0 +1,59 @@
+{
+  "interface": {
+    "title": "AI Assistant",
+    "placeholder": "Type your message here...",
+    "send": "Send",
+    "clear": "Clear Chat",
+    "newChat": "New Chat",
+    "typing": "AI is typing...",
+    "connecting": "Connecting...",
+    "connected": "Connected",
+    "disconnected": "Disconnected"
+  },
+  "messages": {
+    "welcome": "Hello! I'm your AI assistant. How can I help you today?",
+    "error": "Sorry, something went wrong. Please try again.",
+    "networkError": "Network error. Please check your connection.",
+    "rateLimited": "Too many requests. Please wait a moment.",
+    "invalidInput": "Please enter a valid message.",
+    "processing": "Processing your request...",
+    "thinking": "Let me think about that...",
+    "generating": "Generating response..."
+  },
+  "actions": {
+    "copy": "Copy",
+    "copied": "Copied!",
+    "regenerate": "Regenerate",
+    "like": "Like",
+    "dislike": "Dislike",
+    "share": "Share",
+    "export": "Export",
+    "delete": "Delete",
+    "edit": "Edit"
+  },
+  "settings": {
+    "title": "Chat Settings",
+    "model": "AI Model",
+    "temperature": "Creativity",
+    "maxTokens": "Response Length",
+    "systemPrompt": "System Instructions",
+    "save": "Save Settings",
+    "reset": "Reset to Default"
+  },
+  "history": {
+    "title": "Chat History",
+    "empty": "No chat history yet",
+    "clear": "Clear History",
+    "export": "Export History",
+    "search": "Search conversations..."
+  },
+  "upload": {
+    "title": "Upload File",
+    "dragDrop": "Drag and drop files here or click to browse",
+    "supported": "Supported formats: PDF, DOC, TXT, Images",
+    "maxSize": "Max file size: 10MB",
+    "uploading": "Uploading...",
+    "success": "File uploaded successfully",
+    "error": "Upload failed. Please try again."
+  }
+}

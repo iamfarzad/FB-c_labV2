@@ -2,20 +2,26 @@
 
 import { useState, useRef } from 'react';
 import { useMediaCapture, useMediaPlayer } from '@/hooks';
+import { PageShell, PageHeader } from '@/components/page-shell';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 
 export default function MediaTestPage() {
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold mb-6">Media Service Test</h1>
-        <div className="space-y-8">
-          <MediaCaptureTest />
-          <div className="border-t pt-8">
-            <MediaPlaybackTest />
-          </div>
-        </div>
+    <PageShell>
+      <PageHeader
+        title="Media Service Test"
+        subtitle="Test media capture and playback functionality"
+      />
+      
+      <div className="space-y-8">
+        <MediaCaptureTest />
+        <Separator />
+        <MediaPlaybackTest />
       </div>
-    </div>
+    </PageShell>
   );
 }
 
@@ -39,39 +45,41 @@ function MediaCaptureTest() {
   });
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Media Capture</h2>
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="w-full max-h-[400px] bg-black rounded-lg"
-      />
-      <div className="flex items-center space-x-4">
-        <button
-          onClick={isCapturing ? stopCapture : () => startCapture()}
-          className={`px-4 py-2 rounded-md ${
-            isCapturing ? 'bg-red-500' : 'bg-blue-500'
-          } text-white`}
-        >
-          {isCapturing ? 'Stop' : 'Start Recording'}
-        </button>
-        {isCapturing && (
-          <button
-            onClick={isPaused ? resumeCapture : pauseCapture}
-            className="px-4 py-2 bg-yellow-500 text-white rounded-md"
+    <Card>
+      <CardHeader>
+        <CardTitle>Media Capture</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-full max-h-96 bg-muted rounded-lg"
+        />
+        <div className="flex items-center gap-4">
+          <Button
+            onClick={isCapturing ? stopCapture : () => startCapture()}
+            variant={isCapturing ? "destructive" : "default"}
           >
-            {isPaused ? 'Resume' : 'Pause'}
-          </button>
-        )}
-        {isCapturing && (
-          <span className="text-gray-700">
-            {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
-          </span>
-        )}
-      </div>
-    </div>
+            {isCapturing ? 'Stop' : 'Start Recording'}
+          </Button>
+          {isCapturing && (
+            <Button
+              onClick={isPaused ? resumeCapture : pauseCapture}
+              variant="secondary"
+            >
+              {isPaused ? 'Resume' : 'Pause'}
+            </Button>
+          )}
+          {isCapturing && (
+            <span className="text-muted-foreground font-mono">
+              {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
+            </span>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -99,37 +107,41 @@ function MediaPlaybackTest() {
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Media Playback</h2>
-      <video
-        ref={(el) => {
-          if (el) {
-            mediaElementRef.current = el;
-            setupMediaElement(el);
-          }
-        }}
-        className="w-full max-h-[400px] bg-black rounded-lg"
-      />
-      <div className="flex flex-col space-y-2">
-        <input
-          type="file"
-          accept="video/*"
-          onChange={handleFileChange}
-          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+    <Card>
+      <CardHeader>
+        <CardTitle>Media Playback</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <video
+          ref={(el) => {
+            if (el) {
+              mediaElementRef.current = el;
+              setupMediaElement(el);
+            }
+          }}
+          className="w-full max-h-96 bg-muted rounded-lg"
         />
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={isPlaying ? pause : play}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md"
-            disabled={!videoUrl}
-          >
-            {isPlaying ? 'Pause' : 'Play'}
-          </button>
-          <span className="text-sm text-gray-600">
-            {currentTime.toFixed(1)} / {duration.toFixed(1)}s
-          </span>
+        <div className="space-y-4">
+          <Input
+            type="file"
+            accept="video/*"
+            onChange={handleFileChange}
+            className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-secondary file:text-secondary-foreground hover:file:bg-secondary/80"
+          />
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={isPlaying ? pause : play}
+              disabled={!videoUrl}
+              variant={isPlaying ? "secondary" : "default"}
+            >
+              {isPlaying ? 'Pause' : 'Play'}
+            </Button>
+            <span className="text-sm text-muted-foreground font-mono">
+              {currentTime.toFixed(1)} / {duration.toFixed(1)}s
+            </span>
+          </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

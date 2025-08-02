@@ -1,0 +1,23 @@
+{
+  "type": "module",
+  "name": "live-server",
+  "version": "1.0.0",
+  "description": "Gemini Live WebSocket Server",
+  "main": "live-server.js",
+  "scripts": {
+    "start": "node live-server.js",
+    "dev": "node --loader ts-node/esm live-server.ts"
+  },
+  "dependencies": {
+    "ws": "^8.14.2",
+    "@google/generative-ai": "^0.21.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.5.8",
+    "@types/uuid": "^9.0.6",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  }
+}

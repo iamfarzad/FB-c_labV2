@@ -84,7 +84,7 @@ export default function AboutPage() {
           {coreValues.map((value) => (
             <Card key={value.text} className="neu-card transition-all flex flex-col items-center justify-center p-8 text-center">
               <CardContent className="p-6 text-center">
-                <value.icon className="mx-auto h-10 w-10 text-orange-accent" aria-hidden="true" />
+                <value.icon className="mx-auto h-10 w-10 text-accent" aria-hidden="true" />
                 <h3 className="mt-4 font-medium text-base">{value.text}</h3>
               </CardContent>
             </Card>
@@ -101,9 +101,9 @@ export default function AboutPage() {
                 <div key={skill.name}>
                   <div className="flex justify-between mb-1">
                     <span className="text-base font-medium text-primary">{skill.name}</span>
-                    <span className="text-sm font-medium text-orange-accent">{skill.value}%</span>
+                    <span className="text-sm font-medium text-accent">{skill.value}%</span>
                   </div>
-                  <Progress value={skill.value} className="[&>div]:bg-orange-accent" />
+                  <Progress value={skill.value} className="[&>div]:bg-accent" />
                 </div>
               ))}
             </div>
@@ -120,7 +120,7 @@ export default function AboutPage() {
                       ) : null}
                       <div className="relative flex space-x-3">
                         <div>
-                          <span className="h-8 w-8 rounded-full bg-orange-accent/20 text-orange-accent flex items-center justify-center ring-8 ring-background">
+                          <span className="h-8 w-8 rounded-full bg-accent/20 text-accent flex items-center justify-center ring-8 ring-background">
                             <Award className="h-5 w-5" aria-hidden="true" />
                           </span>
                         </div>

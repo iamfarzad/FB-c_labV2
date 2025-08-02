@@ -29,7 +29,7 @@ export function CtaSection({
           maxOpacity={0.04}
           duration={8}
           repeatDelay={4}
-          className="absolute inset-0 fill-orange-accent/10 stroke-orange-accent/10"
+          className="absolute inset-0 fill-accent/10 stroke-accent/10"
         />
         <div className="relative z-10 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">{title}</h2>

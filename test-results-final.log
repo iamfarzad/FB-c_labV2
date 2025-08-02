@@ -1,0 +1,144 @@
+🧪 F.B/c Complete Multimodal AI System Test Suite
+==================================================
+
+🚀 Starting Complete Multimodal AI System Tests...
+
+Session ID: test-multimodal-1754143483172
+Base URL: http://localhost:3000
+
+🧠 Testing Individual AI Features
+==================================
+
+Testing: Text Generation
+   Basic text generation and conversation
+   ✅ Passed (2979ms)
+
+Testing: Speech Generation (TTS)
+   Text-to-speech conversion
+   ✅ Passed (1898ms)
+
+Testing: Long Context Handling
+   Multi-turn conversation with context
+   ✅ Passed (3168ms)
+
+Testing: Structured Output
+   Business summary generation
+   ✅ Passed (2602ms)
+
+Testing: Function Calling
+   API integration and tool usage
+   ✅ Passed (2368ms)
+
+Testing: Google Search Grounding
+   Real-time web data integration
+   ❌ Failed: HTTP 404: Not Found
+
+Testing: URL Context Analysis
+   Website and document analysis
+   ❌ Failed: HTTP 500: Internal Server Error
+
+Testing: Voice Input & Recognition
+   Voice-to-text transcription
+   ❌ Failed: HTTP 500: Internal Server Error
+
+Testing: Webcam Capture & Processing
+   Webcam image capture and analysis
+   ❌ Failed: HTTP 500: Internal Server Error
+
+Testing: Screen Share & Analysis
+   Screen capture and analysis
+   ✅ Passed (1105ms)
+
+Testing: ROI Calculator & Business Tools
+   ROI calculation and business analysis
+   ❌ Failed: HTTP 500: Internal Server Error
+
+Testing: Image Understanding
+   General image analysis
+   ✅ Passed (2978ms)
+
+Testing: Video Understanding
+   YouTube video processing
+   ✅ Passed (27044ms)
+
+Testing: Video-to-Learning App
+   Educational content generation
+   ✅ Passed (30106ms)
+
+Testing: Document Understanding
+   PDF processing and analysis
+   ❌ Failed: HTTP 500: Internal Server Error
+
+Testing: Lead Capture & Summary
+   Contact management integration
+   ❌ Failed: HTTP 500: Internal Server Error
+
+Testing: Lead Research & Analysis
+   Advanced lead intelligence
+   ❌ Failed: HTTP 500: Internal Server Error
+
+Testing: PDF Summary & Email System
+   Professional PDF generation with email integration
+   ❌ Failed: HTTP 500: Internal Server Error
+
+🎭 Testing Multimodal Scenarios
+===============================
+
+Scenario: Complete AI Showcase
+   Test all modalities in sequence
+
+   Step 1: Text Generation
+   ❌ Step 1 failed: HTTP 500: Internal Server Error
+   Step 2: Lead Capture & Summary
+   ❌ Step 2 failed: HTTP 500: Internal Server Error
+   Step 3: Google Search Grounding
+   ❌ Step 3 failed: HTTP 500: Internal Server Error
+   Step 4: Image Understanding
+   ❌ Step 4 failed: HTTP 500: Internal Server Error
+   Step 5: Video Understanding
+   ❌ Step 5 failed: HTTP 500: Internal Server Error
+   Step 6: Lead Research & Analysis
+   ❌ Step 6 failed: HTTP 500: Internal Server Error
+   ❌ Scenario failed
+
+Scenario: Business Consultation Flow
+   Complete business consultation with all AI features
+
+   Step 1: URL Context Analysis
+   ❌ Step 1 failed: HTTP 500: Internal Server Error
+   Step 2: Structured Output
+   ❌ Step 2 failed: HTTP 500: Internal Server Error
+   Step 3: Document Understanding
+   ❌ Step 3 failed: HTTP 500: Internal Server Error
+   Step 4: Lead Capture & Summary
+   ❌ Step 4 failed: HTTP 500: Internal Server Error
+   Step 5: Lead Research & Analysis
+   ❌ Step 5 failed: HTTP 500: Internal Server Error
+   ❌ Scenario failed
+
+Scenario: Educational Content Creation
+   Create learning materials using AI
+
+   Step 1: Video-to-Learning App
+   ❌ Step 1 failed: HTTP 500: Internal Server Error
+   Step 2: Speech Generation (TTS)
+   ❌ Step 2 failed: HTTP 500: Internal Server Error
+   Step 3: Structured Output
+   ❌ Step 3 failed: HTTP 500: Internal Server Error
+   Step 4: Document Understanding
+   ❌ Step 4 failed: HTTP 500: Internal Server Error
+   ❌ Scenario failed
+
+⚡ Testing System Performance
+=============================
+
+Testing concurrent chat requests...
+❌ Concurrent requests failed: HTTP 500: Internal Server Error
+
+Testing memory efficiency...
+💥 Test suite crashed: Error: HTTP 500: Internal Server Error
+    at MultimodalSystemTester.testFeature (file:///Users/farzad/FB-c_labV2/scripts/test-complete-multimodal-system.mjs:340:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async MultimodalSystemTester.testSystemPerformance (file:///Users/farzad/FB-c_labV2/scripts/test-complete-multimodal-system.mjs:519:24)
+    at async MultimodalSystemTester.runAllTests (file:///Users/farzad/FB-c_labV2/scripts/test-complete-multimodal-system.mjs:282:5)
+    at async main (file:///Users/farzad/FB-c_labV2/scripts/test-complete-multimodal-system.mjs:601:26)

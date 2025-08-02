@@ -3,8 +3,9 @@
 import React from "react"
 
 import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Paperclip, ImageIcon, Mic, Video, ScreenShare, Calculator } from "lucide-react"
+import { Paperclip, ImageIcon, Mic, Video, ScreenShare, Calculator, Plus, FileText, Camera, Monitor, Zap } from "lucide-react"
 import type { ModalType } from "@/app/(chat)/chat/hooks/useModalManager"
 
 interface ActionButtonsProps {
@@ -38,13 +39,17 @@ export function ActionButtons({ onFileUpload, onImageUpload, openModal }: Action
     }
   }
 
-  const tooltips = [
-    { name: "Attach File", icon: Paperclip, onClick: handleFileClick },
-    { name: "Upload Image", icon: ImageIcon, onClick: handleImageClick },
-    { name: "Voice Input", icon: Mic, onClick: () => openModal("voiceInput") },
-    { name: "Video to App", icon: Video, onClick: () => openModal("videoToApp") },
-    { name: "Share Screen", icon: ScreenShare, onClick: () => openModal("screenShare") },
-    { name: "ROI Calculator", icon: Calculator, onClick: () => openModal("roiCalculator") },
+  const quickActions = [
+    { name: "Upload Document", icon: FileText, onClick: handleFileClick, color: "text-blue-500" },
+    { name: "Upload Image", icon: ImageIcon, onClick: handleImageClick, color: "text-green-500" },
+  ]
+
+  const advancedTools = [
+    { name: "Voice Input", icon: Mic, onClick: () => openModal("voiceInput"), color: "text-purple-500" },
+    { name: "Webcam Capture", icon: Camera, onClick: () => openModal("webcam"), color: "text-pink-500" },
+    { name: "Screen Share", icon: Monitor, onClick: () => openModal("screenShare"), color: "text-indigo-500" },
+    { name: "Video to App", icon: Video, onClick: () => openModal("videoToApp"), color: "text-orange-500" },
+    { name: "ROI Calculator", icon: Calculator, onClick: () => openModal("roiCalculator"), color: "text-teal-500" },
   ]
 
   return (
@@ -59,18 +64,44 @@ export function ActionButtons({ onFileUpload, onImageUpload, openModal }: Action
           className="hidden"
           aria-hidden="true"
         />
-        {tooltips.map((tip) => (
-          <Tooltip key={tip.name}>
+        
+        {/* Quick Action Buttons */}
+        {quickActions.map((action) => (
+          <Tooltip key={action.name}>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" onClick={tip.onClick} aria-label={tip.name}>
-                <tip.icon className="w-5 h-5 text-muted-foreground" />
+              <Button variant="ghost" size="icon" onClick={action.onClick} aria-label={action.name}>
+                <action.icon className={`w-5 h-5 ${action.color}`} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{tip.name}</p>
+              <p>{action.name}</p>
             </TooltipContent>
           </Tooltip>
         ))}
+
+        {/* Advanced Tools Dropdown */}
+        <DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="More tools">
+                  <Plus className="w-5 h-5 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>More tools</p>
+            </TooltipContent>
+          </Tooltip>
+          <DropdownMenuContent align="start" className="w-48">
+            {advancedTools.map((tool) => (
+              <DropdownMenuItem key={tool.name} onClick={tool.onClick} className="gap-3">
+                <tool.icon className={`w-4 h-4 ${tool.color}`} />
+                <span>{tool.name}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </TooltipProvider>
   )

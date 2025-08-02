@@ -20,7 +20,7 @@ interface AdminSidebarProps {
 export function AdminSidebar({ activeSection, setActiveSection, navigationItems }: AdminSidebarProps) {
   return (
     <aside className="w-64 flex-shrink-0">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-4">
         <nav className="space-y-2">
           {navigationItems.map((item) => {
             const Icon = item.icon
@@ -33,14 +33,14 @@ export function AdminSidebar({ activeSection, setActiveSection, navigationItems 
                 className={`w-full justify-start gap-3 h-auto p-3 ${
                   isActive
                     ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md"
-                    : "hover:bg-slate-50 text-slate-700"
+                    : "hover:bg-muted text-foreground"
                 }`}
                 onClick={() => setActiveSection(item.id)}
               >
                 <Icon className="w-5 h-5" />
                 <div className="flex-1 text-left">
                   <div className="font-medium">{item.label}</div>
-                  <div className={`text-xs ${isActive ? "text-blue-100" : "text-slate-500"}`}>{item.description}</div>
+                  <div className={`text-xs ${isActive ? "text-blue-100" : "text-muted-foreground"}`}>{item.description}</div>
                 </div>
                 {isActive && <ChevronRight className="w-4 h-4" />}
               </Button>

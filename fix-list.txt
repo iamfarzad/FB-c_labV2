@@ -1,0 +1,12 @@
+styles/globals.css
+app/globals.css
+tailwind.config.js
+app/layout.tsx
+components/ui/Button.tsx
+components/ui/Card.tsx
+components/ui/Input.tsx
+components/ui/Modal.tsx
+components/ui/ChatBubble.tsx
+.stylelintrc.js
+.eslintrc.js
+lib/motion/variants.ts

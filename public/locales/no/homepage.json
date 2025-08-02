@@ -1,0 +1,40 @@
+{
+  "hero": {
+    "title": "Transformer din bedrift med AI-drevne løsninger",
+    "subtitle": "Lås opp potensialet til kunstig intelligens for å effektivisere drift, forbedre kundeopplevelser og drive vekst.",
+    "cta": "Kom i gang i dag",
+    "learnMore": "Lær mer"
+  },
+  "features": {
+    "title": "Hvorfor velge våre AI-løsninger",
+    "subtitle": "Oppdag fordelene med vår omfattende AI-plattform",
+    "items": {
+      "automation": {
+        "title": "Smart automatisering",
+        "description": "Automatiser repetitive oppgaver og fokuser på det som betyr mest for din bedrift."
+      },
+      "insights": {
+        "title": "Datadrevne innsikter",
+        "description": "Ta informerte beslutninger med kraftig analyse og prediktiv modellering."
+      },
+      "scalability": {
+        "title": "Skalerbare løsninger",
+        "description": "Voks din bedrift med AI-løsninger som skalerer med dine behov."
+      },
+      "support": {
+        "title": "24/7 støtte",
+        "description": "Få ekspert assistanse når du trenger det med vårt dedikerte støtteteam."
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Hva våre kunder sier",
+    "subtitle": "Se hvordan bedrifter som din transformerer med AI"
+  },
+  "cta": {
+    "title": "Klar til å transformere din bedrift?",
+    "subtitle": "Bli med tusenvis av selskaper som allerede bruker våre AI-løsninger for å drive vekst og innovasjon.",
+    "button": "Start din reise",
+    "contact": "Kontakt salg"
+  }
+}

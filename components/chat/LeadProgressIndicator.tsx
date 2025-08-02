@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import { motion, AnimatePresence } from "framer-motion"
+import { useState } from "react"
 import { ConversationStage } from '@/lib/lead-manager';
 
 interface LeadProgressIndicatorProps {
@@ -13,177 +14,263 @@ interface LeadProgressIndicatorProps {
   className?: string;
 }
 
-const stageConfig = {
-  [ConversationStage.GREETING]: {
-    label: 'Welcome',
-    description: 'Initial greeting',
-    icon: '👋',
-    color: 'bg-blue-500',
+const stageConfig = [
+  {
+    stage: ConversationStage.GREETING,
+    title: 'Welcome',
+    desc: 'Initial greeting & introduction',
+    details: 'Establishing connection and understanding your needs for AI automation and business optimization',
     order: 1
   },
-  [ConversationStage.NAME_COLLECTION]: {
-    label: 'Introduction',
-    description: 'Getting to know you',
-    icon: '👤',
-    color: 'bg-green-500',
+  {
+    stage: ConversationStage.NAME_COLLECTION,
+    title: 'Introduction',
+    desc: 'Getting to know you',
+    details: 'Collecting your name to personalize our conversation and provide better assistance',
     order: 2
   },
-  [ConversationStage.EMAIL_CAPTURE]: {
-    label: 'Contact Info',
-    description: 'Email collection',
-    icon: '📧',
-    color: 'bg-yellow-500',
+  {
+    stage: ConversationStage.EMAIL_CAPTURE,
+    title: 'Contact Info',
+    desc: 'Securing communication channel',
+    details: 'Capturing email for follow-up and sending personalized recommendations',
     order: 3
   },
-  [ConversationStage.BACKGROUND_RESEARCH]: {
-    label: 'Research',
-    description: 'Company analysis',
-    icon: '🔬',
-    color: 'bg-indigo-500',
+  {
+    stage: ConversationStage.BACKGROUND_RESEARCH,
+    title: 'Research',
+    desc: 'Company & industry analysis',
+    details: 'Analyzing your business context to provide tailored AI solutions and strategies',
     order: 4
   },
-  [ConversationStage.PROBLEM_DISCOVERY]: {
-    label: 'Discovery',
-    description: 'Understanding needs',
-    icon: '🔍',
-    color: 'bg-purple-500',
+  {
+    stage: ConversationStage.PROBLEM_DISCOVERY,
+    title: 'Discovery',
+    desc: 'Understanding your challenges',
+    details: 'Identifying specific pain points and opportunities for AI-driven improvements',
     order: 5
   },
-  [ConversationStage.SOLUTION_PRESENTATION]: {
-    label: 'Solution',
-    description: 'Presenting options',
-    icon: '💡',
-    color: 'bg-orange-500',
+  {
+    stage: ConversationStage.SOLUTION_PRESENTATION,
+    title: 'Solutions',
+    desc: 'Presenting tailored options',
+    details: 'Customized AI automation strategies and implementation recommendations',
     order: 6
   },
-  [ConversationStage.CALL_TO_ACTION]: {
-    label: 'Next Steps',
-    description: 'Ready to proceed',
-    icon: '🚀',
-    color: 'bg-red-500',
+  {
+    stage: ConversationStage.CALL_TO_ACTION,
+    title: 'Next Steps',
+    desc: 'Ready to proceed',
+    details: 'Scheduling consultation and defining implementation roadmap',
     order: 7
   }
-};
+]
 
 export function LeadProgressIndicator({ currentStage, leadData, className = '' }: LeadProgressIndicatorProps) {
-  const stages = Object.entries(stageConfig).sort(([, a], [, b]) => a.order - b.order);
-  const currentStageOrder = stageConfig[currentStage]?.order || 1;
+  const [hoveredStage, setHoveredStage] = useState<string | null>(null)
+  
+  // Calculate stage statuses based on current stage
+  const currentStageIndex = stageConfig.findIndex(s => s.stage === currentStage)
+  const stages = stageConfig.map((stage, index) => {
+    let status = "ready"
+    if (index < currentStageIndex) status = "completed"
+    if (index === currentStageIndex) status = "active"
+    return { ...stage, status }
+  })
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-accent/70"
+      case "active":
+        return "bg-accent"
+      case "ready":
+        return "bg-muted"
+      default:
+        return "bg-muted"
+    }
+  }
+
+  const getStatusAnimation = (status: string) => {
+    switch (status) {
+      case "active":
+        return {
+          scale: [1, 1.2, 1],
+          opacity: [0.8, 1, 0.8],
+        }
+      case "completed":
+        return {
+          scale: 1,
+          opacity: 1
+        }
+      default:
+        return {}
+    }
+  }
 
   return (
-    <div className={`bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg border border-orange-200 dark:border-gray-700 ${className}`}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-          Conversation Progress
-        </h3>
-        {leadData?.name && (
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {leadData.name}
+    <div className={`fixed right-6 top-1/2 -translate-y-1/2 z-40 ${className}`}>
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3, duration: 0.6 }}
+        className="flex flex-col items-center gap-6"
+      >
+        {/* Header */}
+        <motion.div
+          className="flex items-center gap-2 mb-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <span className="text-xs font-medium text-muted-foreground tracking-wide">
+            STAGE {currentStageIndex + 1}/7
           </span>
-        )}
-      </div>
+        </motion.div>
 
-      {/* Progress Bar */}
-      <div className="mb-3">
-        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-          <span>Stage {currentStageOrder} of {stages.length}</span>
-          <span className="text-orange-600 font-medium">{Math.round((currentStageOrder / stages.length) * 100)}%</span>
-        </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-          <div 
-            className="bg-gradient-to-r from-orange-500 to-red-500 h-1.5 rounded-full transition-all duration-500 ease-in-out shadow-sm"
-            style={{ width: `${(currentStageOrder / stages.length) * 100}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Vertical Stage Indicators */}
-      <div className="space-y-2">
-        {stages.map(([stage, config], index) => {
-          const isCompleted = config.order < currentStageOrder;
-          const isCurrent = stage === currentStage;
-          const isUpcoming = config.order > currentStageOrder;
+        {/* Vertical Stage Flow */}
+        {stages.map((stage, index) => {
+          const isHovered = hoveredStage === stage.stage
+          const isActive = stage.status === "active"
+          const isCompleted = stage.status === "completed"
 
           return (
-            <div key={stage} className="flex items-center gap-3 relative">
-              {/* Stage Circle */}
-              <div className={`
-                w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-200 flex-shrink-0
-                ${isCompleted ? 'bg-green-500 text-white shadow-sm' : ''}
-                ${isCurrent ? 'bg-orange-500 text-white ring-2 ring-orange-200 shadow-md' : ''}
-                ${isUpcoming ? 'bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400' : ''}
-              `}>
-                {isCompleted ? '✓' : config.icon}
-              </div>
-
-              {/* Vertical Connection Line */}
+            <div key={stage.stage} className="relative group">
+              {/* Connection Line */}
               {index < stages.length - 1 && (
-                <div className={`
-                  absolute left-3 top-6 w-0.5 h-4 -z-10
-                  ${isCompleted ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-600'}
-                `} />
+                <motion.div
+                  className={`absolute top-8 left-1/2 -translate-x-1/2 w-px h-6 ${
+                    isCompleted ? 'bg-accent/40' : 'bg-border/30'
+                  }`}
+                  initial={{ scaleY: 0 }}
+                  animate={{ scaleY: 1 }}
+                  transition={{ delay: 0.6 + index * 0.1, duration: 0.4 }}
+                />
               )}
 
-              {/* Stage Info */}
-              <div className="flex-1 min-w-0">
-                <div className={`text-sm font-medium truncate ${
-                  isCurrent ? 'text-orange-600 dark:text-orange-400' : 
-                  isCompleted ? 'text-green-600 dark:text-green-400' : 
-                  'text-gray-500 dark:text-gray-400'
-                }`}>
-                  {config.label}
+              {/* Stage Dot */}
+              <motion.div
+                className="relative cursor-pointer"
+                onMouseEnter={() => setHoveredStage(stage.stage)}
+                onMouseLeave={() => setHoveredStage(null)}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.7 + index * 0.1, type: "spring", stiffness: 400 }}
+              >
+                {/* Outer Ring */}
+                <div className={`w-8 h-8 rounded-full border-2 ${
+                  isActive ? 'border-accent' : 'border-border'
+                } bg-card shadow-sm flex items-center justify-center relative overflow-hidden`}>
+                  {/* Status Indicator */}
+                  <motion.div
+                    className={`absolute inset-0 rounded-full ${getStatusColor(stage.status)}`}
+                    animate={getStatusAnimation(stage.status)}
+                    transition={{
+                      duration: isActive ? 1.5 : 0,
+                      repeat: isActive ? Infinity : 0,
+                      ease: "easeInOut",
+                    }}
+                  />
+                  
+                  {/* Stage Number or Check */}
+                  <span className={`relative z-10 text-xs font-medium ${
+                    isCompleted ? 'text-accent-foreground' : 
+                    isActive ? 'text-accent-foreground' : 
+                    'text-muted-foreground'
+                  }`}>
+                    {isCompleted ? '✓' : index + 1}
+                  </span>
                 </div>
-                <div className="text-xs text-gray-400 dark:text-gray-500 truncate">
-                  {config.description}
-                </div>
-              </div>
 
-              {/* Current Stage Indicator */}
-              {isCurrent && (
-                <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse flex-shrink-0" />
-              )}
+                {/* Hover Glow Effect */}
+                <motion.div
+                  className="absolute inset-0 rounded-full bg-accent/20 blur-md"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{
+                    opacity: isHovered || isActive ? 1 : 0,
+                    scale: isHovered || isActive ? 1.2 : 0.8,
+                  }}
+                  transition={{ duration: 0.2 }}
+                />
+              </motion.div>
+
+              {/* Hover Information Panel */}
+              <AnimatePresence>
+                {isHovered && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: 10, scale: 0.95 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="absolute right-12 top-1/2 -translate-y-1/2 z-10"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-lg shadow-xl p-3 min-w-[240px]">
+                      {/* Arrow */}
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-2 h-2 bg-card border-r border-t border-border/50 rotate-45" />
+
+                      {/* Content */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium text-foreground text-sm">{stage.title}</h4>
+                          <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(stage.status)}`} />
+                        </div>
+
+                        <p className="text-xs text-muted-foreground leading-relaxed">{stage.desc}</p>
+
+                        <div className="pt-2 border-t border-border/30">
+                          <p className="text-xs text-muted-foreground/80 leading-relaxed">
+                            {stage.details}
+                          </p>
+                        </div>
+
+                        {/* Current Lead Data */}
+                        {isActive && leadData && (
+                          <div className="pt-2 border-t border-border/30">
+                            {leadData.name && (
+                              <p className="text-xs text-accent font-medium">
+                                Current: {leadData.name}
+                              </p>
+                            )}
+                            {leadData.email && (
+                              <p className="text-xs text-muted-foreground">
+                                {leadData.email}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Status */}
+                        <div className="pt-1">
+                          <p className="text-xs text-accent font-medium">
+                            {stage.status === 'completed' ? 'Completed' : 
+                             stage.status === 'active' ? 'In Progress' : 
+                             'Upcoming'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          );
+          )
         })}
-      </div>
 
-      {/* Current Stage Info */}
-      <div className="mt-3 p-2.5 bg-orange-50 dark:bg-gray-700 rounded-lg border border-orange-100">
-        <div className="flex items-center space-x-2">
-          <span className="text-base">{stageConfig[currentStage]?.icon}</span>
-          <div>
-            <div className="text-sm font-medium text-orange-900 dark:text-gray-100">
-              {stageConfig[currentStage]?.label}
-            </div>
-            <div className="text-xs text-orange-600 dark:text-gray-400">
-              {stageConfig[currentStage]?.description}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Lead Data Summary */}
-      {leadData && (
-        <div className="mt-3 space-y-1">
-          {leadData.name && (
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-500 dark:text-gray-400">Name:</span>
-              <span className="text-gray-900 dark:text-gray-100">{leadData.name}</span>
-            </div>
-          )}
-          {leadData.email && (
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-500 dark:text-gray-400">Email:</span>
-              <span className="text-gray-900 dark:text-gray-100">{leadData.email}</span>
-            </div>
-          )}
-          {leadData.company && (
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-500 dark:text-gray-400">Company:</span>
-              <span className="text-gray-900 dark:text-gray-100">{leadData.company}</span>
-            </div>
-          )}
-        </div>
-      )}
+        {/* Progress Percentage */}
+        <motion.div
+          className="mt-2 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2 }}
+        >
+          <span className="text-xs font-medium text-accent">
+            {Math.round(((currentStageIndex + 1) / stages.length) * 100)}%
+          </span>
+        </motion.div>
+      </motion.div>
     </div>
-  );
+  )
 }

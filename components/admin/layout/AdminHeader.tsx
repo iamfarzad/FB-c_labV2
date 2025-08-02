@@ -5,7 +5,7 @@ import { BarChart3, Settings, LogOut, RefreshCw } from "lucide-react"
 
 export function AdminHeader() {
   return (
-    <header className="bg-white border-b border-slate-200 shadow-sm">
+    <header className="bg-card border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -14,8 +14,8 @@ export function AdminHeader() {
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-slate-900">F.B/c AI Admin</h1>
-                <p className="text-sm text-slate-500">Business Intelligence Dashboard</p>
+                <h1 className="text-xl font-semibold text-foreground">F.B/c AI Admin</h1>
+                <p className="text-sm text-muted-foreground">Business Intelligence Dashboard</p>
               </div>
             </div>
             <Separator orientation="vertical" className="h-8" />
@@ -24,7 +24,7 @@ export function AdminHeader() {
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                 Live
               </Badge>
-              <span className="text-sm text-slate-500">Production Ready</span>
+              <span className="text-sm text-muted-foreground">Production Ready</span>
             </div>
           </div>
 

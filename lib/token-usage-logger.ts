@@ -51,7 +51,8 @@ export class TokenUsageLogger {
         .insert({
           user_id: log.user_id,
           session_id: log.session_id,
-          feature: log.feature,
+          task_type: log.feature, // Map feature to task_type
+          endpoint: `/api/${log.feature}`, // Generate endpoint from feature
           model: log.model,
           input_tokens: log.input_tokens,
           output_tokens: log.output_tokens,
@@ -59,7 +60,6 @@ export class TokenUsageLogger {
           estimated_cost: log.estimated_cost,
           success: log.success,
           error_message: log.error_message,
-          usage_metadata: log.usage_metadata,
           created_at: log.created_at || new Date().toISOString()
         })
 
@@ -317,13 +317,15 @@ export class TokenUsageLogger {
         totalTokens += log.total_tokens
         totalCost += log.estimated_cost
 
-        if (!featureBreakdown[log.feature]) {
-          featureBreakdown[log.feature] = { tokens: 0, cost: 0, requests: 0 }
+        const feature = log.task_type || 'unknown' // Use task_type instead of feature
+
+        if (!featureBreakdown[feature]) {
+          featureBreakdown[feature] = { tokens: 0, cost: 0, requests: 0 }
         }
 
-        featureBreakdown[log.feature].tokens += log.total_tokens
-        featureBreakdown[log.feature].cost += log.estimated_cost
-        featureBreakdown[log.feature].requests += 1
+        featureBreakdown[feature].tokens += log.total_tokens
+        featureBreakdown[feature].cost += log.estimated_cost
+        featureBreakdown[feature].requests += 1
       })
 
       return {

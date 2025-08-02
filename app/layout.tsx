@@ -2,7 +2,7 @@ import type React from "react"
 import { Inter, Rajdhani, Space_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { DemoSessionProvider, DemoSessionStatus } from "@/components/demo-session-manager"
+import { DemoSessionProvider } from "@/components/demo-session-manager"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { Toaster } from "@/components/ui/toaster"
@@ -40,9 +40,10 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <DemoSessionProvider>
             <Header />
-            <main className="min-h-screen">{children}</main>
+            <main className="min-h-screen">
+              {children}
+            </main>
             <Footer />
-            <DemoSessionStatus />
             <Toaster />
           </DemoSessionProvider>
         </ThemeProvider>

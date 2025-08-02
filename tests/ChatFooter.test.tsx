@@ -33,7 +33,7 @@ const mockProps = {
   onFileUpload: jest.fn(),
   onImageUpload: jest.fn(),
   onVoiceTranscript: jest.fn(),
-  inputRef: { current: null },
+  inputRef: { current: document.createElement('textarea') },
   showVoiceModal: false,
   setShowVoiceModal: jest.fn(),
   showWebcamModal: false,

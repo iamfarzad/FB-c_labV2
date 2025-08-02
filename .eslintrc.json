@@ -3,6 +3,9 @@
     "next/core-web-vitals",
     "next/typescript"
   ],
+  "plugins": [
+    "@typescript-eslint"
+  ],
   "rules": {
     "no-restricted-syntax": [
       "error",

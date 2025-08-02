@@ -98,12 +98,12 @@ export function AdminDashboard() {
           />
 
           <main className="flex-1">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <header className="border-b border-slate-200 p-6">
+            <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+              <header className="border-b border-border p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-2xl font-semibold text-slate-900">{activeNavItem?.label}</h2>
-                    <p className="text-slate-500 mt-1">{activeNavItem?.description}</p>
+                    <h2 className="text-2xl font-semibold text-foreground">{activeNavItem?.label}</h2>
+                    <p className="text-muted-foreground mt-1">{activeNavItem?.description}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <Button variant="outline" size="sm" className="gap-2 bg-transparent">

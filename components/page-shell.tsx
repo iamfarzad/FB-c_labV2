@@ -3,9 +3,18 @@ import { cn } from "@/lib/utils"
 
 interface PageShellProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
+  variant?: "default" | "fullscreen"
 }
 
-export function PageShell({ children, className, ...props }: PageShellProps) {
+export function PageShell({ children, className, variant = "default", ...props }: PageShellProps) {
+  if (variant === "fullscreen") {
+    return (
+      <section className={cn("w-full h-full", className)} {...props}>
+        {children}
+      </section>
+    )
+  }
+
   return (
     <section className={cn("container py-12 md:py-20", className)} {...props}>
       {children}

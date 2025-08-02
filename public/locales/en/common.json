@@ -1,0 +1,62 @@
+{
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "consulting": "Consulting",
+    "workshop": "Workshop",
+    "chat": "Chat",
+    "admin": "Admin"
+  },
+  "buttons": {
+    "getStarted": "Get Started",
+    "learnMore": "Learn More",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "loading": "Loading...",
+    "tryAgain": "Try Again"
+  },
+  "forms": {
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "phone": "Phone",
+    "company": "Company",
+    "required": "Required",
+    "optional": "Optional",
+    "invalidEmail": "Please enter a valid email address",
+    "fieldRequired": "This field is required"
+  },
+  "status": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information",
+    "loading": "Loading",
+    "completed": "Completed",
+    "pending": "Pending",
+    "failed": "Failed"
+  },
+  "time": {
+    "now": "Now",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow",
+    "thisWeek": "This week",
+    "lastWeek": "Last week",
+    "thisMonth": "This month",
+    "lastMonth": "Last month"
+  },
+  "language": {
+    "english": "English",
+    "norwegian": "Norwegian",
+    "selectLanguage": "Select Language"
+  }
+}

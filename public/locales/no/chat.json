@@ -1,0 +1,59 @@
+{
+  "interface": {
+    "title": "AI-assistent",
+    "placeholder": "Skriv meldingen din her...",
+    "send": "Send",
+    "clear": "Tøm chat",
+    "newChat": "Ny chat",
+    "typing": "AI skriver...",
+    "connecting": "Kobler til...",
+    "connected": "Tilkoblet",
+    "disconnected": "Frakoblet"
+  },
+  "messages": {
+    "welcome": "Hei! Jeg er din AI-assistent. Hvordan kan jeg hjelpe deg i dag?",
+    "error": "Beklager, noe gikk galt. Vennligst prøv igjen.",
+    "networkError": "Nettverksfeil. Vennligst sjekk tilkoblingen din.",
+    "rateLimited": "For mange forespørsler. Vennligst vent et øyeblikk.",
+    "invalidInput": "Vennligst skriv inn en gyldig melding.",
+    "processing": "Behandler forespørselen din...",
+    "thinking": "La meg tenke på det...",
+    "generating": "Genererer svar..."
+  },
+  "actions": {
+    "copy": "Kopier",
+    "copied": "Kopiert!",
+    "regenerate": "Generer på nytt",
+    "like": "Lik",
+    "dislike": "Mislik",
+    "share": "Del",
+    "export": "Eksporter",
+    "delete": "Slett",
+    "edit": "Rediger"
+  },
+  "settings": {
+    "title": "Chat-innstillinger",
+    "model": "AI-modell",
+    "temperature": "Kreativitet",
+    "maxTokens": "Svarlengde",
+    "systemPrompt": "Systeminstruksjoner",
+    "save": "Lagre innstillinger",
+    "reset": "Tilbakestill til standard"
+  },
+  "history": {
+    "title": "Chat-historikk",
+    "empty": "Ingen chat-historikk ennå",
+    "clear": "Tøm historikk",
+    "export": "Eksporter historikk",
+    "search": "Søk i samtaler..."
+  },
+  "upload": {
+    "title": "Last opp fil",
+    "dragDrop": "Dra og slipp filer her eller klikk for å bla gjennom",
+    "supported": "Støttede formater: PDF, DOC, TXT, Bilder",
+    "maxSize": "Maks filstørrelse: 10MB",
+    "uploading": "Laster opp...",
+    "success": "Fil lastet opp vellykket",
+    "error": "Opplasting mislyktes. Vennligst prøv igjen."
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "navigation": {
+    "home": "Hjem",
+    "about": "Om oss",
+    "contact": "Kontakt",
+    "consulting": "Rådgivning",
+    "workshop": "Workshop",
+    "chat": "Chat",
+    "admin": "Admin"
+  },
+  "buttons": {
+    "getStarted": "Kom i gang",
+    "learnMore": "Lær mer",
+    "submit": "Send inn",
+    "cancel": "Avbryt",
+    "save": "Lagre",
+    "delete": "Slett",
+    "edit": "Rediger",
+    "close": "Lukk",
+    "back": "Tilbake",
+    "next": "Neste",
+    "previous": "Forrige",
+    "loading": "Laster...",
+    "tryAgain": "Prøv igjen"
+  },
+  "forms": {
+    "name": "Navn",
+    "email": "E-post",
+    "message": "Melding",
+    "phone": "Telefon",
+    "company": "Bedrift",
+    "required": "Påkrevd",
+    "optional": "Valgfritt",
+    "invalidEmail": "Vennligst skriv inn en gyldig e-postadresse",
+    "fieldRequired": "Dette feltet er påkrevd"
+  },
+  "status": {
+    "success": "Suksess",
+    "error": "Feil",
+    "warning": "Advarsel",
+    "info": "Informasjon",
+    "loading": "Laster",
+    "completed": "Fullført",
+    "pending": "Venter",
+    "failed": "Mislyktes"
+  },
+  "time": {
+    "now": "Nå",
+    "today": "I dag",
+    "yesterday": "I går",
+    "tomorrow": "I morgen",
+    "thisWeek": "Denne uken",
+    "lastWeek": "Forrige uke",
+    "thisMonth": "Denne måneden",
+    "lastMonth": "Forrige måned"
+  },
+  "language": {
+    "english": "Engelsk",
+    "norwegian": "Norsk",
+    "selectLanguage": "Velg språk"
+  }
+}

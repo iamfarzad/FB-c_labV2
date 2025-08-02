@@ -144,14 +144,14 @@ export function AdminChatInterface({ className }: AdminChatInterfaceProps) {
   return (
     <div className={cn("flex flex-col h-full", className)}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-200">
+      <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
             <Brain className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-slate-900">AI Business Assistant</h3>
-            <p className="text-sm text-slate-500">Powered by real-time dashboard data</p>
+            <h3 className="font-semibold text-foreground">AI Business Assistant</h3>
+            <p className="text-sm text-muted-foreground">Powered by real-time dashboard data</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -174,9 +174,9 @@ export function AdminChatInterface({ className }: AdminChatInterfaceProps) {
 
       {/* Quick Actions */}
       {messages.length === 0 && (
-        <div className="p-4 border-b border-slate-200">
+        <div className="p-4 border-b border-border">
           <div className="mb-4">
-            <h4 className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+            <h4 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
               Quick Actions
             </h4>
@@ -195,7 +195,7 @@ export function AdminChatInterface({ className }: AdminChatInterfaceProps) {
                     <Icon className="w-3 h-3 mr-2" />
                     <div className="text-left">
                       <div className="font-medium">{action.title}</div>
-                      <div className="text-slate-500">{action.description}</div>
+                      <div className="text-muted-foreground">{action.description}</div>
                     </div>
                   </Button>
                 )
@@ -204,7 +204,7 @@ export function AdminChatInterface({ className }: AdminChatInterfaceProps) {
           </div>
 
           <div>
-            <h4 className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+            <h4 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
               <Lightbulb className="w-4 h-4" />
               Suggested Questions
             </h4>
@@ -214,7 +214,7 @@ export function AdminChatInterface({ className }: AdminChatInterfaceProps) {
                   key={index}
                   variant="ghost"
                   size="sm"
-                  className="h-auto p-2 text-xs justify-start text-slate-600 hover:text-slate-900"
+                  className="h-auto p-2 text-xs justify-start text-muted-foreground hover:text-foreground"
                   onClick={() => handleSuggestedPrompt(prompt)}
                   disabled={isLoading}
                 >
@@ -236,8 +236,8 @@ export function AdminChatInterface({ className }: AdminChatInterfaceProps) {
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Brain className="w-8 h-8 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">Ready to analyze your data</h3>
-                <p className="text-slate-500 max-w-md mx-auto">
+                <h3 className="text-lg font-semibold text-foreground mb-2">Ready to analyze your data</h3>
+                <p className="text-muted-foreground max-w-md mx-auto">
                   Ask me anything about your leads, meetings, emails, costs, analytics, or system performance. 
                   I have access to all your dashboard data in real-time.
                 </p>
@@ -270,19 +270,19 @@ export function AdminChatInterface({ className }: AdminChatInterfaceProps) {
                     "border-0 shadow-sm",
                     message.role === "user"
                       ? "bg-blue-500 text-white"
-                      : "bg-white"
+                      : "bg-card"
                   )}>
                     <CardContent className="p-3">
                       <div className={cn(
                         "whitespace-pre-wrap text-sm",
-                        message.role === "user" ? "text-white" : "text-slate-700"
+                        message.role === "user" ? "text-white" : "text-foreground"
                       )}>
                         {message.content}
                       </div>
                     </CardContent>
                   </Card>
 
-                  <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Clock className="w-3 h-3" />
                     <span>{formatTimestamp(message.timestamp)}</span>
                     {message.role === "assistant" && (
@@ -304,7 +304,7 @@ export function AdminChatInterface({ className }: AdminChatInterfaceProps) {
 
                 {message.role === "user" && (
                   <Avatar className="w-8 h-8">
-                    <AvatarFallback className="bg-slate-100 text-slate-700">
+                    <AvatarFallback className="bg-muted text-muted-foreground">
                       <User className="w-4 h-4" />
                     </AvatarFallback>
                   </Avatar>
@@ -320,13 +320,13 @@ export function AdminChatInterface({ className }: AdminChatInterfaceProps) {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 max-w-[85%] space-y-1">
-                  <Card className="border-0 shadow-sm bg-white">
+                  <Card className="border-0 shadow-sm bg-card">
                     <CardContent className="p-3">
                       <div className="flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
                         <div>
-                          <div className="text-sm font-medium text-slate-700">Analyzing your data...</div>
-                          <div className="text-xs text-slate-500">Gathering insights from dashboard</div>
+                          <div className="text-sm font-medium text-foreground">Analyzing your data...</div>
+                          <div className="text-xs text-muted-foreground">Gathering insights from dashboard</div>
                         </div>
                       </div>
                     </CardContent>
@@ -364,14 +364,14 @@ export function AdminChatInterface({ className }: AdminChatInterfaceProps) {
       </div>
 
       {/* Input */}
-      <div className="border-t border-slate-200 p-4">
+      <div className="border-t border-border p-4">
         <form onSubmit={handleSubmit} className="flex gap-3">
           <Input
             ref={inputRef}
             value={input}
             onChange={handleInputChange}
             placeholder="Ask about your business data, draft emails, analyze leads..."
-            className="flex-1 border-slate-200 focus:border-blue-500"
+            className="flex-1"
             disabled={isLoading}
           />
           <Button 

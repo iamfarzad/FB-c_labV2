@@ -1,0 +1,40 @@
+{
+  "hero": {
+    "title": "Transform Your Business with AI-Powered Solutions",
+    "subtitle": "Unlock the potential of artificial intelligence to streamline operations, enhance customer experiences, and drive growth.",
+    "cta": "Get Started Today",
+    "learnMore": "Learn More"
+  },
+  "features": {
+    "title": "Why Choose Our AI Solutions",
+    "subtitle": "Discover the benefits of our comprehensive AI platform",
+    "items": {
+      "automation": {
+        "title": "Smart Automation",
+        "description": "Automate repetitive tasks and focus on what matters most to your business."
+      },
+      "insights": {
+        "title": "Data-Driven Insights",
+        "description": "Make informed decisions with powerful analytics and predictive modeling."
+      },
+      "scalability": {
+        "title": "Scalable Solutions",
+        "description": "Grow your business with AI solutions that scale with your needs."
+      },
+      "support": {
+        "title": "24/7 Support",
+        "description": "Get expert assistance whenever you need it with our dedicated support team."
+      }
+    }
+  },
+  "testimonials": {
+    "title": "What Our Clients Say",
+    "subtitle": "See how businesses like yours are transforming with AI"
+  },
+  "cta": {
+    "title": "Ready to Transform Your Business?",
+    "subtitle": "Join thousands of companies already using our AI solutions to drive growth and innovation.",
+    "button": "Start Your Journey",
+    "contact": "Contact Sales"
+  }
+}
