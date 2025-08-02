@@ -2,24 +2,20 @@ import { z } from 'zod'
 
 // Zod schemas for tool results
 export const ROICalculationSchema = z.object({
-  companySize: z.string(),
-  industry: z.string(),
-  useCase: z.string(),
-  currentProcessTime: z.number().min(0),
-  currentCost: z.number().min(0),
-  automationPotential: z.number().min(0).max(100),
-  estimatedROI: z.number().min(0),
-  timeSavings: z.number().min(0),
-  costSavings: z.number().min(0),
-  paybackPeriod: z.number().min(0)
+  currentCosts: z.number().min(0),
+  projectedSavings: z.number().min(0),
+  implementationCost: z.number().min(0),
+  timeFrameMonths: z.number().min(1)
 })
 
 export const VoiceTranscriptSchema = z.object({
-  transcript: z.string().min(1, 'Transcript cannot be empty')
+  audioData: z.string().min(1, 'Audio data cannot be empty'),
+  mimeType: z.string().optional()
 })
 
 export const WebcamCaptureSchema = z.object({
-  imageData: z.string().min(1, 'Image data cannot be empty')
+  image: z.string().min(1, 'Image data cannot be empty'),
+  type: z.string().optional()
 })
 
 export const VideoAppResultSchema = z.object({
@@ -31,8 +27,8 @@ export const VideoAppResultSchema = z.object({
 })
 
 export const ScreenShareSchema = z.object({
-  analysis: z.string().min(1, 'Analysis cannot be empty'),
-  insights: z.array(z.string()).optional()
+  image: z.string().min(1, 'Image data cannot be empty'),
+  type: z.string().optional()
 })
 
 // Type definitions

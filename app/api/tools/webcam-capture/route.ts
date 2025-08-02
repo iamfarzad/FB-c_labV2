@@ -9,11 +9,11 @@ export async function POST(req: NextRequest) {
     const validatedData = WebcamCaptureSchema.parse(body)
     
     // Business logic for webcam capture processing
-    const { imageData } = validatedData
+    const { image, type } = validatedData
     
     // Process image data (could include AI analysis, object detection, etc.)
-    const imageSize = imageData.length
-    const isBase64 = imageData.startsWith('data:image')
+    const imageSize = image.length
+    const isBase64 = image.startsWith('data:image')
     
     // Basic image analysis
     const analysis = {
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     const response = {
       status: 'success',
       data: {
-        imageData,
+        image,
         analysis,
         processedAt: new Date().toISOString()
       }

@@ -9,11 +9,13 @@ export async function POST(req: NextRequest) {
     const validatedData = ROICalculationSchema.parse(body)
     
     // Business logic for ROI calculation
-    const { roi, paybackPeriod, totalInvestment, expectedSavings, recommendations } = validatedData
+    const { currentCosts, projectedSavings, implementationCost, timeFrameMonths } = validatedData
     
-    // Calculate additional metrics
-    const monthlySavings = expectedSavings / paybackPeriod
-    const annualROI = (expectedSavings / totalInvestment) * 100
+    // Calculate ROI metrics
+    const totalSavings = projectedSavings - implementationCost
+    const roi = (totalSavings / implementationCost) * 100
+    const paybackPeriod = implementationCost / (projectedSavings / timeFrameMonths)
+    const monthlySavings = projectedSavings / timeFrameMonths
     
     // Create response with calculated data
     const response = {
@@ -21,11 +23,11 @@ export async function POST(req: NextRequest) {
       data: {
         roi,
         paybackPeriod,
-        totalInvestment,
-        expectedSavings,
+        currentCosts,
+        projectedSavings,
+        implementationCost,
         monthlySavings,
-        annualROI,
-        recommendations,
+        totalSavings,
         calculatedAt: new Date().toISOString()
       }
     }

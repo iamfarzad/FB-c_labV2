@@ -9,10 +9,11 @@ export async function POST(req: NextRequest) {
     const validatedData = VoiceTranscriptSchema.parse(body)
     
     // Business logic for voice transcript processing
-    const { transcript } = validatedData
+    const { audioData, mimeType } = validatedData
     
-    // Process transcript (could include AI analysis, sentiment detection, etc.)
-    const processedTranscript = transcript.trim()
+    // Simulate audio processing and transcription
+    // In a real implementation, this would use a speech-to-text service
+    const processedTranscript = "This is a simulated transcript from the audio data"
     const wordCount = processedTranscript.split(' ').length
     const estimatedDuration = wordCount * 0.5 // Rough estimate: 2 words per second
     
