@@ -1,4 +1,3 @@
-import { getSupabase } from '@/lib/supabase/server'
 import { EmailService } from '@/lib/email-service'
 import { logServerActivity } from '@/lib/server-activity-logger'
 
@@ -66,7 +65,20 @@ export interface FollowUpEmail {
 }
 
 export class LeadManager {
-  private supabase = getSupabase()
+  private supabase: any = null
+  
+  private async getSupabaseClient() {
+    if (!this.supabase) {
+      try {
+        const { getSupabase } = await import('@/lib/supabase/server')
+        this.supabase = getSupabase()
+      } catch (error) {
+        console.warn('Supabase not available, some features will be limited')
+        return null
+      }
+    }
+    return this.supabase
+  }
 
   // ============================================================================
   // EMAIL DOMAIN ANALYSIS & COMPANY INTELLIGENCE
@@ -177,7 +189,7 @@ export class LeadManager {
   // ============================================================================
 
   async processConversationStage(
-    leadId: string, 
+    leadIdOrData: string | LeadData | null, 
     currentMessage: string, 
     stage: ConversationStage
   ): Promise<{
@@ -185,11 +197,17 @@ export class LeadManager {
     response: string
     shouldTriggerResearch: boolean
     shouldSendFollowUp: boolean
+    updatedLeadData?: Partial<LeadData>
   }> {
-    // If no leadId provided, create a temporary lead for processing
+    // Handle different input types
     let lead: LeadData | null = null
-    if (leadId) {
-      lead = await this.getLead(leadId)
+    
+    if (typeof leadIdOrData === 'object' && leadIdOrData !== null) {
+      // Direct lead data provided
+      lead = leadIdOrData as LeadData
+    } else if (typeof leadIdOrData === 'string' && leadIdOrData) {
+      // Lead ID provided, fetch from database
+      lead = await this.getLead(leadIdOrData)
     }
     
     // Create temporary lead data for processing if none exists
@@ -207,6 +225,13 @@ export class LeadManager {
         updatedAt: new Date()
       }
     }
+    
+    console.log('🎯 processConversationStage:', {
+      leadIdOrData: typeof leadIdOrData === 'object' ? 'LeadData object' : leadIdOrData,
+      stage,
+      currentMessage: currentMessage.substring(0, 50) + '...',
+      leadData: lead
+    })
 
     switch (stage) {
       case ConversationStage.GREETING:
@@ -249,67 +274,135 @@ I'd love to learn more about your company and how we can help you leverage AI. C
   }
 
   private async handleNameCollectionStage(lead: LeadData, message: string) {
-    // Extract name from message (simple pattern matching)
+    console.log('🔍 handleNameCollectionStage called with:', { lead, message })
+    
+    // Extract name from message with enhanced NLP
     const name = this.extractName(message)
+    console.log('🔍 Extracted name:', name)
     
     if (name) {
-      await this.updateLead(lead.id!, { name })
+      // Update lead with extracted name
+      lead.name = name
+      if (lead.id && lead.id !== 'temp_' + lead.id?.substring(5)) {
+        await this.updateLead(lead.id, { name })
+      }
       
-      const response = `Great to meet you, ${name}! 
+      // Validate we can move to next stage
+      const validation = this.validateStageTransition(
+        ConversationStage.NAME_COLLECTION,
+        ConversationStage.EMAIL_CAPTURE,
+        lead
+      )
+      
+      console.log('🔍 Validation result:', validation)
+      
+      if (validation.valid) {
+        const response = `Great to meet you, ${name}! 
 
-To provide you with the most relevant AI insights, could you share your work email address? This helps me understand your company's context and tailor my recommendations specifically for your industry and challenges.`
+To provide you with the most relevant AI insights and personalized recommendations, could you share your work email address? This helps me understand your company's context and industry-specific challenges.`
 
-      return {
-        nextStage: ConversationStage.EMAIL_CAPTURE,
-        response,
-        shouldTriggerResearch: false,
-        shouldSendFollowUp: false
+        return {
+          nextStage: ConversationStage.EMAIL_CAPTURE,
+          response,
+          shouldTriggerResearch: false,
+          shouldSendFollowUp: false,
+          updatedLeadData: { name }
+        }
       }
-    } else {
-      return {
-        nextStage: ConversationStage.NAME_COLLECTION,
-        response: "I didn't catch your name. Could you please tell me your name?",
-        shouldTriggerResearch: false,
-        shouldSendFollowUp: false
-      }
+    }
+    
+    // Stay on current stage if name not extracted or validation failed
+    return {
+      nextStage: ConversationStage.NAME_COLLECTION,
+      response: "I didn't quite catch your name. Could you please tell me your full name? For example, 'My name is John Smith' or just 'John Smith'.",
+      shouldTriggerResearch: false,
+      shouldSendFollowUp: false
     }
   }
 
   private async handleEmailCaptureStage(lead: LeadData, message: string) {
     const email = this.extractEmail(message)
     
-    if (email) {
+    if (email && this.isValidBusinessEmail(email)) {
       // Analyze email domain
       const domainAnalysis = await this.analyzeEmailDomain(email)
       
       // Update lead with email and domain analysis
-      await this.updateLead(lead.id!, {
-        email,
-        emailDomain: domainAnalysis.domain,
-        companySize: domainAnalysis.companySize,
-        industry: domainAnalysis.industry,
-        decisionMaker: domainAnalysis.decisionMaker,
-        aiReadiness: domainAnalysis.aiReadiness
-      })
-
-      const response = `Perfect! I can see you're from ${domainAnalysis.domain}. 
-
-Let me quickly research your company to understand your specific context and challenges. This will help me provide you with the most relevant AI solutions for your business.`
-
-      return {
-        nextStage: ConversationStage.BACKGROUND_RESEARCH,
-        response,
-        shouldTriggerResearch: true,
-        shouldSendFollowUp: false
+      lead.email = email
+      lead.emailDomain = domainAnalysis.domain
+      lead.companySize = domainAnalysis.companySize
+      lead.industry = domainAnalysis.industry
+      lead.decisionMaker = domainAnalysis.decisionMaker
+      lead.aiReadiness = domainAnalysis.aiReadiness
+      
+      if (lead.id && lead.id !== 'temp_' + lead.id?.substring(5)) {
+        await this.updateLead(lead.id, {
+          email,
+          emailDomain: domainAnalysis.domain,
+          companySize: domainAnalysis.companySize,
+          industry: domainAnalysis.industry,
+          decisionMaker: domainAnalysis.decisionMaker,
+          aiReadiness: domainAnalysis.aiReadiness
+        })
       }
-    } else {
+
+      // Validate transition to next stage
+      const validation = this.validateStageTransition(
+        ConversationStage.EMAIL_CAPTURE,
+        ConversationStage.BACKGROUND_RESEARCH,
+        lead
+      )
+
+      if (validation.valid) {
+        const companyName = domainAnalysis.companyName || domainAnalysis.domain
+        const response = `Perfect! I can see you're from ${companyName}. 
+
+Let me quickly research ${companyName} to understand your specific industry context and challenges. This will help me provide you with the most relevant AI solutions tailored to your business needs.
+
+*Analyzing your company background...*`
+
+        return {
+          nextStage: ConversationStage.BACKGROUND_RESEARCH,
+          response,
+          shouldTriggerResearch: true,
+          shouldSendFollowUp: false,
+          updatedLeadData: {
+            email,
+            emailDomain: domainAnalysis.domain,
+            company: domainAnalysis.companyName || domainAnalysis.domain,
+            companySize: domainAnalysis.companySize,
+            industry: domainAnalysis.industry,
+            decisionMaker: domainAnalysis.decisionMaker
+          }
+        }
+      }
+    }
+    
+    // Provide specific feedback for invalid emails
+    if (email && !this.isValidBusinessEmail(email)) {
       return {
         nextStage: ConversationStage.EMAIL_CAPTURE,
-        response: "I didn't catch your email address. Could you please share your work email?",
+        response: "Please provide a valid work email address. Personal email addresses (like Gmail or Yahoo) won't give me the context I need to understand your company's specific challenges.",
         shouldTriggerResearch: false,
         shouldSendFollowUp: false
       }
     }
+    
+    return {
+      nextStage: ConversationStage.EMAIL_CAPTURE,
+      response: "I didn't catch a valid email address. Could you please share your work email? For example: 'john.smith@company.com'",
+      shouldTriggerResearch: false,
+      shouldSendFollowUp: false
+    }
+  }
+
+  private isValidBusinessEmail(email: string): boolean {
+    const personalDomains = [
+      'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 
+      'aol.com', 'icloud.com', 'mail.com', 'protonmail.com'
+    ]
+    const domain = email.split('@')[1]?.toLowerCase()
+    return domain ? !personalDomains.includes(domain) : false
   }
 
   private async handleBackgroundResearchStage(lead: LeadData, message: string) {
@@ -329,32 +422,92 @@ What are the biggest challenges your company is currently facing? Are there any 
   }
 
   private async handleProblemDiscoveryStage(lead: LeadData, message: string) {
-    // Extract pain points from message
+    // Extract pain points from message with enhanced NLP
     const painPoints = this.extractPainPoints(message)
     
     if (painPoints.length > 0) {
-      await this.updateLead(lead.id!, { painPoints })
-      
-      const response = `Excellent insights! I can see how AI could significantly impact those areas. 
-
-Based on your challenges with ${painPoints[0]}, I'd recommend focusing on intelligent automation solutions that could save you 40-60% of manual processing time while improving accuracy.
-
-Would you like me to show you a specific example of how we've helped similar companies in your industry?`
-
-      return {
-        nextStage: ConversationStage.SOLUTION_PRESENTATION,
-        response,
-        shouldTriggerResearch: false,
-        shouldSendFollowUp: false
+      // Update lead with pain points
+      lead.painPoints = painPoints
+      if (lead.id && lead.id !== 'temp_' + lead.id?.substring(5)) {
+        await this.updateLead(lead.id, { painPoints })
       }
-    } else {
-      return {
-        nextStage: ConversationStage.PROBLEM_DISCOVERY,
-        response: "Could you tell me more about the specific challenges you're facing? For example, are there any manual processes, data analysis tasks, or customer interactions that could be improved?",
-        shouldTriggerResearch: false,
-        shouldSendFollowUp: false
+      
+      // Validate transition
+      const validation = this.validateStageTransition(
+        ConversationStage.PROBLEM_DISCOVERY,
+        ConversationStage.SOLUTION_PRESENTATION,
+        lead
+      )
+      
+      if (validation.valid) {
+        // Analyze pain points to provide targeted response
+        const primaryPain = painPoints[0]
+        const painCategory = this.categorizePainPoint(primaryPain)
+        
+        const response = `Excellent insights, ${lead.name}! I can see how these challenges are impacting ${lead.company || 'your business'}.
+
+**Key challenges identified:**
+${painPoints.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+
+Based on your ${painCategory} challenges, I can already see several AI solutions that could transform your operations:
+
+• **Intelligent Automation**: Reduce manual work by 40-60% with AI-powered workflows
+• **Predictive Analytics**: Turn your data into actionable insights
+• **Smart Process Optimization**: Eliminate bottlenecks and improve efficiency
+
+Let me show you exactly how we've helped companies like yours achieve measurable results. Would you like to see a specific case study?`
+
+        return {
+          nextStage: ConversationStage.SOLUTION_PRESENTATION,
+          response,
+          shouldTriggerResearch: false,
+          shouldSendFollowUp: false
+        }
       }
     }
+    
+    // Provide more specific prompts based on their industry
+    const industryPrompts: Record<string, string> = {
+      'technology': "Are you dealing with slow development cycles, manual testing, or data processing bottlenecks?",
+      'finance': "Do you have challenges with compliance reporting, risk analysis, or customer onboarding?",
+      'healthcare': "Are there issues with patient data management, appointment scheduling, or clinical workflows?",
+      'retail': "Do you struggle with inventory management, customer service, or demand forecasting?",
+      'manufacturing': "Are there problems with quality control, supply chain visibility, or production planning?"
+    }
+    
+    const industryPrompt = industryPrompts[lead.industry || 'technology'] || 
+      "Are there any repetitive tasks, data analysis challenges, or customer service issues?"
+    
+    return {
+      nextStage: ConversationStage.PROBLEM_DISCOVERY,
+      response: `I'd love to understand more about the specific challenges ${lead.company || 'your company'} is facing.
+
+${industryPrompt}
+
+The more specific you can be about your pain points, the better I can tailor our AI solutions to your needs.`,
+      shouldTriggerResearch: false,
+      shouldSendFollowUp: false
+    }
+  }
+
+  private categorizePainPoint(painPoint: string): string {
+    const categories = {
+      'manual process': 'process automation',
+      'time-consuming': 'efficiency',
+      'error-prone': 'accuracy',
+      'data silos': 'data integration',
+      'customer issues': 'customer experience',
+      'scalability': 'growth',
+      'compliance': 'regulatory'
+    }
+    
+    for (const [key, value] of Object.entries(categories)) {
+      if (painPoint.toLowerCase().includes(key)) {
+        return value
+      }
+    }
+    
+    return 'operational'
   }
 
   private async handleSolutionPresentationStage(lead: LeadData, message: string) {
@@ -659,7 +812,13 @@ F.B/c AI Strategy`
   // ============================================================================
 
   async createLead(leadData: Partial<LeadData>): Promise<LeadData> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getSupabaseClient()
+    if (!supabase) {
+      console.warn('Supabase not available, skipping database operation')
+      return null
+    }
+    
+    const { data, error } = await supabase
       .from('leads')
       .insert([{
         ...leadData,
@@ -678,7 +837,13 @@ F.B/c AI Strategy`
   }
 
   async getLead(leadId: string): Promise<LeadData | null> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getSupabaseClient()
+    if (!supabase) {
+      console.warn('Supabase not available, skipping database operation')
+      return null
+    }
+    
+    const { data, error } = await supabase
       .from('leads')
       .select('*')
       .eq('id', leadId)
@@ -689,7 +854,13 @@ F.B/c AI Strategy`
   }
 
   async updateLead(leadId: string, updates: Partial<LeadData>): Promise<void> {
-    const { error } = await this.supabase
+    const supabase = await this.getSupabaseClient()
+    if (!supabase) {
+      console.warn('Supabase not available, skipping database operation')
+      return
+    }
+    
+    const { error } = await supabase
       .from('leads')
       .update({
         ...updates,
@@ -701,7 +872,13 @@ F.B/c AI Strategy`
   }
 
   async getLeadsWithActiveSequences(): Promise<LeadData[]> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getSupabaseClient()
+    if (!supabase) {
+      console.warn('Supabase not available, skipping database operation')
+      return null
+    }
+    
+    const { data, error } = await supabase
       .from('leads')
       .select('*')
       .not('followUpSequence', 'is', null)
@@ -711,21 +888,102 @@ F.B/c AI Strategy`
   }
 
   // ============================================================================
+  // STAGE VALIDATION & TRANSITION
+  // ============================================================================
+
+  private validateStageTransition(
+    currentStage: ConversationStage,
+    nextStage: ConversationStage,
+    lead: LeadData
+  ): { valid: boolean; reason?: string } {
+    // Define required data for each stage
+    const stageRequirements: Record<ConversationStage, string[]> = {
+      [ConversationStage.GREETING]: [],
+      [ConversationStage.NAME_COLLECTION]: [],
+      [ConversationStage.EMAIL_CAPTURE]: ['name'],
+      [ConversationStage.BACKGROUND_RESEARCH]: ['name', 'email'],
+      [ConversationStage.PROBLEM_DISCOVERY]: ['name', 'email', 'emailDomain'],
+      [ConversationStage.SOLUTION_PRESENTATION]: ['name', 'email', 'painPoints'],
+      [ConversationStage.CALL_TO_ACTION]: ['name', 'email', 'painPoints']
+    }
+
+    const requiredFields = stageRequirements[nextStage] || []
+    const missingFields: string[] = []
+
+    for (const field of requiredFields) {
+      const value = lead[field as keyof LeadData]
+      if (!value || (Array.isArray(value) && value.length === 0)) {
+        missingFields.push(field)
+      }
+    }
+
+    if (missingFields.length > 0) {
+      return {
+        valid: false,
+        reason: `Cannot proceed to ${nextStage} - missing required data: ${missingFields.join(', ')}`
+      }
+    }
+
+    // Validate stage progression order
+    const stageOrder = [
+      ConversationStage.GREETING,
+      ConversationStage.NAME_COLLECTION,
+      ConversationStage.EMAIL_CAPTURE,
+      ConversationStage.BACKGROUND_RESEARCH,
+      ConversationStage.PROBLEM_DISCOVERY,
+      ConversationStage.SOLUTION_PRESENTATION,
+      ConversationStage.CALL_TO_ACTION
+    ]
+
+    const currentIndex = stageOrder.indexOf(currentStage)
+    const nextIndex = stageOrder.indexOf(nextStage)
+
+    // Allow staying on same stage or moving forward (not backward except for special cases)
+    if (nextIndex < currentIndex && nextStage !== ConversationStage.CALL_TO_ACTION) {
+      return {
+        valid: false,
+        reason: `Cannot go back from ${currentStage} to ${nextStage}`
+      }
+    }
+
+    return { valid: true }
+  }
+
+  // ============================================================================
   // UTILITY METHODS
   // ============================================================================
 
   private extractName(message: string): string | null {
-    // Simple name extraction - in production, use NLP
+    // Enhanced name extraction with full name support
     const namePatterns = [
-      /my name is (\w+)/i,
-      /i'm (\w+)/i,
-      /i am (\w+)/i,
-      /call me (\w+)/i
+      /my name is ([a-zA-Z]+(?: [a-zA-Z]+)*)/i,
+      /i'm ([a-zA-Z]+(?: [a-zA-Z]+)*)/i,
+      /i am ([a-zA-Z]+(?: [a-zA-Z]+)*)/i,
+      /call me ([a-zA-Z]+(?: [a-zA-Z]+)*)/i,
+      /this is ([a-zA-Z]+(?: [a-zA-Z]+)*)/i,
+      /^([a-zA-Z]+(?: [a-zA-Z]+)*)$/i, // Just the name
+      /name: ([a-zA-Z]+(?: [a-zA-Z]+)*)/i,
+      /([A-Z][a-z]+(?: [A-Z][a-z]+)+)/ // Capitalized full name
     ]
     
     for (const pattern of namePatterns) {
       const match = message.match(pattern)
-      if (match) return match[1]
+      if (match && match[1]) {
+        const name = match[1].trim()
+        // Validate it's a reasonable name (2-50 chars, no numbers)
+        if (name.length >= 2 && name.length <= 50 && !/\d/.test(name)) {
+          return name
+        }
+      }
+    }
+    
+    // Try to extract from email-like patterns (e.g., "john.smith speaking")
+    const emailNamePattern = /^([a-z]+(?:\.[a-z]+)?)\s+(?:here|speaking|talking)/i
+    const emailMatch = message.match(emailNamePattern)
+    if (emailMatch) {
+      return emailMatch[1].replace('.', ' ').split(' ').map(
+        word => word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ')
     }
     
     return null
@@ -738,21 +996,65 @@ F.B/c AI Strategy`
   }
 
   private extractPainPoints(message: string): string[] {
-    const painPointKeywords = [
-      'manual', 'time-consuming', 'error-prone', 'repetitive',
-      'slow', 'inefficient', 'tedious', 'boring', 'frustrating',
-      'challenge', 'problem', 'issue', 'difficulty', 'struggle'
-    ]
-    
     const painPoints: string[] = []
     const lowerMessage = message.toLowerCase()
     
-    for (const keyword of painPointKeywords) {
-      if (lowerMessage.includes(keyword)) {
-        painPoints.push(keyword)
+    // Enhanced pain point patterns with context
+    const painPointPatterns = [
+      // Process-related pain points
+      { pattern: /(?:we have|there are|dealing with)\s+(\w+\s+)?manual\s+(\w+\s*){0,3}/gi, category: 'manual process' },
+      { pattern: /(?:too much|a lot of|excessive)\s+time\s+(?:spent|wasted)\s+(?:on|doing)\s+(\w+\s*){1,3}/gi, category: 'time-consuming' },
+      { pattern: /(?:keep|keeps)\s+(?:making|getting)\s+errors?\s+(?:in|with)\s+(\w+\s*){1,3}/gi, category: 'error-prone' },
+      { pattern: /(?:have to|need to)\s+(?:repeat|do)\s+(?:the same)\s+(\w+\s*){1,3}/gi, category: 'repetitive' },
+      
+      // Efficiency pain points
+      { pattern: /(?:process|system|workflow)\s+is\s+(?:very|too|really)?\s*slow/gi, category: 'slow process' },
+      { pattern: /(?:not|isn't)\s+(?:efficient|effective|productive)/gi, category: 'inefficient' },
+      { pattern: /(?:waste|wasting)\s+(?:time|resources|money)/gi, category: 'resource waste' },
+      
+      // Challenge-based patterns
+      { pattern: /(?:biggest|major|main)\s+(?:challenge|problem|issue)\s+is\s+(\w+\s*){1,5}/gi, category: 'major challenge' },
+      { pattern: /(?:struggle|struggling)\s+(?:with|to)\s+(\w+\s*){1,3}/gi, category: 'struggling with' },
+      { pattern: /(?:difficult|hard)\s+to\s+(\w+\s*){1,3}/gi, category: 'difficulty' },
+      
+      // Specific business pain points
+      { pattern: /(?:customer|client)\s+(?:complaints?|satisfaction|service)/gi, category: 'customer issues' },
+      { pattern: /(?:data|information)\s+(?:silos?|scattered|disconnected)/gi, category: 'data silos' },
+      { pattern: /(?:lack|lacking)\s+(?:of|in)\s+(?:visibility|insights?|analytics)/gi, category: 'lack of insights' },
+      { pattern: /(?:can't|cannot|unable to)\s+(?:scale|grow|expand)/gi, category: 'scalability issues' },
+      { pattern: /(?:compliance|regulatory)\s+(?:issues?|challenges?|requirements?)/gi, category: 'compliance' },
+    ]
+    
+    // Extract pain points using patterns
+    for (const { pattern, category } of painPointPatterns) {
+      const matches = message.matchAll(pattern)
+      for (const match of matches) {
+        const fullMatch = match[0]
+        const context = match[1] ? `${category}: ${fullMatch}` : category
+        if (!painPoints.includes(context)) {
+          painPoints.push(context)
+        }
       }
     }
     
-    return painPoints
+    // Also check for simple keyword mentions
+    const simpleKeywords = [
+      'bottleneck', 'backlog', 'delay', 'mistake', 'error',
+      'inefficiency', 'redundant', 'outdated', 'legacy',
+      'complex', 'complicated', 'confusing', 'unclear'
+    ]
+    
+    for (const keyword of simpleKeywords) {
+      if (lowerMessage.includes(keyword) && !painPoints.some(p => p.includes(keyword))) {
+        // Find context around the keyword
+        const regex = new RegExp(`(\\w+\\s+){0,3}${keyword}(\\s+\\w+){0,3}`, 'gi')
+        const contextMatch = message.match(regex)
+        if (contextMatch) {
+          painPoints.push(`${keyword}: ${contextMatch[0].trim()}`)
+        }
+      }
+    }
+    
+    return painPoints.slice(0, 5) // Return top 5 pain points
   }
 }

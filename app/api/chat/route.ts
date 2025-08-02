@@ -4,17 +4,32 @@ import type { NextRequest } from 'next/server';
 import { chatRequestSchema, validateRequest, sanitizeString } from '@/lib/validation';
 import { logServerActivity } from '@/lib/server-activity-logger';
 import { ConversationStateManager } from '@/lib/conversation-state-manager';
-import { LeadManager } from '@/lib/lead-manager';
+import { LeadManager, ConversationStage } from '@/lib/lead-manager';
 import { checkDevelopmentConfig } from '@/lib/config';
 import { withFullSecurity } from '@/lib/api-security';
 import { selectModelForFeature, estimateTokensForMessages } from '@/lib/model-selector';
 import { enforceBudgetAndLog } from '@/lib/token-usage-logger';
-import { checkDemoAccess, recordDemoUsage, getDemoSession, DemoFeature } from '@/lib/demo-budget-manager';
+import URLContextService from '@/lib/services/url-context-service';
+import GoogleSearchService from '@/lib/services/google-search-service';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
   imageUrl?: string;
+}
+
+interface EnhancedChatData {
+  hasWebGrounding?: boolean;
+  leadContext?: any;
+  enableUrlContext?: boolean;
+  enableGoogleSearch?: boolean;
+  thinkingBudget?: number;
+  tools?: Array<{
+    urlContext?: {};
+    googleSearch?: {};
+  }>;
+  conversationSessionId?: string;
+  enableLeadGeneration?: boolean;
 }
 
 // Rate limiting
@@ -72,6 +87,160 @@ function logConsoleActivity(level: 'info' | 'warn' | 'error', message: string, m
   
   console.log(JSON.stringify(logEntry));
   return correlationId;
+}
+
+async function processUrlContext(message: string, correlationId: string): Promise<string> {
+  try {
+    // Extract URLs from the message
+    const urls = URLContextService.extractURLsFromText(message);
+    
+    if (urls.length === 0) {
+      return '';
+    }
+
+    console.log(`🔗 Found ${urls.length} URLs to analyze:`, urls);
+
+    // Analyze URLs (limit to first 3 for performance)
+    const urlsToAnalyze = urls.slice(0, 3);
+    const urlAnalyses = await URLContextService.analyzeMultipleURLs(urlsToAnalyze);
+
+    let contextInfo = '\n\n**URL Context Analysis:**\n';
+    
+    urlAnalyses.forEach((analysis, index) => {
+      if (analysis.error) {
+        contextInfo += `\n${index + 1}. **${analysis.url}** - Error: ${analysis.error}\n`;
+      } else {
+        contextInfo += `\n${index + 1}. **${analysis.title || 'Untitled'}**\n`;
+        contextInfo += `   URL: ${analysis.url}\n`;
+        contextInfo += `   Description: ${analysis.description || 'No description available'}\n`;
+        contextInfo += `   Word Count: ${analysis.wordCount} words (${analysis.readingTime} min read)\n`;
+        
+        if (analysis.metadata.author) {
+          contextInfo += `   Author: ${analysis.metadata.author}\n`;
+        }
+        
+        if (analysis.metadata.publishDate) {
+          contextInfo += `   Published: ${analysis.metadata.publishDate}\n`;
+        }
+        
+        // Include a snippet of the content
+        const contentSnippet = analysis.extractedText.substring(0, 300);
+        contextInfo += `   Content Preview: ${contentSnippet}${analysis.extractedText.length > 300 ? '...' : ''}\n`;
+      }
+    });
+
+    return contextInfo;
+  } catch (error: any) {
+    console.error('URL Context Processing Error:', error);
+    return `\n\n**URL Context Analysis Error:** ${error.message}`;
+  }
+}
+
+async function processGoogleSearch(message: string, leadContext: any, correlationId: string): Promise<string> {
+  try {
+    if (!GoogleSearchService.isConfigured()) {
+      console.log('Google Search API not configured, skipping search');
+      return '';
+    }
+
+    // Determine search strategy based on message content and lead context
+    let searchResults = '';
+    
+    // Check if message contains specific search intent
+    const searchIntentKeywords = ['search', 'find', 'look up', 'research', 'what is', 'who is', 'tell me about'];
+    const hasSearchIntent = searchIntentKeywords.some(keyword => 
+      message.toLowerCase().includes(keyword)
+    );
+
+    if (hasSearchIntent) {
+      // Extract search query from message
+      let searchQuery = message;
+      
+      // Clean up the query
+      searchIntentKeywords.forEach(keyword => {
+        searchQuery = searchQuery.replace(new RegExp(keyword, 'gi'), '').trim();
+      });
+      
+      // Remove common question words
+      searchQuery = searchQuery.replace(/^(what|who|when|where|why|how)\s+/gi, '').trim();
+      
+      if (searchQuery.length > 0) {
+        console.log(`🔍 Performing Google search for: "${searchQuery}"`);
+        
+        const response = await GoogleSearchService.search(searchQuery, {
+          num: 5,
+          safe: 'active',
+        });
+        
+        if (response.items && response.items.length > 0) {
+          searchResults += '\n\n**Google Search Results:**\n';
+          searchResults += GoogleSearchService.formatResultsForAI(response);
+        }
+      }
+    }
+
+    // If we have lead context, search for additional information about the person/company
+    if (leadContext && leadContext.name && leadContext.name.trim() !== '') {
+      console.log(`🔍 Searching for lead information: ${leadContext.name}`);
+      
+      const personSearch = await GoogleSearchService.searchPerson(
+        leadContext.name,
+        leadContext.company,
+        ['LinkedIn', 'profile', 'biography']
+      );
+      
+      if (personSearch.items && personSearch.items.length > 0) {
+        searchResults += '\n\n**Lead Research Results:**\n';
+        searchResults += `Research for ${leadContext.name}${leadContext.company ? ` at ${leadContext.company}` : ''}:\n\n`;
+        
+        personSearch.items.slice(0, 3).forEach((item, index) => {
+          searchResults += `${index + 1}. **${item.title}**\n`;
+          searchResults += `   ${item.snippet}\n`;
+          searchResults += `   Source: ${item.link}\n\n`;
+        });
+      }
+      
+      // Also search for company information if available
+      if (leadContext.company && leadContext.company.trim() !== '') {
+        console.log(`🔍 Searching for company information: ${leadContext.company}`);
+        
+        const companySearch = await GoogleSearchService.searchCompany(
+          leadContext.company,
+          ['about', 'business', 'services']
+        );
+        
+        if (companySearch.items && companySearch.items.length > 0) {
+          searchResults += `\n**Company Research Results:**\n`;
+          searchResults += `Research for ${leadContext.company}:\n\n`;
+          
+          companySearch.items.slice(0, 2).forEach((item, index) => {
+            searchResults += `${index + 1}. **${item.title}**\n`;
+            searchResults += `   ${item.snippet}\n`;
+            searchResults += `   Source: ${item.link}\n\n`;
+          });
+        }
+      }
+    }
+
+    return searchResults;
+  } catch (error: any) {
+    console.error('Google Search Processing Error:', error);
+    return `\n\n**Google Search Error:** ${error.message}`;
+  }
+}
+
+function getStageInstructions(stage: ConversationStage): string {
+  const instructions = {
+    [ConversationStage.GREETING]: "Welcome the user warmly and ask for their name in a natural, conversational way.",
+    [ConversationStage.NAME_COLLECTION]: "Acknowledge their name and ask for their work email to provide personalized insights.",
+    [ConversationStage.EMAIL_CAPTURE]: "Thank them for the email and explain you'll research their company for context.",
+    [ConversationStage.BACKGROUND_RESEARCH]: "Share insights about their company and transition to understanding their challenges.",
+    [ConversationStage.PROBLEM_DISCOVERY]: "Ask specific questions about their pain points and business challenges.",
+    [ConversationStage.SOLUTION_PRESENTATION]: "Present tailored AI solutions based on their specific challenges.",
+    [ConversationStage.CALL_TO_ACTION]: "Offer next steps like scheduling a consultation or getting a custom proposal."
+  };
+  
+  return instructions[stage] || "Continue the conversation naturally.";
 }
 
 async function buildEnhancedSystemPrompt(leadContext: any, currentMessage: string, sessionId: string | null): Promise<string> {
@@ -224,6 +393,14 @@ export async function POST(req: NextRequest) {
 
     // Parse and validate request
     const rawData = await req.json();
+    console.log('📥 Chat API Request:', {
+      messageCount: rawData.messages?.length,
+      sessionId: rawData.sessionId,
+      conversationSessionId: rawData.conversationSessionId,
+      enableLeadGeneration: rawData.enableLeadGeneration,
+      hasMessages: !!rawData.messages
+    });
+    
     const validation = validateRequest(chatRequestSchema, rawData);
     
     if (!validation.success) {
@@ -234,13 +411,93 @@ export async function POST(req: NextRequest) {
     }
 
     const { messages, data = {} } = validation.data;
-    const { hasWebGrounding = false, leadContext } = data;
+    const enhancedData = data as EnhancedChatData;
+    const { 
+      hasWebGrounding = false, 
+      leadContext,
+      enableUrlContext = true,
+      enableGoogleSearch = true,
+      thinkingBudget = -1,
+      tools = [{ urlContext: {} }, { googleSearch: {} }],
+      conversationSessionId,
+      enableLeadGeneration = true
+    } = enhancedData;
 
     // Sanitize messages
     const sanitizedMessages = messages.map((message: Message) => ({
       ...message,
       content: sanitizeString(message.content)
     }));
+
+    const currentMessage = sanitizedMessages[sanitizedMessages.length - 1]?.content || '';
+
+    // Initialize conversation state management if lead generation is enabled
+    let conversationResult = null;
+    let leadData = leadContext;
+    
+    console.log('🔍 Lead generation check:', {
+      enableLeadGeneration,
+      conversationSessionId,
+      sessionId,
+      condition: enableLeadGeneration && (conversationSessionId || sessionId)
+    });
+    
+    if (enableLeadGeneration && (conversationSessionId || sessionId)) {
+      try {
+        const conversationManager = ConversationStateManager.getInstance();
+        const effectiveSessionId = conversationSessionId || sessionId || `session-${Date.now()}`;
+        
+        console.log('🎯 Initializing conversation manager with session:', effectiveSessionId);
+        
+        // Initialize conversation state if it doesn't exist
+        let conversationState = conversationManager.getConversationState(effectiveSessionId);
+        if (!conversationState) {
+          conversationState = await conversationManager.initializeConversation(effectiveSessionId);
+        }
+        
+        // Process message through conversation state manager
+        conversationResult = await conversationManager.processMessage(
+          effectiveSessionId,
+          currentMessage,
+          leadData?.id || null
+        );
+        
+        // Update lead data with any new information extracted
+        if (conversationResult.updatedState.context.leadData) {
+          leadData = { ...leadData, ...conversationResult.updatedState.context.leadData };
+        }
+        
+        console.log('🎯 Conversation state processed:', {
+          sessionId: effectiveSessionId,
+          currentStage: conversationResult.newStage,
+          shouldTriggerResearch: conversationResult.shouldTriggerResearch,
+          leadData: leadData
+        });
+        
+        // Trigger company research if needed
+        if (conversationResult.shouldTriggerResearch && leadData?.email) {
+          console.log('🔍 Triggering company research for:', leadData.email);
+          // This will be handled by the Google Search processing below
+        }
+        
+      } catch (error) {
+        console.error('❌ Conversation state management error:', error);
+        console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
+        // Continue without conversation state if there's an error
+      }
+    }
+
+    // Process URL context if enabled
+    let urlContext = '';
+    if (enableUrlContext) {
+      urlContext = await processUrlContext(currentMessage, correlationId);
+    }
+
+    // Process Google Search if enabled
+    let searchResults = '';
+    if (enableGoogleSearch) {
+      searchResults = await processGoogleSearch(currentMessage, leadContext, correlationId);
+    }
 
     // Estimate tokens and select model
     const estimatedTokens = estimateTokensForMessages(sanitizedMessages);
@@ -261,28 +518,6 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Check demo budget for chat feature
-    if (sessionId) {
-      const accessCheck = await checkDemoAccess(sessionId, 'chat' as DemoFeature, estimatedTokens);
-      
-      if (!accessCheck.allowed) {
-        // Log failed activity
-        await logServerActivity({
-          type: 'error',
-          title: 'Demo Limit Reached',
-          description: accessCheck.reason,
-          status: 'failed',
-          metadata: { correlationId, sessionId, remainingTokens: accessCheck.remainingTokens }
-        });
-
-        return new Response(JSON.stringify({
-          error: 'Demo limit reached',
-          message: accessCheck.reason,
-          remainingTokens: accessCheck.remainingTokens,
-          remainingRequests: accessCheck.remainingRequests
-        }), { status: 429 });
-      }
-    }
 
     // Check user budget if authenticated
     if (isAuthenticated && auth.userId) {
@@ -314,8 +549,33 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Build system prompt
-    const systemPrompt = await buildEnhancedSystemPrompt(leadContext, messages[messages.length - 1]?.content || '', sessionId || null);
+    // Build system prompt with enhanced context
+    let systemPrompt = await buildEnhancedSystemPrompt(leadContext, messages[messages.length - 1]?.content || '', sessionId || null);
+    
+    // Add conversation stage context if available
+    if (conversationResult) {
+      systemPrompt += `\n\n**Conversation Context:**
+- Current Stage: ${conversationResult.newStage}
+- Lead Name: ${leadData?.name || 'Not provided yet'}
+- Lead Email: ${leadData?.email || 'Not provided yet'}
+- Company: ${leadData?.company || leadData?.emailDomain || 'Not identified yet'}
+- Pain Points: ${leadData?.painPoints?.join(', ') || 'Not identified yet'}
+
+**Stage-Specific Instructions:**
+${getStageInstructions(conversationResult.newStage)}
+
+**Important:** Use the conversation stage response provided by the system. The response has already been crafted for this stage.
+Response to use: "${conversationResult.response}"`;
+    }
+    
+    // Append URL context and search results to system prompt
+    if (urlContext) {
+      systemPrompt += urlContext;
+    }
+    
+    if (searchResults) {
+      systemPrompt += searchResults;
+    }
 
     // Initialize Gemini client
     if (!process.env.GEMINI_API_KEY) {
@@ -334,15 +594,24 @@ export async function POST(req: NextRequest) {
       }))
     ];
 
-    // Generate response
+    // Generate response with enhanced configuration
     let responseStream;
     let actualInputTokens = 0;
     let actualOutputTokens = 0;
     
+    // Build configuration with thinking and tools support
+    const config = {
+      thinkingConfig: {
+        thinkingBudget: thinkingBudget,
+      },
+      tools,
+      responseMimeType: 'text/plain',
+    };
+    
     try {
       responseStream = await model({
         model: modelSelection.model,
-        config: { responseMimeType: 'text/plain' },
+        config,
         contents
       });
 
@@ -368,10 +637,7 @@ export async function POST(req: NextRequest) {
       throw error;
     }
 
-    // Record usage
-    if (sessionId) {
-      await recordDemoUsage(sessionId, 'chat' as DemoFeature, actualInputTokens + actualOutputTokens, 1);
-    }
+    // Usage tracking is now handled client-side with the simplified demo session system
 
     if (isAuthenticated && auth.userId) {
       await enforceBudgetAndLog(
@@ -408,6 +674,25 @@ export async function POST(req: NextRequest) {
       async start(controller) {
         const encoder = new TextEncoder();
         try {
+          // Send conversation state as first event if available
+          console.log('🎯 Stream start - conversationResult:', conversationResult ? {
+            newStage: conversationResult.newStage,
+            hasLeadData: !!leadData
+          } : 'null');
+          
+          if (conversationResult) {
+            const stateData = {
+              conversationStage: conversationResult.newStage,
+              leadData: leadData ? {
+                name: leadData.name,
+                email: leadData.email,
+                company: leadData.company || leadData.emailDomain
+              } : undefined
+            };
+            console.log('🎯 Sending conversation state:', stateData);
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(stateData)}\n\n`));
+          }
+          
           for await (const chunk of responseStream) {
             const text = chunk.text || '';
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: text })}\n\n`));

@@ -41,9 +41,20 @@ export interface StageTransition {
   trigger: string
 }
 
+// Singleton instance to persist state across requests
+let conversationManagerInstance: ConversationStateManager | null = null
+
 export class ConversationStateManager {
   private leadManager = new LeadManager()
   private states = new Map<string, ConversationState>()
+  
+  // Get singleton instance
+  static getInstance(): ConversationStateManager {
+    if (!conversationManagerInstance) {
+      conversationManagerInstance = new ConversationStateManager()
+    }
+    return conversationManagerInstance
+  }
 
   // ============================================================================
   // CONVERSATION INITIALIZATION
@@ -96,6 +107,12 @@ export class ConversationStateManager {
     shouldSendFollowUp: boolean
     updatedState: ConversationState
   }> {
+    console.log('📊 ConversationStateManager.processMessage called:', {
+      sessionId,
+      userMessage: userMessage.substring(0, 50) + '...',
+      leadId
+    })
+    
     const state = this.states.get(sessionId)
     if (!state) {
       throw new Error('Conversation state not found')
@@ -120,8 +137,14 @@ export class ConversationStateManager {
     state.metadata.lastActivity = new Date()
 
     // Process the message through the current stage
+    // Pass the accumulated lead data to maintain context
+    const leadDataToPass = state.leadId || {
+      ...state.context.leadData,
+      id: state.leadId || `temp_${sessionId}`
+    }
+    
     const stageResult = await this.leadManager.processConversationStage(
-      state.leadId,
+      leadDataToPass,
       userMessage,
       state.currentStage
     )
@@ -149,8 +172,16 @@ export class ConversationStateManager {
       trigger: userMessage.substring(0, 50) + '...'
     })
 
-    // Update context based on stage
-    await this.updateConversationContext(state, userMessage, stageResult)
+    // Update lead data from stage result
+    if (stageResult.updatedLeadData) {
+      state.context.leadData = {
+        ...state.context.leadData,
+        ...stageResult.updatedLeadData
+      }
+    }
+    
+    // Update context based on the PREVIOUS stage (where the message was processed)
+    await this.updateConversationContext(state, userMessage, stageResult, previousStage)
 
     // Log stage transition
     await logServerActivity({
@@ -183,9 +214,10 @@ export class ConversationStateManager {
   private async updateConversationContext(
     state: ConversationState,
     userMessage: string,
-    stageResult: any
+    stageResult: any,
+    previousStage: ConversationStage
   ): Promise<void> {
-    switch (state.currentStage) {
+    switch (previousStage) {
       case ConversationStage.NAME_COLLECTION:
         const name = this.extractName(userMessage)
         if (name) {
@@ -428,9 +460,23 @@ export class ConversationStateManager {
 
   private extractPainPoints(message: string): string[] {
     const painPointKeywords = [
+      // Current keywords (keep these)
       'manual', 'time-consuming', 'error-prone', 'repetitive',
       'slow', 'inefficient', 'tedious', 'boring', 'frustrating',
-      'challenge', 'problem', 'issue', 'difficulty', 'struggle'
+      'challenge', 'problem', 'issue', 'difficulty', 'struggle',
+      
+      // ADD FOR CONSULTING LEAD GENERATION:
+      'struggling', 'pain', 'headache', 'nightmare', 'broken', 'failing',
+      'expensive', 'costly', 'waste', 'wasting', 'losing', 'behind',
+      'stuck', 'blocked', 'overwhelmed', 'stressed', 'unable', 'cannot',
+      'can\'t', 'difficult', 'hard', 'impossible', 'lack', 'missing',
+      'bottleneck', 'backlog', 'delay', 'mistake', 'error', 'outdated',
+      'legacy', 'chaos', 'mess', 'disaster', 'need', 'help', 'fix',
+      
+      // Business impact words for consulting opportunities
+      'revenue', 'profit', 'cost', 'budget', 'money', 'time', 'resources',
+      'customers', 'clients', 'team', 'staff', 'employees', 'process',
+      'system', 'workflow', 'operations', 'management'
     ]
     
     const painPoints: string[] = []

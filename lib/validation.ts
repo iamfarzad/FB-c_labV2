@@ -51,6 +51,10 @@ export const chatRequestSchema = z.object({
     sessionId: z.string().optional(),
     userId: z.string().optional(),
     hasWebGrounding: z.boolean().optional(),
+    conversationSessionId: z.string().optional(),
+    enableLeadGeneration: z.boolean().optional(),
+    enableUrlContext: z.boolean().optional(),
+    enableGoogleSearch: z.boolean().optional(),
   }).optional(),
 });
 
@@ -114,6 +118,14 @@ export const emailCampaignSchema = z.object({
   scheduled_at: z.string()
     .datetime('Scheduled time must be a valid datetime')
     .optional(),
+});
+
+// Lead research validation
+export const leadResearchSchema = z.object({
+  email: z.string().email('Invalid email format'),
+  sessionId: z.string().min(1, 'Session ID is required'),
+  name: z.string().optional(),
+  company: z.string().optional()
 });
 
 // Token usage validation

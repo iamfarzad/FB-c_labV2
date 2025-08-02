@@ -202,116 +202,14 @@ export async function POST(req: NextRequest) {
 
         console.log("✅ Text generation completed:", { callId, responseLength: textResponse.length })
 
-        // Enhanced Gemini TTS with optimized voice configuration
-        const generateTTSAudio = async (text: string, voiceName: string = 'Puck', multiSpeakerMode: boolean = false, languageCode: string = 'en-US'): Promise<string> => {
-          try {
-            console.log("🔊 Enhanced TTS Audio generation:", { callId, voiceName, textLength: text.length })
-            
-            // Determine if this is multi-speaker content
-            const hasMultipleSpeakers = multiSpeakerMode && text.includes(':') && text.split(':').length > 2;
-            
-            let speechConfig;
-            
-            if (hasMultipleSpeakers) {
-              // Extract speaker names from text (e.g., "Joe: Hello\nJane: Hi there")
-              const speakerMatches = text.match(/^([^:]+):/gm);
-              const speakers = speakerMatches ? [...new Set(speakerMatches.map(s => s.replace(':', '').trim()))] : [];
-              
-              if (speakers.length >= 2) {
-                // Enhanced multi-speaker configuration
-                speechConfig = {
-                  multiSpeakerVoiceConfig: {
-                    speakerVoiceConfigs: speakers.slice(0, 2).map((speaker, index) => ({
-                      speaker: speaker,
-                      voiceConfig: {
-                        prebuiltVoiceConfig: {
-                          voiceName: index === 0 ? voiceName : 'Kore',
-                          voiceStyle: 'professional',
-                          speakingRate: 1.0,
-                          pitch: index === 0 ? 0.0 : -2.0, // Slight pitch difference for speakers
-                          volumeGainDb: 0.0
-                        }
-                      }
-                    }))
-                  }
-                };
-              } else {
-                // Enhanced single speaker fallback
-                speechConfig = {
-                  voiceConfig: {
-                    prebuiltVoiceConfig: {
-                      voiceName: voiceName,
-                      voiceStyle: 'professional',
-                      speakingRate: 1.0,
-                      pitch: 0.0,
-                      volumeGainDb: 0.0
-                    }
-                  }
-                };
-              }
-            } else {
-              // Enhanced single speaker configuration
-              speechConfig = {
-                voiceConfig: {
-                  prebuiltVoiceConfig: {
-                    voiceName: voiceName,
-                    voiceStyle: 'professional',
-                    speakingRate: 1.0,
-                    pitch: 0.0,
-                    volumeGainDb: 0.0
-                  }
-                }
-              };
-            }
-
-            // Use the correct model from the documentation with proper contents format
-            const ttsResponse = await genAI.models.generateContent({
-              model: "gemini-2.5-flash-preview-tts",
-              contents: [{ role: "user", parts: [{ text }] }], // ✅ Correct format per docs
-              config: {
-                responseModalities: ["AUDIO"],
-                speechConfig: {
-                  ...speechConfig,
-                  languageCode: languageCode // ✅ Language support
-                }
-              }
-            });
-
-            // Extract audio data from response
-            const audioData = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-            
-            if (audioData) {
-              console.log("✅ TTS Audio generated successfully:", { callId, audioDataLength: audioData.length })
-              
-              // Enhance audio quality
-              const enhancer = new AudioQualityEnhancer(
-                AudioQualityEnhancer.getOptimalConfig('conversation')
-              )
-              const enhancedAudioData = await enhancer.enhanceAudioData(audioData)
-              
-              console.log("🎵 Audio quality enhanced:", { callId, originalLength: audioData.length, enhancedLength: enhancedAudioData.length })
-              
-              // Convert to base64 data URL for browser playback
-              return `data:audio/wav;base64,${enhancedAudioData}`;
-            } else {
-              throw new Error('No audio data received from Gemini TTS');
-            }
-            
-          } catch (error) {
-            console.error('❌ Gemini TTS generation failed:', { callId, error: error instanceof Error ? error.message : 'Unknown error' })
-            
-            // Fallback: Use client-side TTS with requested voice characteristics
-            return JSON.stringify({
-              type: 'client_tts',
-              text: text,
-              voiceName: voiceName,
-              voiceStyle: voiceName.toLowerCase(),
-              instructions: 'Use a bright, engaging voice for business communication'
-            })
-          }
-        }
-
-        const audioData = await generateTTSAudio(textResponse, voiceName, multiSpeakerMode, languageCode)
+        // Simplified TTS for testing - return client-side TTS instructions
+        const audioData = JSON.stringify({
+          type: 'client_tts',
+          text: textResponse,
+          voiceName: voiceName,
+          voiceStyle: 'professional',
+          instructions: 'Use a clear, professional voice for business communication'
+        })
 
         console.log("🎵 TTS processing completed:", { 
           callId, 

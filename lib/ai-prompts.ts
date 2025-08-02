@@ -24,4 +24,43 @@ Provide the result as a JSON object containing a single field called "spec", who
 export const CODE_REGION_OPENER = "```"
 export const CODE_REGION_CLOSER = "```"
 
-export const SPEC_ADDENDUM = `\n\nThe app must be fully responsive and function properly on both desktop and mobile. Provide the code as a single, self-contained HTML document. All styles and scripts must be inline. In the result, encase the code between "${CODE_REGION_OPENER}" and "${CODE_REGION_CLOSER}" for easy parsing.`
+export const SPEC_ADDENDUM = `
+
+IMPORTANT IMPLEMENTATION REQUIREMENTS:
+
+1. **Modern shadcn/ui Design System**: Use a clean, modern design inspired by shadcn/ui with:
+   - Clean typography (Inter or similar font)
+   - Subtle shadows and rounded corners
+   - Neutral color palette (slate/gray tones)
+   - Proper spacing and padding
+   - Modern button styles with hover effects
+
+2. **Component Styling**: Style components to match shadcn/ui patterns:
+   - Cards with subtle borders and shadows
+   - Buttons with proper hover and active states
+   - Form inputs with focus rings
+   - Clean, minimal icons (use Unicode symbols or simple SVG)
+   - Consistent spacing using 4px grid system
+
+3. **Color Scheme**: Use a professional color palette:
+   - Background: #ffffff or #f8fafc
+   - Text: #0f172a (primary), #64748b (secondary)
+   - Borders: #e2e8f0
+   - Primary: #3b82f6 (blue)
+   - Success: #10b981 (green)
+   - Warning: #f59e0b (amber)
+
+4. **Interactive Elements**: Include engaging components:
+   - Buttons with smooth transitions
+   - Cards with hover effects
+   - Progress indicators
+   - Form elements with validation
+   - Tabs or accordion sections
+
+5. **Responsive Design**: Ensure the app works on all devices with:
+   - Mobile-first approach
+   - Flexible layouts using CSS Grid/Flexbox
+   - Proper touch targets (44px minimum)
+   - Readable typography at all sizes
+
+The app must be fully responsive and function properly on both desktop and mobile. Provide the code as a single, self-contained HTML document. All styles and scripts must be inline. In the result, encase the code between "${CODE_REGION_OPENER}" and "${CODE_REGION_CLOSER}" for easy parsing.`
