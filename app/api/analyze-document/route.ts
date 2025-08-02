@@ -83,23 +83,25 @@ Please provide a structured analysis with clear sections.`
       prompt += '\n\nNote: This appears to be an image document. Analyze any visible text and provide insights based on the visual content.'
     }
 
-    const model = genAI.models.generateContentStream
-
     let actualInputTokens = 0
     let actualOutputTokens = 0
     let analysisResult = ''
 
     try {
-      const result = await model({
+      const config = {
+        responseMimeType: "text/plain",
+      }
+
+      const result = await genAI.models.generateContent({
         model: modelSelection.model,
-        config: { responseMimeType: 'text/plain' },
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+        config,
+        contents: [{ 
+          role: 'user', 
+          parts: [{ text: prompt }] 
+        }]
       })
 
-      // Collect the full response
-      for await (const chunk of result) {
-        analysisResult += chunk.text || ''
-      }
+      analysisResult = result.candidates?.[0]?.content?.parts?.[0]?.text || 'No analysis available'
 
       // Estimate actual token counts
       actualInputTokens = estimatedTokens

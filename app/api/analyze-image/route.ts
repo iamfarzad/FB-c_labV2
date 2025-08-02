@@ -30,15 +30,17 @@ export async function POST(request: NextRequest) {
       model: "gemini-2.5-flash-lite", // Updated from gemini-1.5-flash for cost efficiency
       config,
       contents: [
-        { role: "user", parts: [{ text: prompt }] },
         {
           role: "user",
-          parts: [{
-            inlineData: {
-              mimeType: mimeType,
-              data: base64Data,
-            },
-          }],
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                mimeType: mimeType,
+                data: base64Data,
+              },
+            }
+          ],
         },
       ],
     })

@@ -3,17 +3,18 @@ import { GoogleGenAI } from "@google/genai"
 import { parseJSON, parseHTML } from "@/lib/parse-utils"
 import { SPEC_FROM_VIDEO_PROMPT, CODE_REGION_OPENER, CODE_REGION_CLOSER, SPEC_ADDENDUM } from "@/lib/ai-prompts"
 import { getYouTubeVideoId } from "@/lib/youtube"
+import { getYouTubeTranscript, summarizeTranscript, extractKeyTopics } from "@/lib/youtube-transcript"
 import { selectModelForFeature, estimateTokens } from "@/lib/model-selector"
 import { enforceBudgetAndLog } from "@/lib/token-usage-logger"
-import { checkDemoAccess, recordDemoUsage } from "@/lib/demo-budget-manager"
 
 async function generateText(options: {
   modelName: string
   prompt: string
   videoUrl?: string
   temperature?: number
+  correlationId?: string
 }): Promise<string> {
-  const { modelName, prompt, videoUrl, temperature = 0.75 } = options
+  const { modelName, prompt, videoUrl, temperature = 0.75, correlationId } = options
 
   if (!process.env.GEMINI_API_KEY) {
     throw new Error("GEMINI_API_KEY environment variable is not set")
@@ -40,16 +41,57 @@ async function generateText(options: {
       ]
 
       if (videoUrl) {
-        // For YouTube URLs, we'll enhance the prompt with video context
-        const videoId = getYouTubeVideoId(videoUrl)
-        if (videoId) {
-          // Enhanced prompt that includes video URL context
-          const enhancedPrompt = `${prompt}\n\nVideo URL: ${videoUrl}\nVideo ID: ${videoId}\n\nPlease analyze this YouTube video and create a comprehensive spec for an interactive learning app based on its content. If you cannot access the video directly, please create a spec for a general educational app that could complement video-based learning.`
+        // Extract transcript from YouTube video
+        try {
+          console.log(`📺 Extracting transcript for video:`, { videoUrl, correlationId })
+          
+          const transcriptData = await getYouTubeTranscript(videoUrl)
+          const summarizedTranscript = summarizeTranscript(transcriptData.transcript, 3000)
+          const keyTopics = extractKeyTopics(transcriptData.transcript)
+          
+          console.log(`✅ Transcript extracted:`, { 
+            transcriptLength: transcriptData.transcript.length,
+            summarizedLength: summarizedTranscript.length,
+            keyTopics: keyTopics.slice(0, 5),
+            videoTitle: transcriptData.title,
+            correlationId 
+          })
+          
+          // Enhanced prompt with actual video content
+          const enhancedPrompt = `${prompt}
+
+VIDEO CONTENT ANALYSIS:
+Title: ${transcriptData.title || 'Unknown'}
+Video URL: ${videoUrl}
+
+TRANSCRIPT:
+${summarizedTranscript}
+
+KEY TOPICS IDENTIFIED:
+${keyTopics.slice(0, 8).join(', ')}
+
+Based on this video content, create a comprehensive spec for an interactive learning app that reinforces the key concepts and ideas presented in the video. The app should be educational, engaging, and directly related to the video's content.`
           
           contents = [
             { 
               role: "user", 
               parts: [{ text: enhancedPrompt }]
+            },
+          ]
+        } catch (transcriptError) {
+          console.warn(`⚠️ Failed to extract transcript:`, { 
+            error: transcriptError instanceof Error ? transcriptError.message : 'Unknown error',
+            correlationId 
+          })
+          
+          // Fallback: Use basic video info
+          const videoId = getYouTubeVideoId(videoUrl)
+          const fallbackPrompt = `${prompt}\n\nVideo URL: ${videoUrl}\nVideo ID: ${videoId}\n\nNote: Could not extract video transcript (${transcriptError instanceof Error ? transcriptError.message : 'transcript unavailable'}). Please create a general interactive learning app spec that could complement educational video content. Focus on common educational patterns and interactive elements that enhance video-based learning.`
+          
+          contents = [
+            { 
+              role: "user", 
+              parts: [{ text: fallbackPrompt }]
             },
           ]
         }
@@ -120,15 +162,7 @@ export async function POST(request: NextRequest) {
         correlationId
       })
       
-      // Check demo access and budget
-      const demoAccess = await checkDemoAccess(sessionId || '', 'video_to_app', estimatedTokens)
-      if (!demoAccess.allowed) {
-        console.log(`🚫 Demo access denied:`, { reason: demoAccess.reason, correlationId })
-        return NextResponse.json({ 
-          error: 'Demo budget exceeded', 
-          details: demoAccess.reason 
-        }, { status: 429 })
-      }
+      // Demo access is now handled client-side with simplified session system
       
       // Enforce budget and log usage
       const budgetResult = await enforceBudgetAndLog(
@@ -158,6 +192,7 @@ export async function POST(request: NextRequest) {
         modelName: modelSelection.model,
         prompt: SPEC_FROM_VIDEO_PROMPT,
         videoUrl: videoUrl,
+        correlationId,
       })
 
       console.log(`✅ Spec generation completed:`, { 
@@ -165,8 +200,7 @@ export async function POST(request: NextRequest) {
         correlationId 
       })
 
-      // Record demo usage
-      await recordDemoUsage(sessionId || '', 'video_to_app', estimatedTokens)
+      // Usage tracking is now handled client-side with simplified demo session system
 
       let parsedSpec
       try {
@@ -205,15 +239,7 @@ export async function POST(request: NextRequest) {
         correlationId
       })
       
-      // Check demo access and budget
-      const demoAccess = await checkDemoAccess(sessionId || '', 'video_to_app', estimatedTokens)
-      if (!demoAccess.allowed) {
-        console.log(`🚫 Demo access denied for code generation:`, { reason: demoAccess.reason, correlationId })
-        return NextResponse.json({ 
-          error: 'Demo budget exceeded', 
-          details: demoAccess.reason 
-        }, { status: 429 })
-      }
+      // Demo access is now handled client-side with simplified session system
       
       // Enforce budget and log usage
       const budgetResult = await enforceBudgetAndLog(
@@ -249,8 +275,7 @@ export async function POST(request: NextRequest) {
         correlationId 
       })
 
-      // Record demo usage
-      await recordDemoUsage(sessionId || '', 'video_to_app', estimatedTokens)
+      // Usage tracking is now handled client-side with simplified demo session system
 
       let code
       try {
