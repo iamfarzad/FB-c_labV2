@@ -125,11 +125,21 @@ export function WebcamCapture({
     }
   }, [onAIAnalysis])
 
-  // Auto-analysis interval
+  // Auto-analysis interval with throttling and cost awareness
   useEffect(() => {
     if (isAutoAnalyzing && webcamState === "active") {
+      let analysisCount = 0;
+      const maxAnalysisPerSession = 15; // Limit webcam analysis more strictly
+      
       autoAnalysisInterval.current = setInterval(async () => {
-        if (videoRef.current && canvasRef.current) {
+        // Check if we've exceeded the analysis limit
+        if (analysisCount >= maxAnalysisPerSession) {
+          console.warn('🚨 Webcam auto-analysis limit reached to prevent excessive API costs');
+          setIsAutoAnalyzing(false);
+          return;
+        }
+
+        if (videoRef.current && canvasRef.current && !isAnalyzing) {
           const canvas = canvasRef.current
           const video = videoRef.current
           
@@ -140,10 +150,12 @@ export function WebcamCapture({
           if (ctx) {
             ctx.drawImage(video, 0, 0)
             const imageData = canvas.toDataURL('image/jpeg', 0.8)
+            analysisCount++;
+            console.log(`📹 Webcam auto-analysis ${analysisCount}/${maxAnalysisPerSession}`);
             await sendVideoFrame(imageData)
           }
         }
-      }, 8000) // Analyze every 8 seconds
+      }, 20000) // Increased to 20 seconds for webcam (more frequent than screen)
     } else {
       if (autoAnalysisInterval.current) {
         clearInterval(autoAnalysisInterval.current)

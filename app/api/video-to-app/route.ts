@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { GoogleGenAI } from "@google/genai"
+import { createOptimizedConfig } from "@/lib/gemini-config-enhanced"
 import { parseJSON, parseHTML } from "@/lib/parse-utils"
 import { SPEC_FROM_VIDEO_PROMPT, CODE_REGION_OPENER, CODE_REGION_CLOSER, SPEC_ADDENDUM } from "@/lib/ai-prompts"
 import { getYouTubeVideoId } from "@/lib/youtube"
@@ -24,9 +25,11 @@ async function generateText(options: {
     apiKey: process.env.GEMINI_API_KEY!,
   })
 
-  const config = {
-    responseMimeType: "text/plain",
-  }
+  // Use optimized configuration with token limits for video processing
+  const config = createOptimizedConfig('research', {
+    maxOutputTokens: 4096, // Higher limit for complex video-to-app generation
+    temperature: 0.5, // Balanced creativity for app generation
+  });
 
   try {
     // Create a timeout promise

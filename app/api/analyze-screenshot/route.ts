@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
+import { createOptimizedConfig } from '@/lib/gemini-config-enhanced'
 import { selectModelForFeature, estimateTokens } from '@/lib/model-selector'
 import { enforceBudgetAndLog } from '@/lib/token-usage-logger'
 import { checkDemoAccess, recordDemoUsage, DemoFeature } from '@/lib/demo-budget-manager'
@@ -82,9 +83,15 @@ Focus on identifying business process improvements and automation opportunities.
     let analysisResult = ''
 
     try {
+      // Use optimized configuration with token limits
+      const optimizedConfig = createOptimizedConfig('analysis', {
+        maxOutputTokens: 1024, // Reasonable limit for screenshot analysis
+        temperature: 0.3, // More focused analysis
+      });
+
       const result = await model({
         model: modelSelection.model,
-        config: { responseMimeType: 'text/plain' },
+        config: optimizedConfig,
         contents: [
           { 
             role: 'user', 
