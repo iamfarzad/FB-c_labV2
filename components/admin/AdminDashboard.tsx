@@ -13,6 +13,7 @@ import { RealTimeActivity } from "./RealTimeActivity"
 import { AdminChatInterface } from "./AdminChatInterface"
 import { TokenCostAnalytics } from "./TokenCostAnalytics"
 import { MeetingCalendar } from "./MeetingCalendar"
+import { GeminiOptimizationDashboard } from "./GeminiOptimizationDashboard"
 import {
   Home,
   Users,
@@ -36,6 +37,7 @@ type DashboardSection =
   | "costs"
   | "analytics"
   | "ai-performance"
+  | "gemini-optimization"
   | "activity"
   | "ai-assistant"
 
@@ -47,6 +49,7 @@ const navigationItems = [
   { id: "costs", label: "Costs", icon: DollarSign, description: "AI usage and cost tracking" },
   { id: "analytics", label: "Analytics", icon: TrendingUp, description: "Business performance insights" },
   { id: "ai-performance", label: "AI Performance", icon: Zap, description: "AI model performance metrics" },
+  { id: "gemini-optimization", label: "Gemini Optimization", icon: Brain, description: "Gemini API cost optimization and caching" },
   { id: "activity", label: "Activity", icon: Activity, description: "Real-time system activity" },
   { id: "ai-assistant", label: "AI Assistant", icon: Brain, description: "AI-powered business intelligence" },
 ]
@@ -70,6 +73,8 @@ export function AdminDashboard() {
         return <InteractionAnalytics period="last_30_days" />
       case "ai-performance":
         return <AIPerformanceMetrics period="last_30_days" />
+      case "gemini-optimization":
+        return <GeminiOptimizationDashboard />
       case "activity":
         return <RealTimeActivity />
       case "ai-assistant":
