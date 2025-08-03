@@ -6,7 +6,16 @@
   "regions": ["iad1"],
   "functions": {
     "app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "memory": 1024
+    },
+    "app/api/video-to-app/route.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "app/api/analyze-document/route.ts": {
+      "maxDuration": 45,
+      "memory": 1024
     }
   },
   "headers": [

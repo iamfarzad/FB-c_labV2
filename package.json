@@ -36,7 +36,10 @@
     "test:network": "jest --testPathPattern=network",
     "test:cost": "jest --testPathPattern=cost",
     "test:api": "jest --testPathPattern=api",
-    "test:all": "pnpm test:security && pnpm test:compliance && pnpm test:performance && pnpm test:scalability && pnpm test:observability && pnpm test:ci && pnpm test:dr && pnpm test:network && pnpm test:cost && pnpm test:api"
+    "test:all": "pnpm test:security && pnpm test:compliance && pnpm test:performance && pnpm test:scalability && pnpm test:observability && pnpm test:ci && pnpm test:dr && pnpm test:network && pnpm test:cost && pnpm test:api",
+    "monitor-costs": "tsx scripts/monitor-gemini-usage.ts",
+    "verify-deployment": "tsx scripts/verify-deployment.ts",
+    "pre-deploy": "pnpm monitor-costs && pnpm test:all"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
