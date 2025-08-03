@@ -6,6 +6,7 @@ import { buildAdminContext, formatAdminContextForAI } from '@/lib/admin-context-
 import { logServerActivity } from '@/lib/server-activity-logger'
 import { sanitizeString } from '@/lib/validation'
 import { withAdminMonitoring } from '@/lib/admin-monitoring'
+import { createOptimizedConfig, optimizeConversation, type ConversationMessage } from '@/lib/gemini-config-enhanced'
 
 interface Message {
   role: 'user' | 'assistant' | 'system'
@@ -111,31 +112,42 @@ Use this real-time data to provide informed, actionable advice.`
     const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
     const model = genAI.models.generateContentStream
 
-    // Prepare content for Gemini with admin context
-    const contents = [
-      { role: 'user', parts: [{ text: enhancedSystemPrompt }] },
-      ...sanitizedMessages.map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
-      }))
-    ]
+    // Prepare optimized content for Gemini with admin context and caching
+    const conversationMessages: ConversationMessage[] = sanitizedMessages.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : msg.role,
+      content: msg.content
+    }));
+
+    const optimizedContent = await optimizeConversation(
+      conversationMessages,
+      enhancedSystemPrompt,
+      `admin-${correlationId}`, // Admin-specific session ID
+      6000 // Higher token limit for admin context
+    );
+
+    // Create optimized generation config for admin usage
+    const optimizedConfig = createOptimizedConfig('research', {
+      maxOutputTokens: 3072, // Higher limit for detailed admin analysis
+      temperature: 0.4, // Balanced for business analysis
+    });
 
     // Generate response
     let responseStream
-    let actualInputTokens = 0
+    let actualInputTokens = optimizedContent.estimatedTokens
     let actualOutputTokens = 0
+    
+    // Log optimization results for admin monitoring
+    console.log(`🔧 Admin chat optimization: ${optimizedContent.usedCache ? 'Used cache' : 'Created new'}, estimated tokens: ${optimizedContent.estimatedTokens}${optimizedContent.summary ? ', with summary' : ''}`);
     
     try {
       responseStream = await model({
         model: 'gemini-2.5-flash',
-        config: { responseMimeType: 'text/plain' },
-        contents
+        config: optimizedConfig,
+        contents: optimizedContent.contents
       })
 
-      // Estimate token counts
-      actualInputTokens = Math.ceil(enhancedSystemPrompt.length / 4) + 
-                         sanitizedMessages.reduce((sum, msg) => sum + Math.ceil(msg.content.length / 4), 0)
-      actualOutputTokens = Math.ceil(actualInputTokens * 0.5)
+      // Use optimized token estimation with cap
+      actualOutputTokens = Math.min(optimizedConfig.maxOutputTokens, actualInputTokens * 0.7) // Admin responses tend to be longer
     } catch (error: any) {
       // Log failed activity
       await logServerActivity({
