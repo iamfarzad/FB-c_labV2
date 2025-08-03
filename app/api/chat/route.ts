@@ -588,7 +588,7 @@ Response to use: "${conversationResult.response}"`;
 
     // Prepare optimized content for Gemini with caching and summarization
     const conversationMessages: ConversationMessage[] = sanitizedMessages.map(msg => ({
-      role: msg.role === 'assistant' ? 'model' : msg.role,
+      role: msg.role === 'assistant' ? 'model' : (msg.role === 'system' ? 'user' : msg.role as 'user' | 'model'),
       content: msg.content
     }));
 

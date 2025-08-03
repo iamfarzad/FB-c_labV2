@@ -2,15 +2,13 @@
 
 import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Monitor, Square, Brain, Loader2, Eye, EyeOff } from "lucide-react"
+import { Monitor, Brain, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { ToolCardWrapper } from "@/components/chat/ToolCardWrapper"
-import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils"
 import type { ScreenShareProps, ScreenShareState } from "./ScreenShare.types"
 
 interface AnalysisResult {
@@ -65,9 +63,6 @@ export function ScreenShare({
     }
   }, [onAnalysis])
 
-<<<<<<< Current (Your changes)
-  const startScreenShare = useCallback(async () => {
-=======
   // Auto-analysis interval with throttling and cost awareness
   useEffect(() => {
     if (isAutoAnalyzing && screenState === "sharing") {
@@ -111,15 +106,9 @@ export function ScreenShare({
         clearInterval(autoAnalysisIntervalRef.current)
       }
     }
-  }, [isAutoAnalyzing, screenState, sendScreenFrame])
+  }, [isAutoAnalyzing, screenState, sendScreenFrame, isAnalyzing])
 
-  const handleClose = useCallback(() => {
-    cleanup()
-    onClose?.()
-    onCancel?.()
-  }, [onClose, onCancel])
-
-  const cleanup = () => {
+  const cleanup = useCallback(() => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop())
       setStream(null)
@@ -137,10 +126,9 @@ export function ScreenShare({
     setScreenState("stopped")
     setIsAnalyzing(false)
     setIsAutoAnalyzing(false)
-  }
+  }, [stream])
 
-  const startScreenShare = async () => {
->>>>>>> Incoming (Background Agent changes)
+  const startScreenShare = useCallback(async () => {
     try {
       setScreenState("initializing")
       const mediaStream = await navigator.mediaDevices.getDisplayMedia({
@@ -151,14 +139,16 @@ export function ScreenShare({
       setScreenState("sharing")
       if(videoRef.current) videoRef.current.srcObject = mediaStream
       onStream?.(mediaStream)
-      mediaStream.getVideoTracks()[0].addEventListener('ended', () => setScreenState("stopped"))
+      mediaStream.getVideoTracks()[0].addEventListener('ended', () => {
+        cleanup()
+      })
       toast({ title: "Screen Sharing Started" })
     } catch (error) {
       setScreenState("error")
       setError('Screen share failed')
       toast({ title: "Screen Share Failed", variant: "destructive" })
     }
-  }, [onStream, toast])
+  }, [onStream, toast, cleanup])
 
   const captureScreenshot = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -172,18 +162,7 @@ export function ScreenShare({
       const imageData = canvas.toDataURL('image/jpeg', 0.8)
       sendScreenFrame(imageData)
     }
-  }, [sendScreenFrame]);
-
-  useEffect(() => {
-    if (isAutoAnalyzing && screenState === "sharing") {
-      autoAnalysisIntervalRef.current = setInterval(captureScreenshot, 10000);
-    } else if(autoAnalysisIntervalRef.current) {
-      clearInterval(autoAnalysisIntervalRef.current);
-    }
-    return () => {
-        if(autoAnalysisIntervalRef.current) clearInterval(autoAnalysisIntervalRef.current)
-    }
-  }, [isAutoAnalyzing, screenState, captureScreenshot])
+  }, [sendScreenFrame])
 
   return (
     <ToolCardWrapper title="Screen Share" description="Real-time screen sharing with AI analysis" icon={Monitor}>
@@ -191,7 +170,11 @@ export function ScreenShare({
         <div className="flex items-center justify-between">
             <Badge variant={screenState === "sharing" ? "default" : "destructive"}>{screenState}</Badge>
             <div className="flex items-center gap-2">
-                <Switch checked={isAutoAnalyzing} onCheckedChange={setIsAutoAnalyzing} disabled={screenState !== "sharing"} />
+                <Switch 
+                  checked={isAutoAnalyzing} 
+                  onCheckedChange={setIsAutoAnalyzing} 
+                  disabled={screenState !== "sharing"} 
+                />
                 <span className="text-xs">Auto Analysis</span>
             </div>
         </div>
@@ -199,19 +182,26 @@ export function ScreenShare({
           <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg border bg-black" />
           <canvas ref={canvasRef} className="hidden" />
           {screenState === 'sharing' ? (
-            <Button onClick={captureScreenshot} disabled={isAnalyzing} className="absolute bottom-4 right-4 w-12 h-12 rounded-full">
+            <Button 
+              onClick={captureScreenshot} 
+              disabled={isAnalyzing} 
+              className="absolute bottom-4 right-4 w-12 h-12 rounded-full"
+            >
               {isAnalyzing ? <Loader2 className="w-6 h-6 animate-spin" /> : <Brain className="w-6 h-6" />}
             </Button>
           ) : (
-            <Button onClick={startScreenShare} className="absolute bottom-4 right-4">Start Sharing</Button>
+            <Button onClick={startScreenShare} className="absolute bottom-4 right-4">
+              Start Sharing
+            </Button>
           )}
-
         </div>
         {analysisHistory.length > 0 && (
           <Card>
             <CardHeader><CardTitle className="text-sm">Analysis History</CardTitle></CardHeader>
             <CardContent className="space-y-2 max-h-40 overflow-y-auto">
-              {analysisHistory.map((a) => <p key={a.id} className="text-sm border-b pb-1">{a.text}</p>)}
+              {analysisHistory.map((a) => (
+                <p key={a.id} className="text-sm border-b pb-1">{a.text}</p>
+              ))}
             </CardContent>
           </Card>
         )}
