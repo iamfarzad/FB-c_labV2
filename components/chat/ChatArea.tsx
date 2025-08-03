@@ -20,12 +20,12 @@ import { WebcamCapture } from "@/components/chat/tools/WebcamCapture"
 import { ScreenShare } from "@/components/chat/tools/ScreenShare"
 import { BusinessContentRenderer } from "@/components/chat/BusinessContentRenderer"
 import type { 
-  ROICalculationResult, 
   VoiceTranscriptResult, 
   WebcamCaptureResult, 
   VideoAppResult, 
   ScreenShareResult 
 } from "@/lib/services/tool-service"
+import type { ROICalculationResult } from "@/components/chat/tools/ROICalculator/ROICalculator.types";
 import type { BusinessInteractionData, UserBusinessContext } from "@/types/business-content"
 
 interface ChatAreaProps {
@@ -172,7 +172,7 @@ export function ChatArea({
       case 'webcam_capture':
         return <WebcamCapture mode="card" onCancel={handleCancel} onCapture={(imageData: string) => onWebcamCapture(imageData)} />
       case 'roi_calculator':
-        return <ROICalculator mode="card" onCancel={handleCancel} onComplete={onROICalculation} />
+        return <ROICalculator mode="card" onCancel={handleCancel} onComplete={(result: ROICalculationResult) => onROICalculation(result)} />
       case 'video_to_app':
         return <VideoToApp 
           mode="card"
@@ -300,14 +300,14 @@ export function ChatArea({
                   <Button
                     variant="outline"
                     onClick={action.action}
-                    className="h-auto p-6 w-full flex flex-col items-center gap-4 hover:bg-accent/5 transition-all duration-300 border-border/30 rounded-xl group bg-card/50 backdrop-blur-sm hover:shadow-lg"
+                    className="h-auto min-h-[140px] p-6 w-full flex flex-col items-center gap-4 hover:bg-accent/5 transition-all duration-300 border-border/30 rounded-xl group bg-card/50 backdrop-blur-sm hover:shadow-lg"
                   >
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow`}>
                       <action.icon className="w-6 h-6 text-white" />
                     </div>
-                    <div className="text-center">
-                      <div className="font-semibold text-foreground mb-1">{action.title}</div>
-                      <div className="text-sm text-muted-foreground">{action.desc}</div>
+                    <div className="text-center space-y-1 flex-1 flex flex-col justify-center">
+                      <div className="font-semibold text-foreground">{action.title}</div>
+                      <div className="text-sm text-muted-foreground leading-relaxed">{action.desc}</div>
                     </div>
                   </Button>
                 </TooltipTrigger>
@@ -323,13 +323,19 @@ export function ChatArea({
   )
 
   return (
-    <div className="flex-1 overflow-hidden relative max-w-2xl mx-auto px-4">
+    <div className="flex-1 overflow-hidden relative mx-auto px-4">
       {/* outer scrollable container */}
       <div
         ref={scrollAreaRef}
         className="h-full overflow-y-auto overscroll-contain w-full chat-scroll-container"
       >
-        <div className="max-w-2xl mx-auto space-y-8 p-6 pb-32 chat-message-container" data-testid="messages-container">
+        <div 
+          className={cn(
+            "mx-auto space-y-8 p-6 pb-32 chat-message-container",
+            messages.length === 0 ? "max-w-4xl" : "max-w-2xl"
+          )} 
+          data-testid="messages-container"
+        >
           {messages.length === 0 && !isLoading ? (
             <EmptyState />
           ) : (

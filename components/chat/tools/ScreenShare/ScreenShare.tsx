@@ -65,7 +65,82 @@ export function ScreenShare({
     }
   }, [onAnalysis])
 
+<<<<<<< Current (Your changes)
   const startScreenShare = useCallback(async () => {
+=======
+  // Auto-analysis interval with throttling and cost awareness
+  useEffect(() => {
+    if (isAutoAnalyzing && screenState === "sharing") {
+      let analysisCount = 0;
+      const maxAnalysisPerSession = 20; // Limit to prevent excessive costs
+      
+      autoAnalysisIntervalRef.current = setInterval(async () => {
+        // Check if we've exceeded the analysis limit
+        if (analysisCount >= maxAnalysisPerSession) {
+          console.warn('🚨 Auto-analysis limit reached to prevent excessive API costs');
+          setIsAutoAnalyzing(false);
+          return;
+        }
+
+        if (videoRef.current && canvasRef.current && !isAnalyzing) {
+          const canvas = canvasRef.current
+          const video = videoRef.current
+          
+          canvas.width = video.videoWidth
+          canvas.height = video.videoHeight
+          
+          const ctx = canvas.getContext('2d')
+          if (ctx) {
+            ctx.drawImage(video, 0, 0)
+            const imageData = canvas.toDataURL('image/jpeg', 0.8)
+            analysisCount++;
+            console.log(`📊 Auto-analysis ${analysisCount}/${maxAnalysisPerSession}`);
+            await sendScreenFrame(imageData)
+          }
+        }
+      }, 15000) // Increased to 15 seconds to reduce API calls
+    } else {
+      if (autoAnalysisIntervalRef.current) {
+        clearInterval(autoAnalysisIntervalRef.current)
+        autoAnalysisIntervalRef.current = null
+      }
+    }
+
+    return () => {
+      if (autoAnalysisIntervalRef.current) {
+        clearInterval(autoAnalysisIntervalRef.current)
+      }
+    }
+  }, [isAutoAnalyzing, screenState, sendScreenFrame])
+
+  const handleClose = useCallback(() => {
+    cleanup()
+    onClose?.()
+    onCancel?.()
+  }, [onClose, onCancel])
+
+  const cleanup = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop())
+      setStream(null)
+    }
+    
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+
+    if (autoAnalysisIntervalRef.current) {
+      clearInterval(autoAnalysisIntervalRef.current)
+      autoAnalysisIntervalRef.current = null
+    }
+
+    setScreenState("stopped")
+    setIsAnalyzing(false)
+    setIsAutoAnalyzing(false)
+  }
+
+  const startScreenShare = async () => {
+>>>>>>> Incoming (Background Agent changes)
     try {
       setScreenState("initializing")
       const mediaStream = await navigator.mediaDevices.getDisplayMedia({
