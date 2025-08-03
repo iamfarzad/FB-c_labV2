@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai'
+import { createOptimizedConfig } from './gemini-config-enhanced'
 import { GroundedSearchService } from './grounded-search-service'
 
 export interface LeadContext {
@@ -31,9 +32,11 @@ export class GeminiLiveAPI {
       // Enhanced prompt that uses real search results
       const searchQuery = this.buildEnhancedPrompt(leadContext, userMessage, searchResults)
 
-      const config = {
-        responseMimeType: 'text/plain',
-      };
+      // Use optimized configuration for live API
+      const config = createOptimizedConfig('live', {
+        maxOutputTokens: 512, // Short responses for live interaction
+        temperature: 0.7, // Natural conversation
+      });
 
       const model = 'gemini-2.5-flash';
 
@@ -133,8 +136,15 @@ RESPONSE FORMAT: Provide a professional, detailed analysis that shows you unders
       apiKey: this.apiKey,
     })
 
+    // Use optimized config for fallback response
+    const fallbackConfig = createOptimizedConfig('live', {
+      maxOutputTokens: 512, // Short fallback responses
+      temperature: 0.6,
+    });
+
     const result = await genAI.models.generateContent({
       model: 'gemini-2.5-flash',
+      config: fallbackConfig,
       contents: [
         {
           role: 'user',

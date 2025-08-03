@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
+import { createOptimizedConfig } from '@/lib/gemini-config-enhanced'
 import { selectModelForFeature, estimateTokens } from '@/lib/model-selector'
 import { enforceBudgetAndLog } from '@/lib/token-usage-logger'
 import { checkDemoAccess, recordDemoUsage, DemoFeature } from '@/lib/demo-budget-manager'
@@ -88,13 +89,15 @@ Please provide a structured analysis with clear sections.`
     let analysisResult = ''
 
     try {
-      const config = {
-        responseMimeType: "text/plain",
-      }
+      // Use optimized configuration with token limits
+      const optimizedConfig = createOptimizedConfig('document', {
+        maxOutputTokens: 1536, // Reasonable limit for document analysis
+        temperature: 0.4, // Balanced for analysis
+      });
 
       const result = await genAI.models.generateContent({
         model: modelSelection.model,
-        config,
+        config: optimizedConfig,
         contents: [{ 
           role: 'user', 
           parts: [{ text: prompt }] 

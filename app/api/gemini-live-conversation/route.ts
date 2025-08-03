@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai"
+import { createOptimizedConfig } from "@/lib/gemini-config-enhanced"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 import { supabaseService } from "@/lib/supabase/client"
@@ -168,13 +169,15 @@ export async function POST(req: NextRequest) {
       audioEnabled: enableAudio
     })
 
-    const config = {
-      responseMimeType: "text/plain",
-    }
+    // Use optimized configuration for live conversation
+    const optimizedConfig = createOptimizedConfig('live', {
+      maxOutputTokens: 512, // Short responses for live conversation
+      temperature: 0.7, // Natural conversation
+    });
 
     const result = await genAI.models.generateContent({
       model: "gemini-2.5-flash",
-      config,
+      config: optimizedConfig,
       contents: [{ role: "user", parts: [{ text: message }] }],
     })
 
@@ -201,10 +204,17 @@ export async function POST(req: NextRequest) {
       try {
         console.log("🎤 Generating audio for live response")
         
+        // Use optimized config for TTS generation
+        const ttsConfig = createOptimizedConfig('live', {
+          maxOutputTokens: 256, // Very short for TTS
+          temperature: 0.5, // Stable for voice
+        });
+
         const ttsResponse = await genAI.models.generateContent({
           model: "gemini-2.5-flash-preview-tts",
           contents: [{ role: "user", parts: [{ text: responseText }] }],
           config: {
+            ...ttsConfig,
             responseModalities: ["AUDIO"],
             speechConfig: {
               voiceConfig: {

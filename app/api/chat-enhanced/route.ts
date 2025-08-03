@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import { createOptimizedConfig, optimizeConversation, type ConversationMessage } from '@/lib/gemini-config-enhanced';
 import { getSupabase } from '@/lib/supabase/server';
 import type { NextRequest } from 'next/server';
 import { chatRequestSchema, validateRequest, sanitizeString } from '@/lib/validation';
@@ -486,39 +487,51 @@ export async function POST(req: NextRequest) {
     const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const model = genAI.models.generateContentStream;
 
-    // Prepare content for Gemini with enhanced configuration
-    const contents = [
-      { role: 'user', parts: [{ text: systemPrompt }] },
-      ...sanitizedMessages.map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
-      }))
-    ];
+    // Prepare optimized content for Gemini with caching and summarization
+    const conversationMessages: ConversationMessage[] = sanitizedMessages.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : msg.role,
+      content: msg.content
+    }));
 
-    // Enhanced configuration matching your reference implementation
+    const optimizedContent = await optimizeConversation(
+      conversationMessages,
+      systemPrompt,
+      sessionId || 'enhanced-default',
+      4000 // Max history tokens for enhanced chat
+    );
+
+    // Create optimized generation config with token limits
+    const optimizedConfig = createOptimizedConfig('chat', {
+      maxOutputTokens: 2048, // Prevent unbounded generation
+      temperature: 0.7
+    });
+
+    // Enhanced configuration with optimization
     const config = {
+      ...optimizedConfig,
       thinkingConfig: {
         thinkingBudget: thinkingBudget,
       },
       tools: tools,
-      responseMimeType: 'text/plain',
     };
 
     // Generate response
     let responseStream;
-    let actualInputTokens = 0;
+    let actualInputTokens = optimizedContent.estimatedTokens;
     let actualOutputTokens = 0;
+    
+    // Log optimization results
+    console.log(`💡 Enhanced chat optimization: ${optimizedContent.usedCache ? 'Used cache' : 'Created new'}, estimated tokens: ${optimizedContent.estimatedTokens}${optimizedContent.summary ? ', with summary' : ''}`);
     
     try {
       responseStream = await model({
         model: modelSelection.model,
         config: config,
-        contents
+        contents: optimizedContent.contents
       });
 
-      // Estimate actual token counts (Gemini doesn't provide usageMetadata in streaming)
-      actualInputTokens = estimatedTokens;
-      actualOutputTokens = estimatedTokens * 0.5;
+      // Use optimized token estimation
+      actualOutputTokens = Math.min(optimizedConfig.maxOutputTokens, actualInputTokens * 0.6);
     } catch (error: any) {
       // Log failed activity
       await logServerActivity({

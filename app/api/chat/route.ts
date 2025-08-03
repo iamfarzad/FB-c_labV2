@@ -11,6 +11,7 @@ import { selectModelForFeature, estimateTokensForMessages } from '@/lib/model-se
 import { enforceBudgetAndLog } from '@/lib/token-usage-logger';
 import URLContextService from '@/lib/services/url-context-service';
 import GoogleSearchService from '@/lib/services/google-search-service';
+import { createOptimizedConfig, optimizeConversation, type ConversationMessage } from '@/lib/gemini-config-enhanced';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -585,28 +586,43 @@ Response to use: "${conversationResult.response}"`;
     const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const model = genAI.models.generateContentStream;
 
-    // Prepare content for Gemini
-    const contents = [
-      { role: 'user', parts: [{ text: systemPrompt }] },
-      ...sanitizedMessages.map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
-      }))
-    ];
+    // Prepare optimized content for Gemini with caching and summarization
+    const conversationMessages: ConversationMessage[] = sanitizedMessages.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : msg.role,
+      content: msg.content
+    }));
+
+    const optimizedContent = await optimizeConversation(
+      conversationMessages,
+      systemPrompt,
+      sessionId || 'default',
+      4000 // Max history tokens
+    );
+
+    // Create optimized generation config with token limits
+    const optimizedConfig = createOptimizedConfig('chat', {
+      maxOutputTokens: 2048, // Prevent unbounded generation
+      temperature: 0.7
+    });
 
     // Generate response with enhanced configuration
     let responseStream;
-    let actualInputTokens = 0;
+    let actualInputTokens = optimizedContent.estimatedTokens;
     let actualOutputTokens = 0;
     
-    // Build configuration with thinking and tools support
+    // Build configuration with thinking, tools support, and optimization
     const config = {
+      ...optimizedConfig,
       thinkingConfig: {
         thinkingBudget: thinkingBudget,
       },
       tools,
-      responseMimeType: 'text/plain',
     };
+
+    // Log optimization results
+    console.log(`💡 Chat optimization: ${optimizedContent.usedCache ? 'Used cache' : 'Created new'}, estimated tokens: ${optimizedContent.estimatedTokens}${optimizedContent.summary ? ', with summary' : ''}`);
+
+    const contents = optimizedContent.contents;
     
     try {
       responseStream = await model({
@@ -615,9 +631,9 @@ Response to use: "${conversationResult.response}"`;
         contents
       });
 
-      // Estimate actual token counts (Gemini doesn't provide usageMetadata in streaming)
-      actualInputTokens = estimatedTokens;
-      actualOutputTokens = estimatedTokens * 0.5;
+      // Use optimized token estimation
+      // actualInputTokens already set from optimizedContent.estimatedTokens
+      actualOutputTokens = Math.min(optimizedConfig.maxOutputTokens, actualInputTokens * 0.6); // Estimate based on input with cap
     } catch (error: any) {
       // Log failed activity
       await logServerActivity({

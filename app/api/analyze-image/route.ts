@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { GoogleGenAI } from "@google/genai"
+import { createOptimizedConfig } from "@/lib/gemini-config-enhanced"
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,13 +23,15 @@ export async function POST(request: NextRequest) {
     const base64Data = image.includes(",") ? image.split(",")[1] : image
     const mimeType = image.includes("data:") ? image.split(";")[0].split(":")[1] : "image/jpeg"
 
-    const config = {
-      responseMimeType: "text/plain",
-    };
+    // Use optimized configuration with token limits
+    const optimizedConfig = createOptimizedConfig('analysis', {
+      maxOutputTokens: 512, // Limit output for image analysis
+      temperature: 0.3, // More focused analysis
+    });
 
     const result = await genAI.models.generateContent({
-      model: "gemini-2.5-flash-lite", // Updated from gemini-1.5-flash for cost efficiency
-      config,
+      model: "gemini-2.5-flash-lite", // Cost-efficient model for analysis
+      config: optimizedConfig,
       contents: [
         {
           role: "user",

@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai"
+import { createOptimizedConfig } from "@/lib/gemini-config-enhanced"
 import { getSupabase } from "@/lib/supabase/server"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
@@ -51,13 +52,15 @@ export async function POST(req: NextRequest) {
         }))
       : []
 
-    const config = {
-      responseMimeType: "text/plain",
-    };
+    // Use optimized configuration with token limits
+    const optimizedConfig = createOptimizedConfig('chat', {
+      maxOutputTokens: 2048, // Reasonable limit for streaming
+      temperature: 0.7,
+    });
 
     const response = await genAI.models.generateContentStream({
       model: "gemini-2.5-flash",
-      config,
+      config: optimizedConfig,
       contents: [
         ...history,
         {

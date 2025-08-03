@@ -117,11 +117,21 @@ export function ScreenShare({
     }
   }, [onAnalysis])
 
-  // Auto-analysis interval
+  // Auto-analysis interval with throttling and cost awareness
   useEffect(() => {
     if (isAutoAnalyzing && screenState === "sharing") {
+      let analysisCount = 0;
+      const maxAnalysisPerSession = 20; // Limit to prevent excessive costs
+      
       autoAnalysisIntervalRef.current = setInterval(async () => {
-        if (videoRef.current && canvasRef.current) {
+        // Check if we've exceeded the analysis limit
+        if (analysisCount >= maxAnalysisPerSession) {
+          console.warn('🚨 Auto-analysis limit reached to prevent excessive API costs');
+          setIsAutoAnalyzing(false);
+          return;
+        }
+
+        if (videoRef.current && canvasRef.current && !isAnalyzing) {
           const canvas = canvasRef.current
           const video = videoRef.current
           
@@ -132,10 +142,12 @@ export function ScreenShare({
           if (ctx) {
             ctx.drawImage(video, 0, 0)
             const imageData = canvas.toDataURL('image/jpeg', 0.8)
+            analysisCount++;
+            console.log(`📊 Auto-analysis ${analysisCount}/${maxAnalysisPerSession}`);
             await sendScreenFrame(imageData)
           }
         }
-      }, 10000) // Analyze every 10 seconds
+      }, 15000) // Increased to 15 seconds to reduce API calls
     } else {
       if (autoAnalysisIntervalRef.current) {
         clearInterval(autoAnalysisIntervalRef.current)

@@ -14,6 +14,7 @@ import {
   Part,
   SafetySetting,
 } from '@google/genai';
+import { createOptimizedConfig } from '../gemini-config-enhanced';
 
 const GEMINI_API_KEY =
   globalThis.process.env.GEMINI_API_KEY || globalThis.process.env.GEMINI_API_KEY;
@@ -59,14 +60,16 @@ export async function generateText(
     }
   }
 
-  const generationConfig: GenerateContentConfig = {
+  // Use optimized configuration with token limits
+  const optimizedConfig = createOptimizedConfig('research', {
+    maxOutputTokens: 4096, // Higher limit for video processing
     temperature,
-  };
+  });
 
   const request: GenerateContentParameters = {
     model: modelName,
     contents: [{role: 'user', parts}],
-    config: generationConfig,
+    config: optimizedConfig,
   };
 
   try {

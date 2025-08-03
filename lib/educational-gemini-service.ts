@@ -3,6 +3,7 @@
  */
 
 import { GoogleGenAI } from "@google/genai"
+import { createOptimizedConfig } from "./gemini-config-enhanced"
 import { EDUCATIONAL_APP_DEFINITIONS, getEducationalSystemPrompt } from "./education-constants"
 
 export interface EducationalInteractionData {
@@ -61,9 +62,11 @@ export async function* streamEducationalContent(
       return
     }
 
-    const config = {
-      responseMimeType: "text/plain",
-    };
+    // Use optimized configuration for educational content
+    const config = createOptimizedConfig('research', {
+      maxOutputTokens: 3072, // Higher limit for educational content
+      temperature: 0.6, // Balanced creativity for education
+    });
 
     const systemPrompt = getEducationalSystemPrompt(
       `Video: ${videoContext.videoTitle || videoContext.videoUrl}

@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai"
+import { createOptimizedConfig } from "@/lib/gemini-config-enhanced"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 import { AudioQualityEnhancer } from "@/lib/audio-quality-enhancer"
@@ -187,14 +188,15 @@ export async function POST(req: NextRequest) {
       try {
         console.log("🎤 TTS Generation started:", { callId, correlationId, promptLength: (prompt || '').length })
         
-        // Generate text content first
-        const config = {
-          responseMimeType: "text/plain",
-        };
+        // Generate text content first with optimization
+        const optimizedConfig = createOptimizedConfig('live', {
+          maxOutputTokens: 512, // Limit for live responses
+          temperature: 0.6, // Balanced for conversation
+        });
 
         const textResult = await genAI.models.generateContent({
           model: "gemini-2.5-flash",
-          config,
+          config: optimizedConfig,
           contents: [{ role: "user", parts: [{ text: textToProcess }] }],
         })
         
@@ -346,13 +348,15 @@ export async function POST(req: NextRequest) {
       // Standard text-only generation
       console.log("📝 Text-only generation:", { callId, promptLength: (prompt || '').length })
       
-      const config = {
-        responseMimeType: "text/plain",
-      };
+      // Use optimized config for live text generation
+      const optimizedConfig = createOptimizedConfig('live', {
+        maxOutputTokens: 512, // Limit for live responses
+        temperature: 0.6,
+      });
 
       const result = await genAI.models.generateContent({
         model: "gemini-2.5-flash",
-        config,
+        config: optimizedConfig,
         contents: [{ role: "user", parts: [{ text: prompt! }] }],
       })
 
