@@ -71,7 +71,7 @@ cd FB-c_labV2
 pnpm install
 
 # Copy environment variables
-cp .env.example .env.local
+cp .env.local.example .env.local
 # Edit .env.local with your API keys and configuration
 ```
 

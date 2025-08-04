@@ -55,6 +55,11 @@ const nextConfig = {
   // Environment variables that should be available at build time
   env: {
     CUSTOM_BUILD_TIME: new Date().toISOString(),
+    // Supabase configuration from environment variables
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
 }
 
