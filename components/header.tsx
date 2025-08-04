@@ -5,7 +5,9 @@ import { usePathname } from "next/navigation"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Menu, Bot, Languages, Check } from "lucide-react"
+import { Menu, Languages, Check } from "@/lib/icon-mapping"
+import { FbcIcon } from "@/fbc-logo-icon/components/fbc-icon"
+import { FbcLogo } from "@/fbc-logo-icon/components/fbc-logo"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
@@ -75,9 +77,9 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 glass-header">
       <div className="container flex h-16 items-center">
-        <Link href="/" className="flex items-center gap-2">
-          <Bot className="h-6 w-6 text-primary" />
-          <span className="font-bold uppercase font-display tracking-wider">F.B</span>
+        <Link href="/" className="flex items-center gap-3">
+          <FbcIcon className="w-8 h-8" />
+          <FbcLogo className="text-lg" />
         </Link>
         <div className="hidden md:flex ml-10">
           <NavLinks />

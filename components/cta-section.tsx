@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "./ui/button"
 import { PageShell } from "./page-shell"
-import { Bot } from "lucide-react"
+import { FbcIcon } from "@/components/ui/fbc-icon"
 import { AnimatedGridPattern } from "./ui/animated-grid-pattern"
 
 interface CtaSectionProps {
@@ -40,7 +40,7 @@ export function CtaSection({
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href={secondaryCtaLink}>
-                {secondaryCtaText} <Bot className="ml-2 h-4 w-4" />
+                {secondaryCtaText} <FbcIcon className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
