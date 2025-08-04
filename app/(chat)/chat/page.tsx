@@ -16,6 +16,7 @@ import { DemoSessionCard } from "@/components/chat/sidebar/DemoSessionCard"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ChevronLeft, ChevronRight, BarChart3 } from "lucide-react"
+import { cn } from "@/lib/utils"
 import type { Message } from "@/app/(chat)/chat/types/chat"
 import { LeadProgressIndicator } from "@/components/chat/LeadProgressIndicator"
 import { ConversationStage } from "@/lib/lead-manager"
@@ -355,41 +356,57 @@ ${result.summary}`
           />
         }
       >
-        <div className="flex flex-1 overflow-hidden relative">
-          <ChatArea
-            messages={messages}
-            isLoading={isLoading}
-            messagesEndRef={messagesEndRef}
-            onVoiceTranscript={handleVoiceTranscript}
-            onWebcamCapture={handleWebcamCapture}
-            onROICalculation={handleROICalculation}
-            onVideoAppResult={handleVideoAppResult}
-            onScreenAnalysis={handleScreenAnalysis}
-          />
-          
-          {/* Progress Indicator - Always Visible on Right */}
+        {/* Chat Area - Full Width */}
+        <ChatArea
+          messages={messages}
+          isLoading={isLoading}
+          messagesEndRef={messagesEndRef}
+          onVoiceTranscript={handleVoiceTranscript}
+          onWebcamCapture={handleWebcamCapture}
+          onROICalculation={handleROICalculation}
+          onVideoAppResult={handleVideoAppResult}
+          onScreenAnalysis={handleScreenAnalysis}
+        />
+        
+        {/* Desktop: Always visible progress indicator */}
+        <div className="hidden lg:block">
           <LeadProgressIndicator 
             currentStage={conversationStage}
             leadData={leadData}
           />
-          
-          {/* Mobile Lead Progress Sheet */}
+        </div>
+        
+        {/* Mobile: Progress button with modal */}
+        <div className="lg:hidden">
           <Sheet>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
-                className="lg:hidden fixed bottom-20 right-4 z-50"
+                className={cn(
+                  "fixed z-50",
+                  "top-[80px] right-4",
+                  "shadow-lg backdrop-blur-sm",
+                  "safe-area-inset-bottom"
+                )}
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Progress
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[320px] sm:w-[400px]">
-              <LeadProgressIndicator 
-                currentStage={conversationStage}
-                leadData={leadData}
-              />
+            <SheetContent 
+              side="right" 
+              className={cn(
+                "w-[320px] sm:w-[400px]",
+                "bg-transparent backdrop-blur-md border-transparent" // No color gaussian blur
+              )}
+            >
+              <div className="h-full overflow-y-auto">
+                <LeadProgressIndicator 
+                  currentStage={conversationStage}
+                  leadData={leadData}
+                />
+              </div>
             </SheetContent>
           </Sheet>
         </div>
@@ -434,11 +451,14 @@ ${result.summary}`
         )}
         
         {showVideo2AppModal && (
-          <VideoToApp
-            mode="modal"
-            onClose={() => setShowVideo2AppModal(false)}
-            onAnalysisComplete={handleVideoAppResult}
-          />
+            <VideoToApp
+              mode="modal"
+              onClose={() => setShowVideo2AppModal(false)}
+              onAnalysisComplete={handleVideoAppResult}
+              onAppGenerated={(url: string) => {
+                console.log('App generated:', url)
+              }}
+            />
         )}
       </ChatLayout>
     </PageShell>

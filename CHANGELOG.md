@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Fixed - 2025-08-04
+- **Token Usage Logging**: Fixed error "cannot insert a non-DEFAULT value into column 'total_tokens'" by converting `total_tokens` to a generated column
+  - Created migration `20250804170000_make_total_tokens_generated.sql` to make `total_tokens` a generated column that automatically calculates `input_tokens + output_tokens`
+  - Updated `lib/token-usage-logger.ts` to not set `total_tokens` explicitly during INSERT operations
+  - Updated `lib/database.types.ts` to exclude `total_tokens` from Insert type definition
+  - Made `total_tokens` optional in `TokenUsageLog` interface for backward compatibility
+  - Database now automatically ensures accurate token calculations without manual errors
+
+### Fixed - 2025-01-24
+- **🎨 Major Chat Layout UX Overhaul**: Comprehensive fix for all layout and UX issues
+  - **Fixed nested scrolling containers**: Eliminated multiple scroll areas, consolidated to single smooth scroll
+  - **Standardized spacing and padding**: Consistent spacing system across all components (px-4 sm:px-6 py-6)
+  - **Fixed container width jumping**: Consistent max-w-3xl for both empty and populated states
+  - **Implemented mobile-first responsive design**: Proper safe area handling and dynamic viewport height
+  - **Optimized footer space usage**: Responsive min-height (100px mobile, 120px desktop) with safe areas
+  - **Balanced message width constraints**: Consistent 85% max-width for both user and assistant messages
+  - **Fixed progress indicator positioning**: Desktop sidebar (320px) + mobile sheet, no content overlap
+  - **Resolved overflow handling**: Proper flex layout with single scroll container and z-index hierarchy
+  - **Enhanced mobile experience**: Safe area insets, proper touch targets, keyboard-aware positioning
+  - **Improved scroll behavior**: Smooth scrolling with proper anchor positioning
+
 ### Changed - 2025-01-24
 - **🎨 Chat Page UX Design Improvements**: Enhanced user experience with design token compliance
   - Added translation dropdown to header navigation with language selector
