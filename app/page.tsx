@@ -2,9 +2,10 @@ import { PageHeader, PageShell } from "@/components/page-shell"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ArrowRight, Brain, Lightbulb, Rocket, Star, Users, Zap } from "lucide-react"
+import { ArrowRight, Lightbulb, Star, Users } from "lucide-react"
 import { FbcIcon } from "@/components/ui/fbc-icon"
 import { FbcIcon as FbcIconPolished } from "@/fbc-logo-icon/components/fbc-icon"
+import { Brain, Zap, Sparkles, Target } from "@/lib/icon-mapping"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -38,7 +39,7 @@ const features = [
     description: "Streamline repetitive tasks with smart automation that learns and adapts."
   },
   {
-    icon: Rocket,
+    icon: Target,
     title: "Rapid Prototyping",
     description: "Quick proof-of-concepts to validate AI solutions before full implementation."
   }
@@ -192,7 +193,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Rocket className="h-6 w-6 text-accent mt-1 flex-shrink-0" />
+                <Target className="h-6 w-6 text-accent mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-primary">Rapid Implementation</h3>
                   <p className="text-muted-foreground">Quick prototypes and fast deployment to get results sooner.</p>

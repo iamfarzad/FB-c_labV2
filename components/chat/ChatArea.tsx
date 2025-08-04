@@ -284,10 +284,10 @@ export function ChatArea({
       >
         {[
           { 
-            icon: Brain, 
+            icon: FbcIcon, 
             title: "Ask about AI automation", 
             desc: "Get insights on process optimization", 
-            color: "from-orange-500 to-red-500",
+            color: "from-accent to-accent/80",
             action: () => {
               // Add a sample AI automation question
               const sampleQuestions = [
@@ -303,10 +303,10 @@ export function ChatArea({
             }
           },
           { 
-            icon: Sparkles, 
+            icon: FileText, 
             title: "Upload a document", 
             desc: "Analyze files and extract insights", 
-            color: "from-green-500 to-emerald-600",
+            color: "from-accent to-accent/80",
             action: () => {
               // Trigger file upload
               const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -314,10 +314,10 @@ export function ChatArea({
             }
           },
           { 
-            icon: Zap, 
+            icon: TrendingUp, 
             title: "Business analysis", 
             desc: "Strategic planning and ROI calculations", 
-            color: "from-purple-500 to-indigo-600",
+            color: "from-accent to-accent/80",
             action: () => {
               // Trigger ROI calculator or business analysis
               const analysisPrompts = [
