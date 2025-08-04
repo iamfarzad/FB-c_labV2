@@ -3,12 +3,19 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Download, Bot, Menu, FileText, Sparkles, Zap, Brain, Activity } from "lucide-react"
+import { Download, Menu, FileText, Sparkles, Zap, Brain, Activity } from "lucide-react"
+import { FbcIcon } from "@/components/ui/fbc-icon"
 import { MobileSidebarSheet } from "./sidebar/MobileSidebarSheet"
-import type { ActivityItem } from "@/app/(chat)/chat/types/chat"
 import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+
+interface ActivityItem {
+  id: string
+  status: 'in_progress' | 'completed' | 'pending'
+  type: string
+  title: string
+}
 
 interface ChatHeaderProps {
   onDownloadSummary: () => void
@@ -143,7 +150,7 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
                   animate={{ rotate: [0, 5, -5, 0] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <Bot className={cn("mobile:w-5 mobile:h-5", "tablet:w-6 tablet:h-6", "desktop:w-7 desktop:h-7")} />
+                  <FbcIcon className={cn("mobile:w-5 mobile:h-5", "tablet:w-6 tablet:h-6", "desktop:w-7 desktop:h-7")} />
                 </motion.div>
               </AvatarFallback>
             </Avatar>

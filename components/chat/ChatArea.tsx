@@ -2,23 +2,35 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, Check, Download, Play, Pause, Square, RotateCcw, FileText, Image as ImageIcon, Video, Mic, Calculator, Monitor, Sparkles, Zap, Bot, TrendingUp, FileSearch, Brain } from 'lucide-react'
+// Consolidated Phosphor icons imports
+import { 
+  Copy, Check, Download, Play, Pause, Square, RotateCcw, FileText, 
+  ImageIcon, Video, Mic, Calculator, Monitor, Sparkles, Zap, 
+  TrendingUp, FileSearch, Brain, Loader2, User, AlertTriangle, 
+  Info, Clock, Target, Edit 
+} from '@/lib/icon-mapping'
+import { FbcIcon } from '@/components/ui/fbc-icon'
+
+// UI Components
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { cn } from '@/lib/utils'
-import { Message } from '@/app/(chat)/chat/types/chat'
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Loader2, User, AlertTriangle, Info, Clock, Target, Edit } from "lucide-react"
+
+// Utils and Types
+import { cn } from '@/lib/utils'
+import { Message } from '@/app/(chat)/chat/types/chat'
 import { VoiceInput } from "@/components/chat/tools/VoiceInput"
 import { ROICalculator } from "@/components/chat/tools/ROICalculator"
 import { VideoToApp } from "@/components/chat/tools/VideoToApp"
 import { WebcamCapture } from "@/components/chat/tools/WebcamCapture"
 import { ScreenShare } from "@/components/chat/tools/ScreenShare"
 import { BusinessContentRenderer } from "@/components/chat/BusinessContentRenderer"
+import { AIThinkingIndicator, detectAIContext, type AIThinkingContext } from "./AIThinkingIndicator"
+import { AIInsightCard } from "./AIInsightCard"
 import type { 
   VoiceTranscriptResult, 
   WebcamCaptureResult, 
@@ -65,7 +77,7 @@ export function ChatArea({
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')
       .replace(/\*(.*?)\*/g, '<em class="italic text-foreground/90">$1</em>')
       .replace(/`(.*?)`/g, '<code class="bg-muted/60 text-accent px-2 py-1 rounded-md text-sm font-mono border border-border/30">$1</code>')
-      .replace(/```([\s\S]*?)```/g, '<pre class="bg-muted/40 border border-border/30 rounded-lg p-4 my-3 overflow-x-auto"><code class="text-sm font-mono">$1</code></pre>')
+      .replace(/```([\s\S]*?)```/g, '<pre class="bg-muted/40 border border-border/30 rounded-lg p-4 my-3 whitespace-pre-wrap break-words overflow-x-auto"><code class="text-sm font-mono">$1</code></pre>')
   }
 
   const detectMessageType = (content: string): { type: string; icon?: React.ReactNode; badge?: string; color?: string } => {
@@ -118,6 +130,37 @@ export function ChatArea({
     if (content.includes('VIDEO_TO_APP')) return 'video_to_app'
     if (content.includes('SCREEN_SHARE')) return 'screen_share'
     return null
+  }
+
+  const shouldRenderAsInsightCard = (content: string): boolean => {
+    if (!content) return false
+    
+    // Check for company research patterns
+    if (content.toLowerCase().includes('research') && content.match(/\w+\.com/i)) {
+      return true
+    }
+    
+    // Check for structured analysis with bullet points
+    if (content.includes('*') && content.split('*').length > 3) {
+      return true
+    }
+    
+    // Check for strategic questions
+    if (content.includes('?') && content.split('?').length > 2) {
+      return true
+    }
+    
+    // Check for long analytical content
+    if (content.length > 500 && (
+      content.toLowerCase().includes('analyz') ||
+      content.toLowerCase().includes('recommend') ||
+      content.toLowerCase().includes('suggest') ||
+      content.toLowerCase().includes('strategy')
+    )) {
+      return true
+    }
+    
+    return false
   }
 
   const copyToClipboard = async (text: string, messageId: string) => {
@@ -180,6 +223,9 @@ export function ChatArea({
           status="pending"
           sessionId={messageId}
           onCancel={handleCancel}
+          onAppGenerated={(url: string) => {
+            console.log('App generated:', url)
+          }}
         />
       case 'screen_share':
         return <ScreenShare mode="card" onCancel={handleCancel} onAnalysis={(analysis: string) => onScreenAnalysis(analysis)} />
@@ -193,7 +239,7 @@ export function ChatArea({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="text-center py-20 px-6 flex flex-col items-center justify-center min-h-[60vh]"
+      className="text-center py-20 flex flex-col items-center justify-center min-h-[60vh]"
     >
       <motion.div 
         animate={{ 
@@ -205,11 +251,9 @@ export function ChatArea({
           repeat: Infinity, 
           ease: "easeInOut" 
         }}
-        className="w-32 h-32 mx-auto mb-8 rounded-full bg-gradient-to-br from-accent/20 via-primary/10 to-accent/30 flex items-center justify-center shadow-2xl"
+        className="w-20 h-20 mx-auto mb-8 rounded-full bg-muted/10 border border-border/20 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
       >
-        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-inner">
-          <Sparkles className="w-12 h-12 text-accent-foreground" />
-        </div>
+        <FbcIcon className="w-8 h-8 text-foreground/80" />
       </motion.div>
       
       <motion.h3 
@@ -236,7 +280,7 @@ export function ChatArea({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.5 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto justify-items-center"
+        className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full"
       >
         {[
           { 
@@ -300,7 +344,7 @@ export function ChatArea({
                   <Button
                     variant="outline"
                     onClick={action.action}
-                    className="h-auto min-h-[140px] p-6 w-full flex flex-col items-center gap-4 hover:bg-accent/5 transition-all duration-300 border-border/30 rounded-xl group bg-card/50 backdrop-blur-sm hover:shadow-lg"
+                    className="h-auto min-h-[120px] sm:min-h-[140px] p-4 sm:p-6 w-full flex flex-col items-center gap-3 sm:gap-4 hover:bg-accent/5 transition-all duration-300 border-border/30 rounded-xl group bg-card/50 backdrop-blur-sm hover:shadow-lg"
                   >
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow`}>
                       <action.icon className="w-6 h-6 text-white" />
@@ -323,16 +367,18 @@ export function ChatArea({
   )
 
   return (
-    <div className="flex-1 overflow-hidden relative mx-auto px-4">
-      {/* outer scrollable container */}
+    <div className="flex-1 min-h-0">
+      {/* Single scroll container for the entire chat */}
       <div
         ref={scrollAreaRef}
-        className="h-full overflow-y-auto overscroll-contain w-full chat-scroll-container"
+        className="h-full overflow-y-auto overscroll-contain chat-scroll-container"
+        style={{ scrollBehavior: 'smooth' }}
       >
         <div 
           className={cn(
-            "mx-auto space-y-8 p-6 pb-32 chat-message-container",
-            messages.length === 0 ? "max-w-4xl" : "max-w-2xl"
+            "mx-auto space-y-4 sm:space-y-6 px-2 sm:px-4 md:px-6 py-4 sm:py-6",
+            "max-w-4xl w-full", // Match footer width and ensure full width
+            "min-h-full flex flex-col justify-end" // Push content to bottom when few messages
           )} 
           data-testid="messages-container"
         >
@@ -347,6 +393,7 @@ export function ChatArea({
                   const messageType = message.role === "assistant" ? detectMessageType(message.content || '') : { type: 'default' }
                   const toolType = detectToolType(message.content || '')
                   const isVisible = visibleMessages.has(message.id)
+                  const isLastMessage = index === messages.length - 1
                   
                   // Render VideoToApp card if present
                   if (message.videoToAppCard) {
@@ -362,7 +409,7 @@ export function ChatArea({
                         {/* Regular message content */}
                         <div className="flex gap-3 justify-start">
                           <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-1">
-                            <Bot className="w-3 h-3 text-accent" />
+                            <FbcIcon className="w-3 h-3 text-accent" />
                           </div>
                           <div className="flex flex-col max-w-[85%] min-w-0 items-start">
                             <div className="relative group/message transition-all duration-200 bg-transparent text-foreground">
@@ -384,6 +431,9 @@ export function ChatArea({
                             code={message.videoToAppCard.code}
                             error={message.videoToAppCard.error}
                             sessionId={message.videoToAppCard.sessionId}
+                            onAppGenerated={(url: string) => {
+                              console.log('App generated:', url)
+                            }}
                           />
                         </div>
                       </motion.div>
@@ -405,7 +455,7 @@ export function ChatArea({
                         {message.content && (
                           <div className="flex gap-3 justify-start">
                             <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-1">
-                              <Bot className="w-3 h-3 text-accent" />
+                              <FbcIcon className="w-3 h-3 text-accent" />
                             </div>
                             <div className="flex flex-col max-w-[85%] min-w-0 items-start">
                               <div className="relative group/message transition-all duration-200 bg-transparent text-foreground">
@@ -449,221 +499,223 @@ export function ChatArea({
                     )
                   }
                   
-                  return (
-                    <motion.div
-                      key={message.id}
-                      data-message-id={message.id}
-                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                      animate={{ 
-                        opacity: isVisible ? 1 : 0.7, 
-                        y: 0, 
-                        scale: 1 
-                      }}
-                      transition={{ 
-                        duration: 0.4, 
-                        delay: index * 0.05,
-                        ease: [0.16, 1, 0.3, 1]
-                      }}
-                      className="group relative"
-                    >
-                      <div className={cn(
-                        "flex gap-3",
-                        message.role === "user" ? "justify-end" : "justify-start"
-                      )}>
-                        {/* AI Avatar - Small and minimal */}
-                        {message.role === "assistant" && (
-                          <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-1">
-                            <Bot className="w-3 h-3 text-accent" />
-                          </div>
+                  // Check if this AI message should be rendered as an insight card
+                  if (message.role === "assistant" && shouldRenderAsInsightCard(message.content || '')) {
+                    return (
+                      <React.Fragment key={message.id}>
+                        <motion.div
+                          data-message-id={message.id}
+                          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                          animate={{ 
+                            opacity: isVisible ? 1 : 0.7, 
+                            y: 0, 
+                            scale: 1 
+                          }}
+                          transition={{ 
+                            duration: 0.4, 
+                            delay: index * 0.05,
+                            ease: [0.16, 1, 0.3, 1]
+                          }}
+                          className="flex justify-center"
+                        >
+                          <AIInsightCard content={message.content || ''} />
+                        </motion.div>
+                        
+                        {/* Show AI Thinking Indicator immediately after the last message when loading */}
+                        {isLastMessage && isLoading && (
+                          <AIThinkingIndicator 
+                            context={detectAIContext(
+                              message.content || '',
+                              '/api/chat'
+                            )}
+                          />
                         )}
+                      </React.Fragment>
+                    )
+                  }
 
+                  return (
+                    <React.Fragment key={message.id}>
+                      <motion.div
+                        data-message-id={message.id}
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ 
+                          opacity: isVisible ? 1 : 0.7, 
+                          y: 0, 
+                          scale: 1 
+                        }}
+                        transition={{ 
+                          duration: 0.4, 
+                          delay: index * 0.05,
+                          ease: [0.16, 1, 0.3, 1]
+                        }}
+                        className="group relative"
+                      >
                         <div className={cn(
-                          "flex flex-col max-w-[75%] min-w-0",
-                          message.role === "user" ? "items-end" : "items-start"
+                          "flex gap-3 w-full",
+                          message.role === "user" ? "justify-end" : "justify-start"
                         )}>
-                          {/* Message Content - Minimal styling like ChatGPT */}
+                          {/* AI Avatar - Small and minimal */}
+                          {message.role === "assistant" && (
+                            <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-1">
+                              <FbcIcon className="w-3 h-3 text-accent" />
+                            </div>
+                          )}
+
                           <div className={cn(
-                            "relative group/message transition-all duration-200",
-                            message.role === "user"
-                              ? "bg-muted/20 text-foreground border border-border/10 rounded-2xl px-4 py-3"
-                              : "bg-transparent text-foreground" // No background for AI messages
+                            "flex flex-col max-w-[85%] min-w-0",
+                            message.role === "user" ? "items-end" : "items-start"
                           )}>
-                            {message.imageUrl && (
-                              <motion.div 
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.1 }}
-                                className="mb-3"
-                              >
-                                <div className="relative group/image rounded-xl overflow-hidden">
-                                  <img
-                                    src={message.imageUrl || "/placeholder.svg"}
-                                    alt="Uploaded image"
-                                    className="max-w-full h-auto border border-border/20 max-h-96 object-contain rounded-xl"
-                                    loading="lazy"
-                                  />
-                                  <div className="absolute top-3 right-3 opacity-0 group-hover/image:opacity-100 transition-opacity">
-                                    <Button
-                                      variant="secondary"
-                                      size="icon"
-                                      className="w-8 h-8 bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm"
-                                      onClick={() => message.imageUrl && window.open(message.imageUrl, "_blank")}
-                                    >
-                                      <ImageIcon className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
-
-                            <div
-                              className={cn(
-                                "prose prose-sm max-w-none leading-relaxed break-words",
-                                "dark:prose-invert prose-slate text-foreground",
-                                "prose-headings:mt-4 prose-headings:mb-2 prose-p:mb-3 prose-li:mb-1",
-                                "prose-strong:text-current prose-em:text-current"
-                              )}
-                              dangerouslySetInnerHTML={{
-                                __html: formatMessageContent(message.content || ''),
-                              }}
-                            />
-
-                            {/* Sources */}
-                            {message.sources && message.sources.length > 0 && (
-                              <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="mt-4"
-                              >
-                                <Separator className="my-4 opacity-30" />
-                                <div className="space-y-3">
-                                  <p className="text-xs font-medium opacity-70 flex items-center gap-2">
-                                    <Info className="w-3 h-3" />
-                                    Sources & References:
-                                  </p>
-                                  <div className="space-y-2">
-                                    {message.sources.map((src, idx) => (
-                                      <motion.a
-                                        key={`${message.id}-source-${idx}`}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.4 + idx * 0.1 }}
-                                        href={src.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block text-xs hover:underline opacity-80 hover:opacity-100 transition-all p-3 bg-muted/30 rounded-lg border border-border/20 hover:border-accent/30 hover:bg-accent/5"
+                            {/* Message Content - Minimal styling like ChatGPT */}
+                            <div className={cn(
+                              "relative group/message transition-all duration-200",
+                              message.role === "user"
+                                ? "bg-muted/20 text-foreground border border-border/10 rounded-2xl px-4 py-3"
+                                : "bg-transparent text-foreground" // No background for AI messages
+                            )}>
+                              {message.imageUrl && (
+                                <motion.div 
+                                  initial={{ opacity: 0, scale: 0.95 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: 0.1 }}
+                                  className="mb-3"
+                                >
+                                  <div className="relative group/image rounded-xl overflow-hidden">
+                                    <img
+                                      src={message.imageUrl || "/placeholder.svg"}
+                                      alt="Uploaded image"
+                                      className="max-w-full h-auto border border-border/20 max-h-96 object-contain rounded-xl"
+                                      loading="lazy"
+                                    />
+                                    <div className="absolute top-3 right-3 opacity-0 group-hover/image:opacity-100 transition-opacity">
+                                      <Button
+                                        variant="secondary"
+                                        size="icon"
+                                        className="w-8 h-8 bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm"
+                                        onClick={() => message.imageUrl && window.open(message.imageUrl, "_blank")}
                                       >
-                                        <div className="font-medium">{src.title || 'Source'}</div>
-                                        <div className="text-muted-foreground mt-1 truncate">{src.url}</div>
-                                      </motion.a>
-                                    ))}
+                                        <ImageIcon className="w-4 h-4" />
+                                      </Button>
+                                    </div>
                                   </div>
-                                </div>
-                              </motion.div>
-                            )}
-                          </div>
+                                </motion.div>
+                              )}
 
-                          {/* Message Actions - ChatGPT style */}
-                          <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="w-6 h-6 hover:bg-accent/10 transition-colors"
-                              onClick={() => copyToClipboard(message.content || '', message.id)}
+                              <div
+                                className={cn(
+                                  "prose prose-sm max-w-none leading-relaxed break-words",
+                                  "dark:prose-invert prose-slate text-foreground",
+                                  "prose-headings:mt-4 prose-headings:mb-2 prose-p:mb-3 prose-li:mb-1",
+                                  "prose-strong:text-current prose-em:text-current"
+                                )}
+                                dangerouslySetInnerHTML={{
+                                  __html: formatMessageContent(message.content || ''),
+                                }}
+                              />
+
+                              {/* Sources */}
+                              {message.sources && message.sources.length > 0 && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: 0.3 }}
+                                  className="mt-4"
+                                >
+                                  <Separator className="my-4 opacity-30" />
+                                  <div className="space-y-3">
+                                    <p className="text-xs font-medium opacity-70 flex items-center gap-2">
+                                      <Info className="w-3 h-3" />
+                                      Sources & References:
+                                    </p>
+                                    <div className="space-y-2">
+                                      {message.sources.map((src, idx) => (
+                                        <motion.a
+                                          key={`${message.id}-source-${idx}`}
+                                          initial={{ opacity: 0, x: -10 }}
+                                          animate={{ opacity: 1, x: 0 }}
+                                          transition={{ delay: 0.4 + idx * 0.1 }}
+                                          href={src.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="block text-xs hover:underline opacity-80 hover:opacity-100 transition-all p-3 bg-muted/30 rounded-lg border border-border/20 hover:border-accent/30 hover:bg-accent/5"
+                                        >
+                                          <div className="font-medium">{src.title || 'Source'}</div>
+                                          <div className="text-muted-foreground mt-1 truncate">{src.url}</div>
+                                        </motion.a>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </div>
+
+                            {/* Message Actions - ChatGPT style */}
+                            <motion.div 
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                              <motion.div
-                                animate={copiedMessageId === message.id ? { scale: [1, 1.2, 1] } : {}}
-                                transition={{ duration: 0.2 }}
-                              >
-                                {copiedMessageId === message.id ? 
-                                  <Check className="w-3 h-3 text-green-600" /> : 
-                                  <Copy className="w-3 h-3" />
-                                }
-                              </motion.div>
-                            </Button>
-                            
-                            {message.role === "user" && (
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 className="w-6 h-6 hover:bg-accent/10 transition-colors"
-                                onClick={() => {
-                                  // TODO: Implement edit functionality
-                                  console.log('Edit message:', message.id)
-                                }}
+                                onClick={() => copyToClipboard(message.content || '', message.id)}
                               >
-                                <Edit className="w-3 h-3" />
+                                <motion.div
+                                  animate={copiedMessageId === message.id ? { scale: [1, 1.2, 1] } : {}}
+                                  transition={{ duration: 0.2 }}
+                                >
+                                  {copiedMessageId === message.id ? 
+                                    <Check className="w-3 h-3 text-green-600" /> : 
+                                    <Copy className="w-3 h-3" />
+                                  }
+                                </motion.div>
                               </Button>
-                            )}
-                          </motion.div>
-                        </div>
-
-                        {/* User Avatar - Small and minimal */}
-                        {message.role === "user" && (
-                          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
-                            <User className="w-3 h-3 text-primary" />
+                              
+                              {message.role === "user" && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="w-6 h-6 hover:bg-accent/10 transition-colors"
+                                  onClick={() => {
+                                    // TODO: Implement edit functionality
+                                    console.log('Edit message:', message.id)
+                                  }}
+                                >
+                                  <Edit className="w-3 h-3" />
+                                </Button>
+                              )}
+                            </motion.div>
                           </div>
-                        )}
-                      </div>
-                    </motion.div>
+
+                          {/* User Avatar - Small and minimal */}
+                          {message.role === "user" && (
+                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                              <User className="w-3 h-3 text-primary" />
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                      
+                      {/* Show AI Thinking Indicator immediately after the last message when loading */}
+                      {isLastMessage && isLoading && (
+                        <AIThinkingIndicator 
+                          context={detectAIContext(
+                            message.content || '',
+                            '/api/chat'
+                          )}
+                        />
+                      )}
+                    </React.Fragment>
                   )
                 })}
               </AnimatePresence>
 
-              {/* Enhanced Loading State */}
-              {isLoading && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="flex gap-3"
-                >
-                  <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-1">
-                    <Bot className="w-3 h-3 text-accent" />
-                  </div>
-                  <div className="p-3 bg-muted/20 rounded-2xl border border-border/10 max-w-xs">
-                    <div className="flex items-center gap-3">
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      >
-                        <Sparkles className="w-4 h-4 text-accent" />
-                      </motion.div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-foreground">AI is thinking...</span>
-                        <div className="flex items-center gap-1 mt-1">
-                          {[0, 1, 2].map((i) => (
-                            <motion.div
-                              key={i}
-                              animate={{ 
-                                opacity: [0.3, 1, 0.3],
-                                scale: [1, 1.2, 1]
-                              }}
-                              transition={{ 
-                                duration: 1.5, 
-                                repeat: Infinity,
-                                delay: i * 0.2
-                              }}
-                              className="w-1.5 h-1.5 bg-accent rounded-full"
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Scroll anchor */}
+              {/* Scroll anchor with proper spacing */}
               <div 
                 ref={messagesEndRef} 
-                className="h-0 w-0" 
-                style={{ scrollMarginBottom: '20px' }}
+                className="h-4 w-full" 
+                style={{ scrollMarginBottom: '16px' }}
               />
             </>
           )}

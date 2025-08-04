@@ -4,10 +4,20 @@ import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Send, Camera, Mic, Paperclip, Play, Calculator, Monitor, Plus, X, Sparkles, Zap, FileText, Image as ImageIcon, ChevronDown } from "lucide-react"
+// Consolidated Phosphor icons imports
+import { 
+  Send, Camera, Mic, Paperclip, Play, Calculator, Monitor, Plus, X, 
+  Sparkles, Zap, FileText, ImageIcon, ChevronDown 
+} from "@/lib/icon-mapping"
+
+// Hooks and Utils
 import { useToast } from '@/hooks/use-toast'
-import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+
+// External Libraries
+import { motion, AnimatePresence } from "framer-motion"
+
+// UI Components
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface ChatFooterProps {
@@ -212,7 +222,7 @@ export function ChatFooter({
         className="absolute inset-0 pointer-events-none"
       />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6 relative z-10">
+      <div className="max-w-4xl mx-auto px-2 sm:px-4 md:px-6 py-2 sm:py-4 relative z-10">
         <form onSubmit={handleSubmit}>
           {/* Hidden File Inputs */}
           <input

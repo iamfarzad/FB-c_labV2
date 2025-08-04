@@ -81,13 +81,13 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '' }
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-accent/70"
+        return "bg-transparent"
       case "active":
-        return "bg-accent"
+        return "bg-transparent"
       case "ready":
-        return "bg-muted"
+        return "bg-transparent"
       default:
-        return "bg-muted"
+        return "bg-transparent"
     }
   }
 
