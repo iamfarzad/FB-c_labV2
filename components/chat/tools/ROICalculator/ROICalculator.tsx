@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ToolCardWrapper } from "@/components/chat/ToolCardWrapper"
 import { cn } from "@/lib/utils"
 import type { ROICalculatorProps, ROICalculationResult, WizardStep } from "./ROICalculator.types"
@@ -18,7 +19,8 @@ const WIZARD_STEPS: WizardStep[] = ["company-info", "metrics", "results"];
 export function ROICalculator({
   mode = 'card',
   onComplete,
-  onCancel
+  onCancel,
+  onClose
 }: ROICalculatorProps) {
   const { toast } = useToast()
   const [currentStep, setCurrentStep] = useState<WizardStep>("company-info")
@@ -91,15 +93,45 @@ export function ROICalculator({
     }
   }
 
+  const ROICalculatorUI = () => (
+    <div className="p-4">
+      {renderStep()}
+      <div className="flex justify-between mt-4">
+          {currentStep !== "company-info" && <Button variant="ghost" onClick={() => setCurrentStep(WIZARD_STEPS[WIZARD_STEPS.indexOf(currentStep) - 1])}>Back</Button>}
+          {onCancel && <Button variant="destructive" onClick={onCancel}>Cancel</Button>}
+      </div>
+    </div>
+  )
+
+  // Modal variant
+  if (mode === 'modal') {
+    return (
+      <Dialog open={true} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <DialogTitle className="flex items-center gap-2">
+              <Calculator className="w-5 h-5" />
+              ROI Calculator
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 rounded-full"
+              onClick={onClose}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </DialogHeader>
+          <ROICalculatorUI />
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  // Card variant
   return (
     <ToolCardWrapper title="ROI Calculator" description="Calculate the ROI for your business." icon={<Calculator className="w-4 h-4" />}>
-      <div className="p-4">
-        {renderStep()}
-        <div className="flex justify-between mt-4">
-            {currentStep !== "company-info" && <Button variant="ghost" onClick={() => setCurrentStep(WIZARD_STEPS[WIZARD_STEPS.indexOf(currentStep) - 1])}>Back</Button>}
-            {onCancel && <Button variant="destructive" onClick={onCancel}>Cancel</Button>}
-        </div>
-      </div>
+      <ROICalculatorUI />
     </ToolCardWrapper>
   )
 }

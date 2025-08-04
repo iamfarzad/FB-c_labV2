@@ -2,11 +2,12 @@
 
 import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Monitor, Brain, Loader2 } from "@/lib/icon-mapping"
+import { Monitor, Brain, Loader2, X } from "@/lib/icon-mapping"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { ToolCardWrapper } from "@/components/chat/ToolCardWrapper"
 import type { ScreenShareProps, ScreenShareState } from "./ScreenShare.types"
@@ -18,7 +19,10 @@ interface AnalysisResult {
 }
 
 export function ScreenShare({
+  mode = 'card',
   onAnalysis,
+  onClose,
+  onCancel,
   onStream
 }: ScreenShareProps) {
   const { toast } = useToast()
@@ -164,49 +168,79 @@ export function ScreenShare({
     }
   }, [sendScreenFrame])
 
+  const ScreenShareUI = () => (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+          <Badge variant={screenState === "sharing" ? "default" : "destructive"}>{screenState}</Badge>
+          <div className="flex items-center gap-2">
+              <Switch 
+                checked={isAutoAnalyzing} 
+                onCheckedChange={setIsAutoAnalyzing} 
+                disabled={screenState !== "sharing"} 
+              />
+              <span className="text-xs">Auto Analysis</span>
+          </div>
+      </div>
+      <div className="relative">
+        <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg border bg-black" />
+        <canvas ref={canvasRef} className="hidden" />
+        {screenState === 'sharing' ? (
+          <Button 
+            onClick={captureScreenshot} 
+            disabled={isAnalyzing} 
+            className="absolute bottom-4 right-4 w-12 h-12 rounded-full"
+          >
+            {isAnalyzing ? <Loader2 className="w-6 h-6 animate-spin" /> : <Brain className="w-6 h-6" />}
+          </Button>
+        ) : (
+          <Button onClick={startScreenShare} className="absolute bottom-4 right-4">
+            Start Sharing
+          </Button>
+        )}
+      </div>
+      {analysisHistory.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-sm">Analysis History</CardTitle></CardHeader>
+          <CardContent className="space-y-2 max-h-40 overflow-y-auto">
+            {analysisHistory.map((a) => (
+              <p key={a.id} className="text-sm border-b pb-1">{a.text}</p>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+    </div>
+  )
+
+  // Modal variant
+  if (mode === 'modal') {
+    return (
+      <Dialog open={true} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <DialogTitle className="flex items-center gap-2">
+              <Monitor className="w-5 h-5" />
+              Screen Share
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 rounded-full"
+              onClick={onClose}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </DialogHeader>
+          <ScreenShareUI />
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  // Card variant
   return (
     <ToolCardWrapper title="Screen Share" description="Real-time screen sharing with AI analysis" icon={<Monitor className="w-4 h-4" />}>
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-            <Badge variant={screenState === "sharing" ? "default" : "destructive"}>{screenState}</Badge>
-            <div className="flex items-center gap-2">
-                <Switch 
-                  checked={isAutoAnalyzing} 
-                  onCheckedChange={setIsAutoAnalyzing} 
-                  disabled={screenState !== "sharing"} 
-                />
-                <span className="text-xs">Auto Analysis</span>
-            </div>
-        </div>
-        <div className="relative">
-          <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg border bg-black" />
-          <canvas ref={canvasRef} className="hidden" />
-          {screenState === 'sharing' ? (
-            <Button 
-              onClick={captureScreenshot} 
-              disabled={isAnalyzing} 
-              className="absolute bottom-4 right-4 w-12 h-12 rounded-full"
-            >
-              {isAnalyzing ? <Loader2 className="w-6 h-6 animate-spin" /> : <Brain className="w-6 h-6" />}
-            </Button>
-          ) : (
-            <Button onClick={startScreenShare} className="absolute bottom-4 right-4">
-              Start Sharing
-            </Button>
-          )}
-        </div>
-        {analysisHistory.length > 0 && (
-          <Card>
-            <CardHeader><CardTitle className="text-sm">Analysis History</CardTitle></CardHeader>
-            <CardContent className="space-y-2 max-h-40 overflow-y-auto">
-              {analysisHistory.map((a) => (
-                <p key={a.id} className="text-sm border-b pb-1">{a.text}</p>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-      </div>
+      <ScreenShareUI />
     </ToolCardWrapper>
   )
 }

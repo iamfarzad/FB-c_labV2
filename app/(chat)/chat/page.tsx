@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils"
 import type { Message } from "@/app/(chat)/chat/types/chat"
 import { LeadProgressIndicator } from "@/components/chat/LeadProgressIndicator"
 import { ConversationStage } from "@/lib/lead-manager"
+import { ErrorHandler, useErrorToast } from "@/components/chat/ErrorHandler"
 
 // Stage configuration for progress display
 const stageConfig = {
@@ -56,6 +57,7 @@ interface VideoAppResult {
 
 function ChatPageContent() {
   const { incrementUsage } = useDemoSession()
+  const { showError, showNetworkError, showSuccess } = useErrorToast()
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [input, setInput] = useState("")
@@ -70,6 +72,7 @@ function ChatPageContent() {
   const [conversationStage, setConversationStage] = useState<ConversationStage>(ConversationStage.GREETING)
   const [leadData, setLeadData] = useState<{name?: string; email?: string; company?: string}>({})
   const [sessionId] = useState(() => Date.now().toString())
+  const [error, setError] = useState<Error | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Check if mobile on mount and resize
@@ -248,9 +251,21 @@ function ChatPageContent() {
       incrementUsage(1000, 1) // Estimate 1000 tokens per request
     } catch (error) {
       console.error("Error sending message:", error)
+      
+      // Set error state for detailed error display
+      setError(error as Error)
+      
+      // Show appropriate error toast
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        showNetworkError()
+      } else {
+        showError(error as Error, 'chat')
+      }
+      
+      // Add error message to chat
       addMessage({
         role: "assistant",
-        content: "I apologize, but I encountered an error while processing your request. Please try again.",
+        content: "I apologize, but I encountered an error while processing your request. Please check your connection and try again.",
       })
     } finally {
       setIsLoading(false)
@@ -357,16 +372,41 @@ ${result.summary}`
         }
       >
         {/* Chat Area - Full Width */}
-        <ChatArea
-          messages={messages}
-          isLoading={isLoading}
-          messagesEndRef={messagesEndRef}
-          onVoiceTranscript={handleVoiceTranscript}
-          onWebcamCapture={handleWebcamCapture}
-          onROICalculation={handleROICalculation}
-          onVideoAppResult={handleVideoAppResult}
-          onScreenAnalysis={handleScreenAnalysis}
-        />
+        {error ? (
+          <div className="flex-1 flex items-center justify-center p-4">
+            <ErrorHandler 
+              error={error} 
+              context="chat"
+              onRetry={() => {
+                setError(null)
+                // Retry last message if there were messages
+                if (messages.length > 0) {
+                  const lastUserMessage = messages.filter(m => m.role === 'user').pop()
+                  if (lastUserMessage) {
+                    handleSendMessage(lastUserMessage.content || '', lastUserMessage.imageUrl)
+                  }
+                }
+              }}
+              onReset={() => {
+                setError(null)
+                setMessages([])
+                setInput("")
+              }}
+            />
+          </div>
+        ) : (
+          <ChatArea
+            messages={messages}
+            isLoading={isLoading}
+            messagesEndRef={messagesEndRef}
+            onVoiceTranscript={handleVoiceTranscript}
+            onWebcamCapture={handleWebcamCapture}
+            onROICalculation={handleROICalculation}
+            onVideoAppResult={handleVideoAppResult}
+            onScreenAnalysis={handleScreenAnalysis}
+            onSendMessage={handleSendMessage}
+          />
+        )}
         
         {/* Desktop: Always visible progress indicator */}
         <div className="hidden lg:block">

@@ -1,14 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export function middleware(req: NextRequest) {
+  // Create response
+  let response = NextResponse.next()
+
+  // Add security headers
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()')
+  
+  // Content Security Policy
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https:",
+    "media-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'"
+  ].join('; ')
+  
+  response.headers.set('Content-Security-Policy', csp)
+
   // Only apply mocking in development
   if (process.env.NODE_ENV !== 'development') {
-    return NextResponse.next()
+    return response
   }
 
   const enableMocking = process.env.ENABLE_GEMINI_MOCKING === 'true'
   if (!enableMocking) {
-    return NextResponse.next()
+    return response
   }
 
   // Define Gemini routes that should be mocked
@@ -49,11 +76,14 @@ export function middleware(req: NextRequest) {
     return NextResponse.rewrite(mockUrl)
   }
 
-  return NextResponse.next()
+  return response
 }
 
 export const config = {
   matcher: [
+    // Apply security headers to all routes
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+    // Specific API routes for mocking
     '/api/chat/:path*',
     '/api/gemini-live/:path*',
     '/api/gemini-live-conversation/:path*',

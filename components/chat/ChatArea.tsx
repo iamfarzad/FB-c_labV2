@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 // Consolidated Phosphor icons imports
 import { 
@@ -51,9 +51,10 @@ interface ChatAreaProps {
   onScreenAnalysis: (analysis: string) => void
   onBusinessInteraction?: (data: BusinessInteractionData) => void
   userContext?: UserBusinessContext
+  onSendMessage?: (message: string) => void
 }
 
-export function ChatArea({
+export const ChatArea = memo(function ChatArea({
   messages,
   isLoading,
   messagesEndRef,
@@ -63,14 +64,58 @@ export function ChatArea({
   onVideoAppResult,
   onScreenAnalysis,
   onBusinessInteraction,
-  userContext
+  userContext,
+  onSendMessage
 }: ChatAreaProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages.length, isLoading])
+
+  // Keyboard navigation for messages
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Skip if user is typing in an input
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      return
+    }
+
+    switch (e.key) {
+      case 'Home':
+        e.preventDefault()
+        scrollAreaRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+        break
+      case 'End':
+        e.preventDefault()
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+        break
+      case 'PageUp':
+        e.preventDefault()
+        if (scrollAreaRef.current) {
+          scrollAreaRef.current.scrollBy({ top: -window.innerHeight * 0.8, behavior: 'smooth' })
+        }
+        break
+      case 'PageDown':
+        e.preventDefault()
+        if (scrollAreaRef.current) {
+          scrollAreaRef.current.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' })
+        }
+        break
+    }
+  }, [])
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
   const [visibleMessages, setVisibleMessages] = useState<Set<string>>(new Set())
   const [hoveredAction, setHoveredAction] = useState<string | null>(null)
 
-  const formatMessageContent = (content: string): string => {
+  const formatMessageContent = useCallback((content: string): string => {
     if (!content) return ''
     // Enhanced markdown formatting with better styling
     return content
@@ -78,9 +123,9 @@ export function ChatArea({
       .replace(/\*(.*?)\*/g, '<em class="italic text-foreground/90">$1</em>')
       .replace(/`(.*?)`/g, '<code class="bg-muted/60 text-accent px-2 py-1 rounded-md text-sm font-mono border border-border/30">$1</code>')
       .replace(/```([\s\S]*?)```/g, '<pre class="bg-muted/40 border border-border/30 rounded-lg p-4 my-3 whitespace-pre-wrap break-words overflow-x-auto"><code class="text-sm font-mono">$1</code></pre>')
-  }
+  }, [])
 
-  const detectMessageType = (content: string): { type: string; icon?: React.ReactNode; badge?: string; color?: string } => {
+  const detectMessageType = useCallback((content: string): { type: string; icon?: React.ReactNode; badge?: string; color?: string } => {
     if (!content) return { type: 'default' }
     
     if (content.includes('```') || content.toLowerCase().includes('code')) {
@@ -120,9 +165,9 @@ export function ChatArea({
     }
     
     return { type: 'default' }
-  }
+  }, [])
 
-  const detectToolType = (content: string): string | null => {
+  const detectToolType = useCallback((content: string): string | null => {
     if (!content) return null
     if (content.includes('VOICE_INPUT')) return 'voice_input'
     if (content.includes('WEBCAM_CAPTURE')) return 'webcam_capture'
@@ -130,7 +175,7 @@ export function ChatArea({
     if (content.includes('VIDEO_TO_APP')) return 'video_to_app'
     if (content.includes('SCREEN_SHARE')) return 'screen_share'
     return null
-  }
+  }, [])
 
   const shouldRenderAsInsightCard = (content: string): boolean => {
     if (!content) return false
@@ -163,15 +208,28 @@ export function ChatArea({
     return false
   }
 
-  const copyToClipboard = async (text: string, messageId: string) => {
+  const copyToClipboard = useCallback(async (text: string, messageId: string) => {
     try {
       await navigator.clipboard.writeText(text)
       setCopiedMessageId(messageId)
       setTimeout(() => setCopiedMessageId(null), 2000)
     } catch (error) {
       console.error('Failed to copy text:', error)
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea')
+      textArea.value = text
+      document.body.appendChild(textArea)
+      textArea.select()
+      try {
+        document.execCommand('copy')
+        setCopiedMessageId(messageId)
+        setTimeout(() => setCopiedMessageId(null), 2000)
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed:', fallbackErr)
+      }
+      document.body.removeChild(textArea)
     }
-  }
+  }, [])
 
   useEffect(() => {
     const scrollToBottom = () => {
@@ -219,12 +277,13 @@ export function ChatArea({
       case 'video_to_app':
         return <VideoToApp 
           mode="card"
-          videoUrl=""
+          videoUrl={`/api/video-uploads/${messageId}`} // Dynamic video URL based on session
           status="pending"
           sessionId={messageId}
           onCancel={handleCancel}
           onAppGenerated={(url: string) => {
             console.log('App generated:', url)
+            // TODO: Handle app generation result
           }}
         />
       case 'screen_share':
@@ -234,7 +293,7 @@ export function ChatArea({
     }
   }
 
-  const EmptyState = () => (
+  const EmptyState = useMemo(() => (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -364,7 +423,7 @@ export function ChatArea({
         ))}
       </motion.div>
     </motion.div>
-  )
+  ), [])
 
   return (
     <div className="flex-1 min-h-0">
@@ -373,6 +432,9 @@ export function ChatArea({
         ref={scrollAreaRef}
         className="h-full overflow-y-auto overscroll-contain chat-scroll-container"
         style={{ scrollBehavior: 'smooth' }}
+        role="log"
+        aria-live="polite"
+        aria-label="Chat conversation"
       >
         <div 
           className={cn(
@@ -383,7 +445,7 @@ export function ChatArea({
           data-testid="messages-container"
         >
           {messages.length === 0 && !isLoading ? (
-            <EmptyState />
+            EmptyState
           ) : (
             <>
               <AnimatePresence>
@@ -518,7 +580,14 @@ export function ChatArea({
                           }}
                           className="flex justify-center"
                         >
-                          <AIInsightCard content={message.content || ''} />
+                          <AIInsightCard 
+                            content={message.content || ''} 
+                            onContinue={(suggestion) => {
+                              if (onSendMessage) {
+                                onSendMessage(suggestion)
+                              }
+                            }}
+                          />
                         </motion.div>
                         
                         {/* Show AI Thinking Indicator immediately after the last message when loading */}
@@ -550,6 +619,8 @@ export function ChatArea({
                           ease: [0.16, 1, 0.3, 1]
                         }}
                         className="group relative"
+                        role="article"
+                        aria-label={`${message.role === 'user' ? 'User' : 'Assistant'} message`}
                       >
                         <div className={cn(
                           "flex gap-3 w-full",
@@ -677,10 +748,14 @@ export function ChatArea({
                                   variant="ghost"
                                   size="icon"
                                   className="w-6 h-6 hover:bg-accent/10 transition-colors"
-                                  onClick={() => {
-                                    // TODO: Implement edit functionality
-                                    console.log('Edit message:', message.id)
-                                  }}
+                                                                onClick={() => {
+                                // Implement edit functionality
+                                const newContent = prompt('Edit message:', message.content)
+                                if (newContent && newContent.trim() !== message.content) {
+                                  // TODO: Add proper edit handler to props
+                                  console.log('Edit message:', message.id, 'New content:', newContent)
+                                }
+                              }}
                                 >
                                   <Edit className="w-3 h-3" />
                                 </Button>
@@ -723,4 +798,4 @@ export function ChatArea({
       </div>
     </div>
   )
-}
+})

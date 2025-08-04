@@ -129,8 +129,13 @@ export function ChatFooter({
   }, [setShowScreenShareModal])
 
   const handleVideo2App = useCallback(() => {
-    window.open('/video-learning-tool', '_blank')
-  }, [])
+    if (setShowVideo2AppModal) {
+      setShowVideo2AppModal(true)
+    } else {
+      // Fallback to new tab if modal not available
+      window.open('/video-learning-tool', '_blank')
+    }
+  }, [setShowVideo2AppModal])
 
   const handleROICalculator = useCallback(() => {
     if (setShowROICalculatorModal) {
@@ -318,6 +323,8 @@ export function ChatFooter({
                     )}
                     onClick={tool.onClick}
                     disabled={tool.disabled || isLoading}
+                    aria-label={tool.description}
+                    title={tool.description}
                   >
                     <tool.icon className="w-3 h-3 mr-1.5" />
                     {tool.label.replace(' Input', '').replace(' Capture', '')}

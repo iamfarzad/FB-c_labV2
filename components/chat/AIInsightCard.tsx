@@ -2,358 +2,128 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { 
-  Brain, 
-  Target, 
-  ArrowRight, 
-  AlertTriangle,
-  Info,
   Sparkles,
-  Check,
-  Monitor
+  ArrowRight,
+  Target
 } from '@/lib/icon-mapping'
 import { cn } from '@/lib/utils'
 
 interface AIInsightCardProps {
   content: string
   className?: string
+  onContinue?: (suggestion: string) => void
 }
 
 interface ParsedInsight {
-  type: 'research' | 'analysis' | 'recommendations' | 'questions' | 'default'
+  type: 'research' | 'analysis' | 'recommendations' | 'default'
   title: string
-  summary?: string
-  keyPoints: string[]
-  recommendations?: string[]
-  questions?: string[]
-  companyInfo?: {
-    name: string
-    domain: string
-    description: string
-  }
+  keyPoint: string
+  actionSuggestion: string
+  companyName?: string
 }
 
-export function AIInsightCard({ content, className }: AIInsightCardProps) {
+export function AIInsightCard({ content, className, onContinue }: AIInsightCardProps) {
   const parseContent = (text: string): ParsedInsight => {
-    // Remove duplicate sentences
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0)
-    const uniqueSentences = [...new Set(sentences.map(s => s.trim()))]
-    const cleanContent = uniqueSentences.join('. ') + '.'
+    const cleanContent = text.trim()
 
-    // Detect company research
-    const companyMatch = cleanContent.match(/research.*?(\w+\.com)/i)
-    const companyName = companyMatch ? companyMatch[1] : null
+    // Extract company name
+    const companyMatch = cleanContent.match(/(\w+(?:\.\w+)?(?:\.com)?)/i)
+    const companyName = companyMatch ? companyMatch[1].replace('.com', '') : undefined
 
-    // Extract key information
-    const keyPoints: string[] = []
-    const recommendations: string[] = []
-    const questions: string[] = []
-
-    // Parse bullet points and lists
-    const bulletMatches = cleanContent.match(/\*\s*([^*]+)/g)
-    if (bulletMatches) {
-      bulletMatches.forEach(match => {
-        const point = match.replace(/^\*\s*/, '').trim()
-        if (point.includes('?')) {
-          questions.push(point)
-        } else if (point.toLowerCase().includes('enhance') || 
-                   point.toLowerCase().includes('improve') || 
-                   point.toLowerCase().includes('optimize')) {
-          recommendations.push(point)
-        } else {
-          keyPoints.push(point)
-        }
-      })
-    }
-
-    // Determine type
+    // Determine type and extract key insight
     let type: ParsedInsight['type'] = 'default'
-    let title = 'AI Analysis'
+    let title = 'AI Insight'
+    let keyPoint = cleanContent.split('.')[0] || 'Analysis complete'
+    let actionSuggestion = 'Continue our conversation'
 
-    if (cleanContent.toLowerCase().includes('research') && companyName) {
+    if (cleanContent.toLowerCase().includes('research') || cleanContent.toLowerCase().includes('founded')) {
       type = 'research'
-      title = `Company Research: ${companyName}`
-    } else if (questions.length > 0) {
-      type = 'questions'
-      title = 'Strategic Questions'
-    } else if (recommendations.length > 0) {
+      title = companyName ? `${companyName} Research` : 'Company Research'
+      keyPoint = `${companyName || 'Company'} operates in a competitive market with growth opportunities`
+      actionSuggestion = 'Explore strategic recommendations'
+    } else if (cleanContent.toLowerCase().includes('recommend') || cleanContent.toLowerCase().includes('enhance')) {
       type = 'recommendations'
-      title = 'AI Recommendations'
+      title = 'Strategic Recommendations'
+      keyPoint = 'AI-powered optimization opportunities identified'
+      actionSuggestion = 'Discuss implementation strategy'
     } else if (cleanContent.toLowerCase().includes('analyz')) {
       type = 'analysis'
       title = 'Business Analysis'
+      keyPoint = 'Key insights and patterns discovered'
+      actionSuggestion = 'Dive deeper into findings'
     }
-
-    // Extract company info if it's a research type
-    let companyInfo: ParsedInsight['companyInfo'] | undefined
-    if (type === 'research' && companyName) {
-      const descMatch = cleanContent.match(/is an? ([^.]+)/i)
-      companyInfo = {
-        name: companyName.replace('.com', ''),
-        domain: companyName,
-        description: descMatch ? descMatch[1] : 'AI-powered business solution'
-      }
-    }
-
-    // Create summary
-    const summary = uniqueSentences.slice(0, 2).join('. ') + '.'
 
     return {
       type,
       title,
-      summary,
-      keyPoints,
-      recommendations,
-      questions,
-      companyInfo
+      keyPoint,
+      actionSuggestion,
+      companyName
     }
   }
 
   const insight = parseContent(content)
 
-  const getTypeConfig = (type: ParsedInsight['type']) => {
-    switch (type) {
-      case 'research':
-        return {
-          icon: Monitor,
-          color: 'from-blue-500 to-cyan-500',
-          bgColor: 'bg-blue-50 dark:bg-blue-950/20',
-          borderColor: 'border-blue-200 dark:border-blue-800',
-          badge: 'Company Research',
-          badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-        }
-      case 'analysis':
-        return {
-          icon: Brain,
-          color: 'from-purple-500 to-indigo-500',
-          bgColor: 'bg-purple-50 dark:bg-purple-950/20',
-          borderColor: 'border-purple-200 dark:border-purple-800',
-          badge: 'AI Analysis',
-          badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
-        }
-      case 'recommendations':
-        return {
-          icon: Sparkles,
-          color: 'from-amber-500 to-orange-500',
-          bgColor: 'bg-amber-50 dark:bg-amber-950/20',
-          borderColor: 'border-amber-200 dark:border-amber-800',
-          badge: 'Recommendations',
-          badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300'
-        }
-      case 'questions':
-        return {
-          icon: Target,
-          color: 'from-green-500 to-emerald-500',
-          bgColor: 'bg-green-50 dark:bg-green-950/20',
-          borderColor: 'border-green-200 dark:border-green-800',
-          badge: 'Strategic Questions',
-          badgeColor: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-        }
-      default:
-        return {
-          icon: Sparkles,
-          color: 'from-gray-500 to-slate-500',
-          bgColor: 'bg-gray-50 dark:bg-gray-950/20',
-          borderColor: 'border-gray-200 dark:border-gray-800',
-          badge: 'AI Insight',
-          badgeColor: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300'
-        }
+  const handleContinue = () => {
+    if (onContinue) {
+      onContinue(insight.actionSuggestion)
     }
   }
 
-  const config = getTypeConfig(insight.type)
-  const IconComponent = config.icon
+  const getTypeIcon = (type: ParsedInsight['type']) => {
+    switch (type) {
+      case 'research': return Target
+      case 'analysis': return Sparkles
+      case 'recommendations': return ArrowRight
+      default: return Sparkles
+    }
+  }
+
+  const IconComponent = getTypeIcon(insight.type)
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className={cn("w-full max-w-2xl", className)}
+      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+      className={cn("w-full max-w-md mx-auto", className)}
     >
-      <Card className={cn(
-        "border-2 shadow-lg backdrop-blur-sm",
-        config.bgColor,
-        config.borderColor
-      )}>
-        <CardHeader className="pb-3">
-          <div className="flex items-start gap-3">
-            <div className={cn(
-              "w-10 h-10 rounded-xl bg-gradient-to-r flex items-center justify-center shadow-md",
-              config.color
-            )}>
-              <IconComponent className="w-5 h-5 text-white" />
+      {/* Compact Insight Card */}
+      <div className="bg-accent/5 border border-accent/20 rounded-2xl p-4 backdrop-blur-sm">
+        <div className="flex items-start gap-3">
+          {/* Icon */}
+          <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
+            <IconComponent className="w-4 h-4 text-accent" />
+          </div>
+          
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Badge variant="secondary" className="text-xs bg-accent/10 text-accent border-accent/20">
+                {insight.title}
+              </Badge>
             </div>
             
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="secondary" className={config.badgeColor}>
-                  {config.badge}
-                </Badge>
-                <motion.div
-                  animate={{ rotate: [0, 360] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                >
-                  <Sparkles className="w-3 h-3 text-muted-foreground" />
-                </motion.div>
-              </div>
-              
-              <h3 className="font-semibold text-lg text-foreground leading-tight">
-                {insight.title}
-              </h3>
-              
-              {insight.summary && (
-                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                  {insight.summary}
-                </p>
-              )}
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {/* Company Info Section */}
-          {insight.companyInfo && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-card/50 rounded-lg p-4 border border-border/50"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Monitor className="w-4 h-4 text-blue-600" />
-                <span className="font-medium text-sm">Company Profile</span>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">{insight.companyInfo.name}</span>
-                  <Badge variant="outline" className="text-xs">
-                    {insight.companyInfo.domain}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {insight.companyInfo.description}
-                </p>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Key Points */}
-          {insight.keyPoints.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <Info className="w-4 h-4 text-blue-600" />
-                <span className="font-medium text-sm">Key Insights</span>
-              </div>
-              <div className="space-y-2">
-                {insight.keyPoints.map((point, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 + index * 0.1 }}
-                    className="flex items-start gap-2 text-sm"
-                  >
-                    <Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
-                    <span className="text-foreground/90">{point}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Recommendations */}
-          {insight.recommendations && insight.recommendations.length > 0 && (
-            <>
-              <Separator className="opacity-30" />
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="w-4 h-4 text-amber-600" />
-                  <span className="font-medium text-sm">Recommendations</span>
-                </div>
-                <div className="space-y-2">
-                  {insight.recommendations.map((rec, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 + index * 0.1 }}
-                      className="flex items-start gap-2 text-sm"
-                    >
-                      <ArrowRight className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                      <span className="text-foreground/90">{rec}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            </>
-          )}
-
-          {/* Strategic Questions */}
-          {insight.questions && insight.questions.length > 0 && (
-            <>
-              <Separator className="opacity-30" />
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <Target className="w-4 h-4 text-green-600" />
-                  <span className="font-medium text-sm">Strategic Questions</span>
-                </div>
-                <div className="space-y-3">
-                  {insight.questions.map((question, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.7 + index * 0.1 }}
-                      className="bg-card/30 rounded-lg p-3 border border-border/30 hover:border-green-300 transition-colors cursor-pointer group"
-                    >
-                      <div className="flex items-start gap-2">
-                        <AlertTriangle className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
-                        <span className="text-sm text-foreground/90 group-hover:text-foreground transition-colors">
-                          {question}
-                        </span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            </>
-          )}
-
-          {/* Action Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="pt-2"
-          >
+            <p className="text-sm text-foreground/80 leading-relaxed mb-3">
+              {insight.keyPoint}
+            </p>
+            
+            {/* Action Button */}
             <Button 
-              variant="outline" 
               size="sm" 
-              className="w-full hover:bg-accent/50 transition-colors"
+              variant="ghost"
+              onClick={handleContinue}
+              className="h-8 px-3 text-xs bg-accent/10 hover:bg-accent/20 text-accent border border-accent/20 rounded-lg transition-all duration-200 hover:scale-[1.02]"
             >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Continue Conversation
+              <ArrowRight className="w-3 h-3 mr-1.5" />
+              {insight.actionSuggestion}
             </Button>
-          </motion.div>
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      </div>
     </motion.div>
   )
 }

@@ -4,21 +4,11 @@ import { createToken } from "@/lib/auth"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password } = body
-
-    // Only allow the owner to log in
-    if (email !== 'farzad@farzadbayat.com') {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      )
-    }
+    const { password } = body
 
     // Check password from environment variable or fallback to default
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin123'
-    console.log('Debug - Admin password from env:', adminPassword)
-    console.log('Debug - Provided password:', password)
-    console.log('Debug - Passwords match:', password === adminPassword)
+    
     if (password !== adminPassword) {
       return NextResponse.json(
         { error: "Invalid credentials" },
@@ -26,10 +16,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create admin token
+    // Create admin token for the owner
+    const ownerEmail = 'farzad@farzadbayat.com'
     const token = await createToken({
-      userId: email,
-      email: email,
+      userId: ownerEmail,
+      email: ownerEmail,
       role: 'admin'
     })
 
@@ -37,7 +28,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       user: {
-        email,
+        email: ownerEmail,
         role: 'admin'
       }
     })

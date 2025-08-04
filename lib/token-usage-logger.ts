@@ -212,20 +212,20 @@ export class TokenUsageLogger {
     if (userId) {
       const budgetCheck = await this.checkUserBudget(userId, totalTokens)
       if (!budgetCheck.allowed) {
-        // Log the blocked request
-        await this.logTokenUsage({
-          user_id: userId,
-          session_id: sessionId,
-          feature,
-          model,
-          input_tokens: inputTokens,
-          output_tokens: outputTokens,
-          total_tokens: totalTokens,
-          estimated_cost: estimatedCost,
-          success: false,
-          error_message: `Budget exceeded: ${budgetCheck.reason}`,
-          usage_metadata: usageMetadata
-        })
+            // Log the blocked request
+    await this.logTokenUsage({
+      user_id: userId,
+      session_id: sessionId,
+      feature,
+      model,
+      input_tokens: Math.round(inputTokens),
+      output_tokens: Math.round(outputTokens),
+      total_tokens: Math.round(totalTokens),
+      estimated_cost: estimatedCost,
+      success: false,
+      error_message: `Budget exceeded: ${budgetCheck.reason}`,
+      usage_metadata: usageMetadata
+    })
         
         return budgetCheck
       }
@@ -237,9 +237,9 @@ export class TokenUsageLogger {
       session_id: sessionId,
       feature,
       model,
-      input_tokens: inputTokens,
-      output_tokens: outputTokens,
-      total_tokens: totalTokens,
+      input_tokens: Math.round(inputTokens),
+      output_tokens: Math.round(outputTokens),
+      total_tokens: Math.round(totalTokens),
       estimated_cost: estimatedCost,
       success,
       error_message: errorMessage,

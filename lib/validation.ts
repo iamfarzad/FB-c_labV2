@@ -182,6 +182,14 @@ export function sanitizeString(input: string): string {
     .replace(/[<>]/g, '') // Remove potential HTML tags
     .replace(/javascript:/gi, '') // Remove javascript: protocol
     .replace(/on\w+=/gi, '') // Remove event handlers
+    .replace(/data:/gi, '') // Remove data: protocol
+    .replace(/vbscript:/gi, '') // Remove vbscript: protocol
+    .replace(/\x00/g, '') // Remove null bytes
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control characters
+    .replace(/script/gi, '') // Remove script tags
+    .replace(/iframe/gi, '') // Remove iframe tags
+    .replace(/object/gi, '') // Remove object tags
+    .replace(/embed/gi, '') // Remove embed tags
     .substring(0, 1000); // Limit length
 }
 

@@ -45,17 +45,21 @@ export function InputWithSend({ input, handleInputChange, handleSubmit, isLoadin
         ref={combinedRef}
         rows={1}
         placeholder="Ask a question or type '/' for commands..."
-        className="py-3 px-4 resize-none pr-12"
+        className="py-3 px-4 resize-none pr-12 touch-manipulation" // Better touch interaction
         value={input}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         disabled={isLoading}
         aria-label="Chat input"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck="false"
       />
       <Button
         type="submit"
         size="icon"
-        className="absolute right-2 bottom-2 w-8 h-8 shrink-0"
+        className="absolute right-2 bottom-2 w-8 h-8 shrink-0 touch-manipulation" // Better touch targets
         disabled={isLoading || !input.trim()}
         aria-label="Send message"
       >
