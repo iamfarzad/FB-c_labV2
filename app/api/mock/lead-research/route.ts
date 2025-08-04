@@ -3,50 +3,95 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, email, company } = body
+    const { email, company } = body
 
     // Simulate processing delay
     await new Promise(resolve => setTimeout(resolve, 1000))
 
-    // Create a mock lead research response
+    // Create mock lead research response
     const mockResponse = {
-      id: `mock-research-${Date.now()}`,
-      name: name || 'Unknown',
-      email: email || 'unknown@example.com',
-      company: company || 'Unknown Company',
-      researchResults: [
-        {
-          source: 'LinkedIn',
-          title: `${name || 'User'} - Professional Profile`,
-          url: 'https://linkedin.com/in/mock-profile',
-          summary: 'Professional with experience in technology and business development.'
+      id: `lead-${Date.now()}`,
+      email: email || 'demo@example.com',
+      company: company || 'Demo Company Inc.',
+      research: {
+        companyInfo: {
+          name: company || 'Demo Company Inc.',
+          industry: 'Technology',
+          size: '50-200 employees',
+          founded: '2015',
+          location: 'San Francisco, CA',
+          website: 'https://democompany.com',
+          description: 'A leading technology company specializing in innovative solutions for modern businesses.'
         },
-        {
-          source: 'Company Website',
-          title: `${company || 'Company'} - About Us`,
-          url: 'https://example-company.com/about',
-          summary: 'Innovative company focused on AI and automation solutions.'
+        keyPeople: [
+          {
+            name: 'John Demo',
+            role: 'CEO',
+            linkedin: 'https://linkedin.com/in/johndemo',
+            background: 'Former VP at TechCorp, 15+ years in technology leadership'
+          },
+          {
+            name: 'Jane Smith',
+            role: 'CTO',
+            linkedin: 'https://linkedin.com/in/janesmith',
+            background: 'Ex-Google engineer, expert in AI and machine learning'
+          }
+        ],
+        recentNews: [
+          {
+            title: 'Demo Company Raises $10M Series A',
+            date: '2024-01-15',
+            source: 'TechCrunch',
+            summary: 'Company announces major funding round to expand AI capabilities'
+          },
+          {
+            title: 'New Partnership with Enterprise Client',
+            date: '2024-02-01',
+            source: 'Business Wire',
+            summary: 'Strategic partnership to deliver innovative solutions'
+          }
+        ],
+        socialMedia: {
+          linkedin: 'https://linkedin.com/company/democompany',
+          twitter: 'https://twitter.com/democompany',
+          followers: {
+            linkedin: 5420,
+            twitter: 2100
+          }
+        },
+        financials: {
+          revenue: '$5-10M',
+          funding: '$15M total',
+          lastRound: 'Series A - $10M (2024)'
         }
+      },
+      insights: [
+        'Company is in growth phase with recent funding',
+        'Strong technical leadership team',
+        'Focus on AI and automation aligns with our services',
+        'Good timing for partnership discussions'
       ],
       recommendations: [
-        'Schedule a discovery call to understand their specific needs',
-        'Prepare a customized demo based on their industry',
-        'Follow up with relevant case studies and ROI examples'
+        'Highlight AI automation ROI in initial outreach',
+        'Reference recent funding and growth trajectory',
+        'Connect with CTO Jane Smith for technical discussions',
+        'Propose pilot project to demonstrate value'
       ],
-      timestamp: new Date().toISOString()
+      confidence: 0.85,
+      timestamp: new Date().toISOString(),
+      metadata: {
+        sources: 5,
+        processingTime: 1000,
+        model: 'lead-research-mock'
+      }
     }
 
-    return NextResponse.json(mockResponse, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache'
-      }
-    })
+    return NextResponse.json(mockResponse)
 
   } catch (error) {
     console.error('Mock lead research API error:', error)
     return NextResponse.json(
-      { error: 'Mock lead research API error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Mock API error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

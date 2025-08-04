@@ -12,6 +12,7 @@ import { enforceBudgetAndLog } from '@/lib/token-usage-logger';
 import URLContextService from '@/lib/services/url-context-service';
 import GoogleSearchService from '@/lib/services/google-search-service';
 import { createOptimizedConfig, optimizeConversation, type ConversationMessage } from '@/lib/gemini-config-enhanced';
+import { shouldUseMockForRequest, createMockRedirectResponse, logApiRouting } from '@/lib/api-router';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -362,6 +363,16 @@ Welcome! I'm here to help you with your business consulting needs. Please tell m
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
   const correlationId = logConsoleActivity('info', 'Chat request started');
+  
+  // Check if we should redirect to mock endpoint
+  if (process.env.NODE_ENV === 'development') {
+    logApiRouting(); // Log current routing configuration
+    
+    const mockRedirect = createMockRedirectResponse(req);
+    if (mockRedirect) {
+      return mockRedirect;
+    }
+  }
   
   try {
     // Get client IP for rate limiting and demo session tracking
