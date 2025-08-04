@@ -1,11 +1,8 @@
 import { createClient } from "@supabase/supabase-js"
+import { config, isDevelopment } from "../config"
+import type { Database } from "../database.types"
 
-// Validate environment variables at runtime
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-// Check if we're in development mode
-const isDevelopment = process.env.NODE_ENV === 'development'
+// Check if mocking is enabled
 const enableMocking = process.env.ENABLE_GEMINI_MOCKING === 'true'
 
 // Mock Supabase client for development when environment variables are missing
@@ -43,16 +40,17 @@ const createMockSupabaseClient = () => {
 // Server-side client factory
 export const getSupabase = () => {
   // Check if environment variables are available
-  if (!supabaseUrl || !supabaseAnonKey) {
-    if (isDevelopment && enableMocking) {
+  if (!config.supabase.url || !config.supabase.anonKey) {
+    if (isDevelopment || enableMocking) {
       console.warn('🔧 Development mode: Using mock Supabase client due to missing environment variables')
       return createMockSupabaseClient()
     } else {
-      throw new Error('Supabase environment variables are missing. Please check SUPABASE_URL and SUPABASE_ANON_KEY.')
+      console.error('❌ Supabase environment variables are missing. Please check SUPABASE_URL and SUPABASE_ANON_KEY.')
+      return null
     }
   }
 
-  return createClient(supabaseUrl, supabaseAnonKey, {
+  return createClient<Database>(config.supabase.url, config.supabase.anonKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -66,15 +64,12 @@ let supabaseInstance: any = null
 
 export const supabase = (() => {
   if (!supabaseInstance) {
-    try {
-      supabaseInstance = getSupabase()
-    } catch (error) {
-      if (isDevelopment && enableMocking) {
-        console.warn('🔧 Fallback to mock Supabase client')
-        supabaseInstance = createMockSupabaseClient()
-      } else {
-        throw error
-      }
+    supabaseInstance = getSupabase()
+    
+    // If getSupabase returns null (missing env vars in production), use mock client
+    if (!supabaseInstance) {
+      console.warn('🔧 Fallback to mock Supabase client due to missing environment variables')
+      supabaseInstance = createMockSupabaseClient()
     }
   }
   return supabaseInstance
