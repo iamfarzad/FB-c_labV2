@@ -150,9 +150,10 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  html, body {
+  html {
     height: 100%;
-    overflow: hidden;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   body {
@@ -161,8 +162,8 @@
     scroll-behavior: smooth;
     overflow-x: hidden;
     overscroll-behavior: contain;
-    height: 100vh;
-    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
     /* Enhanced font rendering */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -487,6 +488,7 @@
 .chat-scroll-container {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted)) transparent;
+  scroll-behavior: smooth;
 }
 
 .chat-scroll-container::-webkit-scrollbar {
@@ -507,17 +509,23 @@
   background-color: hsl(var(--muted-foreground));
 }
 
-  /* Enhanced chat message container */
-  .chat-message-container {
-    padding: 1.5rem;
-    max-width: 100%;
-    margin: 0 auto;
+/* Safe area support for mobile devices */
+@supports (padding: max(0px)) {
+  .safe-area-inset-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
   }
+  
+  .safe-area-inset-top {
+    padding-top: max(env(safe-area-inset-top), 1rem);
+  }
+}
 
-  .chat-message-container * {
-    max-width: 100%;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+/* Enhanced word breaking for all text content */
+.chat-message-container * {
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
   }
 
   /* F.B/c Business Content Styles */

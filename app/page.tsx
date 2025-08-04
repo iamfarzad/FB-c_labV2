@@ -2,7 +2,9 @@ import { PageHeader, PageShell } from "@/components/page-shell"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ArrowRight, Bot, Brain, Lightbulb, Rocket, Star, Users, Zap } from "lucide-react"
+import { ArrowRight, Brain, Lightbulb, Rocket, Star, Users, Zap } from "lucide-react"
+import { FbcIcon } from "@/components/ui/fbc-icon"
+import { FbcIcon as FbcIconPolished } from "@/fbc-logo-icon/components/fbc-icon"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -26,7 +28,7 @@ const features = [
     description: "Custom AI solutions designed for your specific business needs and workflows."
   },
   {
-    icon: Bot,
+    icon: FbcIcon,
     title: "Intelligent Chatbots",
     description: "Advanced conversational AI that understands context and delivers real value."
   },
@@ -73,6 +75,17 @@ export default function HomePage() {
       {/* Hero Section */}
       <PageShell className="pt-20 pb-16">
         <div className="text-center max-w-4xl mx-auto">
+          <div className="flex justify-center mb-16 relative">
+            {/* Pulsating orange glow background */}
+            <div className="absolute inset-0 flex justify-center items-center">
+              <div className="w-56 h-56 bg-accent/20 rounded-full blur-xl animate-pulse"></div>
+              <div className="absolute w-64 h-64 bg-accent/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+            </div>
+            {/* F.B/c Icon */}
+            <div className="relative z-10">
+              <FbcIconPolished className="w-48 h-48" />
+            </div>
+          </div>
           <h1 className="text-4xl font-bold tracking-tight text-primary sm:text-6xl">
             Build AI That Actually <span className="text-accent">Works</span>
           </h1>
@@ -89,7 +102,7 @@ export default function HomePage() {
             </Button>
             <Button asChild variant="outline" size="lg" className="border-primary hover:bg-primary/10">
               <Link href="/chat" className="flex items-center">
-                <Bot className="mr-2 h-4 w-4" />
+                <FbcIcon className="mr-2 h-4 w-4" />
                 Talk with F.B/c AI
               </Link>
             </Button>
@@ -100,17 +113,6 @@ export default function HomePage() {
         </div>
       </PageShell>
 
-      {/* Stats Section */}
-      <PageShell className="bg-secondary">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="text-3xl font-bold text-accent">{stat.number}</div>
-              <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </PageShell>
 
       {/* Features Section */}
       <PageShell>
