@@ -39,7 +39,9 @@
     "test:all": "pnpm test:security && pnpm test:compliance && pnpm test:performance && pnpm test:scalability && pnpm test:observability && pnpm test:ci && pnpm test:dr && pnpm test:network && pnpm test:cost && pnpm test:api",
     "monitor-costs": "tsx scripts/monitor-gemini-usage.ts",
     "verify-deployment": "tsx scripts/verify-deployment.ts",
-    "pre-deploy": "pnpm monitor-costs && pnpm test:all"
+    "pre-deploy": "pnpm monitor-costs && pnpm test:all",
+    "diagnose-production": "tsx scripts/diagnose-production-issues.ts",
+    "fix-production": "tsx scripts/fix-production-issues.ts"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",

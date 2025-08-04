@@ -76,19 +76,9 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "flex items-center justify-between p-4 border-b border-border/10",
-        // Advanced glassmorphism with multi-layer depth
-        "bg-card/60 backdrop-blur-2xl",
-        "shadow-lg shadow-black/5",
-        "relative overflow-hidden",
-        // Fixed header positioning
-        "flex-shrink-0 z-30",
-        // Mobile optimizations
-        "mobile:px-3 mobile:py-3 mobile:min-h-[64px]",
-        // Tablet optimizations
-        "tablet:px-4 tablet:py-3 tablet:min-h-[68px]",
-        // Desktop optimizations
-        "desktop:px-6 desktop:py-4 desktop:min-h-[76px]",
+        "glass-header",
+        "flex items-center justify-between px-4 sm:px-6 py-4",
+        "flex-shrink-0 z-30 relative overflow-hidden",
         className,
       )}
     >
@@ -96,9 +86,9 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
       <motion.div
         animate={{
           background: [
-            "linear-gradient(90deg, transparent, rgba(255,165,0,0.03), transparent)",
-            "linear-gradient(90deg, transparent, rgba(255,165,0,0.05), transparent)",
-            "linear-gradient(90deg, transparent, rgba(255,165,0,0.03), transparent)",
+            "linear-gradient(90deg, transparent, hsl(var(--accent) / 0.03), transparent)",
+            "linear-gradient(90deg, transparent, hsl(var(--accent) / 0.05), transparent)",
+            "linear-gradient(90deg, transparent, hsl(var(--accent) / 0.03), transparent)",
           ]
         }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -168,7 +158,7 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
               }}
               className={cn(
                 "absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full",
-                "border-2 border-background shadow-lg",
+                "border-2 border-card shadow-lg",
                 "flex items-center justify-center",
                 "mobile:w-3 mobile:h-3",
                 "tablet:w-4 tablet:h-4",

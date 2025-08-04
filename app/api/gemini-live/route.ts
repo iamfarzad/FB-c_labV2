@@ -1,3 +1,25 @@
+
+
+// Timeout wrapper for production stability
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => 
+      setTimeout(() => reject(new Error('Operation timeout')), timeoutMs)
+    )
+  ])
+}
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, x-correlation-id, x-demo-session-id, x-user-id',
+    },
+  })
+}
+
 import { GoogleGenAI } from "@google/genai"
 import { createOptimizedConfig } from "@/lib/gemini-config-enhanced"
 import type { NextRequest } from "next/server"

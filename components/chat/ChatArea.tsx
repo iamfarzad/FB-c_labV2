@@ -133,7 +133,7 @@ export const ChatArea = memo(function ChatArea({
         type: 'code',
         icon: <FileText className="w-3 h-3 mr-1" />,
         badge: 'Code',
-        color: 'bg-purple-50 text-purple-700 border-purple-200'
+        color: 'bg-purple-500/10 text-purple-600 border-purple-500/20'
       }
     }
     
@@ -142,7 +142,7 @@ export const ChatArea = memo(function ChatArea({
         type: 'image',
         icon: <ImageIcon className="w-3 h-3 mr-1" />,
         badge: 'Visual',
-        color: 'bg-blue-50 text-blue-700 border-blue-200'
+        color: 'bg-blue-500/10 text-blue-600 border-blue-500/20'
       }
     }
 
@@ -151,7 +151,7 @@ export const ChatArea = memo(function ChatArea({
         type: 'analysis',
         icon: <TrendingUp className="w-3 h-3 mr-1" />,
         badge: 'Analysis',
-        color: 'bg-green-50 text-green-700 border-green-200'
+        color: 'bg-green-500/10 text-green-600 border-green-500/20'
       }
     }
     
@@ -160,7 +160,7 @@ export const ChatArea = memo(function ChatArea({
         type: 'long',
         icon: <FileText className="w-3 h-3 mr-1" />,
         badge: 'Detailed',
-        color: 'bg-amber-50 text-amber-700 border-amber-200'
+        color: 'bg-accent/10 text-accent border-accent/20'
       }
     }
     
@@ -641,8 +641,8 @@ export const ChatArea = memo(function ChatArea({
                             <div className={cn(
                               "relative group/message transition-all duration-200",
                               message.role === "user"
-                                ? "bg-muted/20 text-foreground border border-border/10 rounded-2xl px-4 py-3"
-                                : "bg-transparent text-foreground" // No background for AI messages
+                                ? "chat-bubble-user"
+                                : "chat-bubble-assistant"
                             )}>
                               {message.imageUrl && (
                                 <motion.div 

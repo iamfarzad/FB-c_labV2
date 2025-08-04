@@ -3,7 +3,9 @@
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install",
   "framework": "nextjs",
-  "regions": ["iad1"],
+  "regions": [
+    "iad1"
+  ],
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30,
@@ -14,6 +16,22 @@
       "memory": 1024
     },
     "app/api/analyze-document/route.ts": {
+      "maxDuration": 45,
+      "memory": 1024
+    },
+    "app/api/gemini-live/route.ts": {
+      "maxDuration": 45,
+      "memory": 1024
+    },
+    "app/api/analyze-image/route.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    },
+    "app/api/analyze-screenshot/route.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    },
+    "app/api/gemini-live-conversation/route.ts": {
       "maxDuration": 45,
       "memory": 1024
     }
@@ -86,6 +104,23 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/api/(gemini-live|analyze-image|analyze-screenshot|video-to-app)/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, x-correlation-id, x-demo-session-id, x-user-id"
         }
       ]
     }

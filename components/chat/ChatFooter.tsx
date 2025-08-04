@@ -151,7 +151,7 @@ export function ChatFooter({
       description: "PDF, DOC, TXT files",
       onClick: () => fileInputRef.current?.click(),
       disabled: !onFileUpload,
-      color: "text-blue-500"
+      color: "text-blue-600"
     },
     {
       icon: ImageIcon,
@@ -159,7 +159,7 @@ export function ChatFooter({
       description: "JPG, PNG, GIF files",
       onClick: () => imageInputRef.current?.click(),
       disabled: !onImageUpload,
-      color: "text-green-500"
+      color: "text-green-600"
     }
   ]
 
@@ -187,7 +187,7 @@ export function ChatFooter({
       description: "Share your screen",
       onClick: handleScreenShare,
       disabled: !setShowScreenShareModal,
-      color: "from-indigo-500 to-indigo-600"
+      color: "from-blue-500 to-blue-600"
     },
     {
       icon: Play,
@@ -195,7 +195,7 @@ export function ChatFooter({
       description: "Convert video to app",
       onClick: handleVideo2App,
       disabled: false,
-      color: "from-orange-500 to-orange-600"
+      color: "from-accent to-accent/80"
     },
     {
       icon: Calculator,
@@ -203,7 +203,7 @@ export function ChatFooter({
       description: "Calculate returns",
       onClick: handleROICalculator,
       disabled: !setShowROICalculatorModal,
-      color: "from-teal-500 to-teal-600"
+      color: "from-green-500 to-green-600"
     }
   ]
 
@@ -220,8 +220,8 @@ export function ChatFooter({
       <motion.div
         animate={{
           background: isFocused 
-            ? "linear-gradient(90deg, transparent, rgba(255,165,0,0.02), transparent)"
-            : "linear-gradient(90deg, transparent, rgba(255,165,0,0.01), transparent)"
+            ? "linear-gradient(90deg, transparent, hsl(var(--accent) / 0.02), transparent)"
+            : "linear-gradient(90deg, transparent, hsl(var(--accent) / 0.01), transparent)"
         }}
         transition={{ duration: 0.3 }}
         className="absolute inset-0 pointer-events-none"

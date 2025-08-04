@@ -43,37 +43,37 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md card-glass">
         <CardHeader className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-            <Shield className="h-6 w-6 text-blue-600" />
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
+            <Shield className="h-6 w-6 text-accent" />
           </div>
-          <CardTitle className="mt-4 text-2xl font-bold">Admin Access</CardTitle>
-          <CardDescription>Enter your admin password to continue</CardDescription>
+          <CardTitle className="mt-4 text-2xl font-bold text-foreground">F.B/c AI Admin</CardTitle>
+          <CardDescription className="text-muted-foreground">Enter your admin password to continue</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-foreground">Password</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="mt-1"
+                className="mt-1 input-enhanced"
                 placeholder="Enter admin password"
               />
             </div>
 
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full btn-primary" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -86,43 +86,57 @@ export function AdminDashboard() {
   const activeNavItem = navigationItems.find((item) => item.id === activeSection)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-background">
       <AdminHeader />
 
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="flex gap-6">
-          <AdminSidebar
-            activeSection={activeSection}
-            setActiveSection={(id) => setActiveSection(id as DashboardSection)}
-            navigationItems={navigationItems}
-          />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="lg:hidden">
+            <select 
+              value={activeSection} 
+              onChange={(e) => setActiveSection(e.target.value as DashboardSection)}
+              className="w-full p-3 rounded-lg border border-border bg-card text-foreground"
+            >
+              {navigationItems.map((item) => (
+                <option key={item.id} value={item.id}>{item.label}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="hidden lg:block">
+            <AdminSidebar
+              activeSection={activeSection}
+              setActiveSection={(id) => setActiveSection(id as DashboardSection)}
+              navigationItems={navigationItems}
+            />
+          </div>
 
-          <main className="flex-1">
-            <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-              <header className="border-b border-border p-6">
-                <div className="flex items-center justify-between">
+          <main className="flex-1 min-w-0">
+            <div className="card-glass overflow-hidden">
+              <header className="border-b border-border/30 p-4 sm:p-6 bg-card/50">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-2xl font-semibold text-foreground">{activeNavItem?.label}</h2>
-                    <p className="text-muted-foreground mt-1">{activeNavItem?.description}</p>
+                    <h2 className="text-xl sm:text-2xl font-semibold text-foreground">{activeNavItem?.label}</h2>
+                    <p className="text-muted-foreground mt-1 text-sm sm:text-base">{activeNavItem?.description}</p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                  <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto">
+                    <Button variant="outline" size="sm" className="btn-minimal gap-2 flex-shrink-0">
                       <Search className="w-4 h-4" />
-                      Search
+                      <span className="hidden sm:inline">Search</span>
                     </Button>
-                    <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                    <Button variant="outline" size="sm" className="btn-minimal gap-2 flex-shrink-0">
                       <Filter className="w-4 h-4" />
-                      Filter
+                      <span className="hidden sm:inline">Filter</span>
                     </Button>
-                    <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                    <Button variant="outline" size="sm" className="btn-minimal gap-2 flex-shrink-0">
                       <Download className="w-4 h-4" />
-                      Export
+                      <span className="hidden sm:inline">Export</span>
                     </Button>
                   </div>
                 </div>
               </header>
 
-              <div className="p-6">{renderSection()}</div>
+              <div className="p-4 sm:p-6 bg-background/50">{renderSection()}</div>
             </div>
           </main>
         </div>

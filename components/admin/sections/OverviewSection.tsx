@@ -80,21 +80,21 @@ export function OverviewSection() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-600">{metric.title}</p>
-                    <p className="text-2xl font-bold text-slate-900">{metric.value}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{metric.title}</p>
+                    <p className="text-2xl font-bold text-foreground">{metric.value}</p>
                     <div className="flex items-center gap-1 mt-1">
                       <span
                         className={`text-xs font-medium ${
-                          metric.changeType === "positive" ? "text-green-600" : "text-red-600"
+                          metric.changeType === "positive" ? "text-green-600" : "text-destructive"
                         }`}
                       >
                         {metric.change}
                       </span>
-                      <span className="text-xs text-slate-500">vs last month</span>
+                      <span className="text-xs text-muted-foreground">vs last month</span>
                     </div>
                   </div>
-                  <div className={`w-12 h-12 rounded-lg bg-${metric.color}-100 flex items-center justify-center`}>
-                    <Icon className={`w-6 h-6 text-${metric.color}-600`} />
+                  <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <Icon className="w-6 h-6 text-accent" />
                   </div>
                 </div>
               </CardContent>
@@ -120,13 +120,13 @@ export function OverviewSection() {
                 <Button
                   key={action.title}
                   variant="outline"
-                  className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-slate-50 bg-transparent"
+                  className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-accent/5 bg-transparent border border-border/30 hover:border-accent/30"
                   onClick={action.action}
                 >
-                  <Icon className="w-6 h-6 text-slate-600" />
+                  <Icon className="w-6 h-6 text-muted-foreground" />
                   <div className="text-center">
-                    <div className="font-medium text-slate-900">{action.title}</div>
-                    <div className="text-xs text-slate-500">{action.description}</div>
+                    <div className="font-medium text-foreground">{action.title}</div>
+                    <div className="text-xs text-muted-foreground">{action.description}</div>
                   </div>
                 </Button>
               )
@@ -150,26 +150,26 @@ export function OverviewSection() {
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">API Health</span>
-                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                <span className="text-sm text-muted-foreground">API Health</span>
+                <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
                   Healthy
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Database</span>
-                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                <span className="text-sm text-muted-foreground">Database</span>
+                <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
                   Connected
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">AI Services</span>
-                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                <span className="text-sm text-muted-foreground">AI Services</span>
+                <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
                   Online
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Email Service</span>
-                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                <span className="text-sm text-muted-foreground">Email Service</span>
+                <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
                   Active
                 </Badge>
               </div>
@@ -188,23 +188,23 @@ export function OverviewSection() {
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-sm text-slate-600">New lead captured</span>
-                <span className="text-xs text-slate-400 ml-auto">2m ago</span>
+                <span className="text-sm text-muted-foreground">New lead captured</span>
+                <span className="text-xs text-muted-foreground/60 ml-auto">2m ago</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-slate-600">Meeting scheduled</span>
-                <span className="text-xs text-slate-400 ml-auto">5m ago</span>
+                <span className="text-sm text-muted-foreground">Meeting scheduled</span>
+                <span className="text-xs text-muted-foreground/60 ml-auto">5m ago</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <span className="text-sm text-slate-600">Email campaign sent</span>
-                <span className="text-xs text-slate-400 ml-auto">12m ago</span>
+                <span className="text-sm text-muted-foreground">Email campaign sent</span>
+                <span className="text-xs text-muted-foreground/60 ml-auto">12m ago</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                <span className="text-sm text-slate-600">Cost alert triggered</span>
-                <span className="text-xs text-slate-400 ml-auto">15m ago</span>
+                <div className="w-2 h-2 bg-accent rounded-full"></div>
+                <span className="text-sm text-muted-foreground">Cost alert triggered</span>
+                <span className="text-xs text-muted-foreground/60 ml-auto">15m ago</span>
               </div>
             </div>
           </CardContent>

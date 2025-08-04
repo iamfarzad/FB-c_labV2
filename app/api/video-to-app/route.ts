@@ -8,6 +8,16 @@ import { getYouTubeTranscript, summarizeTranscript, extractKeyTopics } from "@/l
 import { selectModelForFeature, estimateTokens } from "@/lib/model-selector"
 import { enforceBudgetAndLog } from "@/lib/token-usage-logger"
 
+
+// Timeout wrapper for production stability
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => 
+      setTimeout(() => reject(new Error('Operation timeout')), timeoutMs)
+    )
+  ])
+}
 async function generateText(options: {
   modelName: string
   prompt: string
