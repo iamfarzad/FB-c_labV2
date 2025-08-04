@@ -5,7 +5,7 @@ import Link from "next/link"
 import { ArrowRight, Lightbulb, Star, Users } from "lucide-react"
 import { FbcIcon } from "@/components/ui/fbc-icon"
 import { FbcIcon as FbcIconPolished } from "@/fbc-logo-icon/components/fbc-icon"
-import { Brain, Zap, Sparkles, Target } from "@/lib/icon-mapping"
+import { ClientBrain, ClientZap, ClientSparkles, ClientTarget } from "@/components/ui/client-icons"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 const features = [
   {
-    icon: Brain,
+    icon: ClientBrain,
     title: "AI Strategy & Implementation",
     description: "Custom AI solutions designed for your specific business needs and workflows."
   },
@@ -34,12 +34,12 @@ const features = [
     description: "Advanced conversational AI that understands context and delivers real value."
   },
   {
-    icon: Zap,
+    icon: ClientZap,
     title: "Workflow Automation",
     description: "Streamline repetitive tasks with smart automation that learns and adapts."
   },
   {
-    icon: Target,
+    icon: ClientTarget,
     title: "Rapid Prototyping",
     description: "Quick proof-of-concepts to validate AI solutions before full implementation."
   }
@@ -193,7 +193,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Target className="h-6 w-6 text-accent mt-1 flex-shrink-0" />
+                <ClientTarget className="h-6 w-6 text-accent mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-primary">Rapid Implementation</h3>
                   <p className="text-muted-foreground">Quick prototypes and fast deployment to get results sooner.</p>

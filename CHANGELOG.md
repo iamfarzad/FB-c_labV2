@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Fixed - 2025-08-04
+- **React Context Error with Phosphor Icons**: Fixed `createContext is not a function` error in server-side rendering
+  - Created client-side icon wrapper components in `components/ui/client-icons.tsx`
+  - Updated `app/page.tsx` to use client-side icons instead of importing Phosphor Icons directly in server components
+  - Resolved compatibility issue between React 19 and Phosphor Icons package in SSR context
+  - Application now loads successfully without React context errors
+
+### Fixed - 2025-08-04
 - **Token Usage Logging**: Fixed error "cannot insert a non-DEFAULT value into column 'total_tokens'" by converting `total_tokens` to a generated column
   - Created migration `20250804170000_make_total_tokens_generated.sql` to make `total_tokens` a generated column that automatically calculates `input_tokens + output_tokens`
   - Updated `lib/token-usage-logger.ts` to not set `total_tokens` explicitly during INSERT operations
