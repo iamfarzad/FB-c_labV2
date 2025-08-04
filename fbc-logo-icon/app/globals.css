@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: hsl(var(--color-light-silver));
+    --foreground: hsl(var(--color-gunmetal));
+    --card: hsl(var(--color-light-silver));
+    --card-foreground: hsl(var(--color-gunmetal));
+    --popover: hsl(var(--color-light-silver));
+    --popover-foreground: hsl(var(--color-gunmetal));
+    --primary: hsl(var(--color-orange-accent));
+    --primary-foreground: hsl(var(--color-light-silver));
+    --secondary: hsl(var(--color-light-silver-darker));
+    --secondary-foreground: hsl(var(--color-gunmetal));
+    --muted: hsl(var(--color-light-silver-darker));
+    --muted-foreground: hsl(var(--color-gunmetal));
+    --accent: hsl(var(--color-orange-accent));
+    --accent-foreground: hsl(var(--color-gunmetal));
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: hsl(var(--color-light-silver-darker));
+    --input: hsl(var(--color-light-silver-darker));
+    --ring: hsl(var(--color-orange-accent));
+    --radius: 0.5rem;
+
+    /* F.B/c Brand Colors */
+    --color-orange-accent: 22 100% 51%; /* #ff5b04 */
+    --color-orange-accent-hover: 22 100% 45%; /* #e65200 */
+    --color-gunmetal: 0 0% 10%; /* #1a1a1a */
+    --color-gunmetal-lighter: 0 0% 16%; /* #2a2a2a */
+    --color-light-silver: 0 0% 96%; /* #f5f5f5 */
+    --color-light-silver-darker: 0 0% 88%; /* #e0e0e0 */
+
+    /* F.B/c Font Families */
+    --font-sans: "Inter", sans-serif;
+    --font-display: "Rajdhani", sans-serif;
+    --font-mono: "Space Mono", monospace;
+  }
+
+  .dark {
+    --background: hsl(var(--color-gunmetal));
+    --foreground: hsl(var(--color-light-silver));
+    --card: hsl(var(--color-gunmetal-lighter));
+    --card-foreground: hsl(var(--color-light-silver));
+    --popover: hsl(var(--color-gunmetal));
+    --popover-foreground: hsl(var(--color-light-silver));
+    --primary: hsl(var(--color-orange-accent));
+    --primary-foreground: hsl(var(--color-gunmetal));
+    --secondary: hsl(var(--color-gunmetal-lighter));
+    --secondary-foreground: hsl(var(--color-light-silver));
+    --muted: hsl(var(--color-gunmetal-lighter));
+    --muted-foreground: hsl(var(--color-light-silver));
+    --accent: hsl(var(--color-orange-accent));
+    --accent-foreground: hsl(var(--color-light-silver));
+    --border: hsl(var(--color-gunmetal-lighter));
+    --input: hsl(var(--color-gunmetal-lighter));
+    --ring: hsl(var(--color-orange-accent));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display;
+  }
+}
