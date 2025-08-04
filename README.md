@@ -62,7 +62,7 @@
 
 ### Installation
 
-\`\`\`bash
+```bash
 # Clone the repository
 git clone https://github.com/iamfarzad/FB-c_labV2.git
 cd FB-c_labV2
@@ -72,8 +72,8 @@ pnpm install
 
 # Copy environment variables
 cp .env.example .env.local
-# Edit .env.local with your API keys
-\`\`\`
+# Edit .env.local with your API keys and configuration
+```
 
 ### Running the Application
 

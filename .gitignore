@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+**/node_modules/
+server/node_modules/
 
 # next.js
 /.next/
@@ -18,6 +20,7 @@ yarn-error.log*
 
 # env files
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -25,6 +28,24 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# testing
+/coverage/
+/test-results/
+*.log
+test-*.pdf
+test-*.mjs
+
+# sensitive files
+cookies.txt
+prod-cookies.txt
+*.cookie
+*.session
+
+# build artifacts
+*.pdf
+!README.pdf
+!docs/**/*.pdf
 
 # admin documentation (contains sensitive credentials)
 docs/ADMIN_LOGIN.md
@@ -36,3 +57,25 @@ playwright-tests/
 
 # embedded git repositories
 fb-centric-ai/
+fbc-logo-icon/
+
+# IDE and editor files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# temporary files
+*.tmp
+*.temp
+.cache/
