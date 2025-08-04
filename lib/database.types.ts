@@ -32,7 +32,7 @@ export interface Database {
           model: string
           input_tokens?: number
           output_tokens?: number
-          total_tokens?: number
+          // total_tokens is a generated column - not included in Insert
           estimated_cost?: number
           task_type: string
           endpoint: string

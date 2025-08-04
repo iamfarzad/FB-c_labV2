@@ -13,7 +13,7 @@ export interface TokenUsageLog {
   model: string
   input_tokens: number
   output_tokens: number
-  total_tokens: number
+  total_tokens?: number // Optional since it's calculated by the database as a generated column
   estimated_cost: number
   success: boolean
   error_message?: string
@@ -56,7 +56,7 @@ export class TokenUsageLogger {
           model: log.model,
           input_tokens: log.input_tokens,
           output_tokens: log.output_tokens,
-          total_tokens: log.total_tokens,
+          // total_tokens is now a generated column - don't set it explicitly
           estimated_cost: log.estimated_cost,
           success: log.success,
           error_message: log.error_message,
