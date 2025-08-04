@@ -4,6 +4,7 @@
 /node_modules
 **/node_modules/
 server/node_modules/
+node_modules/
 
 # next.js
 /.next/
@@ -31,8 +32,11 @@ next-env.d.ts
 
 # testing
 /coverage/
+coverage/
 /test-results/
+test-results/
 *.log
+**/*.log
 test-*.pdf
 test-*.mjs
 
@@ -46,6 +50,15 @@ prod-cookies.txt
 *.pdf
 !README.pdf
 !docs/**/*.pdf
+
+# additional build artifacts
+dist/
+build/
+out/
+.next/
+.nuxt/
+.output/
+.vite/
 
 # admin documentation (contains sensitive credentials)
 docs/ADMIN_LOGIN.md
