@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Monitor, Brain, Loader2 } from "lucide-react"
+import { Monitor, Brain, Loader2 } from "@/lib/icon-mapping"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -165,7 +165,7 @@ export function ScreenShare({
   }, [sendScreenFrame])
 
   return (
-    <ToolCardWrapper title="Screen Share" description="Real-time screen sharing with AI analysis" icon={Monitor}>
+    <ToolCardWrapper title="Screen Share" description="Real-time screen sharing with AI analysis" icon={<Monitor className="w-4 h-4" />}>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
             <Badge variant={screenState === "sharing" ? "default" : "destructive"}>{screenState}</Badge>

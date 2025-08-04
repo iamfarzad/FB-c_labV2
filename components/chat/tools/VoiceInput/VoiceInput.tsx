@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ToolCardWrapper } from "@/components/chat/ToolCardWrapper"
 import { Button } from "@/components/ui/button"
-import { Mic, MicOff, Square, X } from "lucide-react"
+import { Mic, MicOff, Square, X } from "@/lib/icon-mapping"
 import { useToast } from "@/hooks/use-toast"
 import type { VoiceInputProps } from "./VoiceInput.types"
 

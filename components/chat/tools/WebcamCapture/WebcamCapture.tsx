@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useCallback, useRef } from "react"
-import { Camera, Upload, X, Brain, Video, VideoOff, Eye, EyeOff, Loader2, Download } from "lucide-react"
+import { Camera, Upload, X, Brain, Video, VideoOff, Eye, EyeOff, Loader2, Download } from "@/lib/icon-mapping"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -468,7 +468,7 @@ export function WebcamCapture({
     <ToolCardWrapper
       title="Webcam Capture"
       description="Real-time video capture with AI analysis"
-      icon={Camera}
+      icon={<Camera className="w-4 h-4" />}
     >
       <WebcamUI />
     </ToolCardWrapper>

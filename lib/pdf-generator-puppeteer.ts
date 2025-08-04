@@ -388,14 +388,14 @@ function generateHtmlContent(data: SummaryData): string {
       bottom: 50%;
       right: 50%;
       transform: translate(50%, 50%) rotate(-45deg);
-      opacity: 0.03;
+      opacity: 0.05;
       z-index: -1;
       pointer-events: none;
-    }
-    
-    .watermark svg {
-      width: 600px;
-      height: 600px;
+      font-family: 'Inter', sans-serif;
+      font-size: 120px;
+      font-weight: 700;
+      color: #1e293b;
+      letter-spacing: -0.02em;
     }
     
     /* Page Break */
@@ -417,20 +417,7 @@ function generateHtmlContent(data: SummaryData): string {
 <body>
   <!-- Watermark -->
   <div class="watermark">
-    <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#334155;stop-opacity:1" />
-        </linearGradient>
-      </defs>
-      <g transform="translate(200,200)">
-        <text x="0" y="-60" text-anchor="middle" font-family="Inter, sans-serif" font-size="72" font-weight="700" fill="url(#grad)">F.B</text>
-        <text x="0" y="0" text-anchor="middle" font-family="Inter, sans-serif" font-size="36" font-weight="700" fill="url(#grad)">/c</text>
-        <circle cx="0" cy="50" r="25" fill="none" stroke="url(#grad)" stroke-width="3"/>
-        <text x="0" y="58" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="600" fill="url(#grad)">AI</text>
-      </g>
-    </svg>
+    F.B/c
   </div>
   
   <div class="container">

@@ -43,21 +43,30 @@ export function renderSummaryPdf(
       const writeStream = fs.createWriteStream(outputPath);
       doc.pipe(writeStream);
 
-      // 3. Header with logo and branding
-      const logoPath = path.resolve(process.cwd(), 'public/placeholder-logo.png');
+      // 3. Header with F.B/c branding
+      const fbcLogoPath = './public/pdf_watermark_logo/fb_bold_3dlogo_base64.svg';
       
-      // Check if logo exists, otherwise use text-only header
-      if (fs.existsSync(logoPath)) {
-        doc.image(logoPath, 50, 40, { width: 60 });
-        doc
-          .fontSize(18)
-          .fillColor('#1f2937')
-          .text('F.B/c AI Consulting', 120, 55, { align: 'left' });
-      } else {
+      // Check if F.B/c logo exists, otherwise use text-only header
+      if (fs.existsSync(fbcLogoPath)) {
+        doc.image(fbcLogoPath, 50, 40, { width: 80 });
         doc
           .fontSize(20)
           .fillColor('#1f2937')
-          .text('F.B/c AI Consulting', 50, 55, { align: 'left' });
+          .text('F.B/c AI Consulting', 140, 55, { align: 'left' });
+      } else {
+        // F.B/c text-only header with proper styling
+        doc
+          .fontSize(24)
+          .fillColor('#1f2937')
+          .text('F.B', 50, 50, { align: 'left' });
+        doc
+          .fontSize(16)
+          .fillColor('#f59e0b')
+          .text('/c', 85, 55, { align: 'left' });
+        doc
+          .fontSize(18)
+          .fillColor('#1f2937')
+          .text(' AI Consulting', 105, 55, { align: 'left' });
       }
 
       doc

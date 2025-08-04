@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Calculator, ArrowRight, ArrowLeft, Check, X, Maximize2, Minimize2 } from "lucide-react"
+import { Calculator, ArrowRight, ArrowLeft, Check, X, Maximize2, Minimize2 } from "@/lib/icon-mapping"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -92,7 +92,7 @@ export function ROICalculator({
   }
 
   return (
-    <ToolCardWrapper title="ROI Calculator" description="Calculate the ROI for your business." icon={Calculator}>
+    <ToolCardWrapper title="ROI Calculator" description="Calculate the ROI for your business." icon={<Calculator className="w-4 h-4" />}>
       <div className="p-4">
         {renderStep()}
         <div className="flex justify-between mt-4">

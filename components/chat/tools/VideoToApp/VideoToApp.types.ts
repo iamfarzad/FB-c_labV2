@@ -10,6 +10,7 @@ export interface VideoToAppProps {
   onClose?: () => void
   onCancel?: () => void
   onAnalysisComplete?: (data: any) => void
+  onAppGenerated: (url: string) => void
 }
 
 export interface VideoToAppModalProps {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Video, Sparkles, Loader2, Link as LinkIcon } from "lucide-react"
+import { Video, Sparkles, Loader2, Link } from "@/lib/icon-mapping"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast"
 import { ToolCardWrapper } from "@/components/chat/ToolCardWrapper"
 import type { VideoToAppProps } from "./VideoToApp.types"
 
-export function VideoToApp({ onAppGenerated }: VideoToAppProps) {
+export function VideoToApp({ onAppGenerated }: VideoToAppProps & { onAppGenerated: (url: string) => void }) {
   const { toast } = useToast()
   const [videoUrl, setVideoUrl] = useState("")
   const [userPrompt, setUserPrompt] = useState("")
@@ -69,7 +69,7 @@ export function VideoToApp({ onAppGenerated }: VideoToAppProps) {
     <ToolCardWrapper
       title="Video-to-Learning App"
       description="Create an interactive learning app from a video URL."
-      icon={Video}
+      icon={<Video className="w-4 h-4" />}
     >
       <div className="space-y-4">
         <Input
@@ -102,7 +102,7 @@ export function VideoToApp({ onAppGenerated }: VideoToAppProps) {
             <CardContent className="p-4">
               <p className="text-sm font-medium">App URL:</p>
               <a href={generatedAppUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center gap-2">
-                <LinkIcon className="h-4 w-4"/>
+                <Link className="h-4 w-4"/>
                 {generatedAppUrl}
               </a>
             </CardContent>
