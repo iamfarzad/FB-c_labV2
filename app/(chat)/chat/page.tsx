@@ -5,11 +5,7 @@ import { ChatArea } from "@/components/chat/ChatArea"
 import { ChatFooter } from "@/components/chat/ChatFooter"
 import { ChatLayout } from "@/components/chat/ChatLayout"
 import { PageShell } from "@/components/page-shell"
-import { VoiceInput } from "@/components/chat/tools/VoiceInput"
-import { WebcamCapture } from "@/components/chat/tools/WebcamCapture"
-import { ScreenShare } from "@/components/chat/tools/ScreenShare"
-import { ROICalculator } from "@/components/chat/tools/ROICalculator"
-import { VideoToApp } from "@/components/chat/tools/VideoToApp"
+import { UnifiedToolPanel } from "@/components/chat/tools/UnifiedToolPanel"
 import { VerticalProcessChain } from "@/components/chat/activity/VerticalProcessChain"
 import { DemoSessionProvider, useDemoSession } from "@/components/demo-session-manager"
 import { DemoSessionCard } from "@/components/chat/sidebar/DemoSessionCard"
@@ -61,11 +57,8 @@ function ChatPageContent() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [input, setInput] = useState("")
-  const [showVoiceModal, setShowVoiceModal] = useState(false)
-  const [showWebcamModal, setShowWebcamModal] = useState(false)
-  const [showScreenShareModal, setShowScreenShareModal] = useState(false)
-  const [showROICalculatorModal, setShowROICalculatorModal] = useState(false)
-  const [showVideo2AppModal, setShowVideo2AppModal] = useState(false)
+  const [showToolPanel, setShowToolPanel] = useState(false)
+  const [activeTool, setActiveTool] = useState<string | null>(null)
   const [videoToAppSessions, setVideoToAppSessions] = useState<Map<string, any>>(new Map())
   const [showDemoSidebar, setShowDemoSidebar] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
@@ -346,6 +339,31 @@ ${result.summary}`
     handleSendMessage(`I've shared my screen. Here's what I can see: ${analysis}`)
   }
 
+  const handleToolComplete = (toolId: string, result: any) => {
+    setActiveTool(null)
+    
+    switch (toolId) {
+      case 'voice':
+        if (result.transcript) {
+          handleVoiceTranscript(result.transcript)
+        }
+        break
+      case 'multimodal':
+        if (result.analysis) {
+          handleScreenAnalysis(result.analysis)
+        }
+        break
+      case 'roi':
+        handleROICalculation(result)
+        break
+      case 'video2app':
+        handleVideoAppResult(result)
+        break
+      default:
+        console.log('Tool completed:', toolId, result)
+    }
+  }
+
   return (
     <PageShell variant="fullscreen">
       <ChatLayout
@@ -362,14 +380,7 @@ ${result.summary}`
             onFileUpload={handleFileUpload}
             onImageUpload={handleImageUpload}
             onVoiceTranscript={handleVoiceTranscript}
-            showVoiceModal={showVoiceModal}
-            setShowVoiceModal={setShowVoiceModal}
-            showWebcamModal={showWebcamModal}
-            setShowWebcamModal={setShowWebcamModal}
-            showScreenShareModal={showScreenShareModal}
-            setShowScreenShareModal={setShowScreenShareModal}
-            setShowVideo2AppModal={setShowVideo2AppModal}
-            setShowROICalculatorModal={setShowROICalculatorModal}
+            onToolComplete={handleToolComplete}
           />
         }
       >
@@ -455,59 +466,21 @@ ${result.summary}`
           </Sheet>
         </div>
         
-        {/* Modals */}
-        {showVoiceModal && (
-          <VoiceInput
-            mode="modal"
-            onClose={() => setShowVoiceModal(false)}
-            onTranscript={handleVoiceTranscript}
-            leadContext={{
-              name: leadData.name,
-              company: leadData.company,
-              role: 'User'
-            }}
-          />
-        )}
-        
-        {showWebcamModal && (
-          <WebcamCapture
-            mode="modal"
-            onClose={() => setShowWebcamModal(false)}
-            onCapture={handleWebcamCapture}
-            onAIAnalysis={(analysis: string) => {
-              addMessage({
-                role: "assistant",
-                content: analysis,
-              })
-            }}
-          />
-        )}
-        
-        {showScreenShareModal && (
-          <ScreenShare
-            mode="modal"
-            onClose={() => setShowScreenShareModal(false)}
-            onAnalysis={handleScreenAnalysis}
-          />
-        )}
-        
-        {showROICalculatorModal && (
-          <ROICalculator
-            mode="modal"
-            onClose={() => setShowROICalculatorModal(false)}
-            onComplete={handleROICalculation}
-          />
-        )}
-        
-        {showVideo2AppModal && (
-            <VideoToApp
-              mode="modal"
-              onClose={() => setShowVideo2AppModal(false)}
-              onAnalysisComplete={handleVideoAppResult}
-              onAppGenerated={(url: string) => {
-                console.log('App generated:', url)
-              }}
-            />
+        {/* Unified Tool Panel Modal */}
+        {showToolPanel && (
+          <Sheet open={showToolPanel} onOpenChange={setShowToolPanel}>
+            <SheetContent 
+              side="bottom" 
+              className="h-[80vh] max-h-[600px]"
+            >
+              <UnifiedToolPanel
+                onToolComplete={handleToolComplete}
+                onToolCancel={() => setShowToolPanel(false)}
+                activeTool={activeTool || undefined}
+                mode="modal"
+              />
+            </SheetContent>
+          </Sheet>
         )}
       </ChatLayout>
     </PageShell>

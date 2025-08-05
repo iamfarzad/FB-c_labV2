@@ -4,11 +4,12 @@ import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-// Consolidated Phosphor icons imports
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
 import { 
   Send, Camera, Mic, Paperclip, Play, Calculator, Monitor, Plus, X, 
-  Sparkles, Zap, FileText, ImageIcon, ChevronDown 
-} from "@/lib/icon-mapping"
+  Sparkles, Zap, FileText, ImageIcon, ChevronDown, Settings
+} from 'lucide-react'
 
 // Hooks and Utils
 import { useToast } from '@/hooks/use-toast'
@@ -16,9 +17,6 @@ import { cn } from "@/lib/utils"
 
 // External Libraries
 import { motion, AnimatePresence } from "framer-motion"
-
-// UI Components
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface ChatFooterProps {
   input: string
@@ -29,16 +27,45 @@ interface ChatFooterProps {
   onFileUpload?: (file: File) => void
   onImageUpload?: (imageData: string, fileName: string) => void
   onVoiceTranscript?: (transcript: string) => void
+  onToolComplete?: (toolId: string, result: any) => void
   inputRef?: React.RefObject<HTMLTextAreaElement>
-  showVoiceModal?: boolean
-  setShowVoiceModal?: (show: boolean) => void
-  showWebcamModal?: boolean
-  setShowWebcamModal?: (show: boolean) => void
-  showScreenShareModal?: boolean
-  setShowScreenShareModal?: (show: boolean) => void
-  setShowVideo2AppModal?: (show: boolean) => void
-  setShowROICalculatorModal?: (show: boolean) => void
 }
+
+// Unified tool configuration
+const UNIFIED_TOOLS = [
+  {
+    id: 'voice',
+    name: 'Voice Input',
+    description: 'Speak your message',
+    icon: Mic,
+    color: 'from-purple-500 to-purple-600',
+    shortcut: 'Ctrl+Shift+V'
+  },
+  {
+    id: 'multimodal',
+    name: 'Multimodal AI',
+    description: 'Voice, webcam, and screen sharing',
+    icon: Sparkles,
+    color: 'from-blue-500 to-blue-600',
+    shortcut: 'Ctrl+Shift+M'
+  },
+  {
+    id: 'roi',
+    name: 'ROI Calculator',
+    description: 'Calculate automation ROI',
+    icon: Calculator,
+    color: 'from-green-500 to-green-600',
+    shortcut: 'Ctrl+Shift+R'
+  },
+  {
+    id: 'video2app',
+    name: 'Video to App',
+    description: 'Convert videos to apps',
+    icon: Play,
+    color: 'from-orange-500 to-orange-600',
+    shortcut: 'Ctrl+Shift+A'
+  }
+]
 
 export function ChatFooter({
   input,
@@ -49,20 +76,14 @@ export function ChatFooter({
   onFileUpload,
   onImageUpload,
   onVoiceTranscript,
-  inputRef,
-  showVoiceModal,
-  setShowVoiceModal,
-  showWebcamModal,
-  setShowWebcamModal,
-  showScreenShareModal,
-  setShowScreenShareModal,
-  setShowVideo2AppModal,
-  setShowROICalculatorModal
+  onToolComplete,
+  inputRef
 }: ChatFooterProps) {
   const { toast } = useToast()
   const [isComposing, setIsComposing] = useState(false)
   const [showToolMenu, setShowToolMenu] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
+  const [activeTool, setActiveTool] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -76,6 +97,7 @@ export function ChatFooter({
     }
     if (e.key === 'Escape') {
       e.currentTarget.blur()
+      setActiveTool(null)
     }
   }
 
@@ -83,11 +105,15 @@ export function ChatFooter({
     const file = event.target.files?.[0]
     if (file && onFileUpload) {
       onFileUpload(file)
+      toast({
+        title: "File uploaded",
+        description: `${file.name} has been uploaded successfully.`
+      })
     }
     if (event.target) {
       event.target.value = ''
     }
-  }, [onFileUpload])
+  }, [onFileUpload, toast])
 
   const handleImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -96,144 +122,171 @@ export function ChatFooter({
       reader.onload = (e) => {
         const result = e.target?.result as string
         onImageUpload(result, file.name)
+        toast({
+          title: "Image uploaded",
+          description: `${file.name} has been uploaded successfully.`
+        })
       }
       reader.readAsDataURL(file)
     }
     if (event.target) {
       event.target.value = ''
     }
-  }, [onImageUpload])
+  }, [onImageUpload, toast])
 
-  const handleVoiceInput = useCallback(() => {
-    if (setShowVoiceModal) {
-      setShowVoiceModal(true)
-    } else if (onVoiceTranscript) {
+  const handleToolSelect = useCallback((toolId: string) => {
+    setActiveTool(toolId)
+    setShowToolMenu(false)
+    
+    // Show tool-specific feedback
+    const tool = UNIFIED_TOOLS.find(t => t.id === toolId)
+    if (tool) {
       toast({
-        title: "Voice Input",
-        description: "Voice input is not available in this mode.",
-        variant: "destructive"
+        title: `${tool.name} activated`,
+        description: tool.description
       })
     }
-  }, [setShowVoiceModal, onVoiceTranscript, toast])
+  }, [toast])
 
-  const handleWebcamCapture = useCallback(() => {
-    if (setShowWebcamModal) {
-      setShowWebcamModal(true)
+  const handleToolComplete = useCallback((toolId: string, result: any) => {
+    setActiveTool(null)
+    onToolComplete?.(toolId, result)
+    
+    // Show completion feedback
+    const tool = UNIFIED_TOOLS.find(t => t.id === toolId)
+    if (tool) {
+      toast({
+        title: `${tool.name} completed`,
+        description: "Result has been processed successfully."
+      })
     }
-  }, [setShowWebcamModal])
+  }, [onToolComplete, toast])
 
-  const handleScreenShare = useCallback(() => {
-    if (setShowScreenShareModal) {
-      setShowScreenShareModal(true)
-    }
-  }, [setShowScreenShareModal])
-
-  const handleVideo2App = useCallback(() => {
-    if (setShowVideo2AppModal) {
-      setShowVideo2AppModal(true)
-    } else {
-      // Fallback to new tab if modal not available
-      window.open('/video-learning-tool', '_blank')
-    }
-  }, [setShowVideo2AppModal])
-
-  const handleROICalculator = useCallback(() => {
-    if (setShowROICalculatorModal) {
-      setShowROICalculatorModal(true)
-    }
-  }, [setShowROICalculatorModal])
-
-  // Upload tools for dropdown
-  const uploadTools = [
+  // Quick action buttons for most common tools
+  const quickActions = [
     {
-      icon: FileText,
-      label: "Upload Document",
-      description: "PDF, DOC, TXT files",
-      onClick: () => fileInputRef.current?.click(),
-      disabled: !onFileUpload,
-      color: "text-blue-600"
-    },
-    {
-      icon: ImageIcon,
-      label: "Upload Image",
-      description: "JPG, PNG, GIF files",
-      onClick: () => imageInputRef.current?.click(),
-      disabled: !onImageUpload,
-      color: "text-green-600"
-    }
-  ]
-
-  // Main visible tools (reduced from 7 to 5 + dropdown)
-  const toolButtons = [
-    {
+      id: 'voice',
       icon: Mic,
-      label: "Voice",
-      description: "Speak your message",
-      onClick: handleVoiceInput,
-      disabled: !setShowVoiceModal && !onVoiceTranscript,
-      color: "from-purple-500 to-purple-600"
+      label: 'Voice',
+      color: 'from-purple-500 to-purple-600',
+      onClick: () => handleToolSelect('voice')
     },
     {
-      icon: Camera,
-      label: "Webcam",
-      description: "Capture from camera",
-      onClick: handleWebcamCapture,
-      disabled: !setShowWebcamModal,
-      color: "from-pink-500 to-pink-600"
+      id: 'multimodal',
+      icon: Sparkles,
+      label: 'AI',
+      color: 'from-blue-500 to-blue-600',
+      onClick: () => handleToolSelect('multimodal')
     },
     {
-      icon: Monitor,
-      label: "Screen Share",
-      description: "Share your screen",
-      onClick: handleScreenShare,
-      disabled: !setShowScreenShareModal,
-      color: "from-blue-500 to-blue-600"
-    },
-    {
-      icon: Play,
-      label: "Video to App",
-      description: "Convert video to app",
-      onClick: handleVideo2App,
-      disabled: false,
-      color: "from-accent to-accent/80"
-    },
-    {
+      id: 'roi',
       icon: Calculator,
-      label: "ROI Calculator",
-      description: "Calculate returns",
-      onClick: handleROICalculator,
-      disabled: !setShowROICalculatorModal,
-      color: "from-green-500 to-green-600"
+      label: 'ROI',
+      color: 'from-green-500 to-green-600',
+      onClick: () => handleToolSelect('roi')
     }
   ]
-
-  const canSend = input.trim() && !isLoading
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="relative z-20"
-    >
-      {/* Enhanced background with subtle animation */}
-      <motion.div
-        animate={{
-          background: isFocused 
-            ? "linear-gradient(90deg, transparent, hsl(var(--accent) / 0.02), transparent)"
-            : "linear-gradient(90deg, transparent, hsl(var(--accent) / 0.01), transparent)"
-        }}
-        transition={{ duration: 0.3 }}
-        className="absolute inset-0 pointer-events-none"
-      />
+    <div className="space-y-4">
+      {/* Active Tool Display */}
+      {activeTool && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="p-3 bg-muted/50 rounded-lg border border-border/20"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {(() => {
+                const tool = UNIFIED_TOOLS.find(t => t.id === activeTool)
+                const Icon = tool?.icon || Settings
+                return (
+                  <>
+                    <div className={`p-1 rounded bg-gradient-to-r ${tool?.color || 'from-gray-500 to-gray-600'}`}>
+                      <Icon className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-sm font-medium">{tool?.name || 'Tool'}</span>
+                  </>
+                )
+              })()}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setActiveTool(null)}
+              className="h-6 w-6 p-0"
+            >
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
+        </motion.div>
+      )}
 
-      <div className="max-w-4xl mx-auto px-2 sm:px-4 md:px-6 py-2 sm:py-4 relative z-10">
-        <form onSubmit={handleSubmit}>
-          {/* Hidden File Inputs */}
+      {/* Main Input Area */}
+      <div className="flex items-end gap-2">
+        {/* Quick Action Buttons */}
+        <div className="flex gap-1">
+          {quickActions.map((action) => (
+            <Button
+              key={action.id}
+              variant="outline"
+              size="sm"
+              onClick={action.onClick}
+              disabled={isLoading}
+              className={cn(
+                "h-8 w-8 p-0",
+                activeTool === action.id && "ring-2 ring-accent"
+              )}
+              aria-label={action.label}
+            >
+              <action.icon className="w-4 h-4" />
+            </Button>
+          ))}
+          
+          {/* More Tools Dropdown */}
+          <DropdownMenu open={showToolMenu} onOpenChange={setShowToolMenu}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isLoading}
+                className="h-8 w-8 p-0"
+                aria-label="More tools"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              {UNIFIED_TOOLS.map((tool) => (
+                <DropdownMenuItem
+                  key={tool.id}
+                  onClick={() => handleToolSelect(tool.id)}
+                  className="flex items-center gap-3"
+                >
+                  <div className={`p-1 rounded bg-gradient-to-r ${tool.color}`}>
+                    <tool.icon className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium">{tool.name}</div>
+                    <div className="text-xs text-muted-foreground">{tool.description}</div>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {tool.shortcut}
+                  </Badge>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* File Upload Buttons */}
+        <div className="flex gap-1">
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.txt,.doc,.docx,.md,.csv,.json"
+            accept=".pdf,.doc,.docx,.txt"
             onChange={handleFileUpload}
             className="hidden"
           />
@@ -244,209 +297,97 @@ export function ChatFooter({
             onChange={handleImageUpload}
             className="hidden"
           />
-
-          {/* Clean Input Container with Tool Pills Only */}
-          <motion.div
-            animate={{
-              borderColor: isFocused ? "hsl(var(--accent))" : "hsl(var(--border))",
-              boxShadow: isFocused 
-                ? "0 0 0 3px hsl(var(--accent) / 0.1)" 
-                : "0 1px 3px rgba(0,0,0,0.1)"
-            }}
-            transition={{ duration: 0.2 }}
-            className="relative rounded-2xl border bg-card/50 backdrop-blur-sm overflow-hidden"
-          >
-            {/* Tool Pills Row */}
-            <div className="flex items-center gap-1.5 px-3 pt-2.5 pb-1.5 border-b border-border/10">
-              {/* Upload Dropdown */}
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "h-8 px-3 rounded-full border border-border/30 bg-muted/40",
-                        "hover:bg-accent/10 hover:border-accent/30 text-xs font-medium",
-                        "transition-all duration-200 whitespace-nowrap"
-                      )}
-                      disabled={isLoading}
-                    >
-                      <Plus className="w-3 h-3 mr-1.5" />
-                      Upload
-                      <ChevronDown className="w-3 h-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48">
-                    {uploadTools.map((tool, index) => (
-                      <DropdownMenuItem
-                        key={index}
-                        onClick={tool.onClick}
-                        disabled={tool.disabled}
-                        className="gap-3 cursor-pointer"
-                      >
-                        <tool.icon className={`w-4 h-4 ${tool.color}`} />
-                        <div className="flex flex-col">
-                          <span className="font-medium">{tool.label}</span>
-                          <span className="text-xs text-muted-foreground">{tool.description}</span>
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </motion.div>
-
-              {/* Main Tool Pills */}
-              {toolButtons.map((tool, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (index + 1) * 0.05, duration: 0.2 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      "h-8 px-3 rounded-full border border-border/30 bg-muted/40",
-                      "hover:bg-accent/10 hover:border-accent/30 text-xs font-medium",
-                      "transition-all duration-200 whitespace-nowrap",
-                      tool.disabled && "opacity-50 cursor-not-allowed"
-                    )}
-                    onClick={tool.onClick}
-                    disabled={tool.disabled || isLoading}
-                    aria-label={tool.description}
-                    title={tool.description}
-                  >
-                    <tool.icon className="w-3 h-3 mr-1.5" />
-                    {tool.label.replace(' Input', '').replace(' Capture', '')}
-                  </Button>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Input Area - Clean without duplicate buttons */}
-            <div className="relative">
-              <Textarea
-                ref={textareaRef}
-                value={input}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                onCompositionStart={() => setIsComposing(true)}
-                onCompositionEnd={() => setIsComposing(false)}
-                placeholder="Ask anything about AI automation, business analysis, or upload a document..."
-                                  className={cn(
-                    "resize-none min-h-[52px] max-h-36 border-0 bg-transparent",
-                    "focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                    "placeholder:text-muted-foreground/60 text-base leading-relaxed", // text-base prevents iOS zoom
-                    "pl-3 pr-12 py-3 touch-manipulation" // Better mobile padding and touch handling
-                  )}
-                disabled={isLoading}
-              />
-
-              {/* Right Send Button Only */}
-              <motion.div
-                className="absolute right-3 bottom-3"
-                whileHover={{ scale: canSend ? 1.05 : 1 }}
-                whileTap={{ scale: canSend ? 0.95 : 1 }}
-                transition={{ type: "spring", stiffness: 400 }}
-              >
-                <Button
-                  type="submit"
-                  size="icon"
-                  className={cn(
-                    "w-8 h-8 rounded-lg transition-all duration-300",
-                    canSend
-                      ? "bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent/80 shadow-md hover:shadow-lg text-accent-foreground"
-                      : "bg-muted/50 text-muted-foreground cursor-not-allowed"
-                  )}
-                  disabled={!canSend}
-                >
-                  <motion.div
-                    animate={isLoading ? { rotate: 360 } : { rotate: 0 }}
-                    transition={isLoading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}
-                  >
-                    {isLoading ? (
-                      <Zap className="w-4 h-4" />
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
-                  </motion.div>
-                </Button>
-              </motion.div>
-
-              {/* Input Enhancement Overlay */}
-              {isFocused && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-accent/5 pointer-events-none rounded-2xl"
-                />
-              )}
-            </div>
-          </motion.div>
-        </form>
-
-        {/* Enhanced Status Bar */}
-        <motion.div 
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="flex items-center justify-between mt-3 text-xs text-muted-foreground"
-        >
-          <div className="flex items-center gap-4">
-            <motion.span 
-              animate={{
-                color: input.length > 4000 ? "hsl(var(--destructive))" : "hsl(var(--muted-foreground))"
-              }}
-              className="font-mono"
-            >
-              {input.length}/4000
-            </motion.span>
-            
-            {isLoading && (
-              <motion.span 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-2"
-              >
-                <motion.div
-                  animate={{ 
-                    opacity: [0.4, 1, 0.4],
-                    scale: [1, 1.1, 1]
-                  }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  className="w-2 h-2 bg-accent rounded-full"
-                />
-                AI is processing your request...
-              </motion.span>
-            )}
-          </div>
           
-          <div className="flex items-center gap-3 text-xs opacity-60">
-            <span className="hidden sm:inline">Press Enter to send</span>
-            <span className="hidden sm:inline">•</span>
-            <span className="hidden sm:inline">Shift+Enter for new line</span>
-            {showToolMenu && (
-              <>
-                <span>•</span>
-                <span>ESC to close menu</span>
-              </>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isLoading || !onFileUpload}
+            className="h-8 w-8 p-0"
+            aria-label="Upload document"
+          >
+            <FileText className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => imageInputRef.current?.click()}
+            disabled={isLoading || !onImageUpload}
+            className="h-8 w-8 p-0"
+            aria-label="Upload image"
+          >
+            <ImageIcon className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Text Input */}
+        <div className="flex-1 relative">
+          <Textarea
+            ref={textareaRef || inputRef}
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={() => setIsComposing(false)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            placeholder="Type your message or use AI tools..."
+            className={cn(
+              "min-h-[44px] max-h-32 resize-none",
+              "pr-12", // Space for send button
+              "border-border/50 focus:border-border",
+              "bg-background/95 backdrop-blur-sm"
             )}
-          </div>
-        </motion.div>
+            disabled={isLoading}
+          />
+          
+          {/* Send Button */}
+          <Button
+            type="submit"
+            size="sm"
+            onClick={(e) => {
+              e.preventDefault()
+              if (input.trim() && !isLoading) {
+                handleSubmit(e as any)
+              }
+            }}
+            disabled={!input.trim() || isLoading}
+            className={cn(
+              "absolute right-2 bottom-2",
+              "h-8 w-8 p-0",
+              "transition-all duration-200",
+              input.trim() && !isLoading
+                ? "opacity-100 scale-100"
+                : "opacity-50 scale-95"
+            )}
+            aria-label="Send message"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
-    </motion.div>
+
+      {/* Status Indicators */}
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="flex items-center gap-2">
+          {isLoading && (
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+              <span>AI is thinking...</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {activeTool && (
+            <Badge variant="secondary" className="text-xs">
+              {UNIFIED_TOOLS.find(t => t.id === activeTool)?.name}
+            </Badge>
+          )}
+          <span>Press Enter to send, Shift+Enter for new line</span>
+        </div>
+      </div>
+    </div>
   )
 }

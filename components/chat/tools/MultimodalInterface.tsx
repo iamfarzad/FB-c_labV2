@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useMultimodalSession } from '@/hooks/use-multimodal-session'
 import { 
   Mic, 
@@ -15,19 +16,22 @@ import {
   MonitorOff, 
   Square, 
   Play,
-  Volume2
+  Volume2,
+  Settings
 } from 'lucide-react'
 
 interface MultimodalInterfaceProps {
   leadId?: string
   onAnalysisComplete?: (result: string) => void
   className?: string
+  mode?: 'modal' | 'card' | 'inline'
 }
 
 export function MultimodalInterface({ 
   leadId, 
   onAnalysisComplete, 
-  className = '' 
+  className = '',
+  mode = 'card'
 }: MultimodalInterfaceProps) {
   const [isRecording, setIsRecording] = useState(false)
   const [isWebcamOn, setIsWebcamOn] = useState(false)
@@ -249,12 +253,27 @@ export function MultimodalInterface({
     setTimeout(sendVideoFramePeriodically, 1000)
   }
 
+  // Responsive container classes
+  const containerClasses = mode === 'modal' 
+    ? 'w-full max-w-4xl mx-auto p-4 sm:p-6'
+    : mode === 'inline'
+    ? 'w-full'
+    : 'w-full max-w-2xl mx-auto p-4 sm:p-6'
+
   return (
-    <Card className={`w-full max-w-2xl mx-auto ${className}`}>
+    <Card className={`${containerClasses} ${className}`}>
       <CardHeader className="space-y-4">
-        <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          Multimodal AI Assistant
+        <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+          <div className={`
+            w-2 h-2 rounded-full animate-pulse
+            ${isConnected ? 'bg-green-500' : 'bg-muted-foreground'}
+          `} />
+          <span>Multimodal AI Assistant</span>
+          {isProcessing && (
+            <div className="ml-auto">
+              <Settings className="w-4 h-4 animate-spin text-muted-foreground" />
+            </div>
+          )}
         </CardTitle>
         
         {/* Status Indicators */}
@@ -294,7 +313,7 @@ export function MultimodalInterface({
           <div className="relative">
             <video
               ref={setVideoElement}
-              className="w-full h-48 object-cover rounded-lg border border-border bg-muted"
+              className="w-full h-48 sm:h-64 object-cover rounded-lg border border-border bg-muted"
               autoPlay
               muted
               playsInline
@@ -312,17 +331,17 @@ export function MultimodalInterface({
 
         {/* Voice Selection */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Voice</label>
-          <select
-            value={selectedVoice}
-            onChange={(e) => setSelectedVoice(e.target.value)}
-            disabled={isRecording}
-            className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground disabled:opacity-50"
-          >
-            <option value="Orus">Orus</option>
-            <option value="Eirene">Eirene</option>
-            <option value="Abeo">Abeo</option>
-          </select>
+          <label className="text-sm font-medium text-foreground">AI Voice</label>
+          <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isRecording}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Choose AI voice" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Orus">Orus - Professional</SelectItem>
+              <SelectItem value="Eirene">Eirene - Friendly</SelectItem>
+              <SelectItem value="Abeo">Abeo - Technical</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <Separator />
@@ -335,7 +354,8 @@ export function MultimodalInterface({
             size="icon"
             onClick={toggleAudio}
             disabled={isRecording}
-            className="w-12 h-12"
+            className="h-10 w-10"
+            aria-label={isAudioEnabled ? "Disable audio" : "Enable audio"}
           >
             {isAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
           </Button>
@@ -346,7 +366,8 @@ export function MultimodalInterface({
             size="icon"
             onClick={toggleWebcam}
             disabled={isRecording}
-            className="w-12 h-12"
+            className="h-10 w-10"
+            aria-label={isWebcamOn ? "Disable webcam" : "Enable webcam"}
           >
             {isWebcamOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
           </Button>
@@ -357,7 +378,8 @@ export function MultimodalInterface({
             size="icon"
             onClick={toggleScreenShare}
             disabled={isRecording}
-            className="w-12 h-12"
+            className="h-10 w-10"
+            aria-label={isScreenSharing ? "Stop screen sharing" : "Start screen sharing"}
           >
             {isScreenSharing ? <Monitor className="w-5 h-5" /> : <MonitorOff className="w-5 h-5" />}
           </Button>
@@ -368,7 +390,8 @@ export function MultimodalInterface({
             size="icon"
             onClick={toggleRecording}
             disabled={isProcessing}
-            className="w-12 h-12"
+            className="h-10 w-10"
+            aria-label={isRecording ? "Stop recording" : "Start recording"}
           >
             {isRecording ? <Square className="w-5 h-5" /> : <Play className="w-5 h-5" />}
           </Button>
