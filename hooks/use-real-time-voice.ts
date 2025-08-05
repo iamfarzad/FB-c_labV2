@@ -28,21 +28,9 @@ export function useRealTimeVoice() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
-  const audioContextRef = useRef<AudioContext | null>(null)
-  const audioQueueRef = useRef<AudioBuffer[]>([])
-  const isPlayingRef = useRef(false)
 
-  // Initialize audio context
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
-    }
-    return () => {
-      if (audioContextRef.current) {
-        audioContextRef.current.close()
-      }
-    }
-  }, [])
+
+
 
   // Start conversation session
   const startSession = useCallback(async (leadContext?: { leadId: string; leadName: string }) => {
@@ -178,51 +166,28 @@ export function useRealTimeVoice() {
 
   // Play audio from base64 data
   const playAudio = useCallback(async (audioData: string) => {
-    if (!audioContextRef.current) return
-
     try {
-      // Remove data URL prefix
-      const base64Data = audioData.replace('data:audio/wav;base64,', '')
-      const binaryString = atob(base64Data)
-      const bytes = new Uint8Array(binaryString.length)
+      console.log('🎵 Playing audio data...')
       
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i)
-      }
-
-      // Decode audio data
-      const audioBuffer = await audioContextRef.current.decodeAudioData(bytes.buffer)
-      audioQueueRef.current.push(audioBuffer)
-
-      // Play if not currently playing
-      if (!isPlayingRef.current) {
-        playNextAudio()
-      }
+      // Create audio element
+      const audio = new Audio(audioData)
+      
+      // Set up event listeners
+      audio.onloadstart = () => console.log('🎵 Audio loading started')
+      audio.oncanplay = () => console.log('🎵 Audio can play')
+      audio.onplay = () => console.log('🎵 Audio playing')
+      audio.onended = () => console.log('🎵 Audio ended')
+      audio.onerror = (e) => console.error('🎵 Audio error:', e)
+      
+      // Play the audio
+      await audio.play()
+      console.log('🎵 Audio playback started')
     } catch (err) {
       console.error('❌ Failed to play audio:', err)
     }
   }, [])
 
-  // Play next audio in queue
-  const playNextAudio = useCallback(async () => {
-    if (!audioContextRef.current || audioQueueRef.current.length === 0) {
-      isPlayingRef.current = false
-      return
-    }
 
-    isPlayingRef.current = true
-    const audioBuffer = audioQueueRef.current.shift()!
-    
-    const source = audioContextRef.current.createBufferSource()
-    source.buffer = audioBuffer
-    source.connect(audioContextRef.current.destination)
-    
-    source.onended = () => {
-      playNextAudio()
-    }
-    
-    source.start()
-  }, [])
 
   // Update voice settings
   const updateVoiceSettings = useCallback((settings: Partial<Pick<VoiceSession, 'voiceName' | 'languageCode' | 'audioEnabled'>>) => {
@@ -240,7 +205,7 @@ export function useRealTimeVoice() {
         schema: 'public',
         table: 'activities',
         filter: `metadata->>'sessionId'=eq.${session.sessionId}`
-      }, (payload) => {
+      }, (payload: any) => {
         console.log('📡 Real-time voice activity:', payload)
         // Handle real-time updates if needed
       })
