@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed - 2025-08-05
+- **🚀 MIGRATED: Voice System to Direct Gemini Live Connect**
+  - **Architecture Upgrade**: Replaced HTTP proxy with direct `client.live.connect()` for ultra-low latency
+  - **Performance**: Eliminated server proxy latency, reduced API costs and server load
+  - **Removed**: `/api/gemini-live-conversation` HTTP endpoint (no longer needed)
+  - **Removed**: Supabase dependency for voice real-time updates
+  - **Enhanced**: Web Audio API implementation for raw PCM audio playback
+  - **Result**: Optimal real-time voice conversation experience with direct browser-to-Gemini connection
+
 ### Fixed - 2025-08-05
 - **Screen Share Pipeline Fix**: Fixed broken screen share functionality by correcting API endpoint and security headers
   - **API Endpoint Fix**: Updated ScreenShare component to call `/api/tools/screen-share` instead of `/api/gemini-live-conversation`
