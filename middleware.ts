@@ -9,7 +9,7 @@ export function middleware(req: NextRequest) {
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('X-XSS-Protection', '1; mode=block')
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()')
+  response.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(), payment=()')
   
   // Content Security Policy
   const csp = [
@@ -18,8 +18,8 @@ export function middleware(req: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https:",
-    "media-src 'self' blob:",
+    "connect-src 'self' https: https://generativelanguage.googleapis.com https://*.googleapis.com",
+    "media-src 'self' blob: data: https:",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
