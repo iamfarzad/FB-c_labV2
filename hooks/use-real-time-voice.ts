@@ -28,6 +28,9 @@ export function useRealTimeVoice() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
+  // Web Audio API context for playing raw audio data
+  const audioContextRef = useRef<AudioContext | null>(null)
+  
 
 
 
@@ -164,42 +167,95 @@ export function useRealTimeVoice() {
     }
   }, [session])
 
-  // Play audio from base64 data
+  // Initialize Web Audio API context
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({
+        sampleRate: 24000 // Gemini TTS sample rate
+      })
+      console.log('🎵 Web Audio API context initialized')
+    }
+    
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+      }
+    }
+  }, [])
+
+  // Decode base64 to raw bytes
+  const decodeBase64 = useCallback((base64: string): Uint8Array => {
+    const binaryString = atob(base64)
+    const len = binaryString.length
+    const bytes = new Uint8Array(len)
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i)
+    }
+    return bytes
+  }, [])
+
+  // Decode raw audio bytes to AudioBuffer
+  const decodeAudioData = useCallback(async (
+    rawBytes: Uint8Array,
+    sampleRate: number = 24000,
+    channels: number = 1
+  ): Promise<AudioBuffer> => {
+    if (!audioContextRef.current) {
+      throw new Error('AudioContext not initialized')
+    }
+
+    // Convert 8-bit PCM to 32-bit float for Web Audio API
+    const audioBuffer = audioContextRef.current.createBuffer(channels, rawBytes.length, sampleRate)
+    const channelData = audioBuffer.getChannelData(0)
+    
+    for (let i = 0; i < rawBytes.length; i++) {
+      // Convert 8-bit unsigned to 32-bit float (-1 to 1)
+      channelData[i] = (rawBytes[i] - 128) / 128
+    }
+    
+    return audioBuffer
+  }, [])
+
+  // Play audio from base64 data using Web Audio API
   const playAudio = useCallback(async (audioData: string) => {
     try {
-      console.log('🎵 Playing audio data...')
+      console.log('🎵 Playing audio data with Web Audio API...')
       
-      // Create audio element
-      const audio = new Audio(audioData)
-      
-      // Set up event listeners
-      audio.onloadstart = () => console.log('🎵 Audio loading started')
-      audio.oncanplay = () => console.log('🎵 Audio can play')
-      audio.onplay = () => console.log('🎵 Audio playing')
-      audio.onended = () => console.log('🎵 Audio ended')
-      audio.onerror = (e) => console.error('🎵 Audio error:', e)
-      
-      // Handle autoplay restrictions
-      audio.muted = false
-      audio.volume = 1.0
-      
-      // Try to play with user interaction context
-      try {
-        await audio.play()
-        console.log('🎵 Audio playback started')
-      } catch (playError) {
-        console.error('🎵 Autoplay blocked, trying with user gesture:', playError)
-        
-        // If autoplay is blocked, we need user interaction
-        // This will be handled by the VoiceInput component
-        // which is triggered by user clicking "Use This Text"
-        throw new Error('Autoplay blocked - requires user interaction')
+      if (!audioContextRef.current) {
+        throw new Error('AudioContext not initialized')
       }
+
+      // Resume context if suspended (required for autoplay)
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume()
+      }
+
+      // Remove data URL prefix if present
+      const base64Data = audioData.replace('data:audio/wav;base64,', '')
+      
+      // Decode base64 to raw bytes
+      const rawBytes = decodeBase64(base64Data)
+      console.log('🎵 Decoded audio bytes:', rawBytes.length)
+      
+      // Convert to AudioBuffer
+      const audioBuffer = await decodeAudioData(rawBytes)
+      console.log('🎵 Created AudioBuffer:', audioBuffer.length, 'samples')
+      
+      // Create and play audio source
+      const source = audioContextRef.current.createBufferSource()
+      source.buffer = audioBuffer
+      source.connect(audioContextRef.current.destination)
+      
+      source.onended = () => console.log('🎵 Audio playback completed')
+      
+      source.start()
+      console.log('🎵 Audio playback started')
+      
     } catch (err) {
       console.error('❌ Failed to play audio:', err)
       throw err
     }
-  }, [])
+  }, [decodeBase64, decodeAudioData])
 
 
 
