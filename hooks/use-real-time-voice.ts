@@ -179,11 +179,25 @@ export function useRealTimeVoice() {
       audio.onended = () => console.log('🎵 Audio ended')
       audio.onerror = (e) => console.error('🎵 Audio error:', e)
       
-      // Play the audio
-      await audio.play()
-      console.log('🎵 Audio playback started')
+      // Handle autoplay restrictions
+      audio.muted = false
+      audio.volume = 1.0
+      
+      // Try to play with user interaction context
+      try {
+        await audio.play()
+        console.log('🎵 Audio playback started')
+      } catch (playError) {
+        console.error('🎵 Autoplay blocked, trying with user gesture:', playError)
+        
+        // If autoplay is blocked, we need user interaction
+        // This will be handled by the VoiceInput component
+        // which is triggered by user clicking "Use This Text"
+        throw new Error('Autoplay blocked - requires user interaction')
+      }
     } catch (err) {
       console.error('❌ Failed to play audio:', err)
+      throw err
     }
   }, [])
 

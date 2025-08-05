@@ -148,8 +148,8 @@ export function VoiceInput({
         await voiceSystem.sendMessage(text)
         
         toast({
-          title: "🎵 Voice Conversation",
-          description: "AI is responding with Puck's voice!",
+          title: "🎵 Voice Response",
+          description: "Playing Puck's voice response...",
         })
       } else {
         console.warn('Voice session not active, starting session...')
@@ -166,11 +166,21 @@ export function VoiceInput({
       }
     } catch (error) {
       console.error('❌ Voice conversation failed:', error)
-      toast({
-        title: "Voice Response Failed",
-        description: "Could not get voice response from AI",
-        variant: "destructive"
-      })
+      
+      // Check if it's an autoplay error
+      if (error instanceof Error && error.message.includes('Autoplay blocked')) {
+        toast({
+          title: "🔇 Audio Blocked",
+          description: "Please allow audio playback in your browser settings",
+          variant: "destructive"
+        })
+      } else {
+        toast({
+          title: "Voice Response Failed",
+          description: "Could not get voice response from AI",
+          variant: "destructive"
+        })
+      }
     } finally {
       setIsProcessing(false)
     }
