@@ -21,10 +21,22 @@ export const VideoAppResultSchema = z.object({
   summary: z.string().min(1)
 })
 
+export const ScreenShareSchema = z.object({
+  image: z.string().min(1, 'Image data cannot be empty'),
+  type: z.string().min(1, 'Type cannot be empty')
+})
+
+export const WebcamCaptureSchema = z.object({
+  image: z.string().min(1, 'Image data cannot be empty'),
+  type: z.string().min(1, 'Type cannot be empty')
+})
+
 // Type definitions
 export type ROICalculationResult = z.infer<typeof ROICalculationSchema>
 export type VoiceTranscriptResult = z.infer<typeof VoiceTranscriptSchema>
 export type VideoAppResult = z.infer<typeof VideoAppResultSchema>
+export type ScreenShareResult = z.infer<typeof ScreenShareSchema>
+export type WebcamCaptureResult = z.infer<typeof WebcamCaptureSchema>
 
 // Service functions
 export const handleROICalculation = async (result: ROICalculationResult) => {
@@ -88,6 +100,48 @@ export const handleVideoAppResult = async (result: VideoAppResult) => {
   } catch (error) {
     console.error('Video to app error:', error)
     throw new Error('Failed to process video to app')
+  }
+}
+
+export const handleScreenShare = async (result: ScreenShareResult) => {
+  try {
+    const validatedResult = ScreenShareSchema.parse(result)
+    
+    const response = await fetch('/api/tools/screen-share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(validatedResult)
+    })
+
+    if (!response.ok) {
+      throw new Error(`Screen share analysis failed: ${response.statusText}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Screen share analysis error:', error)
+    throw new Error('Failed to process screen share analysis')
+  }
+}
+
+export const handleWebcamCapture = async (result: WebcamCaptureResult) => {
+  try {
+    const validatedResult = WebcamCaptureSchema.parse(result)
+    
+    const response = await fetch('/api/tools/webcam-capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(validatedResult)
+    })
+
+    if (!response.ok) {
+      throw new Error(`Webcam capture analysis failed: ${response.statusText}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Webcam capture analysis error:', error)
+    throw new Error('Failed to process webcam capture analysis')
   }
 }
 
