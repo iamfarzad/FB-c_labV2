@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed - 2025-08-05
+- **CRITICAL: Voice System Infinite Loop Resolution**: Fixed massive API cost burn and broken voice functionality
+  - **Root Cause**: useEffect dependency array included 'transcript', causing SpeechRecognition recreation on every transcript change
+  - **Impact**: Eliminated infinite loops generating hundreds of voice sessions per second ($600+ API cost burn reported)
+  - **Fix 1**: Removed 'transcript' from useEffect dependencies to prevent SpeechRecognition recreation
+  - **Fix 2**: Removed auto-trigger in onend handler, requiring user to click 'Use This Text' button
+  - **Result**: Stable voice recording flow with user control over transcript submission
+  - **Compliance**: Followed core-foundation.rules and request-flow.rules with proper branch workflow and TDD approach
+
 ### Consolidated - 2025-08-04
 - **VideoToApp Component Consolidation**: Single source solution for all video-to-app functionality
   - **Eliminated Rule Violations**: Removed 602-line VideoToAppGenerator component violating size/design token rules
