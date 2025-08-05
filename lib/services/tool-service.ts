@@ -124,23 +124,4 @@ export const handleVideoAppResult = async (result: VideoAppResult) => {
   }
 }
 
-export const handleScreenShare = async (result: ScreenShareResult) => {
-  try {
-    const validatedResult = ScreenShareSchema.parse(result)
-    
-    const response = await fetch('/api/tools/screen-share', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(validatedResult)
-    })
 
-    if (!response.ok) {
-      throw new Error(`Screen share analysis failed: ${response.statusText}`)
-    }
-
-    return await response.json()
-  } catch (error) {
-    console.error('Screen share error:', error)
-    throw new Error('Failed to process screen share analysis')
-  }
-}

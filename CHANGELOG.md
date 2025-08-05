@@ -3,6 +3,22 @@
 ## [Unreleased]
 
 ### Fixed - 2025-08-05
+- **Screen Share Pipeline Fix**: Fixed broken screen share functionality by correcting API endpoint and security headers
+  - **API Endpoint Fix**: Updated ScreenShare component to call `/api/tools/screen-share` instead of `/api/gemini-live-conversation`
+  - **Payload Correction**: Changed from `{ imageData, sessionId, type: 'screen_frame', analysisMode: 'screen' }` to `{ image: imageData, type: 'screen' }`
+  - **AI Analysis Integration**: Enhanced `/api/tools/screen-share/route.ts` with full AI analysis using Gemini 1.5 Flash model
+  - **Security Header Update**: Added `display-capture=(self)` to Permissions-Policy header in middleware.ts
+  - **Budget Management**: Integrated proper token usage tracking and demo budget enforcement
+  - **Error Handling**: Added comprehensive error handling for AI model failures and validation errors
+  - **Response Format**: Updated response parsing to handle `result.data?.analysis` structure
+  - **Context Sharing**: ✅ Verified screen share analysis is properly sent to main chat via `onAnalysis` callback
+  - **Testing**: ✅ API tested and working with proper response format and error handling
+  - **Legacy Code Cleanup**: Removed unused `handleScreenShare` function from `lib/services/tool-service.ts`
+  - **Legacy Component Removal**: Deleted unused `hooks/useScreenShare.ts` and `components/chat/screen/` directory
+  - **Single Source of Truth**: Ensured `/api/tools/screen-share` is the only screen share API endpoint
+  - **Compliance**: Followed core-foundation.rules with proper testing strategy and architectural compliance
+
+### Fixed - 2025-08-05
 - **CRITICAL: Voice System Infinite Loop Resolution**: Fixed massive API cost burn and broken voice functionality
   - **Root Cause**: useEffect dependency array included 'transcript', causing SpeechRecognition recreation on every transcript change
   - **Impact**: Eliminated infinite loops generating hundreds of voice sessions per second ($600+ API cost burn reported)

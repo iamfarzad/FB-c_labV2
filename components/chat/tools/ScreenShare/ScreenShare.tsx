@@ -41,21 +41,19 @@ export function ScreenShare({
   const sendScreenFrame = useCallback(async (imageData: string) => {
     try {
       setIsAnalyzing(true)
-      const response = await fetch('/api/gemini-live-conversation', {
+      const response = await fetch('/api/tools/screen-share', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          imageData,
-          sessionId: sessionIdRef.current,
-          type: 'screen_frame',
-          analysisMode: 'screen'
+          image: imageData,
+          type: 'screen'
         })
       })
       if (!response.ok) throw new Error('Failed to analyze screen frame')
       const result = await response.json()
       const analysis: AnalysisResult = {
         id: Date.now().toString(),
-        text: result.response || result.text || 'No analysis available',
+        text: result.data?.analysis || result.analysis || 'No analysis available',
         timestamp: Date.now(),
       }
       setAnalysisHistory(prev => [analysis, ...prev])
