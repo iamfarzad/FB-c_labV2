@@ -12,6 +12,8 @@ export interface VoiceInputProps {
   className?: string
 }
 
+// Legacy interfaces kept for backward compatibility
+// TODO: Remove these when all references are updated
 export interface VoiceInputModalProps {
   isOpen: boolean
   onClose: () => void

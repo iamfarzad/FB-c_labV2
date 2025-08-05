@@ -350,7 +350,7 @@ class AIFunctionValidator {
       const modalPaths = [
         'components/chat/modals/WebcamModal.tsx',
         'components/chat/modals/ScreenShareModal.tsx',
-        'components/chat/modals/VoiceInputModal.tsx'
+        'components/chat/tools/VoiceInput/VoiceInput.tsx'
       ];
 
       const modalChecks = await Promise.all(

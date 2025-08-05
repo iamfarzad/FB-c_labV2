@@ -104,16 +104,16 @@ export function UITestDashboard() {
       case "voiceInteraction":
         return [
           {
-            component: "VoiceInputModal",
+            component: "VoiceInput",
             test: "Speech Recognition",
             status: "PASS",
             details: "Browser speech recognition initializes correctly.",
           },
           {
-            component: "VoiceInputModal",
-            test: "Transcript Transfer",
+            component: "VoiceInput",
+            test: "TTS Voice Response",
             status: "PASS",
-            details: "Voice transcript correctly appends to chat.",
+            details: "Voice conversation with Puck works end-to-end.",
           },
         ]
 

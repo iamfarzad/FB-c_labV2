@@ -172,28 +172,28 @@ class VoiceSystemTester {
     try {
       console.log('Testing Voice Components...')
       
-      // Check if voice components exist
-      const voiceInputExists = await this.checkFileExists('components/chat/modals/VoiceInputModal.tsx')
-      const voiceOutputExists = await this.checkFileExists('components/chat/modals/VoiceOutputModal.tsx')
+      // Check if unified voice components exist
+      const voiceInputExists = await this.checkFileExists('components/chat/tools/VoiceInput/VoiceInput.tsx')
+      const voiceHookExists = await this.checkFileExists('hooks/use-real-time-voice.ts')
       const audioHookExists = await this.checkFileExists('hooks/useAudioPlayer.ts')
       
-      if (voiceInputExists && voiceOutputExists && audioHookExists) {
+      if (voiceInputExists && voiceHookExists && audioHookExists) {
         // Check imports and basic structure
-        const voiceInputContent = await readFile('components/chat/modals/VoiceInputModal.tsx', 'utf-8')
-        const voiceOutputContent = await readFile('components/chat/modals/VoiceOutputModal.tsx', 'utf-8')
+        const voiceInputContent = await readFile('components/chat/tools/VoiceInput/VoiceInput.tsx', 'utf-8')
+        const voiceHookContent = await readFile('hooks/use-real-time-voice.ts', 'utf-8')
         const audioHookContent = await readFile('hooks/useAudioPlayer.ts', 'utf-8')
         
-        const hasVoiceInputLogic = voiceInputContent.includes('SpeechRecognition') && voiceInputContent.includes('recognition')
-        const hasVoiceOutputLogic = voiceOutputContent.includes('useAudioPlayer') && voiceOutputContent.includes('VoiceOrb')
+        const hasVoiceInputLogic = voiceInputContent.includes('SpeechRecognition') && voiceInputContent.includes('useRealTimeVoice')
+        const hasVoiceHookLogic = voiceHookContent.includes('sendMessage') && voiceHookContent.includes('gemini-live-conversation')
         const hasAudioPlayerLogic = audioHookContent.includes('HTMLAudioElement') && audioHookContent.includes('playAudioData')
         
-        if (hasVoiceInputLogic && hasVoiceOutputLogic && hasAudioPlayerLogic) {
+        if (hasVoiceInputLogic && hasVoiceHookLogic && hasAudioPlayerLogic) {
           this.results.push({
             name: 'Voice Components',
             passed: true,
             details: {
-              voiceInputModal: hasVoiceInputLogic,
-              voiceOutputModal: hasVoiceOutputLogic,
+              voiceInputComponent: hasVoiceInputLogic,
+              voiceHook: hasVoiceHookLogic,
               audioPlayerHook: hasAudioPlayerLogic
             }
           })
