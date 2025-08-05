@@ -34,7 +34,7 @@ export function VoiceInput({
         leadName: leadContext.name || 'User' 
       })
     }
-  }, [leadContext])
+  }, [leadContext, voiceSystem])
 
   useEffect(() => {
     if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {

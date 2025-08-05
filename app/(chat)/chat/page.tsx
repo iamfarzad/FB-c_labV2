@@ -457,6 +457,11 @@ ${result.summary}`
             mode="modal"
             onClose={() => setShowVoiceModal(false)}
             onTranscript={handleVoiceTranscript}
+            leadContext={{
+              name: leadData.name,
+              company: leadData.company,
+              role: 'User'
+            }}
           />
         )}
         
