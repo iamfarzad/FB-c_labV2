@@ -80,7 +80,7 @@ export default function HomePage() {
             {/* Pulsating orange glow background */}
             <div className="absolute inset-0 flex justify-center items-center">
               <div className="w-56 h-56 bg-accent/20 rounded-full blur-xl animate-pulse"></div>
-              <div className="absolute w-64 h-64 bg-accent/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+              <div className="absolute w-64 h-64 bg-accent/10 rounded-full blur-2xl animate-pulse [animation-delay:0.5s]"></div>
             </div>
             {/* F.B/c Icon */}
             <div className="relative z-10">

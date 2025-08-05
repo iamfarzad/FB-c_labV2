@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <h1>WebSocket Connection Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="logs"></div>
+    
+    <script>
+        const logs = document.getElementById('logs');
+        const status = document.getElementById('status');
+        
+        function log(message) {
+            const p = document.createElement('p');
+            p.textContent = new Date().toISOString() + ' - ' + message;
+            logs.appendChild(p);
+            console.log(message);
+        }
+        
+        log('Current page URL: ' + window.location.href);
+        log('Page protocol: ' + window.location.protocol);
+        
+        try {
+            const wsUrl = 'ws://localhost:3001';
+            log('Attempting to connect to: ' + wsUrl);
+            
+            const ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                log('✅ WebSocket connected!');
+                status.textContent = 'Connected!';
+                status.style.color = 'green';
+                
+                // Send test message
+                ws.send(JSON.stringify({
+                    type: 'start',
+                    payload: { leadContext: { name: 'Browser Test' } }
+                }));
+            };
+            
+            ws.onmessage = (event) => {
+                log('📨 Received: ' + event.data);
+            };
+            
+            ws.onerror = (error) => {
+                log('❌ WebSocket error occurred');
+                status.textContent = 'Connection Error';
+                status.style.color = 'red';
+            };
+            
+            ws.onclose = (event) => {
+                log('🔌 WebSocket closed. Code: ' + event.code + ', Reason: ' + event.reason);
+                status.textContent = 'Disconnected';
+                status.style.color = 'orange';
+            };
+            
+        } catch (error) {
+            log('❌ Failed to create WebSocket: ' + error.message);
+            status.textContent = 'Failed to Connect';
+            status.style.color = 'red';
+        }
+    </script>
+</body>
+</html>

@@ -30,10 +30,6 @@
     "app/api/analyze-screenshot/route.ts": {
       "maxDuration": 30,
       "memory": 1024
-    },
-    "app/api/gemini-live-conversation/route.ts": {
-      "maxDuration": 45,
-      "memory": 1024
     }
   },
   "headers": [

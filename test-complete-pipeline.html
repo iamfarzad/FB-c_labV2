@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Complete WebSocket Pipeline Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        #logs { background: #f0f0f0; padding: 10px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Voice Pipeline Test</h1>
+    <button id="connect">Connect to WebSocket</button>
+    <button id="start">Start Session</button>
+    <button id="send">Send Message</button>
+    <button id="close">Close Connection</button>
+    
+    <div id="status">Ready to test...</div>
+    <div id="logs"></div>
+    
+    <script>
+        let ws = null;
+        const logs = document.getElementById('logs');
+        const status = document.getElementById('status');
+        
+        function log(message, type = 'info') {
+            const p = document.createElement('p');
+            p.className = type;
+            p.textContent = new Date().toISOString().substr(11, 8) + ' - ' + message;
+            logs.appendChild(p);
+            console.log(message);
+        }
+        
+        document.getElementById('connect').onclick = () => {
+            log('Current page: ' + window.location.href, 'info');
+            log('Protocol: ' + window.location.protocol, 'info');
+            
+            try {
+                const wsUrl = 'ws://localhost:3001';
+                log('Connecting to: ' + wsUrl, 'info');
+                
+                ws = new WebSocket(wsUrl);
+                
+                ws.onopen = () => {
+                    log('✅ WebSocket connected!', 'success');
+                    status.textContent = 'Connected';
+                    status.className = 'success';
+                };
+                
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        log('📨 Received: ' + data.type + ' - ' + JSON.stringify(data.payload || {}), 'info');
+                        
+                        if (data.type === 'connected') {
+                            log('✅ Server acknowledged immediately!', 'success');
+                        }
+                        if (data.type === 'session_started') {
+                            log('✅ Gemini session started!', 'success');
+                        }
+                        if (data.type === 'error') {
+                            log('❌ Server error: ' + data.payload.message, 'error');
+                        }
+                    } catch (e) {
+                        log('Error parsing message: ' + e.message, 'error');
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    log('❌ WebSocket error occurred', 'error');
+                    status.textContent = 'Error';
+                    status.className = 'error';
+                };
+                
+                ws.onclose = (event) => {
+                    log('🔌 Connection closed. Code: ' + event.code + ', Reason: ' + event.reason, 'info');
+                    status.textContent = 'Disconnected';
+                    status.className = 'info';
+                    ws = null;
+                };
+                
+            } catch (error) {
+                log('❌ Failed to create WebSocket: ' + error.message, 'error');
+            }
+        };
+        
+        document.getElementById('start').onclick = () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'start',
+                    payload: { leadContext: { name: 'Browser Test User' } }
+                }));
+                log('📤 Sent start message', 'info');
+            } else {
+                log('❌ WebSocket not connected', 'error');
+            }
+        };
+        
+        document.getElementById('send').onclick = () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'user_message',
+                    payload: { text: 'Hello from browser test!' }
+                }));
+                log('📤 Sent user message', 'info');
+            } else {
+                log('❌ WebSocket not connected', 'error');
+            }
+        };
+        
+        document.getElementById('close').onclick = () => {
+            if (ws) {
+                ws.close();
+                log('Closing connection...', 'info');
+            }
+        };
+    </script>
+</body>
+</html>

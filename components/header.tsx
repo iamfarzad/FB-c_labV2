@@ -35,13 +35,14 @@ export default function Header() {
   )
 
   const NavLinks = ({ className }: { className?: string }) => (
-    <nav className={cn("flex items-center gap-6 text-sm", className)}>
+    <nav className={cn("flex items-center gap-4 md:gap-6 text-sm", className)}>
       {navLinks.map(({ href, label }) => (
         <Link
           key={href}
           href={href}
           className={cn(
-            "transition-all hover:text-foreground",
+            "transition-all hover:text-foreground focus:text-foreground rounded px-2 py-1",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
             pathname === href ? "text-primary" : "text-muted-foreground",
           )}
         >
@@ -72,9 +73,9 @@ export default function Header() {
                   <span className="sr-only">Open navigation menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right">
+              <SheetContent side="right" className="w-full sm:max-w-md">
                 <div className="p-4 mt-6">
-                  <NavLinks className="flex-col items-start space-y-4" />
+                  <NavLinks className="flex-col items-start gap-3" />
                 </div>
               </SheetContent>
             </Sheet>

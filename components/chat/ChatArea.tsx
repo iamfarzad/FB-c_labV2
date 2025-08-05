@@ -807,8 +807,7 @@ export const ChatArea = memo(function ChatArea({
               {/* Scroll anchor with proper spacing */}
               <div 
                 ref={messagesEndRef} 
-                className="h-4 w-full" 
-                style={{ scrollMarginBottom: '16px' }}
+                className="h-4 w-full scroll-mb-4"
               />
             </>
           )}

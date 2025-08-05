@@ -204,8 +204,7 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '' }
                     animate={{ opacity: 1, x: 0, scale: 1 }}
                     exit={{ opacity: 0, x: 10, scale: 0.95 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute right-12 top-1/2 -translate-y-1/2 z-10"
-                    style={{ pointerEvents: "none" }}
+                    className="absolute right-12 top-1/2 -translate-y-1/2 z-10 pointer-events-none"
                   >
                     <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-lg shadow-xl p-3 min-w-[240px]">
                       {/* Arrow */}

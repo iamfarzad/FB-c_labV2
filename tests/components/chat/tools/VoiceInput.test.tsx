@@ -8,12 +8,20 @@ jest.mock('@/hooks/use-toast')
 const mockToast = jest.fn()
 ;(useToast as jest.Mock).mockReturnValue({ toast: mockToast })
 
-// Mock the real-time voice hook
-jest.mock('@/hooks/use-real-time-voice', () => ({
-  useRealTimeVoice: () => ({
+// Mock the WebSocket voice hook
+jest.mock('@/hooks/use-websocket-voice', () => ({
+  useWebSocketVoice: () => ({
+    session: null,
+    isConnected: false,
     isProcessing: false,
+    error: null,
+    transcript: '',
+    audioQueue: [],
     startSession: jest.fn(),
+    stopSession: jest.fn(),
     sendMessage: jest.fn().mockResolvedValue(undefined),
+    sendAudioChunk: jest.fn(),
+    playNextAudio: jest.fn(),
   })
 }))
 

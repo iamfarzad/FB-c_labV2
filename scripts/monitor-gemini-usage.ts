@@ -15,7 +15,6 @@ const ALLOWED_FILES = [
   'app/api/ai-stream/route.ts',
   'app/api/admin/chat/route.ts',
   'app/api/gemini-live/route.ts',
-  'app/api/gemini-live-conversation/route.ts',
   'app/api/analyze-image/route.ts',
   'app/api/analyze-document/route.ts',
   'app/api/analyze-screenshot/route.ts',

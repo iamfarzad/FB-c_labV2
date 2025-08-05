@@ -58,7 +58,6 @@ class ProductionFixer {
         'app/api/analyze-image/route.ts': { maxDuration: 30, memory: 1024 },
         'app/api/analyze-screenshot/route.ts': { maxDuration: 30, memory: 1024 },
         'app/api/video-to-app/route.ts': { maxDuration: 60, memory: 1024 },
-        'app/api/gemini-live-conversation/route.ts': { maxDuration: 45, memory: 1024 }
       }
 
       if (!config.functions) {
@@ -131,7 +130,6 @@ class ProductionFixer {
       'app/api/analyze-image/route.ts',
       'app/api/analyze-screenshot/route.ts',
       'app/api/video-to-app/route.ts',
-      'app/api/gemini-live-conversation/route.ts'
     ]
 
     for (const route of apiRoutes) {

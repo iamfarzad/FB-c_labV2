@@ -88,16 +88,14 @@ const ProcessNode = ({ activity, index, isLatest, onHover, onLeave }: ProcessNod
 
   return (
     <div
-      className="relative flex items-center group"
+      className="relative flex items-center group mb-3"
       onMouseEnter={() => onHover(activity)}
       onMouseLeave={onLeave}
-      style={{ marginBottom: "12px" }}
     >
       {/* Connection line to next node */}
       {!isLatest && (
         <div
-          className="absolute left-1/2 top-full w-px bg-muted-foreground/30 -translate-x-px"
-          style={{ height: "12px" }}
+          className="absolute left-1/2 top-full w-px bg-muted-foreground/30 -translate-x-px h-3"
         />
       )}
 
