@@ -47,6 +47,26 @@
 
 ## 🔧 **TECHNICAL SPECIFICATIONS**
 
+### **WebSocket Voice Server ✅**
+- **Location**: `server/live-server.ts`
+- **Port**: 3001 (configurable via `LIVE_SERVER_PORT`)
+- **Dependencies**: `ws`, `@google/genai`, `uuid`
+- **Environment**: Requires `GEMINI_API_KEY`
+- **Production**: Deploy as separate service alongside Next.js app
+- **Health Check**: WebSocket connection to `ws://localhost:3001`
+- **Logging**: Comprehensive session and error logging
+
+### **Development Commands**
+- `pnpm dev:live` - Start both Next.js and WebSocket server
+- `pnpm dev:local-ws` - Start WebSocket server only
+- `pnpm dev` - Start Next.js only
+
+### **Production Deployment**
+1. Deploy WebSocket server as separate service (e.g., Railway, Render, or Docker container)
+2. Set `NEXT_PUBLIC_LIVE_SERVER_URL` to production WebSocket URL
+3. Ensure `GEMINI_API_KEY` is available in WebSocket server environment
+4. Configure load balancer for WebSocket sticky sessions if scaling
+
 ### **API Endpoints Status**
 - ✅ `/api/chat` - Main chat functionality (100% working)
 - ✅ `/api/tools/*` - All tool endpoints validated and working
