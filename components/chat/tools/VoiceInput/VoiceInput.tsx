@@ -19,6 +19,7 @@ export function VoiceInput({
 }: VoiceInputProps) {
   const { toast } = useToast()
   const [isRecording, setIsRecording] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [transcript, setTranscript] = useState("")
   const recognitionRef = useRef<any>(null)
 
@@ -105,6 +106,7 @@ export function VoiceInput({
   }
 
   const handleTranscript = async (text: string) => {
+    setIsProcessing(true)
     try {
       // Send to voice system for complete voice conversation
       if (voiceSystem.session?.isActive) {
@@ -135,6 +137,8 @@ export function VoiceInput({
         description: "Could not get voice response from AI",
         variant: "destructive"
       })
+    } finally {
+      setIsProcessing(false)
     }
   }
 
@@ -169,10 +173,10 @@ export function VoiceInput({
           <Button 
             onClick={startRecording} 
             className="w-full"
-            disabled={voiceSystem.isProcessing}
+            disabled={isProcessing || voiceSystem.isProcessing}
           >
             <Mic className="w-4 h-4 mr-2" />
-            {voiceSystem.isProcessing ? 'Processing...' : 'Start Recording'}
+            {(isProcessing || voiceSystem.isProcessing) ? 'Processing...' : 'Start Recording'}
           </Button>
         </div>
       )}
