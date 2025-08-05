@@ -6,6 +6,7 @@ import { ToolCardWrapper } from "@/components/chat/ToolCardWrapper"
 import { Button } from "@/components/ui/button"
 import { Mic, MicOff, Square, X } from "@/lib/icon-mapping"
 import { useToast } from "@/hooks/use-toast"
+import { useRealTimeVoice } from "@/hooks/use-real-time-voice"
 import type { VoiceInputProps } from "./VoiceInput.types"
 
 export function VoiceInput({ 
@@ -18,9 +19,21 @@ export function VoiceInput({
 }: VoiceInputProps) {
   const { toast } = useToast()
   const [isRecording, setIsRecording] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
   const [transcript, setTranscript] = useState("")
   const recognitionRef = useRef<any>(null)
+
+  // Initialize real-time voice system with proper session management
+  const voiceSystem = useRealTimeVoice()
+  
+  // Start voice session when component mounts
+  useEffect(() => {
+    if (leadContext) {
+      voiceSystem.startSession({ 
+        leadId: leadContext.company || 'anonymous',
+        leadName: leadContext.name || 'User' 
+      })
+    }
+  }, [leadContext])
 
   useEffect(() => {
     if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
@@ -92,10 +105,21 @@ export function VoiceInput({
   }
 
   const handleTranscript = async (text: string) => {
-    setIsProcessing(true)
     try {
-      // Send to Gemini Live API for voice response
-      await sendToGeminiLive(text)
+      // Send to voice system for complete voice conversation
+      if (voiceSystem.session?.isActive) {
+        console.log('🎤 Sending to voice system:', text)
+        await voiceSystem.sendMessage(text)
+        
+        toast({
+          title: "🎵 Voice Conversation",
+          description: "AI is responding with Puck's voice!",
+        })
+      } else {
+        console.warn('Voice session not active, starting session...')
+        await voiceSystem.startSession()
+        await voiceSystem.sendMessage(text)
+      }
       
       // Also send to regular chat system
       if (mode === 'modal') {
@@ -104,69 +128,13 @@ export function VoiceInput({
       } else {
         onTranscript(text)
       }
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  // Send transcript to Gemini Live API and play voice response
-  const sendToGeminiLive = async (text: string) => {
-    try {
-      console.log('🎤 Sending to Gemini Live API:', text)
-      
-      const response = await fetch('/api/gemini-live', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-correlation-id': `voice-${Date.now()}`,
-        },
-        body: JSON.stringify({
-          prompt: text,
-          enableTTS: true,
-          voiceName: 'Puck',
-          languageCode: 'en-US',
-          streamAudio: false
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error(`Gemini Live API failed: ${response.status}`)
-      }
-
-      const data = await response.json()
-      console.log('🎵 Received voice response:', data)
-
-      // Play the audio if available
-      if (data.audioData) {
-        await playAudio(data.audioData)
-        
-        toast({
-          title: "🎵 Voice Response",
-          description: "AI responded with Puck's voice!",
-        })
-      } else {
-        console.warn('No audio data received from Gemini Live API')
-      }
-
     } catch (error) {
-      console.error('❌ Gemini Live API error:', error)
+      console.error('❌ Voice conversation failed:', error)
       toast({
         title: "Voice Response Failed",
         description: "Could not get voice response from AI",
         variant: "destructive"
       })
-    }
-  }
-
-  // Play audio data (base64 or data URL)
-  const playAudio = async (audioData: string) => {
-    try {
-      const audio = new Audio(audioData)
-      audio.volume = 0.8
-      await audio.play()
-      console.log('🔊 Audio played successfully')
-    } catch (error) {
-      console.error('❌ Audio playback failed:', error)
     }
   }
 
@@ -182,13 +150,29 @@ export function VoiceInput({
 
   const VoiceInputUI = () => (
     <div className={`flex flex-col items-center gap-4 p-6 ${className || ''}`}>
+      {/* Voice system status */}
+      {voiceSystem.session?.isActive && (
+        <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+          🎤 Voice session active - Puck ready to respond
+        </div>
+      )}
+      
       {!isRecording && !transcript && (
         <div className="flex flex-col items-center gap-4">
           <Mic className="w-12 h-12 text-muted-foreground" />
-          <p className="text-muted-foreground text-center">Click to start voice input</p>
-          <Button onClick={startRecording} className="w-full">
+          <p className="text-muted-foreground text-center">
+            {voiceSystem.session?.isActive 
+              ? "Click to start voice conversation with Puck" 
+              : "Click to start voice input"
+            }
+          </p>
+          <Button 
+            onClick={startRecording} 
+            className="w-full"
+            disabled={voiceSystem.isProcessing}
+          >
             <Mic className="w-4 h-4 mr-2" />
-            Start Recording
+            {voiceSystem.isProcessing ? 'Processing...' : 'Start Recording'}
           </Button>
         </div>
       )}
