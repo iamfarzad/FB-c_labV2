@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { supabase } from '@/lib/supabase/client'
+import { GoogleGenAI } from '@google/genai'
+import { Modality } from '@google/genai'
 
 interface VoiceSession {
   sessionId: string
@@ -28,145 +29,12 @@ export function useRealTimeVoice() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
+  // Direct Gemini Live session
+  const liveSessionRef = useRef<any>(null)
+  
   // Web Audio API context for playing raw audio data
   const audioContextRef = useRef<AudioContext | null>(null)
   
-
-
-
-
-  // Start conversation session
-  const startSession = useCallback(async (leadContext?: { leadId: string; leadName: string }) => {
-    try {
-      setError(null)
-      setIsProcessing(true)
-
-      const response = await fetch('/api/gemini-live-conversation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'start',
-          leadContext,
-          enableAudio: true,
-          voiceName: 'Puck',
-          languageCode: 'en-US'
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to start session: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      
-      setSession({
-        sessionId: data.sessionId,
-        leadId: leadContext?.leadId,
-        isActive: true,
-        messageCount: 0,
-        audioEnabled: true,
-        voiceName: 'Puck',
-        languageCode: 'en-US'
-      })
-
-      setIsConnected(true)
-      console.log('🎙️ Voice session started:', data.sessionId)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start session')
-      console.error('❌ Failed to start voice session:', err)
-    } finally {
-      setIsProcessing(false)
-    }
-  }, [])
-
-  // Send message with voice processing
-  const sendMessage = useCallback(async (message: string) => {
-    if (!session?.sessionId) {
-      setError('No active session')
-      return
-    }
-
-    try {
-      setError(null)
-      setIsProcessing(true)
-
-      const response = await fetch('/api/gemini-live-conversation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'message',
-          sessionId: session.sessionId,
-          message,
-          enableAudio: true,
-          voiceName: session.voiceName,
-          languageCode: session.languageCode
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to send message: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      
-      const newMessage: VoiceMessage = {
-        id: Math.random().toString(36).substring(7),
-        sessionId: session.sessionId,
-        message,
-        response: data.message,
-        audioData: data.audioData,
-        timestamp: new Date(),
-        responseTime: data.responseTime
-      }
-
-      setMessages(prev => [...prev, newMessage])
-      
-      // Update session message count
-      setSession(prev => prev ? { ...prev, messageCount: data.messageCount } : null)
-
-      // Play audio if available
-      if (data.audioData && session.audioEnabled) {
-        await playAudio(data.audioData)
-      }
-
-      console.log('💬 Voice message sent:', newMessage)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send message')
-      console.error('❌ Failed to send voice message:', err)
-    } finally {
-      setIsProcessing(false)
-    }
-  }, [session])
-
-  // End conversation session
-  const endSession = useCallback(async () => {
-    if (!session?.sessionId) return
-
-    try {
-      setError(null)
-      setIsProcessing(true)
-
-      await fetch('/api/gemini-live-conversation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'end',
-          sessionId: session.sessionId
-        })
-      })
-
-      setSession(null)
-      setMessages([])
-      setIsConnected(false)
-      console.log('🔚 Voice session ended')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to end session')
-      console.error('❌ Failed to end voice session:', err)
-    } finally {
-      setIsProcessing(false)
-    }
-  }, [session])
-
   // Initialize Web Audio API context
   useEffect(() => {
     if (typeof window !== 'undefined' && !audioContextRef.current) {
@@ -257,34 +125,159 @@ export function useRealTimeVoice() {
     }
   }, [decodeBase64, decodeAudioData])
 
+  // Start direct Gemini Live session
+  const startSession = useCallback(async (leadContext?: { leadId: string; leadName: string }) => {
+    try {
+      setError(null)
+      setIsProcessing(true)
 
+      // Initialize Gemini client
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY
+      if (!apiKey) {
+        throw new Error('GEMINI_API_KEY not configured')
+      }
+
+      const genAI = new GoogleGenAI({ apiKey })
+      
+      console.log('🎙️ Starting direct Gemini Live session...')
+
+      // Create direct live connection
+      const liveSession = await genAI.live.connect({
+        model: 'gemini-2.5-flash-preview-native-audio-dialog',
+        callbacks: {
+          onopen: () => {
+            console.log('✅ Gemini Live session opened')
+            setIsConnected(true)
+          },
+          onmessage: (event: any) => {
+            console.log('📨 Received Gemini message:', event.data)
+            
+            // Handle text response
+            if (event.data?.text) {
+              const newMessage: VoiceMessage = {
+                id: Math.random().toString(36).substring(7),
+                sessionId: 'live-session',
+                message: '', // Will be set by sendMessage
+                response: event.data.text,
+                timestamp: new Date(),
+                responseTime: 0
+              }
+              setMessages(prev => [...prev, newMessage])
+            }
+            
+            // Handle audio response
+            if (event.data?.audio) {
+              console.log('🎵 Received audio response')
+              // Convert ArrayBuffer to base64 for playback
+              const audioArray = new Uint8Array(event.data.audio)
+              const base64Audio = btoa(String.fromCharCode(...audioArray))
+              const audioData = `data:audio/wav;base64,${base64Audio}`
+              
+              // Play the audio
+              playAudio(audioData)
+            }
+          },
+          onerror: (error) => {
+            console.error('❌ Gemini Live error:', error)
+            setError(error.message || 'Live session error')
+          },
+          onclose: () => {
+            console.log('🔒 Gemini Live session closed')
+            setIsConnected(false)
+            setSession(null)
+          }
+        },
+        config: {
+          responseModalities: [Modality.AUDIO, Modality.TEXT],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: {
+                voiceName: 'Puck'
+              }
+            },
+            languageCode: 'en-US'
+          }
+        }
+      })
+
+      liveSessionRef.current = liveSession
+      
+      setSession({
+        sessionId: 'live-session',
+        leadId: leadContext?.leadId,
+        isActive: true,
+        messageCount: 0,
+        audioEnabled: true,
+        voiceName: 'Puck',
+        languageCode: 'en-US'
+      })
+
+      console.log('🎙️ Direct Gemini Live session started')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start session')
+      console.error('❌ Failed to start Gemini Live session:', err)
+    } finally {
+      setIsProcessing(false)
+    }
+  }, [playAudio])
+
+  // Send message via direct Gemini Live connection
+  const sendMessage = useCallback(async (message: string) => {
+    if (!liveSessionRef.current) {
+      setError('No active live session')
+      return
+    }
+
+    try {
+      setError(null)
+      setIsProcessing(true)
+
+      console.log('💬 Sending message via Gemini Live:', message)
+
+      // Send text message to Gemini Live
+      liveSessionRef.current.sendRealtimeInput({
+        turns: [{ role: 'user', parts: [{ text: message }] }],
+        turnComplete: true
+      })
+
+      console.log('💬 Message sent via Gemini Live')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send message')
+      console.error('❌ Failed to send message via Gemini Live:', err)
+    } finally {
+      setIsProcessing(false)
+    }
+  }, [])
+
+  // End direct Gemini Live session
+  const endSession = useCallback(async () => {
+    if (!liveSessionRef.current) return
+
+    try {
+      setError(null)
+      setIsProcessing(true)
+
+      console.log('🔚 Closing Gemini Live session...')
+      liveSessionRef.current.close()
+
+      setSession(null)
+      setMessages([])
+      setIsConnected(false)
+      liveSessionRef.current = null
+      
+      console.log('🔚 Gemini Live session ended')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to end session')
+      console.error('❌ Failed to end Gemini Live session:', err)
+    } finally {
+      setIsProcessing(false)
+    }
+  }, [])
 
   // Update voice settings
   const updateVoiceSettings = useCallback((settings: Partial<Pick<VoiceSession, 'voiceName' | 'languageCode' | 'audioEnabled'>>) => {
     setSession(prev => prev ? { ...prev, ...settings } : null)
   }, [])
-
-  // Subscribe to real-time updates
-  useEffect(() => {
-    if (!session?.sessionId) return
-
-    const channel = supabase
-      .channel(`voice-session-${session.sessionId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'activities',
-        filter: `metadata->>'sessionId'=eq.${session.sessionId}`
-      }, (payload: any) => {
-        console.log('📡 Real-time voice activity:', payload)
-        // Handle real-time updates if needed
-      })
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [session?.sessionId])
 
   return {
     // State
