@@ -53,60 +53,31 @@ export function WebcamCapture({
   const autoAnalysisInterval = useRef<ReturnType<typeof setInterval> | null>(null)
   const sessionIdRef = useRef<string>(`webcam-session-${Date.now()}`)
 
-  // Start real-time analysis session
-  const startAnalysisSession = useCallback(async () => {
-    try {
-      const response = await fetch('/api/gemini-live-conversation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'start',
-          sessionId: sessionIdRef.current,
-          enableAudio: false,
-          analysisMode: 'video'
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to start analysis session')
-      }
-
-      console.log('📹 Analysis session started')
-    } catch (error) {
-      console.error('❌ Failed to start analysis session:', error)
-      setError('Failed to start analysis session')
-    }
-  }, [])
-
   // Send video frame for analysis
   const sendVideoFrame = useCallback(async (imageData: string) => {
     try {
       setIsAnalyzing(true)
       
-      const response = await fetch('/api/gemini-live-conversation', {
+      const response = await fetch('/api/tools/webcam-capture', { // Corrected API endpoint
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          imageData,
-          sessionId: sessionIdRef.current,
-          type: 'video_frame',
-          analysisMode: 'video'
+          image: imageData, // Changed from imageData to image to match schema
+          type: 'webcam', // Explicitly set type to 'webcam'
         })
       })
 
       if (!response.ok) {
-        throw new Error('Failed to analyze video frame')
+        throw new Error(`Failed to analyze video frame: ${response.statusText}`)
       }
 
       const result = await response.json()
       
       const analysis: AnalysisResult = {
         id: Date.now().toString(),
-        text: result.response || result.text || 'No analysis available',
+        text: result.data?.analysis || result.data?.text || 'No analysis available',
         timestamp: Date.now(),
         imageData
       }
@@ -119,7 +90,7 @@ export function WebcamCapture({
       
     } catch (error) {
       console.error('❌ Failed to analyze video frame:', error)
-      setError('Failed to analyze video frame')
+      setError(`Failed to analyze video frame: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsAnalyzing(false)
     }
@@ -196,7 +167,7 @@ export function WebcamCapture({
       setWebcamState("initializing")
       
       // Start analysis session
-      await startAnalysisSession()
+      // Removed startAnalysisSession - not needed for individual image analysis
       
       const constraints: MediaStreamConstraints = {
         video: {
@@ -251,7 +222,7 @@ export function WebcamCapture({
         }, 2000)
       }
     }
-  }, [toast, startAnalysisSession])
+  }, [toast, onClose])
 
   const checkAndInitCamera = useCallback(async () => {
     try {
@@ -320,7 +291,7 @@ export function WebcamCapture({
         }, 3000)
       }
     }
-  }, [startCamera, toast])
+  }, [startCamera, toast, onClose])
 
   const captureImage = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return
