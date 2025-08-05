@@ -15,6 +15,8 @@ export function ChatLayout({ children, header, footer, className }: ChatLayoutPr
     <main className={cn(
       "flex flex-col h-[100dvh] bg-background",
       "supports-[height:100dvh]:h-[100dvh]", // Use dynamic viewport height when supported
+      "pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]",
+      "pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]",
       className
     )}>
       {header}
@@ -24,12 +26,13 @@ export function ChatLayout({ children, header, footer, className }: ChatLayoutPr
         {children}
       </div>
       
-      {/* Footer - fixed height */}
+      {/* Footer - fixed height with mobile keyboard optimization */}
       <div className="flex-shrink-0 border-t border-border/20 bg-background/95 backdrop-blur-sm">
         <div className={cn(
           "px-2 sm:px-4 py-2 sm:py-4",
-          "min-h-[80px] sm:min-h-[100px]", // Smaller on mobile
-          "safe-area-inset-bottom" // Handle mobile safe areas
+          "min-h-[88px] sm:min-h-[100px]", // Optimized for mobile touch
+          "safe-area-inset-bottom", // Handle mobile safe areas
+          "relative z-10" // Ensure footer stays above content
         )}>
           {footer}
         </div>

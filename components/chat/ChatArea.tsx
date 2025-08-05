@@ -431,7 +431,10 @@ export const ChatArea = memo(function ChatArea({
       <div
         ref={scrollAreaRef}
         className="h-full overflow-y-auto overscroll-contain chat-scroll-container"
-        style={{ scrollBehavior: 'smooth' }}
+        style={{ 
+          scrollBehavior: 'smooth',
+          WebkitOverflowScrolling: 'touch' // iOS momentum scrolling
+        }}
         role="log"
         aria-live="polite"
         aria-label="Chat conversation"

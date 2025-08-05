@@ -17,7 +17,7 @@ interface InputWithSendProps {
 export function InputWithSend({ input, handleInputChange, handleSubmit, isLoading }: InputWithSendProps) {
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
-    minHeight: 44,
+    minHeight: 48, // Increased for better mobile touch
     maxHeight: 200
   })
 
@@ -45,7 +45,7 @@ export function InputWithSend({ input, handleInputChange, handleSubmit, isLoadin
         ref={combinedRef}
         rows={1}
         placeholder="Ask a question or type '/' for commands..."
-        className="py-3 px-4 resize-none pr-12 touch-manipulation" // Better touch interaction
+        className="py-3 px-4 resize-none pr-14 touch-manipulation text-base" // Better touch interaction, text-base prevents zoom on iOS
         value={input}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
@@ -59,7 +59,7 @@ export function InputWithSend({ input, handleInputChange, handleSubmit, isLoadin
       <Button
         type="submit"
         size="icon"
-        className="absolute right-2 bottom-2 w-8 h-8 shrink-0 touch-manipulation" // Better touch targets
+        className="absolute right-2 bottom-2 w-11 h-11 shrink-0 touch-manipulation min-h-[44px] min-w-[44px]" // Mobile-friendly touch targets
         disabled={isLoading || !input.trim()}
         aria-label="Send message"
       >

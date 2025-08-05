@@ -346,10 +346,10 @@ export function ChatFooter({
                 onCompositionEnd={() => setIsComposing(false)}
                 placeholder="Ask anything about AI automation, business analysis, or upload a document..."
                                   className={cn(
-                    "resize-none min-h-[48px] max-h-36 border-0 bg-transparent",
+                    "resize-none min-h-[52px] max-h-36 border-0 bg-transparent",
                     "focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                    "placeholder:text-muted-foreground/60 text-sm leading-relaxed",
-                    "pl-3 pr-12 py-2.5" // Optimized padding for better spacing
+                    "placeholder:text-muted-foreground/60 text-base leading-relaxed", // text-base prevents iOS zoom
+                    "pl-3 pr-12 py-3 touch-manipulation" // Better mobile padding and touch handling
                   )}
                 disabled={isLoading}
               />

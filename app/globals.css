@@ -489,6 +489,8 @@
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted)) transparent;
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
+  overscroll-behavior-y: contain; /* Prevent scroll chaining */
 }
 
 .chat-scroll-container::-webkit-scrollbar {

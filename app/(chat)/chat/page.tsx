@@ -425,9 +425,11 @@ ${result.summary}`
                 size="sm"
                 className={cn(
                   "fixed z-50",
-                  "top-[80px] right-4",
+                  "top-[calc(80px+env(safe-area-inset-top))] right-4",
                   "shadow-lg backdrop-blur-sm",
-                  "safe-area-inset-bottom"
+                  "min-h-[44px] min-w-[44px] px-4 py-2",
+                  "pointer-events-auto", // Ensure it's touchable
+                  "transform-gpu" // GPU acceleration for smooth interactions
                 )}
               >
                 <BarChart3 className="h-4 w-4 mr-2" />

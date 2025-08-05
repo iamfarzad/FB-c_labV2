@@ -108,7 +108,7 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="w-10 h-10 hover:bg-accent/10 rounded-xl border border-border/20 backdrop-blur-sm"
+                className="w-11 h-11 min-h-[44px] min-w-[44px] hover:bg-accent/10 rounded-xl border border-border/20 backdrop-blur-sm"
               >
                 <Menu className="w-5 h-5" />
               </Button>
