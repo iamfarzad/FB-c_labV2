@@ -200,6 +200,7 @@ export async function POST(req: NextRequest) {
 
     // Generate audio if requested
     let audioData = null
+    console.log("🔍 Audio generation check:", { enableAudio, sessionAudioEnabled: session?.audioEnabled })
     if (enableAudio && session?.audioEnabled) {
       try {
         console.log("🎤 Generating audio for live response")
@@ -209,6 +210,9 @@ export async function POST(req: NextRequest) {
           maxOutputTokens: 256, // Very short for TTS
           temperature: 0.5, // Stable for voice
         });
+
+        console.log("🎤 TTS config:", ttsConfig)
+        console.log("🎤 Voice settings:", { voiceName, languageCode })
 
         const ttsResponse = await genAI.models.generateContent({
           model: "gemini-2.5-flash-preview-tts",
@@ -227,14 +231,20 @@ export async function POST(req: NextRequest) {
           }
         })
 
+        console.log("🎤 TTS response received:", ttsResponse)
         const audio = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data
+        console.log("🎤 Audio data extracted:", audio ? "YES" : "NO")
         if (audio) {
           audioData = `data:audio/wav;base64,${audio}`
           console.log("✅ Audio generated for live response")
+        } else {
+          console.log("❌ No audio data in TTS response")
         }
       } catch (error) {
         console.error("❌ Audio generation failed:", error)
       }
+    } else {
+      console.log("🔇 Audio generation skipped:", { enableAudio, sessionAudioEnabled: session?.audioEnabled })
     }
 
     const response = {
