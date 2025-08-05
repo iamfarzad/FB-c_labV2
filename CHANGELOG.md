@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Consolidated - 2025-08-04
+- **VideoToApp Component Consolidation**: Single source solution for all video-to-app functionality
+  - **Eliminated Rule Violations**: Removed 602-line VideoToAppGenerator component violating size/design token rules
+  - **Fixed API Compatibility**: Updated VideoToApp tool to use proper action-based API calls (generateSpec → generateCode)
+  - **Enhanced Functionality**: Added two-step generation workflow with live preview and progress feedback
+  - **Single Source Truth**: One rule-compliant component (185 lines) now handles all video-to-app use cases
+  - **Design Token Compliance**: Replaced all hard-coded colors with CSS variables and Tailwind tokens
+  - **Updated Integration**: VideoLearningToolClient now uses consolidated component with proper props
+  - **Improved UX**: Live iframe preview, blob URL generation, and detailed error handling
+  - **Code Reduction**: Eliminated 417 lines of duplicate code while maintaining all functionality
+
 ### Fixed - 2025-08-04
 - **Comprehensive UX/Functionality Fixes**: Complete resolution of all broken links, missing error handling, and UX gaps
   - **Contact System Overhaul**: Fixed Calendly link with proper booking URL, replaced mailto with contact form system

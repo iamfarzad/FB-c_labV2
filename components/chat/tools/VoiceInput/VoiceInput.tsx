@@ -60,9 +60,8 @@ export function VoiceInput({
 
         recognitionRef.current.onend = () => {
           setIsRecording(false)
-          if (transcript) {
-            handleTranscript(transcript)
-          }
+          // Don't auto-trigger handleTranscript here - let user click "Use This Text"
+          // This prevents double-triggering and stale closure issues
         }
 
         recognitionRef.current.onerror = (event: any) => {
@@ -117,7 +116,7 @@ export function VoiceInput({
         recognitionRef.current.stop()
       }
     }
-  }, [transcript, toast])
+  }, [toast]) // Remove transcript from deps - it causes infinite recreation
 
   const startRecording = () => {
     if (recognitionRef.current) {

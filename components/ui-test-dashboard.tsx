@@ -135,13 +135,13 @@ export function UITestDashboard() {
             if (data.spec && data.spec.length > 0) {
               return [
                 {
-                  component: "VideoToAppGenerator",
+                  component: "VideoToApp",
                   test: "YouTube URL Validation",
                   status: "PASS",
                   details: "Validates YouTube URLs correctly and generates specs.",
                 },
                 {
-                  component: "VideoToAppGenerator",
+                  component: "VideoToApp",
                   test: "AI Spec Generation",
                   status: "PASS",
                   details: "Successfully generates educational specs from video content.",
@@ -150,13 +150,13 @@ export function UITestDashboard() {
             } else {
               return [
                 {
-                  component: "VideoToAppGenerator",
+                  component: "VideoToApp",
                   test: "YouTube URL Validation",
                   status: "PASS",
                   details: "Validates YouTube URLs correctly.",
                 },
                 {
-                  component: "VideoToAppGenerator",
+                  component: "VideoToApp",
                   test: "AI Spec Generation",
                   status: "FAIL",
                   details: "API returned empty spec. Check AI service configuration.",

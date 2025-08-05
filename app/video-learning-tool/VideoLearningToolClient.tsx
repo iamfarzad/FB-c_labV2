@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { PageShell, PageHeader } from '@/components/page-shell'
 import { ArrowLeft, Maximize2, Minimize2 } from 'lucide-react'
-import { VideoToAppGenerator } from '@/app/(chat)/chat/components/VideoToAppGenerator'
+import { VideoToApp } from '@/components/chat/tools/VideoToApp'
 import { useState, useEffect } from 'react'
 
 interface VideoLearningToolClientProps {
@@ -76,8 +76,9 @@ export function VideoLearningToolClient({
           
           {/* Fullscreen Content */}
           <div className="flex-1 p-4">
-            <VideoToAppGenerator
-              initialVideoUrl={initialVideoUrl}
+            <VideoToApp
+              mode="card"
+              videoUrl={initialVideoUrl}
               onAnalysisComplete={(data) => {
                 console.log('Analysis completed:', data)
                 // Save state to session storage for chat integration
@@ -85,6 +86,7 @@ export function VideoLearningToolClient({
                   sessionStorage.setItem(`video2app_${sessionId}`, JSON.stringify(data))
                 }
               }}
+              onAppGenerated={(url) => console.log('App generated:', url)}
               className="h-full"
             />
           </div>
@@ -131,9 +133,10 @@ export function VideoLearningToolClient({
       {/* Main Content */}
       <PageShell className="py-6 md:py-8">
         <Card variant="elevated" padding="none" className="overflow-hidden">
-          <CardContent className="p-0">
-            <VideoToAppGenerator
-              initialVideoUrl={initialVideoUrl}
+          <CardContent className="p-8">
+            <VideoToApp
+              mode="card"
+              videoUrl={initialVideoUrl}
               onAnalysisComplete={(data) => {
                 console.log('Analysis completed:', data)
                 // Save state to session storage for chat integration
@@ -141,7 +144,8 @@ export function VideoLearningToolClient({
                   sessionStorage.setItem(`video2app_${sessionId}`, JSON.stringify(data))
                 }
               }}
-              className="min-h-screen md:min-h-screen"
+              onAppGenerated={(url) => console.log('App generated:', url)}
+              className="min-h-[600px]"
             />
           </CardContent>
         </Card>

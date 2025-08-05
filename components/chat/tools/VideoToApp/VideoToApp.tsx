@@ -12,13 +12,14 @@ import type { VideoToAppProps } from "./VideoToApp.types"
 
 export function VideoToApp({ 
   mode = 'card',
+  videoUrl: initialVideoUrl = "",
   onClose,
   onCancel,
   onAppGenerated,
   onAnalysisComplete
 }: VideoToAppProps) {
   const { toast } = useToast()
-  const [videoUrl, setVideoUrl] = useState("")
+  const [videoUrl, setVideoUrl] = useState(initialVideoUrl)
   const [userPrompt, setUserPrompt] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedAppUrl, setGeneratedAppUrl] = useState<string | null>(null)
@@ -37,28 +38,61 @@ export function VideoToApp({
     setGeneratedAppUrl(null)
     
     try {
-      const response = await fetch('/api/video-to-app', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoUrl, userPrompt }),
+      // Step 1: Generate specification from video
+      toast({
+        title: "Analyzing Video",
+        description: "Generating app specification from video content...",
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to generate the application.')
+      const specResponse = await fetch('/api/video-to-app', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: "generateSpec", 
+          videoUrl 
+        }),
+      })
+
+      if (!specResponse.ok) {
+        const errorData = await specResponse.json()
+        throw new Error(errorData.details || 'Failed to generate specification')
       }
 
-      const result = await response.json()
+      const specResult = await specResponse.json()
       
-      if (result.appUrl) {
-        setGeneratedAppUrl(result.appUrl)
-        onAppGenerated(result.appUrl)
-        toast({
-          title: "App Generated Successfully!",
-          description: "Your new learning app is ready.",
-        })
-      } else {
-        throw new Error(result.error || 'Unknown error occurred.')
+      // Step 2: Generate code from specification
+      toast({
+        title: "Creating App",
+        description: "Generating interactive learning app code...",
+      })
+
+      const codeResponse = await fetch('/api/video-to-app', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: "generateCode", 
+          spec: specResult.spec 
+        }),
+      })
+
+      if (!codeResponse.ok) {
+        const errorData = await codeResponse.json()
+        throw new Error(errorData.details || 'Failed to generate application code')
       }
+
+      const codeResult = await codeResponse.json()
+      
+      // Create blob URL for the generated app
+      const blob = new Blob([codeResult.code], { type: 'text/html' })
+      const appUrl = URL.createObjectURL(blob)
+      
+      setGeneratedAppUrl(appUrl)
+      onAppGenerated?.(appUrl)
+      
+      toast({
+        title: "App Generated Successfully!",
+        description: "Your interactive learning app is ready to use.",
+      })
 
     } catch (error) {
       const err = error as Error;
@@ -101,12 +135,26 @@ export function VideoToApp({
       </Button>
       {generatedAppUrl && (
         <Card>
-          <CardContent className="p-4">
-            <p className="text-sm font-medium">App URL:</p>
-            <a href={generatedAppUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center gap-2">
-              <Link className="h-4 w-4"/>
-              {generatedAppUrl}
-            </a>
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">Your Interactive Learning App</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(generatedAppUrl, '_blank')}
+              >
+                <Link className="w-4 h-4 mr-2" />
+                Open in New Tab
+              </Button>
+            </div>
+            <div className="border rounded-lg overflow-hidden h-64 bg-muted/10">
+              <iframe
+                src={generatedAppUrl}
+                className="w-full h-full"
+                title="Generated Learning App Preview"
+                sandbox="allow-scripts allow-same-origin"
+              />
+            </div>
           </CardContent>
         </Card>
       )}

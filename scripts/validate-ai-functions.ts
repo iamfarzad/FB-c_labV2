@@ -194,7 +194,7 @@ class AIFunctionValidator {
   }
 
   // Test 3: Video-to-App Generator
-  async testVideoToAppGenerator(): Promise<TestResult> {
+  async testVideoToApp(): Promise<TestResult> {
     console.log('\n🎥 Testing Video-to-App Generator...');
     
     try {
@@ -400,7 +400,7 @@ class AIFunctionValidator {
       const tests = [
         this.testCoreConversationalAI(),
         this.testStreamingResponse(),
-        this.testVideoToAppGenerator(),
+        this.testVideoToApp(),
         this.testTokenUsageLogging(),
         this.testRealTimeActivities(),
         this.testMultimodalInputs(),
