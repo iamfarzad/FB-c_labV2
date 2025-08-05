@@ -13,6 +13,7 @@ import { ToolCardWrapper } from "@/components/chat/ToolCardWrapper"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import type { WebcamCaptureProps, WebcamState, InputMode } from "./WebcamCapture.types"
+import { useMultimodalSession } from "@/hooks/use-multimodal-session"
 
 interface AnalysisResult {
   id: string
@@ -47,66 +48,47 @@ export function WebcamCapture({
   const [analysisCount, setAnalysisCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
+  // Multimodal session
+  const {
+    session,
+    isConnected,
+    isProcessing,
+    error: sessionError,
+    startSession,
+    stopSession,
+    sendVideoFrame
+  } = useMultimodalSession()
+
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const autoAnalysisInterval = useRef<ReturnType<typeof setInterval> | null>(null)
-  const sessionIdRef = useRef<string>(`webcam-session-${Date.now()}`)
 
   // Start real-time analysis session
   const startAnalysisSession = useCallback(async () => {
     try {
-      const response = await fetch('/api/gemini-live-conversation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'start',
-          sessionId: sessionIdRef.current,
-          enableAudio: false,
-          analysisMode: 'video'
-        })
+      await startSession({
+        videoEnabled: true,
+        audioEnabled: false,
+        screenShareEnabled: false
       })
-
-      if (!response.ok) {
-        throw new Error('Failed to start analysis session')
-      }
-
-      console.log('📹 Analysis session started')
+      console.log('📹 Multimodal session started for webcam')
     } catch (error) {
-      console.error('❌ Failed to start analysis session:', error)
+      console.error('❌ Failed to start multimodal session:', error)
       setError('Failed to start analysis session')
     }
-  }, [])
+  }, [startSession])
 
   // Send video frame for analysis
-  const sendVideoFrame = useCallback(async (imageData: string) => {
+  const sendVideoFrameForAnalysis = useCallback(async (imageData: string) => {
     try {
       setIsAnalyzing(true)
       
-      const response = await fetch('/api/gemini-live-conversation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          imageData,
-          sessionId: sessionIdRef.current,
-          type: 'video_frame',
-          analysisMode: 'video'
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to analyze video frame')
-      }
-
-      const result = await response.json()
+      await sendVideoFrame(imageData, 'webcam')
       
       const analysis: AnalysisResult = {
         id: Date.now().toString(),
-        text: result.response || result.text || 'No analysis available',
+        text: 'Analysis sent to multimodal session',
         timestamp: Date.now(),
         imageData
       }
@@ -123,7 +105,7 @@ export function WebcamCapture({
     } finally {
       setIsAnalyzing(false)
     }
-  }, [onAIAnalysis])
+  }, [sendVideoFrame, onAIAnalysis])
 
   // Auto-analysis interval with throttling and cost awareness
   useEffect(() => {
@@ -152,7 +134,7 @@ export function WebcamCapture({
             const imageData = canvas.toDataURL('image/jpeg', 0.8)
             analysisCount++;
             console.log(`📹 Webcam auto-analysis ${analysisCount}/${maxAnalysisPerSession}`);
-            await sendVideoFrame(imageData)
+            await sendVideoFrameForAnalysis(imageData)
           }
         }
       }, 20000) // Increased to 20 seconds for webcam (more frequent than screen)
@@ -168,13 +150,13 @@ export function WebcamCapture({
         clearInterval(autoAnalysisInterval.current)
       }
     }
-  }, [isAutoAnalyzing, webcamState, sendVideoFrame])
+  }, [isAutoAnalyzing, webcamState, sendVideoFrameForAnalysis])
 
   const handleCapture = async (imageData: string) => {
     onCapture(imageData)
     
     // Send for AI analysis
-    await sendVideoFrame(imageData)
+    await sendVideoFrameForAnalysis(imageData)
   }
 
   const handleClose = useCallback(() => {

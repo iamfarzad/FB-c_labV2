@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast"
 import { ToolCardWrapper } from "@/components/chat/ToolCardWrapper"
 import type { ScreenShareProps, ScreenShareState } from "./ScreenShare.types"
+import { useMultimodalSession } from "@/hooks/use-multimodal-session"
 
 interface AnalysisResult {
   id: string
@@ -35,25 +36,26 @@ export function ScreenShare({
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  // Multimodal session
+  const {
+    session,
+    isConnected,
+    isProcessing,
+    error: sessionError,
+    startSession,
+    stopSession,
+    sendVideoFrame
+  } = useMultimodalSession()
+
   const autoAnalysisIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const sessionIdRef = useRef<string>(`screen-session-${Date.now()}`)
 
   const sendScreenFrame = useCallback(async (imageData: string) => {
     try {
       setIsAnalyzing(true)
-      const response = await fetch('/api/tools/screen-share', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image: imageData,
-          type: 'screen'
-        })
-      })
-      if (!response.ok) throw new Error('Failed to analyze screen frame')
-      const result = await response.json()
+      await sendVideoFrame(imageData, 'screen')
       const analysis: AnalysisResult = {
         id: Date.now().toString(),
-        text: result.data?.analysis || result.analysis || 'No analysis available',
+        text: 'Analysis sent to multimodal session',
         timestamp: Date.now(),
       }
       setAnalysisHistory(prev => [analysis, ...prev])
@@ -63,7 +65,7 @@ export function ScreenShare({
     } finally {
       setIsAnalyzing(false)
     }
-  }, [onAnalysis])
+  }, [sendVideoFrame, onAnalysis])
 
   // Auto-analysis interval with throttling and cost awareness
   useEffect(() => {
@@ -133,6 +135,15 @@ export function ScreenShare({
   const startScreenShare = useCallback(async () => {
     try {
       setScreenState("initializing")
+      setError(null)
+      
+      // Start multimodal session for screen sharing
+      await startSession({
+        videoEnabled: false,
+        audioEnabled: false,
+        screenShareEnabled: true
+      })
+      
       const mediaStream = await navigator.mediaDevices.getDisplayMedia({
         video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: false
@@ -150,7 +161,7 @@ export function ScreenShare({
       setError('Screen share failed')
       toast({ title: "Screen Share Failed", variant: "destructive" })
     }
-  }, [onStream, toast, cleanup])
+  }, [startSession, onStream, toast, cleanup])
 
   const captureScreenshot = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
