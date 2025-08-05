@@ -68,11 +68,46 @@ export function VoiceInput({
         recognitionRef.current.onerror = (event: any) => {
           console.error('Speech recognition error:', event.error)
           setIsRecording(false)
+          
+          let title = "Voice Recognition Error"
+          let description = "Could not process voice input. Please try again."
+          
+          // Handle specific error types
+          switch (event.error) {
+            case 'not-allowed':
+            case 'permission-denied':
+              title = "Microphone Access Denied"
+              description = "Please allow microphone access in your browser settings and try again."
+              break
+            case 'no-speech':
+              title = "No Speech Detected"
+              description = "No speech was detected. Please try speaking again."
+              break
+            case 'network':
+              title = "Network Error"
+              description = "Network connection failed. Please check your internet connection."
+              break
+            case 'service-not-allowed':
+              title = "Service Not Available"
+              description = "Speech recognition service is not available. Please try again later."
+              break
+            default:
+              // Use default message
+              break
+          }
+          
           toast({
-            title: "Voice Recognition Error",
-            description: "Could not process voice input. Please try again.",
+            title,
+            description,
             variant: "destructive"
           })
+          
+          // Auto-close modal on permission denied
+          if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+            setTimeout(() => {
+              onClose?.()
+            }, 2000)
+          }
         }
       }
     }

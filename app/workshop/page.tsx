@@ -31,7 +31,7 @@ export default function WorkshopPage() {
         />
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Button asChild size="lg">
-            <Link href="/contact">Join the AI Training Waitlist</Link>
+            <Link href="/workshop-waitlist">Join the AI Training Waitlist</Link>
           </Button>
         </div>
       </PageShell>

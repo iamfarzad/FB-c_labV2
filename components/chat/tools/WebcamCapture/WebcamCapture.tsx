@@ -218,15 +218,38 @@ export function WebcamCapture({
         title: "Camera Started",
         description: "Webcam is now active and ready for analysis."
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error("Camera access failed:", error)
       setWebcamState("error")
-      setError('Camera access failed')
+      
+      let title = "Camera Access Failed"
+      let description = "Please check permissions and try again."
+      
+      // Handle specific error types
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        title = "Camera Access Denied"
+        description = "Please allow camera access in your browser settings and try again."
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        title = "No Camera Found"
+        description = "No camera device was found. Please connect a camera and try again."
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        title = "Camera In Use"
+        description = "Camera is already in use by another application. Please close other apps using the camera."
+      }
+      
+      setError(title)
       toast({
-        title: "Camera Access Failed",
-        description: "Please check permissions and try again.",
+        title,
+        description,
         variant: "destructive",
       })
+      
+      // Auto-close modal on permission denied
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        setTimeout(() => {
+          onClose?.()
+        }, 2000)
+      }
     }
   }, [toast, startAnalysisSession])
 
@@ -255,10 +278,47 @@ export function WebcamCapture({
         setSelectedDeviceId(currentDeviceId)
         await startCamera(currentDeviceId)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Camera initialization failed:", error)
       setWebcamState("error")
-      setError('Camera initialization failed')
+      
+      let title = "Camera Access Failed"
+      let description = "Camera initialization failed. Please try again."
+      
+      // Handle specific error types
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        title = "Camera Access Denied"
+        description = "Please allow camera access in your browser settings and try again."
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        title = "No Camera Found"
+        description = "No camera device was found. Please connect a camera and try again."
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        title = "Camera In Use"
+        description = "Camera is already in use by another application. Please close other apps using the camera."
+      } else if (error.name === 'OverconstrainedError' || error.name === 'ConstraintNotSatisfiedError') {
+        title = "Camera Not Compatible"
+        description = "Your camera doesn't support the required settings. Please try a different camera."
+      } else if (error.name === 'NotSupportedError') {
+        title = "Camera Not Supported"
+        description = "Camera access is not supported in this browser or environment."
+      } else if (error.name === 'SecurityError') {
+        title = "Security Error"
+        description = "Camera access blocked for security reasons. Please use HTTPS."
+      }
+      
+      setError(title)
+      toast({
+        title,
+        description,
+        variant: "destructive",
+      })
+      
+      // Auto-close modal on permission denied
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        setTimeout(() => {
+          onClose?.()
+        }, 3000)
+      }
     }
   }, [startCamera, toast])
 

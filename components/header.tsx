@@ -30,31 +30,8 @@ export default function Header() {
   const [currentLanguage, setCurrentLanguage] = useState('en')
 
   const LanguageSelector = () => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
-          <Languages className="h-4 w-4" />
-          <span className="hidden sm:inline-block">
-            {languages.find(lang => lang.code === currentLanguage)?.flag}
-          </span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        {languages.map((language) => (
-          <DropdownMenuItem
-            key={language.code}
-            onClick={() => setCurrentLanguage(language.code)}
-            className="gap-3"
-          >
-            <span className="text-lg">{language.flag}</span>
-            <span className="flex-1">{language.name}</span>
-            {currentLanguage === language.code && (
-              <Check className="h-4 w-4 text-primary" />
-            )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    // Language selector temporarily disabled until translations are ready
+    null
   )
 
   const NavLinks = ({ className }: { className?: string }) => (

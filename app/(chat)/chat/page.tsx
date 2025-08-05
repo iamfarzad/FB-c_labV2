@@ -139,30 +139,32 @@ function ChatPageContent() {
   const handleSendMessage = async (content: string, imageUrl?: string) => {
     if (!content.trim() && !imageUrl) return
 
+    // Clear input immediately to prevent concatenation
+    const messageContent = content.trim()
+    setInput("")
+
     // Check for YouTube URL
-    const youtubeUrl = detectYouTubeURL(content)
+    const youtubeUrl = detectYouTubeURL(messageContent)
     if (youtubeUrl) {
       // Add user message
       addMessage({
         role: "user",
-        content: content.trim(),
+        content: messageContent,
         imageUrl,
       })
       
       // Start Video2App process
       handleVideoToAppStart(youtubeUrl)
-      setInput("")
       return
     }
 
     // Add user message
     addMessage({
       role: "user",
-      content: content.trim(),
+      content: messageContent,
       imageUrl,
     })
 
-    setInput("")
     setIsLoading(true)
 
     try {
@@ -176,7 +178,7 @@ function ChatPageContent() {
             ...messages,
             {
               role: "user",
-              content: content.trim(),
+              content: messageContent,
               imageUrl,
             },
           ],

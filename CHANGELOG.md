@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed - 2025-08-04
+- **Comprehensive UX/Functionality Fixes**: Complete resolution of all broken links, missing error handling, and UX gaps
+  - **Contact System Overhaul**: Fixed Calendly link with proper booking URL, replaced mailto with contact form system
+  - **Language Selector**: Temporarily disabled until translations are ready to prevent confusion
+  - **Chat Improvements**: Fixed message concatenation issues, enhanced bullet-point formatting with proper HTML rendering
+  - **Tool Integration**: Verified all chat tool buttons (Screen Share, ROI Calculator) are properly connected and functional
+  - **Hardware Access**: Enhanced error handling for voice/webcam with specific permission messages and auto-close modals
+  - **Navigation Fixes**: Confirmed Video-Learning Tool navigation and validation working correctly
+  - **API Integration**: Verified ROI Calculator and Video-to-App APIs are functional with proper feedback
+  - **Workshop System**: Created dedicated waitlist signup page with proper form handling and API endpoint
+  - **Error Handling**: Comprehensive graceful handling for blocked hardware access across all components
+
 ### Enhanced - 2025-08-04
 - **Complete Mobile-First UI/UX Redesign**: Comprehensive mobile optimization and design token compliance
   - **Admin Dashboard Complete Redesign**: Full UX/UI overhaul following F.B/c design tokens

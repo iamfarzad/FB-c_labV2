@@ -117,12 +117,29 @@ export const ChatArea = memo(function ChatArea({
 
   const formatMessageContent = useCallback((content: string): string => {
     if (!content) return ''
-    // Enhanced markdown formatting with better styling
-    return content
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="italic text-foreground/90">$1</em>')
-      .replace(/`(.*?)`/g, '<code class="bg-muted/60 text-accent px-2 py-1 rounded-md text-sm font-mono border border-border/30">$1</code>')
+    
+    // Enhanced markdown formatting with better styling and list support
+    let formatted = content
+      // Handle code blocks first (to avoid conflicts)
       .replace(/```([\s\S]*?)```/g, '<pre class="bg-muted/40 border border-border/30 rounded-lg p-4 my-3 whitespace-pre-wrap break-words overflow-x-auto"><code class="text-sm font-mono">$1</code></pre>')
+      // Handle inline code
+      .replace(/`(.*?)`/g, '<code class="bg-muted/60 text-accent px-2 py-1 rounded-md text-sm font-mono border border-border/30">$1</code>')
+      // Handle bold text
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')
+      // Handle italic text (but not bullet points)
+      .replace(/(?<!\*)\*([^\*\n]+?)\*(?!\*)/g, '<em class="italic text-foreground/90">$1</em>')
+    
+    // Handle numbered lists (1. 2. 3. etc.)
+    formatted = formatted.replace(/^(\d+)\.\s+(.+)$/gm, '<div class="flex items-start gap-2 my-1"><span class="text-accent font-medium min-w-[1.5rem]">$1.</span><span>$2</span></div>')
+    
+    // Handle bullet points (*, -, •)
+    formatted = formatted.replace(/^[\*\-•]\s+(.+)$/gm, '<div class="flex items-start gap-2 my-1"><span class="text-accent font-medium min-w-[1rem]">•</span><span>$1</span></div>')
+    
+    // Handle line breaks for better formatting
+    formatted = formatted.replace(/\n\n/g, '<br/><br/>')
+    formatted = formatted.replace(/\n/g, '<br/>')
+    
+    return formatted
   }, [])
 
   const detectMessageType = useCallback((content: string): { type: string; icon?: React.ReactNode; badge?: string; color?: string } => {

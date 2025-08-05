@@ -28,7 +28,7 @@ export default function ContactPage() {
           <h3 className="text-xl font-bold">Schedule Your AI Consultation</h3>
           <p className="mt-2 text-muted-foreground">Use my Calendly link to book a 30-minute AI consultation call that works for your schedule.</p>
           <Button asChild className="mt-6 w-full">
-            <a href="https://calendly.com" target="_blank" rel="noopener noreferrer">
+            <a href="https://calendly.com/farzad-bayat/30min" target="_blank" rel="noopener noreferrer">
               Book Your AI Consultation
             </a>
           </Button>
@@ -40,7 +40,7 @@ export default function ContactPage() {
           <h3 className="text-xl font-bold">Email AI Consultant Directly</h3>
           <p className="mt-2 text-muted-foreground">Have an AI automation project or question? Email me directly for personalized AI consulting advice.</p>
           <Button asChild className="mt-6 w-full bg-transparent" variant="outline">
-            <a href="mailto:hello@farzadbayat.com">hello@farzadbayat.com</a>
+            <a href="/contact-form">Send Message</a>
           </Button>
         </Card>
       </div>
