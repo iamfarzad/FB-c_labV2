@@ -1,4 +1,11 @@
 
+import { NextRequest, NextResponse } from 'next/server'
+import { GoogleGenAI } from '@google/genai'
+import { createOptimizedConfig } from '@/lib/gemini-config-enhanced'
+import { selectModelForFeature, estimateTokens } from '@/lib/model-selector'
+import { enforceBudgetAndLog } from '@/lib/token-usage-logger'
+import { checkDemoAccess, recordDemoUsage, DemoFeature } from '@/lib/demo-budget-manager'
+
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
@@ -9,13 +16,6 @@ export async function OPTIONS() {
     },
   })
 }
-
-import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenAI } from '@google/genai'
-import { createOptimizedConfig } from '@/lib/gemini-config-enhanced'
-import { selectModelForFeature, estimateTokens } from '@/lib/model-selector'
-import { enforceBudgetAndLog } from '@/lib/token-usage-logger'
-import { checkDemoAccess, recordDemoUsage, DemoFeature } from '@/lib/demo-budget-manager'
 
 export async function POST(request: NextRequest) {
   try {

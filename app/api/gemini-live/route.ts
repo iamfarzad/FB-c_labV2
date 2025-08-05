@@ -1,4 +1,11 @@
 
+import { GoogleGenAI } from "@google/genai"
+import { createOptimizedConfig } from "@/lib/gemini-config-enhanced"
+import type { NextRequest } from "next/server"
+import { NextResponse } from "next/server"
+import { AudioQualityEnhancer } from "@/lib/audio-quality-enhancer"
+
+export const dynamic = "force-dynamic"
 
 // Timeout wrapper for production stability
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -9,6 +16,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
     )
   ])
 }
+
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
@@ -19,14 +27,6 @@ export async function OPTIONS() {
     },
   })
 }
-
-import { GoogleGenAI } from "@google/genai"
-import { createOptimizedConfig } from "@/lib/gemini-config-enhanced"
-import type { NextRequest } from "next/server"
-import { NextResponse } from "next/server"
-import { AudioQualityEnhancer } from "@/lib/audio-quality-enhancer"
-
-export const dynamic = "force-dynamic"
 
 // Enhanced audio format configuration for Gemini TTS (optimized for quality)
 const AUDIO_CONFIG = {

@@ -1,4 +1,8 @@
 
+import { type NextRequest, NextResponse } from "next/server"
+import { GoogleGenAI } from "@google/genai"
+import { createOptimizedConfig } from "@/lib/gemini-config-enhanced"
+
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
@@ -9,10 +13,6 @@ export async function OPTIONS() {
     },
   })
 }
-
-import { type NextRequest, NextResponse } from "next/server"
-import { GoogleGenAI } from "@google/genai"
-import { createOptimizedConfig } from "@/lib/gemini-config-enhanced"
 
 export async function POST(request: NextRequest) {
   try {
