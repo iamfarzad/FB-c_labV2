@@ -91,9 +91,13 @@ export function VoiceInput({
     setIsRecording(false)
   }
 
-  const handleTranscript = (text: string) => {
+  const handleTranscript = async (text: string) => {
     setIsProcessing(true)
     try {
+      // Send to Gemini Live API for voice response
+      await sendToGeminiLive(text)
+      
+      // Also send to regular chat system
       if (mode === 'modal') {
         onTranscript(text)
         onClose?.()
@@ -102,6 +106,67 @@ export function VoiceInput({
       }
     } finally {
       setIsProcessing(false)
+    }
+  }
+
+  // Send transcript to Gemini Live API and play voice response
+  const sendToGeminiLive = async (text: string) => {
+    try {
+      console.log('🎤 Sending to Gemini Live API:', text)
+      
+      const response = await fetch('/api/gemini-live', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-correlation-id': `voice-${Date.now()}`,
+        },
+        body: JSON.stringify({
+          prompt: text,
+          enableTTS: true,
+          voiceName: 'Puck',
+          languageCode: 'en-US',
+          streamAudio: false
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Gemini Live API failed: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log('🎵 Received voice response:', data)
+
+      // Play the audio if available
+      if (data.audioData) {
+        await playAudio(data.audioData)
+        
+        toast({
+          title: "🎵 Voice Response",
+          description: "AI responded with Puck's voice!",
+        })
+      } else {
+        console.warn('No audio data received from Gemini Live API')
+      }
+
+    } catch (error) {
+      console.error('❌ Gemini Live API error:', error)
+      toast({
+        title: "Voice Response Failed",
+        description: "Could not get voice response from AI",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // Play audio data (base64 or data URL)
+  const playAudio = async (audioData: string) => {
+    try {
+      const audio = new Audio(audioData)
+      audio.volume = 0.8
+      await audio.play()
+      console.log('🔊 Audio played successfully')
+    } catch (error) {
+      console.error('❌ Audio playback failed:', error)
     }
   }
 
