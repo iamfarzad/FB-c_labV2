@@ -34,7 +34,7 @@ export function VoiceInput({
         leadName: leadContext.name || 'User' 
       })
     }
-  }, [leadContext, voiceSystem])
+  }, [leadContext]) // Remove voiceSystem from deps - it's stable from hook
 
   useEffect(() => {
     if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
