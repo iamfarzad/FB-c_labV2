@@ -1,21 +1,16 @@
 import { z } from 'zod'
 
-// Zod schemas for tool results
+// ROI Calculation Schema
 export const ROICalculationSchema = z.object({
-  currentCosts: z.number().min(0),
-  projectedSavings: z.number().min(0),
-  implementationCost: z.number().min(0),
-  timeFrameMonths: z.number().min(1)
+  initialInvestment: z.number().min(0, 'Initial investment must be positive'),
+  monthlyRevenue: z.number().min(0, 'Monthly revenue must be positive'),
+  monthlyExpenses: z.number().min(0, 'Monthly expenses must be positive'),
+  timePeriod: z.number().min(1, 'Time period must be at least 1 month').max(60, 'Time period cannot exceed 60 months')
 })
 
 export const VoiceTranscriptSchema = z.object({
   audioData: z.string().min(1, 'Audio data cannot be empty'),
   mimeType: z.string().optional()
-})
-
-export const WebcamCaptureSchema = z.object({
-  image: z.string().min(1, 'Image data cannot be empty'),
-  type: z.string().optional()
 })
 
 export const VideoAppResultSchema = z.object({
@@ -26,17 +21,10 @@ export const VideoAppResultSchema = z.object({
   summary: z.string().min(1)
 })
 
-export const ScreenShareSchema = z.object({
-  image: z.string().min(1, 'Image data cannot be empty'),
-  type: z.string().optional()
-})
-
 // Type definitions
 export type ROICalculationResult = z.infer<typeof ROICalculationSchema>
 export type VoiceTranscriptResult = z.infer<typeof VoiceTranscriptSchema>
-export type WebcamCaptureResult = z.infer<typeof WebcamCaptureSchema>
 export type VideoAppResult = z.infer<typeof VideoAppResultSchema>
-export type ScreenShareResult = z.infer<typeof ScreenShareSchema>
 
 // Service functions
 export const handleROICalculation = async (result: ROICalculationResult) => {
@@ -82,45 +70,24 @@ export const handleVoiceTranscript = async (result: VoiceTranscriptResult) => {
   }
 }
 
-export const handleWebcamCapture = async (result: WebcamCaptureResult) => {
-  try {
-    const validatedResult = WebcamCaptureSchema.parse(result)
-    
-    const response = await fetch('/api/tools/webcam-capture', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(validatedResult)
-    })
-
-    if (!response.ok) {
-      throw new Error(`Webcam capture failed: ${response.statusText}`)
-    }
-
-    return await response.json()
-  } catch (error) {
-    console.error('Webcam capture error:', error)
-    throw new Error('Failed to process webcam capture')
-  }
-}
-
 export const handleVideoAppResult = async (result: VideoAppResult) => {
   try {
     const validatedResult = VideoAppResultSchema.parse(result)
     
-    const response = await fetch('/api/tools/video-app', {
+    const response = await fetch('/api/video-to-app', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(validatedResult)
     })
 
     if (!response.ok) {
-      throw new Error(`Video app analysis failed: ${response.statusText}`)
+      throw new Error(`Video to app failed: ${response.statusText}`)
     }
 
     return await response.json()
   } catch (error) {
-    console.error('Video app error:', error)
-    throw new Error('Failed to process video app analysis')
+    console.error('Video to app error:', error)
+    throw new Error('Failed to process video to app')
   }
 }
 

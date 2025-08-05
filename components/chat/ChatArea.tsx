@@ -33,9 +33,7 @@ import { AIThinkingIndicator, detectAIContext, type AIThinkingContext } from "./
 import { AIInsightCard } from "./AIInsightCard"
 import type { 
   VoiceTranscriptResult, 
-  WebcamCaptureResult, 
-  VideoAppResult, 
-  ScreenShareResult 
+  VideoAppResult
 } from "@/lib/services/tool-service"
 import type { ROICalculationResult } from "@/components/chat/tools/ROICalculator/ROICalculator.types";
 import type { BusinessInteractionData, UserBusinessContext } from "@/types/business-content"
@@ -288,7 +286,7 @@ export const ChatArea = memo(function ChatArea({
       case 'voice_input':
         return <VoiceInput mode="card" onCancel={handleCancel} onTranscript={(transcript: string) => onVoiceTranscript(transcript)} />
       case 'webcam_capture':
-        return <WebcamCapture mode="card" onCancel={handleCancel} onCapture={(imageData: string) => onWebcamCapture(imageData)} />
+        return <WebcamCapture onAnalysisComplete={(imageData: string) => onWebcamCapture(imageData)} />
       case 'roi_calculator':
         return <ROICalculator mode="card" onCancel={handleCancel} onComplete={(result: ROICalculationResult) => onROICalculation(result)} />
       case 'video_to_app':
@@ -304,7 +302,7 @@ export const ChatArea = memo(function ChatArea({
           }}
         />
       case 'screen_share':
-        return <ScreenShare mode="card" onCancel={handleCancel} onAnalysis={(analysis: string) => onScreenAnalysis(analysis)} />
+        return <ScreenShare onAnalysisComplete={(analysis: string) => onScreenAnalysis(analysis)} />
       default:
         return null
     }
