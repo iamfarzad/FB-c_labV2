@@ -18,7 +18,7 @@ export function middleware(req: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https: https://generativelanguage.googleapis.com https://*.googleapis.com",
+    "connect-src 'self' https: https://generativelanguage.googleapis.com https://*.googleapis.com ws://localhost:3001",
     "media-src 'self' blob: data: https:",
     "object-src 'none'",
     "base-uri 'self'",
@@ -42,7 +42,6 @@ export function middleware(req: NextRequest) {
   const geminiRoutes = [
     '/api/chat',
     '/api/gemini-live',
-    '/api/gemini-live-conversation',
     '/api/analyze-image',
     '/api/analyze-document',
     '/api/analyze-screenshot',
@@ -86,7 +85,6 @@ export const config = {
     // Specific API routes for mocking
     '/api/chat/:path*',
     '/api/gemini-live/:path*',
-    '/api/gemini-live-conversation/:path*',
     '/api/analyze-image/:path*',
     '/api/analyze-document/:path*',
     '/api/analyze-screenshot/:path*',
