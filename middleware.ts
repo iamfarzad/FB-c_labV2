@@ -18,7 +18,11 @@ export function middleware(req: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https: https://generativelanguage.googleapis.com https://*.googleapis.com ws://localhost:8080 wss://fb-consulting-websocket.fly.dev",
+    `connect-src 'self' https: https://generativelanguage.googleapis.com https://*.googleapis.com ` +
+    (process.env.NODE_ENV === 'development'
+       ? 'ws://localhost:8080 '
+       : '') +
+    "wss://fb-consulting-websocket.fly.dev wss:",
     "media-src 'self' blob: data: https:",
     "object-src 'none'",
     "base-uri 'self'",

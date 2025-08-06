@@ -11,17 +11,34 @@ export default function WebSocketTestPage() {
   const wsRef = useRef<WebSocket | null>(null)
 
   const connect = () => {
-    const wsUrl = process.env.NEXT_PUBLIC_LIVE_SERVER_URL || 'wss://fb-consulting-websocket.fly.dev'
+    // Close existing connection if any
+    if (wsRef.current && wsRef.current.readyState !== WebSocket.CLOSED) {
+      wsRef.current.close()
+    }
+
+    const wsUrl =
+      process.env.NEXT_PUBLIC_LIVE_SERVER_URL ||
+      'wss://fb-consulting-websocket.fly.dev'
     console.log('Connecting to:', wsUrl)
-    
+
     setError(null)
     setMessages(prev => [...prev, `Connecting to ${wsUrl}...`])
-    
+
     try {
       const ws = new WebSocket(wsUrl)
       wsRef.current = ws
 
+      // Add connection timeout
+      const connectionTimeout = setTimeout(() => {
+        if (ws.readyState === WebSocket.CONNECTING) {
+          ws.close()
+          setError('Connection timeout')
+          setMessages(prev => [...prev, '❌ Connection timeout'])
+        }
+      }, 10000) // 10 second timeout
+
       ws.onopen = () => {
+        clearTimeout(connectionTimeout)
         console.log('WebSocket connected')
         setIsConnected(true)
         setMessages(prev => [...prev, '✅ Connected successfully!'])
@@ -41,7 +58,12 @@ export default function WebSocketTestPage() {
       ws.onclose = (event) => {
         console.log('WebSocket closed:', event.code, event.reason)
         setIsConnected(false)
-        setMessages(prev => [...prev, `🔌 Disconnected (Code: ${event.code}, Reason: ${event.reason || 'N/A'})`])
+        setMessages(prev => [
+          ...prev,
+          `🔌 Disconnected (Code: ${event.code}, Reason: ${
+            event.reason || 'N/A'
+          })`,
+        ])
       }
     } catch (error) {
       console.error('Failed to create WebSocket:', error)

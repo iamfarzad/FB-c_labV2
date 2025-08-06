@@ -88,18 +88,22 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
       // Fix: Properly decode base64 audio data
       let audioData: ArrayBuffer
       if (typeof base64Audio === 'string') {
-        // Convert base64 string to ArrayBuffer
-        const binaryString = atob(base64Audio)
-        const bytes = new Uint8Array(binaryString.length)
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i)
+        try {
+          // Convert base64 string to ArrayBuffer
+          const binaryString = atob(base64Audio)
+          const bytes = new Uint8Array(binaryString.length)
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i)
+          }
+          audioData = bytes.buffer
+        } catch (error) {
+          console.error('❌ Invalid base64 audio data:', error)
+          throw new Error('Failed to decode base64 audio data')
         }
-        audioData = bytes.buffer
       } else {
         // If it's already an ArrayBuffer, use it directly
         audioData = base64Audio as unknown as ArrayBuffer
       }
-
       const audioBuffer = await audioContextRef.current?.decodeAudioData(audioData) as AudioBuffer
 
       const source = audioContextRef.current?.createBufferSource()
@@ -287,7 +291,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
       // Don't auto-reconnect - let the component decide when to reconnect
       console.log('[useWebSocketVoice] Connection closed, waiting for manual reconnection.')
     }
-  }, [session, toast, playNextAudioRef])
+  }, [toast, playNextAudioRef])
 
   // Initial session setup (not auto-connect)
   const startSession = useCallback(async (leadContext?: any) => {
@@ -311,8 +315,16 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
 
       return new Promise<void>((resolve, reject) => {
         const checkConnection = () => {
-          const currentState = wsRef.current?.readyState;
-          
+// Log state changes for debugging
+if (currentState !== lastState) {
+  const stateText = currentState !== undefined
+    ? ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][currentState]
+    : 'UNKNOWN';
+  console.log(
+    `[useWebSocketVoice] WebSocket state changed: ${lastState} -> ${currentState} (${stateText})`
+  );
+  lastState = currentState;
+}
           // Log state changes for debugging
           if (currentState !== lastState) {
             console.log(`[useWebSocketVoice] WebSocket state changed: ${lastState} -> ${currentState} (${['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][currentState || 3]})`)

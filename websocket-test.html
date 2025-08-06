@@ -137,9 +137,11 @@
             const wsUrl = 'wss://fb-consulting-websocket.fly.dev';
             addMessage(`Connecting to ${wsUrl}...`);
 
+            // Optimistically disable the button to avoid multiple concurrent attempts
+            document.getElementById('connectBtn').disabled = true;
+
             try {
                 ws = new WebSocket(wsUrl);
-
                 ws.onopen = function(event) {
                     addMessage('✅ WebSocket connected successfully!');
                     updateStatus(true);

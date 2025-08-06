@@ -300,9 +300,10 @@ wss.on('connection', (ws: WebSocket, req) => {
 
 async function handleStart(connectionId: string, ws: WebSocket, payload: any) {
   if (activeSessions.has(connectionId)) {
-    console.log(`[${connectionId}] Session already exists. Closing old one.`)
-    activeSessions.get(connectionId)?.session.close()
-  }
+    if (activeSessions.has(connectionId)) {
+      console.log(`[${connectionId}] Session already exists. Closing old one.`)
+      await activeSessions.get(connectionId)?.session.close()
+    }
 
   if (!process.env.GEMINI_API_KEY) {
     console.error(`[${connectionId}] GEMINI_API_KEY not configured.`)
