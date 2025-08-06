@@ -38,6 +38,8 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
   const wsRef = useRef<WebSocket | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const audioStreamRef = useRef<MediaStream | null>(null)
+  const reconnectingRef = useRef(false)
+  const messageQueueRef = useRef<string[]>([])
 
   // Audio playback context and playing state
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -88,7 +90,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
       ) as AudioBuffer
 
       const source = audioContextRef.current?.createBufferSource()
-      if (source) {
+      if (source && audioContextRef.current) {
         source.buffer = audioBuffer
         source.connect(audioContextRef.current.destination)
         source.onended = () => {
@@ -104,13 +106,36 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
       isPlayingRef.current = false
       playNextAudioRef.current() // Use the stable ref
     }
-  }, [initAudioContext]) // playNextAudioRef.current is stable, so not a dependency
+  }, [initAudioContext, playNextAudioRef]) // Add playNextAudioRef as dependency to ensure latest version
 
   // Connect to WebSocket server
   const connectWebSocket = useCallback(() => {
+    if (reconnectingRef.current) {
+      console.log('[useWebSocketVoice] Reconnect already in progress, skipping...')
+      return
+    }
+    reconnectingRef.current = true
+
     if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
       console.log('[useWebSocketVoice] WebSocket already connecting or open.')
+      reconnectingRef.current = false
       return
+    }
+
+    // Cleanup old WebSocket before creating a new one
+    if (wsRef.current) {
+      try {
+        wsRef.current.onopen = null
+        wsRef.current.onmessage = null
+        wsRef.current.onerror = null
+        wsRef.current.onclose = null
+        if (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING) {
+          wsRef.current.close(1000, 'Recreating connection')
+        }
+      } catch (e) {
+        console.warn('[useWebSocketVoice] Error cleaning up old WebSocket:', e)
+      }
+      wsRef.current = null
     }
 
     const wsUrl = process.env.NEXT_PUBLIC_LIVE_SERVER_URL || 'ws://localhost:3001'
@@ -139,6 +164,16 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
       console.log('✅ [useWebSocketVoice] WebSocket connected. State:', ws.readyState)
       setIsConnected(true)
       setError(null)
+      reconnectingRef.current = false
+
+      // Flush queued messages
+      while (messageQueueRef.current.length > 0 && ws.readyState === WebSocket.OPEN) {
+        const msg = messageQueueRef.current.shift()
+        if (msg) {
+          ws.send(msg)
+          console.log('📤 [useWebSocketVoice] Sent queued message')
+        }
+      }
     }
 
     ws.onmessage = (event) => {
@@ -205,14 +240,22 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     }
 
     ws.onerror = (error: Event) => {
-      console.error('❌ [useWebSocketVoice] WebSocket raw error event:', error)
-      const errorMessage = `WebSocket connection error: ${error.type}`;
+      console.error('❌ [useWebSocketVoice] WebSocket raw error event:', {
+        type: error.type,
+        target: error.target,
+        timeStamp: error.timeStamp,
+        wsUrl,
+        readyState: ws.readyState,
+        readyStateText: ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][ws.readyState]
+      })
+      const errorMessage = `WebSocket connection error: ${error.type || 'Unknown error'}`;
       setError(errorMessage)
       setIsConnected(false)
-      console.error(`[useWebSocketVoice] Error: ${errorMessage}. Current state: ${ws.readyState}`)
+      reconnectingRef.current = false
+      console.error(`[useWebSocketVoice] Error: ${errorMessage}. Current state: ${ws.readyState} (${['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][ws.readyState]})`)
       toast({
         title: "Connection Error",
-        description: errorMessage,
+        description: `${errorMessage}. Check if the WebSocket server is running.`,
         variant: "destructive"
       })
       // Exponential backoff for reconnection
@@ -230,7 +273,8 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
       setIsProcessing(false)
       setError(null)
       setAudioQueue([])
-      setTranscript('') 
+      setTranscript('')
+      reconnectingRef.current = false
 
       // Attempt to reconnect only on abnormal closures or network issues
       // Common codes: 1000 (Normal), 1001 (Going Away), 1006 (Abnormal closure - often network/timeout)
@@ -268,6 +312,11 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
               console.error('❌ [useWebSocketVoice] WebSocket connection timed out waiting for OPEN state.');
               setError('WebSocket connection timed out.');
               throw new Error("WebSocket connection timed out during startSession.");
+          }
+          if (wsRef.current?.readyState === WebSocket.CLOSED) {
+              console.error('❌ [useWebSocketVoice] WebSocket closed before connection could be established.');
+              setError('WebSocket closed before connection could be established.');
+              throw new Error("WebSocket closed before connection could be established during startSession.");
           }
           console.log('[useWebSocketVoice] Waiting for WebSocket to be OPEN... Current state:', wsRef.current?.readyState);
           await new Promise(resolve => setTimeout(resolve, 200)); // Polling interval
@@ -318,30 +367,40 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
   }, [])
 
   const sendMessage = useCallback(async (message: string) => {
+    const payload = JSON.stringify({ type: 'user_message', payload: { message } })
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       console.log('📤 Sending text message via WebSocket:', message)
-      const payload = { type: 'user_message', payload: { message } }
-      wsRef.current.send(JSON.stringify(payload))
+      wsRef.current.send(payload)
     } else {
-      console.error('❌ WebSocket not open, cannot send message')
-      throw new Error('WebSocket connection not active.')
+      console.warn('WebSocket not open, queueing message')
+      messageQueueRef.current.push(payload)
+      if (!reconnectingRef.current) {
+        connectWebSocket() // Try reconnecting if not already doing so
+      }
     }
-  }, [])
+  }, [connectWebSocket])
 
   const sendAudioChunk = useCallback((audioData: ArrayBuffer, mimeType: string) => {
+    const payload = JSON.stringify({
+      type: 'user_audio', // A new type for audio chunks
+      payload: { 
+        audioData: Array.from(new Uint8Array(audioData)).map(b => String.fromCharCode(b)).join(''),
+        mimeType 
+      }
+    })
+    
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       console.log(`[useWebSocketVoice] Attempting to send audio chunk: ${audioData.byteLength} bytes, type: ${mimeType}`)
-      // Convert ArrayBuffer to base64 for sending over WebSocket
-      const payload = {
-        type: 'user_audio', // A new type for audio chunks
-        payload: { audioData: Buffer.from(audioData).toString('base64'), mimeType }
-      }
-      wsRef.current?.send(JSON.stringify(payload))
-      console.log(`[useWebSocketVoice] Sent audio chunk to WebSocket: ${payload.payload.audioData.length} base64 chars`)
+      wsRef.current.send(payload)
+      console.log(`[useWebSocketVoice] Sent audio chunk to WebSocket`)
     } else {
-      console.warn('WebSocket not open, cannot send audio chunk')
+      console.warn('WebSocket not open, queueing audio chunk')
+      messageQueueRef.current.push(payload)
+      if (!reconnectingRef.current) {
+        connectWebSocket() // Try reconnecting if not already doing so
+      }
     }
-  }, [])
+  }, [connectWebSocket])
 
   return {
     session,

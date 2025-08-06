@@ -4,6 +4,7 @@
  */
 
 import { getSupabase } from './supabase/server'
+import { createHash } from 'crypto'
 
 export interface TokenUsageLog {
   id?: string
@@ -30,6 +31,15 @@ export interface UserPlanBudget {
   current_monthly_usage: number
   current_daily_requests: number
   current_monthly_requests: number
+}
+
+/**
+ * Sanitizes user ID to ensure it's compatible with UUID constraints
+ * Converts any string to a consistent MD5 hash format
+ */
+function sanitizeUserIdForUUID(userId: string): string {
+  // Use MD5 hash to generate a consistent UUID-compatible string
+  return createHash('md5').update(userId).digest('hex');
 }
 
 export class TokenUsageLogger {
@@ -77,11 +87,14 @@ export class TokenUsageLogger {
     try {
       const supabase = getSupabase()
       
+      // Sanitize userId for UUID compatibility
+      const sanitizedUserId = sanitizeUserIdForUUID(userId)
+      
       // Get user's plan (default to demo plan if not found)
       const { data: userPlan } = await supabase
         .from('user_plans')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', sanitizedUserId)
         .single()
 
       const plan = userPlan || {
@@ -99,13 +112,13 @@ export class TokenUsageLogger {
       const { data: dailyUsage } = await supabase
         .from('token_usage_logs')
         .select('total_tokens')
-        .eq('user_id', userId)
+        .eq('user_id', sanitizedUserId)
         .gte('created_at', startOfDay.toISOString())
 
       const { data: monthlyUsage } = await supabase
         .from('token_usage_logs')
         .select('total_tokens')
-        .eq('user_id', userId)
+        .eq('user_id', sanitizedUserId)
         .gte('created_at', startOfMonth.toISOString())
 
       const currentDailyUsage = dailyUsage?.reduce((sum, log) => sum + log.total_tokens, 0) || 0
@@ -115,13 +128,13 @@ export class TokenUsageLogger {
       const { count: dailyRequests } = await supabase
         .from('token_usage_logs')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
+        .eq('user_id', sanitizedUserId)
         .gte('created_at', startOfDay.toISOString())
 
       const { count: monthlyRequests } = await supabase
         .from('token_usage_logs')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
+        .eq('user_id', sanitizedUserId)
         .gte('created_at', startOfMonth.toISOString())
 
       return {
@@ -208,13 +221,16 @@ export class TokenUsageLogger {
     const totalTokens = inputTokens + outputTokens
     const estimatedCost = this.calculateCost(model, totalTokens)
 
+    // Sanitize userId for UUID compatibility
+    const sanitizedUserId = userId ? sanitizeUserIdForUUID(userId) : undefined
+
     // Check user budget if user is authenticated
     if (userId) {
       const budgetCheck = await this.checkUserBudget(userId, totalTokens)
       if (!budgetCheck.allowed) {
             // Log the blocked request
     await this.logTokenUsage({
-      user_id: userId,
+      user_id: sanitizedUserId,
       session_id: sessionId,
       feature,
       model,
@@ -233,7 +249,7 @@ export class TokenUsageLogger {
 
     // Log the successful request
     await this.logTokenUsage({
-      user_id: userId,
+      user_id: sanitizedUserId,
       session_id: sessionId,
       feature,
       model,
@@ -293,7 +309,9 @@ export class TokenUsageLogger {
         .gte('created_at', startDate.toISOString())
 
       if (userId) {
-        query = query.eq('user_id', userId)
+        // Sanitize userId for UUID compatibility
+        const sanitizedUserId = sanitizeUserIdForUUID(userId)
+        query = query.eq('user_id', sanitizedUserId)
       } else if (sessionId) {
         query = query.eq('session_id', sessionId)
       }
