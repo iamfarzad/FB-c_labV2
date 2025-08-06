@@ -315,19 +315,16 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
 
       return new Promise<void>((resolve, reject) => {
         const checkConnection = () => {
-// Log state changes for debugging
-if (currentState !== lastState) {
-  const stateText = currentState !== undefined
-    ? ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][currentState]
-    : 'UNKNOWN';
-  console.log(
-    `[useWebSocketVoice] WebSocket state changed: ${lastState} -> ${currentState} (${stateText})`
-  );
-  lastState = currentState;
-}
+          const currentState = wsRef.current?.readyState;
+          
           // Log state changes for debugging
           if (currentState !== lastState) {
-            console.log(`[useWebSocketVoice] WebSocket state changed: ${lastState} -> ${currentState} (${['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][currentState || 3]})`)
+            const stateText = currentState !== undefined
+              ? ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][currentState]
+              : 'UNKNOWN';
+            console.log(
+              `[useWebSocketVoice] WebSocket state changed: ${lastState} -> ${currentState} (${stateText})`
+            );
             lastState = currentState;
           }
 
