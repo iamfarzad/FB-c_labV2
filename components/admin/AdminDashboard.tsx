@@ -12,7 +12,10 @@ import { AIPerformanceMetrics } from "./AIPerformanceMetrics"
 import { RealTimeActivity } from "./RealTimeActivity"
 import { AdminChatInterface } from "./AdminChatInterface"
 import { TokenCostAnalytics } from "./TokenCostAnalytics"
+import { FlyIOCostControls } from "./FlyIOCostControls"
 import { MeetingCalendar } from "./MeetingCalendar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import {
   Home,
   Users,
@@ -65,7 +68,32 @@ export function AdminDashboard() {
       case "emails":
         return <EmailCampaignManager />
       case "costs":
-        return <TokenCostAnalytics />
+        return (
+          <div className="space-y-6">
+            <Tabs defaultValue="ai-costs" className="w-full">
+              <TabsList>
+                <TabsTrigger value="ai-costs">AI Usage</TabsTrigger>
+                <TabsTrigger value="infra-costs">Infrastructure</TabsTrigger>
+              </TabsList>
+              <TabsContent value="ai-costs" className="pt-4">
+                <TokenCostAnalytics />
+              </TabsContent>
+              <TabsContent value="infra-costs" className="pt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Fly.io Infrastructure</CardTitle>
+                    <CardDescription>
+                      Monitor and control your Fly.io infrastructure costs
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <FlyIOCostControls />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )
       case "analytics":
         return <InteractionAnalytics period="last_30_days" />
       case "ai-performance":

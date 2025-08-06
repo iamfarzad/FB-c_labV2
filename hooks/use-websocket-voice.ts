@@ -22,8 +22,10 @@ interface WebSocketVoiceHook {
   startSession: (leadContext?: any) => Promise<void>
   stopSession: () => void
   sendMessage: (message: string) => Promise<void>
-  sendAudioChunk: (audioData: ArrayBuffer, mimeType: string) => void
   playNextAudio: () => void
+  // Callbacks for voice recorder integration
+  onAudioChunk: (chunk: ArrayBuffer) => void
+  onTurnComplete: () => void
 }
 
 export function useWebSocketVoice(): WebSocketVoiceHook {
@@ -409,24 +411,46 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     }
   }, [connectWebSocket])
 
-  const sendAudioChunk = useCallback((audioData: ArrayBuffer, mimeType: string) => {
+  // Callback for voice recorder - properly encode audio data as base64
+  const onAudioChunk = useCallback((audioData: ArrayBuffer) => {
+    // Convert ArrayBuffer to base64 string
+    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(audioData)))
+    
     const payload = JSON.stringify({
-      type: 'user_audio', // A new type for audio chunks
+      type: 'user_audio',
       payload: { 
-        audioData: Array.from(new Uint8Array(audioData)).map(b => String.fromCharCode(b)).join(''),
-        mimeType 
+        audioData: base64Audio,
+        mimeType: 'audio/pcm;rate=16000'
       }
     })
     
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      console.log(`[useWebSocketVoice] Attempting to send audio chunk: ${audioData.byteLength} bytes, type: ${mimeType}`)
+      console.log(`[useWebSocketVoice] Sending audio chunk: ${audioData.byteLength} bytes`)
       wsRef.current.send(payload)
-      console.log(`[useWebSocketVoice] Sent audio chunk to WebSocket`)
     } else {
       console.warn('WebSocket not open, queueing audio chunk')
       messageQueueRef.current.push(payload)
       if (!reconnectingRef.current) {
-        connectWebSocket() // Try reconnecting if not already doing so
+        connectWebSocket()
+      }
+    }
+  }, [connectWebSocket])
+
+  // Callback for voice recorder - signal turn complete
+  const onTurnComplete = useCallback(() => {
+    const payload = JSON.stringify({
+      type: 'TURN_COMPLETE',
+      payload: {}
+    })
+    
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log('[useWebSocketVoice] Sending TURN_COMPLETE signal')
+      wsRef.current.send(payload)
+    } else {
+      console.warn('WebSocket not open, queueing turn complete')
+      messageQueueRef.current.push(payload)
+      if (!reconnectingRef.current) {
+        connectWebSocket()
       }
     }
   }, [connectWebSocket])
@@ -441,7 +465,9 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     startSession,
     stopSession,
     sendMessage,
-    sendAudioChunk,
     playNextAudio: playNextAudioRef.current, // Expose the stable ref
+    // Callbacks for voice recorder integration
+    onAudioChunk,
+    onTurnComplete,
   }
 }

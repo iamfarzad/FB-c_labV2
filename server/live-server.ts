@@ -300,10 +300,12 @@ wss.on('connection', (ws: WebSocket, req) => {
 
 async function handleStart(connectionId: string, ws: WebSocket, payload: any) {
   if (activeSessions.has(connectionId)) {
-    if (activeSessions.has(connectionId)) {
-      console.log(`[${connectionId}] Session already exists. Closing old one.`)
-      await activeSessions.get(connectionId)?.session.close()
+    console.log(`[${connectionId}] Session already exists. Closing old one.`)
+    const existingSession = activeSessions.get(connectionId)
+    if (existingSession) {
+      existingSession.session.close()
     }
+  }
 
   if (!process.env.GEMINI_API_KEY) {
     console.error(`[${connectionId}] GEMINI_API_KEY not configured.`)
@@ -535,13 +537,18 @@ async function handleUserMessage(connectionId: string, payload: any) {
     return
   }
 
-  // Log before sending to Gemini
-  if (userContentParts.length > 0) {
-    console.log(`[${connectionId}] Sending content to Gemini. Type: ${contentType === 'audio' ? 'Audio' : 'Text'}, Estimated Tokens: ${estimatedTokens}`)
-  } else {
-    console.warn(`[${connectionId}] No content parts to send to Gemini.`)
-    client.ws.send(JSON.stringify({ type: 'error', payload: { message: 'No content to send to AI.' } }))
-    return
+  // Handle content validation differently for text vs audio
+  if (contentType === 'text') {
+    if (userContentParts.length > 0) {
+      console.log(`[${connectionId}] Sending text content to Gemini. Estimated Tokens: ${estimatedTokens}`)
+    } else {
+      console.warn(`[${connectionId}] No text content parts to send to Gemini.`)
+      client.ws.send(JSON.stringify({ type: 'error', payload: { message: 'No text content to send to AI.' } }))
+      return
+    }
+  } else if (contentType === 'audio') {
+    console.log(`[${connectionId}] Audio buffered for turn completion. Estimated Tokens: ${estimatedTokens}`)
+    return // Exit early for audio - wait for TURN_COMPLETE signal
   }
 
   try {
@@ -645,7 +652,7 @@ async function sendBufferedAudioToGemini(connectionId: string) {
   }
 }
 
-async function handleClose(connectionId: string) {
+function handleClose(connectionId: string) {
   const client = activeSessions.get(connectionId)
   if (client) {
     // Log final budget stats before cleanup
