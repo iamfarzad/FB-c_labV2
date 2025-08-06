@@ -251,9 +251,8 @@
 
   /* Enhanced chat bubble styles */
   .chat-bubble-user {
-    @apply bg-gradient-to-br from-accent to-accent/90 text-accent-foreground;
+    @apply bg-[--color-orange-accent] text-white;
     @apply rounded-2xl px-5 py-4 max-w-[85%] break-words shadow-lg;
-    @apply backdrop-blur-sm border border-accent/20;
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;

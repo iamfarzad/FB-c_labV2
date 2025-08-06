@@ -8,6 +8,7 @@ import {
 } from '@google/genai'
 import { v4 as uuidv4 } from 'uuid'
 import { Buffer } from 'buffer' // Explicitly import Buffer
+import * as http from 'http'
 
 // Cost management and budget controls
 interface SessionBudget {
@@ -39,12 +40,44 @@ const RATE_LIMIT_WINDOW = 60000             // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 20          // 20 requests per minute
 const DUPLICATE_PREVENTION_WINDOW = 5000    // 5 seconds between identical requests
 
-const PORT = process.env.LIVE_SERVER_PORT || 3001
+// Use PORT from Fly.io, fallback to LIVE_SERVER_PORT, then default
+const PORT = process.env.PORT || process.env.LIVE_SERVER_PORT || 8080
 const wss = new WebSocketServer({ 
-  port: Number(PORT),
+  noServer: true, // Don't create HTTP server, we'll use our own
   perMessageDeflate: false, // Disable compression for lower latency
   clientTracking: true,
   maxPayload: 100 * 1024 * 1024 // 100MB max payload
+})
+
+// Add HTTP server for health checks (required by Fly.io)
+const healthServer = http.createServer((req, res) => {
+  if (req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' })
+    res.end('OK')
+  } else if (req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ 
+      status: 'running', 
+      connections: activeSessions.size,
+      port: PORT 
+    }))
+  } else {
+    res.writeHead(404)
+    res.end()
+  }
+})
+
+// Use same port but handle HTTP upgrade for WebSocket
+const server = healthServer.listen(Number(PORT), () => {
+  console.log(`🚀 WebSocket server listening on port ${PORT}`)
+  console.log(`💚 Health check available at http://localhost:${PORT}/health`)
+})
+
+// Handle WebSocket upgrade
+server.on('upgrade', (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit('connection', ws, request)
+  })
 })
 
 // In-memory session management

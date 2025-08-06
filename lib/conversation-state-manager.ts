@@ -1,8 +1,10 @@
 import { LeadManager, ConversationStage, LeadData } from './lead-manager'
 import { logServerActivity } from './server-activity-logger'
+import { getSupabase } from '@/lib/supabase/server'
 
 export interface ConversationState {
   leadId: string
+  conversationId?: string  // Add Supabase conversation ID
   currentStage: ConversationStage
   messages: ConversationMessage[]
   context: ConversationContext
@@ -122,6 +124,30 @@ export class ConversationStateManager {
     if (leadId && !state.leadId) {
       state.leadId = leadId
     }
+    
+    // Persist conversation to Supabase if not already created
+    const supabase = getSupabase()
+    if (!state.conversationId && state.leadId && supabase) {
+      try {
+        const { data: conv } = await supabase
+          .from('conversations')
+          .insert({
+            lead_id: state.leadId,
+            session_id: sessionId,
+            stage: state.currentStage,
+            status: 'active',
+            total_messages: state.metadata.totalMessages
+          })
+          .select('id')
+          .single()
+        
+        if (conv) {
+          state.conversationId = conv.id
+        }
+      } catch (error) {
+        console.error('Error creating conversation:', error)
+      }
+    }
 
     // Add user message to conversation
     const userMessageObj: ConversationMessage = {
@@ -135,6 +161,23 @@ export class ConversationStateManager {
     state.messages.push(userMessageObj)
     state.metadata.totalMessages++
     state.metadata.lastActivity = new Date()
+    
+    // Persist user message to transcripts
+    if (state.conversationId && state.leadId && supabase) {
+      try {
+        await supabase
+          .from('transcripts')
+          .insert({
+            conversation_id: state.conversationId,
+            lead_id: state.leadId,
+            message_type: 'text',
+            role: 'user',
+            content: userMessage
+          })
+      } catch (error) {
+        console.error('Error persisting user message:', error)
+      }
+    }
 
     // Process the message through the current stage
     // Pass the accumulated lead data to maintain context
@@ -159,10 +202,43 @@ export class ConversationStateManager {
     }
 
     state.messages.push(assistantMessageObj)
+    
+    // Persist assistant response to transcripts
+    if (state.conversationId && state.leadId && supabase) {
+      try {
+        await supabase
+          .from('transcripts')
+          .insert({
+            conversation_id: state.conversationId,
+            lead_id: state.leadId,
+            message_type: 'text',
+            role: 'assistant',
+            content: stageResult.response
+          })
+      } catch (error) {
+        console.error('Error persisting assistant message:', error)
+      }
+    }
 
     // Update conversation stage
     const previousStage = state.currentStage
     state.currentStage = stageResult.nextStage
+    
+    // Update conversation in database
+    if (state.conversationId && supabase) {
+      try {
+        await supabase
+          .from('conversations')
+          .update({
+            stage: state.currentStage,
+            total_messages: state.metadata.totalMessages + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', state.conversationId)
+      } catch (error) {
+        console.error('Error updating conversation:', error)
+      }
+    }
 
     // Record stage transition
     state.metadata.stageTransitions.push({

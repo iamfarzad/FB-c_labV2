@@ -7,7 +7,7 @@ const chatBubbleVariants = cva(
   {
     variants: {
       variant: {
-        user: "bg-gradient-to-br from-accent to-accent/90 text-accent-foreground backdrop-blur-sm border border-accent/20",
+        user: "bg-[--color-orange-accent] text-white",
         assistant: "bg-gradient-to-br from-card to-card/80 text-foreground border border-border/30 shadow-md hover:shadow-lg backdrop-blur-sm",
         system: "bg-muted/50 text-muted-foreground border border-border/20",
       },

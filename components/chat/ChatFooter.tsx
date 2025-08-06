@@ -269,7 +269,7 @@ export function ChatFooter({
                     <Button
                       type="button"
                       variant="ghost"
-                      size="sm"
+                      size="touch"
                       className={cn(
                         "h-8 px-3 rounded-full border border-border/30 bg-muted/40",
                         "hover:bg-accent/10 hover:border-accent/30 text-xs font-medium",
@@ -314,7 +314,7 @@ export function ChatFooter({
                   <Button
                     type="button"
                     variant="ghost"
-                    size="sm"
+                    size="touch"
                     className={cn(
                       "h-8 px-3 rounded-full border border-border/30 bg-muted/40",
                       "hover:bg-accent/10 hover:border-accent/30 text-xs font-medium",
@@ -345,12 +345,12 @@ export function ChatFooter({
                 onCompositionStart={() => setIsComposing(true)}
                 onCompositionEnd={() => setIsComposing(false)}
                 placeholder="Ask anything about AI automation, business analysis, or upload a document..."
-                                  className={cn(
-                    "resize-none min-h-[52px] max-h-36 border-0 bg-transparent",
-                    "focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                    "placeholder:text-muted-foreground/60 text-base leading-relaxed", // text-base prevents iOS zoom
-                    "pl-3 pr-12 py-3 touch-manipulation" // Better mobile padding and touch handling
-                  )}
+                className={cn(
+                  "resize-none min-h-[52px] max-h-36 border-0 bg-transparent",
+                  "focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0",
+                  "placeholder:text-muted-foreground/60 text-base leading-relaxed", // text-base prevents iOS zoom
+                  "pl-3 pr-12 py-3 touch-manipulation" // Better mobile padding and touch handling
+                )}
                 disabled={isLoading}
               />
 
@@ -365,7 +365,7 @@ export function ChatFooter({
                   type="submit"
                   size="icon"
                   className={cn(
-                    "w-8 h-8 rounded-lg transition-all duration-300",
+                    "w-11 h-11 rounded-lg transition-all duration-300",
                     canSend
                       ? "bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent/80 shadow-md hover:shadow-lg text-accent-foreground"
                       : "bg-muted/50 text-muted-foreground cursor-not-allowed"

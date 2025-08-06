@@ -659,7 +659,7 @@ export const ChatArea = memo(function ChatArea({
                             <div className={cn(
                               "relative group/message transition-all duration-200",
                               message.role === "user"
-                                ? "chat-bubble-user"
+                                ? "chat-bubble-user bg-[--color-orange-accent] text-white rounded-2xl px-5 py-4 max-w-[85%] break-words shadow-lg"
                                 : "chat-bubble-assistant"
                             )}>
                               {message.imageUrl && (
@@ -783,8 +783,8 @@ export const ChatArea = memo(function ChatArea({
 
                           {/* User Avatar - Small and minimal */}
                           {message.role === "user" && (
-                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
-                              <User className="w-3 h-3 text-primary" />
+                            <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-1">
+                              <User className="w-3 h-3 text-accent" />
                             </div>
                           )}
                         </div>
