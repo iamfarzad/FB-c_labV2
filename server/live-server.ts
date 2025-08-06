@@ -9,6 +9,10 @@ import {
 import { v4 as uuidv4 } from 'uuid'
 import { Buffer } from 'buffer' // Explicitly import Buffer
 import * as http from 'http'
+import * as dotenv from 'dotenv'
+
+// Load environment variables from .env file
+dotenv.config()
 
 // Cost management and budget controls
 interface SessionBudget {
@@ -297,7 +301,7 @@ wss.on('connection', (ws: WebSocket, req) => {
 async function handleStart(connectionId: string, ws: WebSocket, payload: any) {
   if (activeSessions.has(connectionId)) {
     console.log(`[${connectionId}] Session already exists. Closing old one.`)
-    await activeSessions.get(connectionId)?.session.close()
+    activeSessions.get(connectionId)?.session.close()
   }
 
   if (!process.env.GEMINI_API_KEY) {
@@ -332,15 +336,9 @@ async function handleStart(connectionId: string, ws: WebSocket, payload: any) {
       }
     }
 
-    // Connect with updated config, including initial audioConfig for input
+    // Connect with updated config
     const session = await ai.live.connect({
       ...config,
-      // Add audioConfig directly at the top level for input audio stream properties
-      audioConfig: {
-        sampleRateHertz: 24000,
-        audioChannels: 1,
-        encoding: 'LINEAR16', // Raw PCM, 16-bit signed linear
-      },
       callbacks: {
         onopen: () => {
           console.log(`[${connectionId}] Gemini Live session opened.`)
@@ -449,12 +447,41 @@ async function handleUserMessage(connectionId: string, payload: any) {
   // Determine content type and extract data based on content presence
   if (payload.audioData && payload.mimeType) {
     contentType = 'audio'
-    console.log(`[Server] Received audio content. Size: ${payload.audioData.length} base64 chars, type: ${payload.mimeType}`)
-    const audioDataBuffer = Uint8Array.from(atob(payload.audioData), c => c.charCodeAt(0))
+    console.log(`[Server] Received audio content. Size: ${payload.audioData.length} chars, type: ${payload.mimeType}`)
+    
+    // Handle different audio data formats
+    let audioDataBuffer: Uint8Array
+    try {
+      if (typeof payload.audioData === 'string') {
+        // If it's a base64 string, decode it
+        if (payload.audioData.includes(',')) {
+          // Remove data URL prefix if present (e.g., "data:audio/pcm;base64,")
+          const base64Data = payload.audioData.split(',')[1]
+          audioDataBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'))
+        } else {
+          // Assume it's pure base64
+          audioDataBuffer = new Uint8Array(Buffer.from(payload.audioData, 'base64'))
+        }
+      } else if (payload.audioData instanceof ArrayBuffer) {
+        audioDataBuffer = new Uint8Array(payload.audioData)
+      } else if (Array.isArray(payload.audioData)) {
+        // If it's an array of bytes
+        audioDataBuffer = new Uint8Array(payload.audioData)
+      } else {
+        throw new Error(`Unsupported audio data format: ${typeof payload.audioData}`)
+      }
+    } catch (decodeError) {
+      console.error(`[${connectionId}] Error decoding audio data:`, decodeError)
+      client.ws.send(JSON.stringify({ 
+        type: 'error', 
+        payload: { message: `Invalid audio data format: ${decodeError instanceof Error ? decodeError.message : 'Unknown error'}` } 
+      }))
+      return
+    }
     
     // Buffer audio chunk instead of sending immediately
     let sessionAudioBuffers = bufferedAudioChunks.get(connectionId) || []
-    sessionAudioBuffers.push(audioDataBuffer.buffer) // Store raw ArrayBuffer
+    sessionAudioBuffers.push(audioDataBuffer.buffer as ArrayBuffer) // Store raw ArrayBuffer
     bufferedAudioChunks.set(connectionId, sessionAudioBuffers)
 
     estimatedTokens = Math.ceil(audioDataBuffer.length / 1000) // Rough estimate for audio
@@ -522,7 +549,7 @@ async function handleUserMessage(connectionId: string, payload: any) {
       await client.session.sendClientContent({
         turns: [{ role: 'user', parts: userContentParts }],
         turnComplete: true,
-        speechConfig: undefined // Only for audio input, not text
+        // speechConfig is not a valid parameter for sendClientContent
       })
     }
     
@@ -617,7 +644,7 @@ async function sendBufferedAudioToGemini(connectionId: string) {
   }
 }
 
-function handleClose(connectionId: string) {
+async function handleClose(connectionId: string) {
   const client = activeSessions.get(connectionId)
   if (client) {
     // Log final budget stats before cleanup

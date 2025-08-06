@@ -85,9 +85,22 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     try {
       isPlayingRef.current = true
 
-      const audioBuffer = await audioContextRef.current?.decodeAudioData(
-        Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0)).buffer
-      ) as AudioBuffer
+      // Fix: Properly decode base64 audio data
+      let audioData: ArrayBuffer
+      if (typeof base64Audio === 'string') {
+        // Convert base64 string to ArrayBuffer
+        const binaryString = atob(base64Audio)
+        const bytes = new Uint8Array(binaryString.length)
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i)
+        }
+        audioData = bytes.buffer
+      } else {
+        // If it's already an ArrayBuffer, use it directly
+        audioData = base64Audio as unknown as ArrayBuffer
+      }
+
+      const audioBuffer = await audioContextRef.current?.decodeAudioData(audioData) as AudioBuffer
 
       const source = audioContextRef.current?.createBufferSource()
       if (source && audioContextRef.current) {
@@ -108,7 +121,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     }
   }, [initAudioContext, playNextAudioRef]) // Add playNextAudioRef as dependency to ensure latest version
 
-  // Connect to WebSocket server
+  // Connect to WebSocket server (only when explicitly called)
   const connectWebSocket = useCallback(() => {
     if (reconnectingRef.current) {
       console.log('[useWebSocketVoice] Reconnect already in progress, skipping...')
@@ -156,7 +169,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     } catch (error) {
       console.error('❌ [useWebSocketVoice] Failed to create WebSocket:', error)
       setError(`Failed to create WebSocket connection: ${error instanceof Error ? error.message : 'Unknown error'}`)
-      // No retry here, as this is a fundamental failure to even create the WS object
+      reconnectingRef.current = false
       return
     }
 
@@ -258,12 +271,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
         description: `${errorMessage}. Check if the WebSocket server is running.`,
         variant: "destructive"
       })
-      // Exponential backoff for reconnection
-      if (ws.readyState === WebSocket.CLOSED) { // Only attempt reconnect if truly closed
-        let retryDelay = 1000 + Math.random() * 2000; // 1-3 seconds initial delay
-        console.log(`[useWebSocketVoice] Attempting to reconnect in ${retryDelay / 1000}s...`)
-        setTimeout(connectWebSocket, retryDelay);
-      }
+      // Don't auto-reconnect on error - let user manually retry
     }
 
     ws.onclose = (event) => {
@@ -276,24 +284,17 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
       setTranscript('')
       reconnectingRef.current = false
 
-      // Attempt to reconnect only on abnormal closures or network issues
-      // Common codes: 1000 (Normal), 1001 (Going Away), 1006 (Abnormal closure - often network/timeout)
-      if (event.code === 1006 || (event.code !== 1000 && event.code !== 1001 && event.code !== 1005)) {
-        let retryDelay = 1000 + Math.random() * 2000; // 1-3 seconds initial delay
-        console.log(`[useWebSocketVoice] Attempting to reconnect due to unexpected close in ${retryDelay / 1000}s...`)
-        setTimeout(connectWebSocket, retryDelay);
-      } else {
-        console.log('[useWebSocketVoice] Not attempting to reconnect for this close code.')
-      }
+      // Don't auto-reconnect - let the component decide when to reconnect
+      console.log('[useWebSocketVoice] Connection closed, waiting for manual reconnection.')
     }
-  }, [session, toast, playNextAudioRef]) 
+  }, [session, toast, playNextAudioRef])
 
   // Initial session setup (not auto-connect)
   const startSession = useCallback(async (leadContext?: any) => {
     try {
       setError(null)
       
-      // Connect WebSocket if not connected. This call is non-blocking now.
+      // Connect WebSocket if not connected
       if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
         console.log('[useWebSocketVoice] Initiating WebSocket connection via connectWebSocket()...')
         connectWebSocket()
@@ -303,53 +304,72 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
           console.log('[useWebSocketVoice] WebSocket is already open, proceeding with start message.')
       }
 
-      // Wait for connection to open, with a fixed timeout
+      // Wait for connection to open with better error handling
       const connectionStartTime = Date.now();
-      const connectionTimeout = 5000; // 5 seconds to get OPEN
+      const connectionTimeout = 10000; // Increased to 10 seconds
+      let lastState = wsRef.current?.readyState;
 
-      while (wsRef.current?.readyState !== WebSocket.OPEN) {
+      return new Promise<void>((resolve, reject) => {
+        const checkConnection = () => {
+          const currentState = wsRef.current?.readyState;
+          
+          // Log state changes for debugging
+          if (currentState !== lastState) {
+            console.log(`[useWebSocketVoice] WebSocket state changed: ${lastState} -> ${currentState} (${['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][currentState || 3]})`)
+            lastState = currentState;
+          }
+
+          if (currentState === WebSocket.OPEN) {
+            console.log('[useWebSocketVoice] WebSocket is OPEN, sending start message.')
+            
+            // Send start message
+            const message = {
+              type: 'start',
+              payload: { leadContext }
+            }
+            wsRef.current!.send(JSON.stringify(message))
+            setIsProcessing(true)
+            console.log('📤 [useWebSocketVoice] Sent start message to WebSocket server', leadContext)
+            resolve()
+            return
+          }
+
+          if (currentState === WebSocket.CLOSED) {
+            const errorMsg = 'WebSocket closed before connection could be established.'
+            console.error(`❌ [useWebSocketVoice] ${errorMsg}`)
+            setError(errorMsg)
+            reject(new Error(errorMsg))
+            return
+          }
+
           if (Date.now() - connectionStartTime > connectionTimeout) {
-              console.error('❌ [useWebSocketVoice] WebSocket connection timed out waiting for OPEN state.');
-              setError('WebSocket connection timed out.');
-              throw new Error("WebSocket connection timed out during startSession.");
+            const errorMsg = `WebSocket connection timed out after ${connectionTimeout/1000}s. Current state: ${['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][currentState || 3]}`
+            console.error(`❌ [useWebSocketVoice] ${errorMsg}`)
+            setError('WebSocket connection timed out.')
+            reject(new Error(errorMsg))
+            return
           }
-          if (wsRef.current?.readyState === WebSocket.CLOSED) {
-              console.error('❌ [useWebSocketVoice] WebSocket closed before connection could be established.');
-              setError('WebSocket closed before connection could be established.');
-              throw new Error("WebSocket closed before connection could be established during startSession.");
-          }
-          console.log('[useWebSocketVoice] Waiting for WebSocket to be OPEN... Current state:', wsRef.current?.readyState);
-          await new Promise(resolve => setTimeout(resolve, 200)); // Polling interval
-      }
-      console.log('[useWebSocketVoice] WebSocket is OPEN, sending start message.')
 
-      // Send a 'start' message to the WebSocket server
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        const message = {
-          type: 'start',
-          payload: { leadContext }
+          // Continue checking
+          setTimeout(checkConnection, 100)
         }
-        wsRef.current.send(JSON.stringify(message))
-        setIsProcessing(true)
-        console.log('📤 [useWebSocketVoice] Sent start message to WebSocket server', leadContext)
-      } else {
-          console.error('[useWebSocketVoice] WebSocket not open to send start message. Final state:', wsRef.current?.readyState)
-          throw new Error("WebSocket not open to send start message.")
-      }
+
+        checkConnection()
+      })
 
     } catch (error) {
       console.error('❌ [useWebSocketVoice] Error in startSession:', error)
-      // Ensure client state reflects error, but don't endlessly retry here
-      setIsConnected(false);
-      setIsProcessing(false);
-      if (error instanceof Error && !error.message.includes("timed out")){
+      setIsConnected(false)
+      setIsProcessing(false)
+      
+      if (error instanceof Error) {
         toast({
           title: "Session Start Failed",
           description: error.message,
           variant: "destructive"
-        });
+        })
       }
-      throw error // Re-throw to propagate to component
+      throw error
     }
   }, [connectWebSocket, toast])
 
