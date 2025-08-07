@@ -458,14 +458,9 @@ ${result.summary}`
         {/* Modals */}
         {showVoiceModal && (
           <VoiceInput
-            mode="modal"
+            mode="card"
             onClose={() => setShowVoiceModal(false)}
             onTranscript={handleVoiceTranscript}
-            leadContext={{
-              name: leadData.name,
-              company: leadData.company,
-              role: 'User'
-            }}
           />
         )}
         

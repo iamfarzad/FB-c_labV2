@@ -474,7 +474,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     })
     
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      console.log('[useWebSocketVoice] Sending TURN_COMPLETE signal')
+      console.log('[useWebSocketVoice] 🎯 Sending TURN_COMPLETE signal after VAD delay')
       wsRef.current.send(payload)
     } else {
       console.warn('WebSocket not open, queueing turn complete')

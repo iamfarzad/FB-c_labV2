@@ -120,8 +120,12 @@ export function useVoiceRecorder({
       console.log(`🔇 Silence detected, completing turn.`);
       isProcessingTurnCompleteRef.current = true;
       silenceStartRef.current = null;
-      onTurnComplete();
-      setTimeout(() => { isProcessingTurnCompleteRef.current = false; }, 1000);
+      
+      // Add delay to ensure all audio chunks have been sent to server
+      setTimeout(() => {
+        onTurnComplete();
+        setTimeout(() => { isProcessingTurnCompleteRef.current = false; }, 1000);
+      }, 200); // 200ms delay to ensure audio chunks are processed
     }
   }, [onAudioChunk, onTurnComplete, vadSilenceThreshold, resampleAudio, convertToPCM16]);
 
