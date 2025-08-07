@@ -21,41 +21,110 @@
     <p>This page tests the main features that were fixed in the recent updates.</p>
 
     <div class="test-section">
-        <h2>1. Voice Input Integration Test</h2>
+        <h2>1. Voice Pipeline Integration Test</h2>
+        <p>Tests the complete voice pipeline including permissions, WebSocket, VAD, and audio processing.</p>
+        <button onclick="testVoicePipeline()">Test Complete Voice Pipeline</button>
+        <div id="voice-pipeline-result" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Voice Input Integration Test</h2>
         <p>Tests the VAD integration and WebSocket voice functionality.</p>
         <button onclick="testVoiceIntegration()">Test Voice System</button>
         <div id="voice-result" class="test-result"></div>
     </div>
 
     <div class="test-section">
-        <h2>2. Permissions Test</h2>
+        <h2>3. Permissions Test</h2>
         <p>Tests microphone and camera permission requests.</p>
         <button onclick="testPermissions()">Test Permissions</button>
         <div id="permissions-result" class="test-result"></div>
     </div>
 
     <div class="test-section">
-        <h2>3. API Endpoints Test</h2>
+        <h2>4. API Endpoints Test</h2>
         <p>Tests that the fixed API endpoints are working correctly.</p>
         <button onclick="testAPIEndpoints()">Test APIs</button>
         <div id="api-result" class="test-result"></div>
     </div>
 
     <div class="test-section">
-        <h2>4. ROI Calculator Test</h2>
+        <h2>5. ROI Calculator Test</h2>
         <p>Tests the ROI calculator with proper field mapping.</p>
         <button onclick="testROICalculator()">Test ROI Calculator</button>
         <div id="roi-result" class="test-result"></div>
     </div>
 
     <div class="test-section">
-        <h2>5. Build System Test</h2>
+        <h2>6. Build System Test</h2>
         <p>Verifies that the application can be built without errors.</p>
         <button onclick="testBuildSystem()">Test Build System</button>
         <div id="build-result" class="test-result"></div>
     </div>
 
     <script>
+        async function testVoicePipeline() {
+            const resultDiv = document.getElementById('voice-pipeline-result');
+            resultDiv.innerHTML = '<div class="status">Testing complete voice pipeline...</div>';
+
+            try {
+                let results = '';
+
+                // Test permissions policy
+                if (document.featurePolicy && document.featurePolicy.allowsFeature('microphone')) {
+                    results += '✅ Microphone permissions policy allows access<br>';
+                } else {
+                    results += '⚠️ Microphone permissions policy status unknown<br>';
+                }
+
+                // Test WebSocket connection
+                const wsUrl = 'wss://fb-consulting-websocket.fly.dev';
+                const ws = new WebSocket(wsUrl);
+                
+                let connectionResult = '';
+                
+                ws.onopen = () => {
+                    connectionResult += '✅ WebSocket connection successful<br>';
+                    ws.close();
+                };
+                
+                ws.onerror = (error) => {
+                    connectionResult += '❌ WebSocket connection failed<br>';
+                };
+                
+                ws.onclose = () => {
+                    // Test VAD availability
+                    if (typeof window !== 'undefined' && 'mediaDevices' in navigator) {
+                        connectionResult += '✅ MediaDevices API available<br>';
+                    } else {
+                        connectionResult += '❌ MediaDevices API not available<br>';
+                    }
+                    
+                    results += connectionResult;
+
+                    // Test audio processing availability
+                    if (typeof window !== 'undefined' && 'AudioContext' in window) {
+                        results += '✅ AudioContext API available<br>';
+                    } else {
+                        results += '❌ AudioContext API not available<br>';
+                    }
+
+                    resultDiv.innerHTML = `<div class="success">${results}</div>`;
+                };
+                
+                // Timeout after 5 seconds
+                setTimeout(() => {
+                    if (ws.readyState === WebSocket.CONNECTING) {
+                        ws.close();
+                        resultDiv.innerHTML = '<div class="error">❌ WebSocket connection timeout</div>';
+                    }
+                }, 5000);
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Voice pipeline test failed: ${error.message}</div>`;
+            }
+        }
+
         async function testVoiceIntegration() {
             const resultDiv = document.getElementById('voice-result');
             resultDiv.innerHTML = '<div class="status">Testing voice integration...</div>';

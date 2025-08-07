@@ -137,6 +137,13 @@
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } } },
         inputAudioTranscription: {}, // THE MISSING PIECE - tells Gemini to transcribe input audio
         generationConfig: { maxOutputTokens: DEFAULT_PER_REQUEST_LIMIT },
+        // Audio configuration for 16kHz PCM
+        audioConfig: {
+          inputAudioEncoding: 'LINEAR16',
+          inputAudioSampleRateHertz: 16000,
+          outputAudioEncoding: 'LINEAR16',
+          outputAudioSampleRateHertz: 16000,
+        },
         systemInstruction: {
           parts: [{
             text: `You are Puck, an AI assistant from Future Builders Consulting. You should:
@@ -235,7 +242,7 @@
                     role: 'user',
                     parts: [{
                         inlineData: {
-                            mimeType: 'audio/pcm',
+                            mimeType: 'audio/pcm;rate=16000',
                             data: mergedAudio.toString('base64'),
                         },
                     }],

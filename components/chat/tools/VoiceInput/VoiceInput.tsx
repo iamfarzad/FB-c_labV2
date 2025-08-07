@@ -53,6 +53,7 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
   const [isExpanded, setIsExpanded] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
   const hasStartedRef = useRef(false);
 
   const {
@@ -142,6 +143,35 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
     }
   }, [transcript, onTranscript]);
 
+  // Retry WebSocket connection
+  const retryConnection = useCallback(async () => {
+    if (connectionAttempts >= 3) {
+      toast({
+        title: "Connection Failed",
+        description: "Unable to connect after 3 attempts. Please check your internet connection and try again later.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setConnectionAttempts(prev => prev + 1);
+    console.log(`[VoiceInput] Retrying WebSocket connection (attempt ${connectionAttempts + 1}/3)...`);
+    
+    try {
+      await startSession();
+      console.log('[VoiceInput] WebSocket session started on retry');
+      setIsInitialized(true);
+      setConnectionAttempts(0); // Reset on success
+    } catch (error) {
+      console.error('[VoiceInput] Retry failed:', error);
+      toast({
+        title: "Connection Retry Failed",
+        description: `Attempt ${connectionAttempts + 1} failed. ${connectionAttempts < 2 ? 'Will retry...' : 'Please try again later.'}`,
+        variant: "destructive"
+      });
+    }
+  }, [connectionAttempts, startSession, toast]);
+
   const handleMicClick = useCallback(async () => {
     console.log('[VoiceInput] Mic button clicked. Recording:', isRecording, 'Connected:', isConnected, 'Permission:', hasPermission);
     
@@ -195,20 +225,22 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
   }, [isRecording, isConnected, hasPermission, startRecording, stopRecording, toast]);
 
   const getStatusText = () => {
-    if (hasPermission === false) return "Microphone access denied";
+    if (hasPermission === false) return "Microphone access denied - check browser settings";
     if (hasPermission === null) return "Requesting microphone access...";
-    if (!isConnected) return "Connecting to server...";
-    if (isRecording) return "Listening... Speak now";
-    if (isProcessing) return "Processing your speech...";
-    if (transcript) return "AI has responded";
-    return "Click microphone to start";
+    if (!isConnected && connectionAttempts > 0) return `Connection failed (${connectionAttempts}/3 attempts)`;
+    if (!isConnected) return "Connecting to voice server...";
+    if (isRecording) return "🎤 Listening... Speak now";
+    if (isProcessing) return "🤖 Processing your speech...";
+    if (transcript) return "✅ AI response received";
+    return "Click microphone to start voice chat";
   };
 
   const getStatusColor = () => {
     if (hasPermission === false) return "text-red-500";
     if (hasPermission === null) return "text-yellow-500";
+    if (!isConnected && connectionAttempts > 0) return "text-red-500";
     if (!isConnected) return "text-yellow-500";
-    if (isRecording) return "text-red-500";
+    if (isRecording) return "text-green-500";
     if (isProcessing) return "text-blue-500";
     if (transcript) return "text-green-500";
     return "text-muted-foreground";
@@ -268,6 +300,18 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
               {getStatusText()}
             </p>
 
+            {/* Retry button for failed connections */}
+            {!isConnected && connectionAttempts > 0 && connectionAttempts < 3 && (
+              <Button
+                onClick={retryConnection}
+                variant="outline"
+                size="sm"
+                className="text-xs"
+              >
+                Retry Connection
+              </Button>
+            )}
+
             <VolumeIndicator />
 
             {isExpanded && transcript && (
@@ -309,6 +353,18 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
           <p className={cn("text-sm text-center", getStatusColor())}>
             {getStatusText()}
           </p>
+
+          {/* Retry button for failed connections */}
+          {!isConnected && connectionAttempts > 0 && connectionAttempts < 3 && (
+            <Button
+              onClick={retryConnection}
+              variant="outline"
+              size="sm"
+              className="text-xs"
+            >
+              Retry Connection
+            </Button>
+          )}
 
           <VolumeIndicator />
 

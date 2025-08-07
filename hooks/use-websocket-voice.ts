@@ -155,7 +155,10 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     }
 
     // Production uses port 8080 on Fly.io, local development uses 3001
-    const wsUrl = process.env.NEXT_PUBLIC_LIVE_SERVER_URL || 'wss://localhost:3001'
+    const wsUrl = process.env.NEXT_PUBLIC_LIVE_SERVER_URL || 
+      (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+        ? 'wss://localhost:3001' 
+        : 'wss://fb-consulting-websocket.fly.dev')
     console.log(`🔌 [useWebSocketVoice] Attempting to connect to WebSocket: ${wsUrl}`)
     console.log('🌐 [useWebSocketVoice] Current page URL:', window.location.href)
     console.log('🔒 [useWebSocketVoice] Page protocol:', window.location.protocol)
@@ -227,9 +230,9 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
               console.log('[useWebSocketVoice] Received Gemini audio response (PCM), queued for playback')
             }
             if (data.payload?.serverContent?.turnComplete) {
-                if (onTurnComplete) {
-                    onTurnComplete();
-                }
+              console.log('[useWebSocketVoice] ✅ Server turn completed - conversation ready for next input')
+              setIsProcessing(false)
+              // Don't call onTurnComplete here - that's for client turn completion
             }
             break
 
