@@ -228,7 +228,8 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
                       type: 'audio', 
                       payload: { 
                         audioData: part.inlineData.data,
-                        mimeType: 'audio/pcm;rate=16000'
+                        // Live API outputs 24kHz
+                        mimeType: 'audio/pcm;rate=24000'
                       } 
                     }));
                 }

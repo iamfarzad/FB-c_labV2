@@ -3,12 +3,10 @@
 import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import PillInput from "@/components/ui/PillInput"
+import { ToolMenu } from "@/components/chat/ToolMenu"
 // Consolidated Phosphor icons imports
-import { 
-  Send, Camera, Mic, Paperclip, Play, Calculator, Monitor, Plus, X, 
-  Sparkles, Zap, FileText, ImageIcon, ChevronDown 
-} from "@/lib/icon-mapping"
+import { Send, Zap } from "@/lib/icon-mapping"
 
 // Hooks and Utils
 import { useToast } from '@/hooks/use-toast'
@@ -18,7 +16,6 @@ import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 
 // UI Components
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface ChatFooterProps {
   input: string
@@ -38,6 +35,8 @@ interface ChatFooterProps {
   setShowScreenShareModal?: (show: boolean) => void
   setShowVideo2AppModal?: (show: boolean) => void
   setShowROICalculatorModal?: (show: boolean) => void
+  voiceDraft?: string
+  onClearVoiceDraft?: () => void
 }
 
 export function ChatFooter({
@@ -57,11 +56,13 @@ export function ChatFooter({
   showScreenShareModal,
   setShowScreenShareModal,
   setShowVideo2AppModal,
-  setShowROICalculatorModal
+  setShowROICalculatorModal,
+  voiceDraft,
+  onClearVoiceDraft
 }: ChatFooterProps) {
   const { toast } = useToast()
   const [isComposing, setIsComposing] = useState(false)
-  const [showToolMenu, setShowToolMenu] = useState(false)
+  const [showToolMenu] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
@@ -143,69 +144,7 @@ export function ChatFooter({
     }
   }, [setShowROICalculatorModal])
 
-  // Upload tools for dropdown
-  const uploadTools = [
-    {
-      icon: FileText,
-      label: "Upload Document",
-      description: "PDF, DOC, TXT files",
-      onClick: () => fileInputRef.current?.click(),
-      disabled: !onFileUpload,
-      color: "text-blue-600"
-    },
-    {
-      icon: ImageIcon,
-      label: "Upload Image",
-      description: "JPG, PNG, GIF files",
-      onClick: () => imageInputRef.current?.click(),
-      disabled: !onImageUpload,
-      color: "text-green-600"
-    }
-  ]
-
-  // Main visible tools (reduced from 7 to 5 + dropdown)
-  const toolButtons = [
-    {
-      icon: Mic,
-      label: "Voice",
-      description: "Speak your message",
-      onClick: handleVoiceInput,
-      disabled: !setShowVoiceModal && !onVoiceTranscript,
-      color: "from-purple-500 to-purple-600"
-    },
-    {
-      icon: Camera,
-      label: "Webcam",
-      description: "Capture from camera",
-      onClick: handleWebcamCapture,
-      disabled: !setShowWebcamModal,
-      color: "from-pink-500 to-pink-600"
-    },
-    {
-      icon: Monitor,
-      label: "Screen Share",
-      description: "Share your screen",
-      onClick: handleScreenShare,
-      disabled: !setShowScreenShareModal,
-      color: "from-blue-500 to-blue-600"
-    },
-    {
-      icon: Play,
-      label: "Video to App",
-      description: "Convert video to app",
-      onClick: handleVideo2App,
-      disabled: false,
-      color: "from-accent to-accent/80"
-    },
-    {
-      icon: Calculator,
-      label: "ROI Calculator",
-      description: "Calculate returns",
-      onClick: handleROICalculator,
-      disabled: !setShowROICalculatorModal,
-      color: "from-green-500 to-green-600"
-    }
-  ]
+  // Legacy tool definitions removed; ToolMenu handles tools from the plus button
 
   const canSend = input.trim() && !isLoading
 
@@ -245,122 +184,47 @@ export function ChatFooter({
             className="hidden"
           />
 
-          {/* Compact input like Perplexity */}
-          <motion.div
-            animate={{
-              borderColor: isFocused ? "hsl(var(--accent))" : "hsl(var(--border))",
-              boxShadow: isFocused 
-                ? "0 0 0 2px hsl(var(--accent) / 0.08)" 
-                : "0 1px 2px rgba(0,0,0,0.06)"
+          <PillInput
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (canSend) handleSubmit(e)
             }}
-            transition={{ duration: 0.2 }}
-            className="relative rounded-full border bg-card/70 backdrop-blur-md overflow-hidden shadow"
-          >
-            {/* Inline chips left */}
-            <div className="flex items-center gap-2 px-3 py-2 overflow-x-auto no-scrollbar">
-              {/* Upload Dropdown */}
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="touch"
-                      className={cn(
-                        "h-8 px-3 rounded-full border border-border/30 bg-muted/40",
-                        "hover:bg-accent/10 hover:border-accent/30 text-xs font-medium",
-                        "transition-all duration-200 whitespace-nowrap"
-                      )}
-                      disabled={isLoading}
-                    >
-                      <Plus className="w-3.5 h-3.5 mr-1.5" />
-                      Upload
-                      <ChevronDown className="w-3.5 h-3.5 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48">
-                    {uploadTools.map((tool, index) => (
-                      <DropdownMenuItem
-                        key={index}
-                        onClick={tool.onClick}
-                        disabled={tool.disabled}
-                        className="gap-3 cursor-pointer"
-                      >
-                        <tool.icon className={`w-4 h-4 ${tool.color}`} />
-                        <div className="flex flex-col">
-                          <span className="font-medium">{tool.label}</span>
-                          <span className="text-xs text-muted-foreground">{tool.description}</span>
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </motion.div>
-
-              {/* Main Tool Pills */}
-              {toolButtons.map((tool, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (index + 1) * 0.05, duration: 0.2 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Button
+            placeholder="Ask anything..."
+            disabled={isLoading}
+            waveformChip={voiceDraft ? (
+              <div className="hidden sm:flex items-center h-7 px-2 rounded-full bg-accent/10 text-accent text-xs border border-accent/20">
+                <span className="mr-1">🎤</span>
+                <span className="truncate max-w-[140px]">{voiceDraft}</span>
+              </div>
+            ) : undefined}
+            leftSlot={
+              <div className="flex items-center gap-2">
+                <ToolMenu
+                  onUploadDocument={() => fileInputRef.current?.click()}
+                  onUploadImage={() => imageInputRef.current?.click()}
+                  onWebcam={handleWebcamCapture}
+                  onScreenShare={handleScreenShare}
+                  onROI={handleROICalculator}
+                  disabled={isLoading}
+                />
+                {voiceDraft && (
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="touch"
-                    className={cn(
-                      "h-8 px-3 rounded-full border border-border/30 bg-muted/40",
-                      "hover:bg-accent/10 hover:border-accent/30 text-xs font-medium",
-                      "transition-all duration-200 whitespace-nowrap",
-                      tool.disabled && "opacity-50 cursor-not-allowed"
-                    )}
-                    onClick={tool.onClick}
-                    disabled={tool.disabled || isLoading}
-                    aria-label={tool.description}
-                    title={tool.description}
+                    onClick={onClearVoiceDraft}
+                    className="hidden sm:inline-flex items-center h-7 px-2 rounded-full bg-muted text-xs text-foreground/80 border border-border/40"
+                    aria-label="Clear voice draft"
                   >
-                    <tool.icon className="w-3.5 h-3.5 mr-1.5" />
-                    {tool.label.replace(' Input', '').replace(' Capture', '')}
-                  </Button>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Input field with embedded send button */}
-            <div className="relative">
-              <Textarea
-                ref={textareaRef}
-                value={input}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                onCompositionStart={() => setIsComposing(true)}
-                onCompositionEnd={() => setIsComposing(false)}
-                placeholder="Ask anything..."
-                className={cn(
-                  "resize-none min-h-[48px] max-h-32 border-0 bg-transparent rounded-full",
-                  "focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                  "placeholder:text-muted-foreground/60 text-base leading-relaxed",
-                  "pl-3 pr-12 py-2 touch-manipulation"
+                    •••
+                    <span className="ml-1 truncate max-w-[120px]">{voiceDraft}</span>
+                  </button>
                 )}
-                disabled={isLoading}
-              />
-
-              {/* Right Send Button Only */}
-              <motion.div
-                className="absolute right-2 bottom-2"
-                whileHover={{ scale: canSend ? 1.05 : 1 }}
-                whileTap={{ scale: canSend ? 0.95 : 1 }}
-                transition={{ type: "spring", stiffness: 400 }}
-              >
+              </div>
+            }
+            rightSlot={
+              <motion.div whileHover={{ scale: canSend ? 1.05 : 1 }} whileTap={{ scale: canSend ? 0.95 : 1 }}>
                 <Button
                   type="submit"
                   size="icon"
@@ -376,26 +240,12 @@ export function ChatFooter({
                     animate={isLoading ? { rotate: 360 } : { rotate: 0 }}
                     transition={isLoading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}
                   >
-                    {isLoading ? (
-                      <Zap className="w-4 h-4" />
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
+                    {isLoading ? <Zap className="w-4 h-4" /> : <Send className="w-4 h-4" />}
                   </motion.div>
                 </Button>
               </motion.div>
-
-              {/* Input Enhancement Overlay */}
-              {isFocused && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-accent/5 pointer-events-none rounded-2xl"
-                />
-              )}
-            </div>
-          </motion.div>
+            }
+          />
         </form>
 
         {/* Enhanced Status Bar */}
@@ -438,12 +288,7 @@ export function ChatFooter({
             <span className="hidden sm:inline">Press Enter to send</span>
             <span className="hidden sm:inline">•</span>
             <span className="hidden sm:inline">Shift+Enter for new line</span>
-            {showToolMenu && (
-              <>
-                <span>•</span>
-                <span>ESC to close menu</span>
-              </>
-            )}
+            {/* no persistent tool menu hints */}
           </div>
         </motion.div>
       </div>

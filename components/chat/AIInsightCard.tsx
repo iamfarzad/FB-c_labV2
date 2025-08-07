@@ -89,10 +89,10 @@ export function AIInsightCard({ content, className, onContinue }: AIInsightCardP
       initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className={cn("w-full max-w-md mx-auto", className)}
+      className={cn("w-full max-w-[700px] mx-auto", className)}
     >
       {/* Compact Insight Card */}
-      <div className="bg-accent/5 border border-accent/20 rounded-2xl p-4 backdrop-blur-sm">
+      <div className="bg-accent/5 border border-accent/20 rounded-2xl p-4 md:p-5 backdrop-blur-sm">
         <div className="flex items-start gap-3">
           {/* Icon */}
           <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">

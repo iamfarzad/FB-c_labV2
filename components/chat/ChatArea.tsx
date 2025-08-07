@@ -10,6 +10,8 @@ import {
   Info, Clock, Target, Edit 
 } from '@/lib/icon-mapping'
 import { FbcIcon } from '@/components/ui/fbc-icon'
+import PillInput from '@/components/ui/PillInput'
+import { ToolMenu } from '@/components/chat/ToolMenu'
 
 // UI Components
 import { Button } from '@/components/ui/button'
@@ -313,10 +315,23 @@ export const ChatArea = memo(function ChatArea({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="text-center py-24 flex flex-col items-center justify-center min-h-[55vh]"
+      className="flex-1 min-h-[70vh] grid place-items-center px-4"
     >
-      <h3 className="text-2xl sm:text-3xl font-semibold text-foreground">Ready to dive in?</h3>
-      <p className="text-muted-foreground mt-2">Ask anything or paste a link. I’ll handle the rest.</p>
+      <div className="w-full max-w-3xl">
+        <div className="text-center mb-6">
+          <h3 className="text-2xl sm:text-3xl font-semibold text-foreground">Ready to dive in?</h3>
+          <p className="text-muted-foreground mt-2">Ask anything or paste a link. I’ll handle the rest.</p>
+        </div>
+        {/* Inline PillInput for hero state - delegates to parent via onSendMessage when pressing enter */}
+        <PillInput
+          value={''}
+          placeholder="Ask anything..."
+          onChange={() => { /* no-op: hero uses footer for stateful input; keep visual parity */ }}
+          onSubmit={(e) => e.preventDefault()}
+          leftSlot={<ToolMenu disabled />}
+          rightSlot={<div className="w-9 h-9 rounded-full bg-muted" />}
+        />
+      </div>
     </motion.div>
   ), [])
 
@@ -336,7 +351,7 @@ export const ChatArea = memo(function ChatArea({
       >
         <div 
           className={cn(
-            "mx-auto space-y-4 sm:space-y-6 px-2 sm:px-4 md:px-6 py-4 sm:py-6",
+            "mx-auto space-y-3 sm:space-y-4 px-2 sm:px-4 md:px-6 py-4 sm:py-6",
             "w-full",
             "min-h-full flex flex-col justify-end"
           )} 
@@ -537,7 +552,7 @@ export const ChatArea = memo(function ChatArea({
                           )}>
                             {/* Message Content - Minimal styling like ChatGPT */}
                             <div className={cn(
-                              "relative group/message transition-all duration-200",
+                              "relative group/message transition-all duration-200 max-w-[700px]",
                               message.role === "user" ? "chat-bubble-user" : "chat-bubble-assistant"
                             )}>
                               {message.imageUrl && (

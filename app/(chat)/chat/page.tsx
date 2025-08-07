@@ -6,6 +6,8 @@ import { ChatFooter } from "@/components/chat/ChatFooter"
 import { ChatLayout } from "@/components/chat/ChatLayout"
 import { PageShell } from "@/components/page-shell"
 import { VoiceInput } from "@/components/chat/tools/VoiceInput"
+import { ProgressDots } from "@/components/chat/ProgressDots"
+import { VoiceOverlay } from "@/components/chat/VoiceOverlay"
 import { WebcamCapture } from "@/components/chat/tools/WebcamCapture"
 import { ScreenShare } from "@/components/chat/tools/ScreenShare"
 import { ROICalculator } from "@/components/chat/tools/ROICalculator"
@@ -63,6 +65,7 @@ function ChatPageContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [input, setInput] = useState("")
   const [showVoiceModal, setShowVoiceModal] = useState(false)
+  const [voiceDraft, setVoiceDraft] = useState<string>("")
   const [showWebcamModal, setShowWebcamModal] = useState(false)
   const [showScreenShareModal, setShowScreenShareModal] = useState(false)
   const [showROICalculatorModal, setShowROICalculatorModal] = useState(false)
@@ -314,6 +317,7 @@ function ChatPageContent() {
         id: Date.now().toString(),
         role: 'assistant',
         content: analysisMessage,
+        createdAt: new Date(),
       }])
       
     } catch (error) {
@@ -322,6 +326,7 @@ function ChatPageContent() {
         id: Date.now().toString(),
         role: 'assistant',
         content: `I apologize, but I encountered an error while analyzing your image "${fileName}". Please try again or contact support if the issue persists.`,
+        createdAt: new Date(),
       }])
     } finally {
       setIsLoading(false)
@@ -365,6 +370,7 @@ function ChatPageContent() {
         id: Date.now().toString(),
         role: 'assistant',
         content: analysisMessage,
+        createdAt: new Date(),
       }]);
     } catch (error) {
       console.error('File upload error:', error);
@@ -372,6 +378,7 @@ function ChatPageContent() {
         id: Date.now().toString(),
         role: 'assistant',
         content: `I apologize, but I encountered an error while analyzing your document "${file.name}". Please try again or contact support if the issue persists.`,
+        createdAt: new Date(),
       }]);
     } finally {
       setIsLoading(false);
@@ -471,6 +478,8 @@ ${result.summary}`
             setShowScreenShareModal={setShowScreenShareModal}
             setShowVideo2AppModal={setShowVideo2AppModal}
             setShowROICalculatorModal={setShowROICalculatorModal}
+            voiceDraft={voiceDraft}
+            onClearVoiceDraft={() => setVoiceDraft("")}
           />
         }
       >
@@ -523,16 +532,7 @@ ${result.summary}`
         </div>
 
         <div className="hidden lg:block fixed right-6 top-28 z-30">
-          <div className="flex flex-col items-center gap-3">
-            {Array.from({ length: 7 }).map((_, idx) => {
-              const activeIndex = (stageConfig[conversationStage as keyof typeof stageConfig]?.order || 1) - 1
-              const isActive = idx === activeIndex
-              const isCompleted = idx < activeIndex
-              return (
-                <div key={idx} className={`w-3 h-3 rounded-full ${isActive ? 'bg-[hsl(var(--accent))]' : isCompleted ? 'bg-muted' : 'bg-border'}`} />
-              )
-            })}
-          </div>
+          <ProgressDots total={7} active={(stageConfig[conversationStage as keyof typeof stageConfig]?.order || 1) - 1} />
         </div>
         {/* Chat Area - Full Width */}
         {error ? (
@@ -608,12 +608,16 @@ ${result.summary}`
           </Sheet>
         </div>
         
-        {/* Modals */}
+        {/* Voice Overlay */}
         {showVoiceModal && (
-          <VoiceInput
-            mode="modal"
-            onClose={() => setShowVoiceModal(false)}
-            onTranscript={handleVoiceTranscript}
+          <VoiceOverlay
+            open
+            onCancel={() => setShowVoiceModal(false)}
+            onAccept={(t) => {
+              setVoiceDraft(t)
+              setInput(t)
+              setShowVoiceModal(false)
+            }}
           />
         )}
         
