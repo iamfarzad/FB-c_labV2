@@ -308,138 +308,6 @@ export const ChatArea = memo(function ChatArea({
     }
   }
 
-  const EmptyState = useMemo(() => (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="text-center py-20 flex flex-col items-center justify-center min-h-[60vh]"
-    >
-      <motion.div 
-        animate={{ 
-          rotate: [0, 5, -5, 0],
-          scale: [1, 1.05, 1]
-        }}
-        transition={{ 
-          duration: 4, 
-          repeat: Infinity, 
-          ease: "easeInOut" 
-        }}
-        className="w-20 h-20 mx-auto mb-8 rounded-full bg-muted/10 border border-border/20 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
-      >
-        <FbcIcon className="w-8 h-8 text-foreground/80" />
-      </motion.div>
-      
-      <motion.h3 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-        className="text-3xl font-bold mb-4 text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text"
-      >
-        Welcome to F.B/c AI
-      </motion.h3>
-      
-      <motion.p 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-        className="text-muted-foreground max-w-lg mx-auto mb-10 leading-relaxed text-lg"
-      >
-        I'm your intelligent AI assistant, ready to help with business analysis, automation strategies, and comprehensive consultation. 
-        Let's start building something amazing together.
-      </motion.p>
-      
-      {/* Enhanced Quick Actions */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full"
-      >
-        {[
-          { 
-            icon: FbcIcon, 
-            title: "Ask about AI automation", 
-            desc: "Get insights on process optimization", 
-            color: "from-accent to-accent/80",
-            action: () => {
-              // Add a sample AI automation question
-              const sampleQuestions = [
-                "How can AI automate my customer service processes?",
-                "What are the best AI tools for workflow automation?",
-                "How do I implement chatbots for my business?",
-                "What processes in my company can benefit from AI automation?"
-              ];
-              const randomQuestion = sampleQuestions[Math.floor(Math.random() * sampleQuestions.length)];
-              // Trigger input with sample question
-              document.querySelector('textarea')?.focus();
-              document.querySelector('textarea')?.setAttribute('placeholder', randomQuestion);
-            }
-          },
-          { 
-            icon: FileText, 
-            title: "Upload a document", 
-            desc: "Analyze files and extract insights", 
-            color: "from-accent to-accent/80",
-            action: () => {
-              // Trigger file upload
-              const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-              fileInput?.click();
-            }
-          },
-          { 
-            icon: TrendingUp, 
-            title: "Business analysis", 
-            desc: "Strategic planning and ROI calculations", 
-            color: "from-accent to-accent/80",
-            action: () => {
-              // Trigger ROI calculator or business analysis
-              const analysisPrompts = [
-                "I need help analyzing my business performance",
-                "Can you help me calculate ROI for a new project?",
-                "I want to optimize my business processes",
-                "Help me create a strategic plan for growth"
-              ];
-              const randomPrompt = analysisPrompts[Math.floor(Math.random() * analysisPrompts.length)];
-              document.querySelector('textarea')?.focus();
-              document.querySelector('textarea')?.setAttribute('placeholder', randomPrompt);
-            }
-          }
-        ].map((action, index) => (
-          <motion.div
-            key={index}
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    onClick={action.action}
-                    className="h-auto min-h-[120px] sm:min-h-[140px] p-4 sm:p-6 w-full flex flex-col items-center gap-3 sm:gap-4 hover:bg-accent/5 transition-all duration-300 border-border/30 rounded-xl group bg-card/50 backdrop-blur-sm hover:shadow-lg"
-                  >
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow`}>
-                      <action.icon className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="text-center space-y-1 flex-1 flex flex-col justify-center">
-                      <div className="font-semibold text-foreground">{action.title}</div>
-                      <div className="text-sm text-muted-foreground leading-relaxed">{action.desc}</div>
-                    </div>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{action.desc}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </motion.div>
-        ))}
-      </motion.div>
-    </motion.div>
-  ), [])
-
   return (
     <div className="flex-1 min-h-0">
       {/* Single scroll container for the entire chat */}
@@ -463,7 +331,7 @@ export const ChatArea = memo(function ChatArea({
           data-testid="messages-container"
         >
           {messages.length === 0 && !isLoading ? (
-            EmptyState
+            null
           ) : (
             <>
               <AnimatePresence>

@@ -350,20 +350,25 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
             disabled={!isConnected}
           />
 
+          <div className="flex items-center gap-3">
+            <Button onClick={handleMicClick} variant={isRecording ? "destructive" : "default"}>
+              {isRecording ? <><MicOff className="h-4 w-4 mr-2"/>Stop</> : <><Mic className="h-4 w-4 mr-2"/>Start</>}
+            </Button>
+            {!isConnected && (
+              <Button onClick={retryConnection} variant="outline" disabled={connectionAttempts >= 3}>
+                Retry Connection
+              </Button>
+            )}
+          </div>
+
           <p className={cn("text-sm text-center", getStatusColor())}>
             {getStatusText()}
           </p>
 
-          {/* Retry button for failed connections */}
-          {!isConnected && connectionAttempts > 0 && connectionAttempts < 3 && (
-            <Button
-              onClick={retryConnection}
-              variant="outline"
-              size="sm"
-              className="text-xs"
-            >
-              Retry Connection
-            </Button>
+          {hasPermission === false && (
+            <div className="text-xs text-muted-foreground text-center">
+              Allow microphone access to start recording. If you denied it, open your browser settings and enable microphone for this site, then reload.
+            </div>
           )}
 
           <VolumeIndicator />
@@ -375,7 +380,6 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
             </div>
           )}
 
-          {/* Debug info */}
           {process.env.NODE_ENV === 'development' && (
             <div className="text-xs text-muted-foreground space-y-1">
               <p>Connected: {isConnected ? 'Yes' : 'No'}</p>
