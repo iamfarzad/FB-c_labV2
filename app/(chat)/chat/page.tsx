@@ -18,8 +18,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ChevronLeft, ChevronRight, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Message } from "@/app/(chat)/chat/types/chat"
-import { LeadProgressIndicator } from "@/components/chat/LeadProgressIndicator"
-import { ConversationStage } from "@/lib/lead-manager"
 import { ErrorHandler, useErrorToast } from "@/components/chat/ErrorHandler"
 
 // Stage configuration for progress display
@@ -69,8 +67,7 @@ function ChatPageContent() {
   const [videoToAppSessions, setVideoToAppSessions] = useState<Map<string, any>>(new Map())
   const [showDemoSidebar, setShowDemoSidebar] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
-  const [conversationStage, setConversationStage] = useState<ConversationStage>(ConversationStage.GREETING)
-  const [leadData, setLeadData] = useState<{name?: string; email?: string; company?: string}>({})
+  // Removed conversation stage and lead tracking
   const [sessionId] = useState(() => Date.now().toString())
   const [error, setError] = useState<Error | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -87,6 +84,17 @@ function ChatPageContent() {
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  useEffect(() => {
+    // Insert a minimal welcome message as the first assistant message
+    if (messages.length === 0) {
+      addMessage({
+        role: "assistant",
+        content: "Welcome! Ask a question, upload a document or image for analysis, or open Voice/Webcam/Screen Share from the toolbar below.",
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const scrollToBottom = () => {
@@ -219,17 +227,7 @@ function ChatPageContent() {
               try {
                 const data = JSON.parse(line.slice(6))
                 
-                // Update conversation stage and lead data if provided
-                if (data.conversationStage) {
-                  setConversationStage(data.conversationStage)
-                }
-                
-                if (data.leadData) {
-                  setLeadData(prev => ({
-                    ...prev,
-                    ...data.leadData
-                  }))
-                }
+                // Removed conversation stage and lead data handling
                 
                 // Append content
                 if (data.content) {
@@ -493,51 +491,6 @@ ${result.summary}`
             onSendMessage={handleSendMessage}
           />
         )}
-        
-        {/* Desktop: Always visible progress indicator */}
-        <div className="hidden lg:block">
-          <LeadProgressIndicator 
-            currentStage={conversationStage}
-            leadData={leadData}
-          />
-        </div>
-        
-        {/* Mobile: Progress button with modal */}
-        <div className="lg:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "fixed z-50",
-                  "top-[calc(80px+env(safe-area-inset-top))] right-4",
-                  "shadow-lg backdrop-blur-sm",
-                  "min-h-[44px] min-w-[44px] px-4 py-2",
-                  "pointer-events-auto", // Ensure it's touchable
-                  "transform-gpu" // GPU acceleration for smooth interactions
-                )}
-              >
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Progress
-              </Button>
-            </SheetTrigger>
-            <SheetContent 
-              side="right" 
-              className={cn(
-                "w-[320px] sm:w-[400px]",
-                "bg-transparent backdrop-blur-md border-transparent" // No color gaussian blur
-              )}
-            >
-              <div className="h-full overflow-y-auto">
-                <LeadProgressIndicator 
-                  currentStage={conversationStage}
-                  leadData={leadData}
-                />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
         
         {/* Modals */}
         {showVoiceModal && (
