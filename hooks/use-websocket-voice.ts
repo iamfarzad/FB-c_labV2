@@ -127,6 +127,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
   }, [initAudioContext]);
 
   // Connect to WebSocket server (only when explicitly called)
+  // If NEXT_PUBLIC_GEMINI_DIRECT === '1', use direct Live API with ephemeral token instead of proxy WS
   const connectWebSocket = useCallback(() => {
     if (reconnectingRef.current) {
       console.log('[useWebSocketVoice] Reconnect already in progress, skipping...')
@@ -154,6 +155,13 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
         console.warn('[useWebSocketVoice] Error cleaning up old WebSocket:', e)
       }
       wsRef.current = null
+    }
+
+    const useDirect = process.env.NEXT_PUBLIC_GEMINI_DIRECT === '1'
+    if (useDirect) {
+      // Direct Gemini path is handled by the startSession step; skip WS proxy creation here.
+      reconnectingRef.current = false
+      return
     }
 
     // Resolve WebSocket URL based on env and runtime to avoid protocol mismatch locally
@@ -341,14 +349,70 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     try {
       setError(null)
       
-      // Connect WebSocket if not connected
+      const useDirect = process.env.NEXT_PUBLIC_GEMINI_DIRECT === '1'
+      if (useDirect) {
+        // Direct Live API session using ephemeral token
+        try {
+          const res = await fetch('/api/gemini/ephemeral-token', { cache: 'no-store' })
+          if (!res.ok) throw new Error(`Token endpoint failed: ${res.status}`)
+          const { token } = await res.json()
+          if (!token) throw new Error('No token returned')
+
+          const { GoogleGenAI, Modality } = await import('@google/genai')
+          const ai = new GoogleGenAI({ apiKey: token })
+          const model = process.env.NEXT_PUBLIC_GEMINI_MODEL || 'gemini-live-2.5-flash-preview-native-audio'
+
+          const responseQueue: any[] = []
+          function onmessage(message: any) {
+            responseQueue.push(message)
+            // Text stream
+            const text = message?.serverContent?.modelTurn?.parts?.[0]?.text
+            if (text) setTranscript(prev => prev + text)
+            // Audio stream
+            const inline = message?.serverContent?.modelTurn?.parts?.find((p: any) => p.inlineData?.data)
+            if (inline?.inlineData?.data) {
+              setAudioQueue(prev => [...prev, { data: inline.inlineData.data, mimeType: 'audio/pcm;rate=24000' }])
+              playNextAudioRef.current()
+            }
+          }
+
+          const session = await (ai as any).live.connect({
+            model,
+            config: {
+              responseModalities: [Modality.AUDIO, Modality.TEXT],
+              inputAudioTranscription: {},
+              speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } } },
+            },
+            callbacks: {
+              onopen: () => {
+                setIsConnected(true)
+                setSession({ connectionId: 'direct', isActive: true })
+              },
+              onmessage,
+              onerror: (e: any) => setError(`Gemini error: ${e?.message || 'unknown'}`),
+              onclose: () => setIsConnected(false),
+            },
+          })
+
+          // Stash the session instance on wsRef to reuse send paths
+          // @ts-ignore
+          wsRef.current = session as unknown as WebSocket
+          setIsProcessing(true)
+          return
+        } catch (e: any) {
+          setError(e?.message || 'Failed to start direct Gemini session')
+          throw e
+        }
+      }
+
+      // Proxy WS path
       if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
         console.log('[useWebSocketVoice] Initiating WebSocket connection via connectWebSocket()...')
         connectWebSocket()
       } else if (wsRef.current.readyState === WebSocket.CONNECTING) {
-          console.log('[useWebSocketVoice] WebSocket is already connecting, waiting for open state.')
+        console.log('[useWebSocketVoice] WebSocket is already connecting, waiting for open state.')
       } else if (wsRef.current.readyState === WebSocket.OPEN) {
-          console.log('[useWebSocketVoice] WebSocket is already open, proceeding with start message.')
+        console.log('[useWebSocketVoice] WebSocket is already open, proceeding with start message.')
       }
 
       // Wait for connection to open with better error handling
