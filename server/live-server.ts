@@ -87,6 +87,8 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
     const sessionBudgets = new Map<string, SessionBudget>();
     // Store Node Buffers for simpler concat usage
     const bufferedAudioChunks = new Map<string, Buffer[]>();
+    // Queue TURN_COMPLETE when it arrives before Gemini session is ready
+    const pendingTurnComplete = new Map<string, boolean>();
 
     // --- Core Logic ---
 
@@ -139,13 +141,7 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } } },
         inputAudioTranscription: {}, // THE MISSING PIECE - tells Gemini to transcribe input audio
         generationConfig: { maxOutputTokens: DEFAULT_PER_REQUEST_LIMIT },
-        // Audio configuration for 16kHz PCM
-        audioConfig: {
-          inputAudioEncoding: 'LINEAR16',
-          inputAudioSampleRateHertz: 16000,
-          outputAudioEncoding: 'LINEAR16',
-          outputAudioSampleRateHertz: 16000,
-        },
+        // Note: audioConfig is not part of LiveConnectConfig types; input/output rates are inferred from payloads
         systemInstruction: {
           parts: [{
             text: `You are Puck, an AI assistant from Future Builders Consulting. You should:
@@ -178,6 +174,11 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
 
     activeSessions.set(connectionId, { ws, session });
     console.log(`[${connectionId}] Active session stored.`);
+    if (pendingTurnComplete.get(connectionId)) {
+      console.log(`[${connectionId}] 🔁 Processing queued TURN_COMPLETE after session start.`)
+      pendingTurnComplete.delete(connectionId)
+      await sendBufferedAudioToGemini(connectionId)
+    }
 
   } catch (error) {
     console.error(`[${connectionId}] Failed to start Gemini session:`, error);
@@ -205,7 +206,7 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
                       type: 'audio', 
                       payload: { 
                         audioData: part.inlineData.data,
-                        mimeType: 'audio/pcm;rate=24000'
+                        mimeType: 'audio/pcm;rate=16000'
                       } 
                     }));
                 }
@@ -232,8 +233,13 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
     async function sendBufferedAudioToGemini(connectionId: string) {
         const client = activeSessions.get(connectionId);
         const audioBuffers = bufferedAudioChunks.get(connectionId);
-        if (!client || !audioBuffers || audioBuffers.length === 0) {
+        if (!audioBuffers || audioBuffers.length === 0) {
             console.log(`[${connectionId}] No buffered audio to send.`);
+            return;
+        }
+        if (!client) {
+            console.log(`[${connectionId}] TURN_COMPLETE received but Gemini session not ready yet. Will send after session starts.`);
+            pendingTurnComplete.set(connectionId, true);
             return;
         }
         const mergedAudio: Buffer = Buffer.concat(audioBuffers as Buffer[]);
@@ -242,7 +248,7 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
         updateSessionBudget(connectionId, estimatedTokens, 0);
 
         console.log(`[${connectionId}] Sending FULL buffered audio to Gemini (${mergedAudio.length} bytes).`);
-        const mergedBase64 = Buffer.from(mergedAudio).toString('base64')
+        const mergedBase64 = (Buffer as any).from(mergedAudio).toString('base64')
         console.log(`[${connectionId}] 🔍 Audio format: PCM, Base64 length: ${mergedBase64.length}`);
         
         try {
@@ -275,10 +281,11 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
             client.session.close();
             if (client.ws.readyState === WebSocket.OPEN) client.ws.close();
             activeSessions.delete(connectionId);
-            sessionBudgets.delete(connectionId);
-            bufferedAudioChunks.delete(connectionId);
-            console.log(`[${connectionId}] Session removed.`);
         }
+        sessionBudgets.delete(connectionId);
+        bufferedAudioChunks.delete(connectionId);
+        pendingTurnComplete.delete(connectionId);
+        console.log(`[${connectionId}] Session removed.`);
     }
 
     wss.on('connection', (ws: WebSocket) => {
@@ -297,6 +304,11 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
                         await handleUserMessage(connectionId, parsedMessage.payload);
                         break;
                     case 'TURN_COMPLETE':
+                        if (!activeSessions.get(connectionId)) {
+                            pendingTurnComplete.set(connectionId, true)
+                            console.log(`[${connectionId}] 🕒 TURN_COMPLETE queued (session not ready).`)
+                            break;
+                        }
                         await sendBufferedAudioToGemini(connectionId);
                         break;
                 }
