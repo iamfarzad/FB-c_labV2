@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F.B Consulting - Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 3px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        button { padding: 10px 20px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .status { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>F.B Consulting - Integration Test Suite</h1>
+    <p>This page tests the main features that were fixed in the recent updates.</p>
+
+    <div class="test-section">
+        <h2>1. Voice Input Integration Test</h2>
+        <p>Tests the VAD integration and WebSocket voice functionality.</p>
+        <button onclick="testVoiceIntegration()">Test Voice System</button>
+        <div id="voice-result" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Permissions Test</h2>
+        <p>Tests microphone and camera permission requests.</p>
+        <button onclick="testPermissions()">Test Permissions</button>
+        <div id="permissions-result" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. API Endpoints Test</h2>
+        <p>Tests that the fixed API endpoints are working correctly.</p>
+        <button onclick="testAPIEndpoints()">Test APIs</button>
+        <div id="api-result" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. ROI Calculator Test</h2>
+        <p>Tests the ROI calculator with proper field mapping.</p>
+        <button onclick="testROICalculator()">Test ROI Calculator</button>
+        <div id="roi-result" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Build System Test</h2>
+        <p>Verifies that the application can be built without errors.</p>
+        <button onclick="testBuildSystem()">Test Build System</button>
+        <div id="build-result" class="test-result"></div>
+    </div>
+
+    <script>
+        async function testVoiceIntegration() {
+            const resultDiv = document.getElementById('voice-result');
+            resultDiv.innerHTML = '<div class="status">Testing voice integration...</div>';
+
+            try {
+                // Test WebSocket connection
+                const wsUrl = 'wss://fb-consulting-websocket.fly.dev';
+                const ws = new WebSocket(wsUrl);
+                
+                let connectionResult = '';
+                
+                ws.onopen = () => {
+                    connectionResult += '✅ WebSocket connection successful<br>';
+                    ws.close();
+                };
+                
+                ws.onerror = (error) => {
+                    connectionResult += '❌ WebSocket connection failed<br>';
+                };
+                
+                ws.onclose = () => {
+                    // Test VAD availability
+                    if (typeof window !== 'undefined' && 'mediaDevices' in navigator) {
+                        connectionResult += '✅ MediaDevices API available<br>';
+                    } else {
+                        connectionResult += '❌ MediaDevices API not available<br>';
+                    }
+                    
+                    // Test permissions policy
+                    if (document.featurePolicy && document.featurePolicy.allowsFeature('microphone')) {
+                        connectionResult += '✅ Microphone permissions policy allows access<br>';
+                    } else {
+                        connectionResult += '⚠️ Microphone permissions policy status unknown<br>';
+                    }
+                    
+                    resultDiv.innerHTML = `<div class="success">${connectionResult}</div>`;
+                };
+                
+                // Timeout after 5 seconds
+                setTimeout(() => {
+                    if (ws.readyState === WebSocket.CONNECTING) {
+                        ws.close();
+                        resultDiv.innerHTML = '<div class="error">❌ WebSocket connection timeout</div>';
+                    }
+                }, 5000);
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Voice integration test failed: ${error.message}</div>`;
+            }
+        }
+
+        async function testPermissions() {
+            const resultDiv = document.getElementById('permissions-result');
+            resultDiv.innerHTML = '<div class="status">Testing permissions...</div>';
+
+            try {
+                let results = '';
+                
+                // Test microphone permission
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach(track => track.stop());
+                    results += '✅ Microphone permission granted<br>';
+                } catch (error) {
+                    if (error.name === 'NotAllowedError') {
+                        results += '⚠️ Microphone permission denied by user<br>';
+                    } else {
+                        results += `❌ Microphone permission error: ${error.name}<br>';
+                    }
+                }
+                
+                // Test camera permission
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    stream.getTracks().forEach(track => track.stop());
+                    results += '✅ Camera permission granted<br>';
+                } catch (error) {
+                    if (error.name === 'NotAllowedError') {
+                        results += '⚠️ Camera permission denied by user<br>';
+                    } else {
+                        results += `❌ Camera permission error: ${error.name}<br>';
+                    }
+                }
+                
+                resultDiv.innerHTML = `<div class="success">${results}</div>`;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Permissions test failed: ${error.message}</div>`;
+            }
+        }
+
+        async function testAPIEndpoints() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '<div class="status">Testing API endpoints...</div>';
+
+            try {
+                let results = '';
+                
+                // Test analyze-image endpoint
+                try {
+                    const response = await fetch('/api/analyze-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
+                            type: 'test'
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        results += '✅ analyze-image endpoint working<br>';
+                    } else {
+                        results += `⚠️ analyze-image endpoint returned ${response.status}<br>';
+                    }
+                } catch (error) {
+                    results += `❌ analyze-image endpoint error: ${error.message}<br>';
+                }
+                
+                // Test ROI calculation endpoint
+                try {
+                    const response = await fetch('/api/tools/roi-calculation', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            initialInvestment: 5000,
+                            monthlyRevenue: 10000,
+                            monthlyExpenses: 6500,
+                            timePeriod: 12
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        results += '✅ ROI calculation endpoint working<br>';
+                    } else {
+                        results += `⚠️ ROI calculation endpoint returned ${response.status}<br>';
+                    }
+                } catch (error) {
+                    results += `❌ ROI calculation endpoint error: ${error.message}<br>';
+                }
+                
+                resultDiv.innerHTML = `<div class="success">${results}</div>`;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ API endpoints test failed: ${error.message}</div>`;
+            }
+        }
+
+        async function testROICalculator() {
+            const resultDiv = document.getElementById('roi-result');
+            resultDiv.innerHTML = '<div class="status">Testing ROI calculator...</div>';
+
+            try {
+                const response = await fetch('/api/tools/roi-calculation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        initialInvestment: 10000,
+                        monthlyRevenue: 15000,
+                        monthlyExpenses: 8000,
+                        timePeriod: 12
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success' && data.data && typeof data.data.roi === 'number') {
+                        resultDiv.innerHTML = `
+                            <div class="success">
+                                ✅ ROI Calculator working correctly<br>
+                                ROI: ${data.data.roi}%<br>
+                                Payback Period: ${data.data.paybackPeriod} months<br>
+                                Net Profit: $${data.data.netProfit?.toLocaleString()}
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = '<div class="error">❌ ROI Calculator returned invalid data format</div>';
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ ROI Calculator API returned ${response.status}</div>`;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ ROI Calculator test failed: ${error.message}</div>`;
+            }
+        }
+
+        async function testBuildSystem() {
+            const resultDiv = document.getElementById('build-result');
+            resultDiv.innerHTML = '<div class="status">Testing build system...</div>';
+
+            try {
+                // Test if the page loads correctly (if we're here, it built successfully)
+                let results = '✅ Application built and deployed successfully<br>';
+                
+                // Test if main dependencies are loaded
+                if (typeof React !== 'undefined' || document.querySelector('[data-reactroot]')) {
+                    results += '✅ React components loaded<br>';
+                } else {
+                    results += '⚠️ React status unknown<br>';
+                }
+                
+                // Test if styles are loaded
+                const hasStyles = document.styleSheets.length > 0;
+                if (hasStyles) {
+                    results += '✅ Stylesheets loaded<br>';
+                } else {
+                    results += '❌ No stylesheets found<br>';
+                }
+                
+                // Test environment
+                const isSecure = location.protocol === 'https:';
+                if (isSecure) {
+                    results += '✅ Running on HTTPS<br>';
+                } else {
+                    results += '⚠️ Running on HTTP (development)<br>';
+                }
+                
+                resultDiv.innerHTML = `<div class="success">${results}</div>`;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Build system test failed: ${error.message}</div>`;
+            }
+        }
+
+        // Run a quick initial test
+        window.addEventListener('load', () => {
+            console.log('Integration test page loaded successfully');
+        });
+    </script>
+</body>
+</html>

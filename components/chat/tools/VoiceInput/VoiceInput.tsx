@@ -17,10 +17,42 @@ interface VoiceInputProps {
   onTranscript?: (transcript: string) => void;
 }
 
+// Request microphone permissions upfront
+const requestMicrophonePermission = async (): Promise<boolean> => {
+  try {
+    // Check if permissions API is available
+    if ('permissions' in navigator) {
+      const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+      if (permission.state === 'granted') {
+        return true;
+      }
+    }
+
+    // Try to get user media to trigger permission request
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      audio: {
+        channelCount: 1,
+        sampleRate: { ideal: 16000 },
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      } 
+    });
+    
+    // Stop the stream immediately - we just wanted to check permissions
+    stream.getTracks().forEach(track => track.stop());
+    return true;
+  } catch (error) {
+    console.error('Microphone permission denied or unavailable:', error);
+    return false;
+  }
+};
+
 export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInputProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const hasStartedRef = useRef(false);
 
   const {
@@ -45,23 +77,41 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
     onTurnComplete 
   });
 
-  // Initialize WebSocket connection on mount
+  // Request permissions and initialize WebSocket connection on mount
   useEffect(() => {
-    if (!hasStartedRef.current) {
+    const initializeVoiceInput = async () => {
+      if (hasStartedRef.current) return;
       hasStartedRef.current = true;
+
+      console.log('[VoiceInput] Requesting microphone permission...');
+      const permissionGranted = await requestMicrophonePermission();
+      setHasPermission(permissionGranted);
+
+      if (!permissionGranted) {
+        toast({ 
+          title: "Microphone Access Required", 
+          description: "Please allow microphone access to use voice input. Check your browser settings and reload the page.", 
+          variant: "destructive" 
+        });
+        return;
+      }
+
       console.log('[VoiceInput] Initializing WebSocket connection...');
-      startSession().then(() => {
+      try {
+        await startSession();
         console.log('[VoiceInput] WebSocket session started');
         setIsInitialized(true);
-      }).catch((error) => {
+      } catch (error) {
         console.error('[VoiceInput] Failed to start WebSocket session:', error);
         toast({ 
           title: "Connection Error", 
           description: "Failed to connect to voice server. Please try again.", 
           variant: "destructive" 
         });
-      });
-    }
+      }
+    };
+
+    initializeVoiceInput();
 
     // Cleanup on unmount
     return () => {
@@ -93,8 +143,17 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
   }, [transcript, onTranscript]);
 
   const handleMicClick = useCallback(async () => {
-    console.log('[VoiceInput] Mic button clicked. Recording:', isRecording, 'Connected:', isConnected);
+    console.log('[VoiceInput] Mic button clicked. Recording:', isRecording, 'Connected:', isConnected, 'Permission:', hasPermission);
     
+    if (hasPermission === false) {
+      toast({ 
+        title: "Microphone Access Denied", 
+        description: "Please allow microphone access in your browser settings and reload the page.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     if (isRecording) {
       console.log('[VoiceInput] Stopping recording...');
       stopRecording();
@@ -133,9 +192,11 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
         });
       }
     }
-  }, [isRecording, isConnected, startRecording, stopRecording, toast]);
+  }, [isRecording, isConnected, hasPermission, startRecording, stopRecording, toast]);
 
   const getStatusText = () => {
+    if (hasPermission === false) return "Microphone access denied";
+    if (hasPermission === null) return "Requesting microphone access...";
     if (!isConnected) return "Connecting to server...";
     if (isRecording) return "Listening... Speak now";
     if (isProcessing) return "Processing your speech...";
@@ -144,6 +205,8 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
   };
 
   const getStatusColor = () => {
+    if (hasPermission === false) return "text-red-500";
+    if (hasPermission === null) return "text-yellow-500";
     if (!isConnected) return "text-yellow-500";
     if (isRecording) return "text-red-500";
     if (isProcessing) return "text-blue-500";
@@ -152,6 +215,7 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
   };
 
   const getOrbState = () => {
+    if (hasPermission === false) return 'idle';
     if (!isConnected) return 'idle';
     if (isRecording) return 'listening';
     if (isProcessing) return 'thinking';

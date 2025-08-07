@@ -52,20 +52,42 @@ export function useVoiceRecorder({
         await context.resume();
       }
 
-      // Get microphone stream
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 1,
-          sampleRate: { ideal: sampleRate },
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
+      // Get microphone stream with better error handling
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            channelCount: 1,
+            sampleRate: { ideal: sampleRate },
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          }
+        });
+        mediaStreamRef.current = stream;
+      } catch (mediaError) {
+        console.error('Failed to get user media:', mediaError);
+        let errorMessage = 'Microphone access failed';
+        
+        if (mediaError instanceof Error) {
+          if (mediaError.name === 'NotAllowedError' || mediaError.name === 'PermissionDeniedError') {
+            errorMessage = 'Microphone access denied. Please allow microphone access in your browser settings.';
+          } else if (mediaError.name === 'NotFoundError' || mediaError.name === 'DevicesNotFoundError') {
+            errorMessage = 'No microphone found. Please connect a microphone and try again.';
+          } else if (mediaError.name === 'NotReadableError' || mediaError.name === 'TrackStartError') {
+            errorMessage = 'Microphone is already in use by another application.';
+          } else if (mediaError.name === 'OverconstrainedError' || mediaError.name === 'ConstraintNotSatisfiedError') {
+            errorMessage = 'Microphone does not support the required audio settings.';
+          } else {
+            errorMessage = `Microphone error: ${mediaError.message}`;
+          }
         }
-      });
-      mediaStreamRef.current = stream;
+        
+        setState(prev => ({ ...prev, isInitializing: false, error: errorMessage, hasPermission: false }));
+        return false;
+      }
 
       // Create audio processing chain
-      const source = context.createMediaStreamSource(stream);
+      const source = context.createMediaStreamSource(mediaStreamRef.current!);
       const analyser = context.createAnalyser();
       const processor = context.createScriptProcessor(chunkSize, 1, 1);
       
@@ -80,7 +102,7 @@ export function useVoiceRecorder({
       setState(prev => ({ ...prev, isInitializing: false, hasPermission: true, error: null }));
       return true;
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Microphone access failed';
+      const errorMsg = error instanceof Error ? error.message : 'Audio initialization failed';
       setState(prev => ({ ...prev, isInitializing: false, error: errorMsg, hasPermission: false }));
       console.error('Failed to initialize audio context:', error);
       return false;

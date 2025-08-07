@@ -284,13 +284,111 @@ function ChatPageContent() {
     handleSendMessage("I've captured an image from my webcam. Can you analyze it?", imageData)
   }
 
-  const handleImageUpload = (imageData: string, fileName: string) => {
-    handleSendMessage(`I've uploaded an image: ${fileName}. Can you analyze it?`, imageData)
+  const handleImageUpload = async (imageData: string, fileName: string) => {
+    try {
+      setIsLoading(true)
+      
+      // Call the analyze-image API
+      const response = await fetch('/api/analyze-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: imageData,
+          type: 'upload' // Specify this is an uploaded image
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to analyze image')
+      }
+      
+      const result = await response.json()
+      
+      // Add the analysis as a message
+      const analysisMessage = `I've analyzed your image "${fileName}". Here's what I found:\n\n${result.analysis || 'Analysis completed successfully.'}`
+      
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: analysisMessage,
+      }])
+      
+    } catch (error) {
+      console.error('Image analysis error:', error)
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `I apologize, but I encountered an error while analyzing your image "${fileName}". Please try again or contact support if the issue persists.`,
+      }])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleFileUpload = (file: File) => {
-    // Handle file upload logic here
-    console.log("File uploaded:", file.name)
+  const handleFileUpload = async (file: File) => {
+    try {
+      // Show loading state
+      setIsLoading(true)
+      
+      // Convert file to base64
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        const fileContent = e.target?.result as string
+        
+        try {
+          // Call the analyze-document API
+          const response = await fetch('/api/analyze-document', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              document: fileContent,
+              fileName: file.name,
+              mimeType: file.type
+            })
+          })
+          
+          if (!response.ok) {
+            throw new Error('Failed to analyze document')
+          }
+          
+          const result = await response.json()
+          
+          // Add the analysis as a message
+          const analysisMessage = `I've analyzed your document "${file.name}". Here's what I found:\n\n${result.analysis || 'Analysis completed successfully.'}`
+          
+          setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: analysisMessage,
+          }])
+          
+        } catch (error) {
+          console.error('Document analysis error:', error)
+          setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: `I apologize, but I encountered an error while analyzing your document "${file.name}". Please try again or contact support if the issue persists.`,
+          }])
+        } finally {
+          setIsLoading(false)
+        }
+      }
+      
+      reader.onerror = () => {
+        console.error('Error reading file:', file.name)
+        setIsLoading(false)
+      }
+      
+      reader.readAsDataURL(file)
+      
+    } catch (error) {
+      console.error('File upload error:', error)
+      setIsLoading(false)
+    }
   }
 
   const handleROICalculation = (result: ROICalculationResult) => {

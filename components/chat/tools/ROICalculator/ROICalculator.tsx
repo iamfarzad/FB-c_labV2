@@ -25,12 +25,24 @@ export function ROICalculator({
   const { toast } = useToast()
   const [currentStep, setCurrentStep] = useState<WizardStep>("company-info")
   const [formData, setFormData] = useState({
-    currentCosts: 5000,
-    projectedSavings: 3500,
-    implementationCost: 500,
-    timeFrameMonths: 12
+    initialInvestment: 5000,
+    monthlyRevenue: 10000,
+    monthlyExpenses: 6500,
+    timePeriod: 12
   })
-  const [result, setResult] = useState<ROICalculationResult | null>(null)
+  const [companyInfo, setCompanyInfo] = useState({
+    companySize: "",
+    industry: "",
+    useCase: ""
+  })
+  const [result, setResult] = useState<any | null>(null) // Changed to any since API response doesn't match ROICalculationResult
+
+  const fieldLabels: Record<string, string> = {
+    initialInvestment: "Initial Investment ($)",
+    monthlyRevenue: "Monthly Revenue ($)",
+    monthlyExpenses: "Monthly Expenses ($)",
+    timePeriod: "Time Period (months)"
+  }
 
   const handleCalculate = async () => {
     try {
@@ -41,55 +53,163 @@ export function ROICalculator({
       });
       if (!response.ok) throw new Error("Calculation failed");
       const data = await response.json();
-      setResult(data.data);
+      setResult(data.data); // API returns data in data field
       setCurrentStep("results");
-      toast({ title: "Calculation Complete" });
+      toast({ title: "ROI Calculation Complete", description: "Your ROI analysis is ready!" });
     } catch (error) {
-      toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
+      console.error('ROI calculation error:', error);
+      toast({ 
+        title: "Calculation Error", 
+        description: (error as Error).message || "Failed to calculate ROI", 
+        variant: "destructive" 
+      });
     }
   }
 
   const renderStep = () => {
     switch (currentStep) {
+      case "company-info":
+        return (
+          <div className="space-y-4">
+            <h3 className="font-semibold">Company Information</h3>
+            <div>
+              <Label htmlFor="companySize">Company Size</Label>
+              <Select value={companyInfo.companySize} onValueChange={(value) => setCompanyInfo(prev => ({ ...prev, companySize: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select company size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="startup">Startup (1-10 employees)</SelectItem>
+                  <SelectItem value="small">Small (11-50 employees)</SelectItem>
+                  <SelectItem value="medium">Medium (51-200 employees)</SelectItem>
+                  <SelectItem value="large">Large (200+ employees)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="industry">Industry</Label>
+              <Select value={companyInfo.industry} onValueChange={(value) => setCompanyInfo(prev => ({ ...prev, industry: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="technology">Technology</SelectItem>
+                  <SelectItem value="finance">Finance</SelectItem>
+                  <SelectItem value="healthcare">Healthcare</SelectItem>
+                  <SelectItem value="retail">Retail</SelectItem>
+                  <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="useCase">Primary Use Case</Label>
+              <Input
+                id="useCase"
+                value={companyInfo.useCase}
+                onChange={(e) => setCompanyInfo(prev => ({ ...prev, useCase: e.target.value }))}
+                placeholder="e.g., Process automation, Customer service, Data analysis"
+              />
+            </div>
+            <Button 
+              onClick={() => setCurrentStep("metrics")} 
+              className="w-full"
+              disabled={!companyInfo.companySize || !companyInfo.industry}
+            >
+              Next: Enter Metrics
+            </Button>
+          </div>
+        )
       case "metrics":
         return (
           <div className="space-y-4">
-            <h3 className="font-semibold">Enter Metrics</h3>
+            <h3 className="font-semibold">Financial Metrics</h3>
+            <p className="text-sm text-muted-foreground">Enter your business metrics to calculate ROI</p>
             {Object.entries(formData).map(([key, value]) => (
               <div key={key}>
-                <Label htmlFor={key}>{key.replace(/([A-Z])/g, ' $1').trim()}</Label>
+                <Label htmlFor={key}>{fieldLabels[key] || key}</Label>
                 <Input
                   id={key}
                   type="number"
                   value={value}
                   onChange={(e) => setFormData(prev => ({ ...prev, [key]: Number(e.target.value) }))}
+                  min="0"
+                  step={key === 'timePeriod' ? '1' : '0.01'}
                 />
               </div>
             ))}
-            <Button onClick={handleCalculate} className="w-full">Calculate ROI</Button>
+            <Button onClick={handleCalculate} className="w-full" disabled={Object.values(formData).some(v => v <= 0)}>
+              Calculate ROI
+            </Button>
           </div>
         )
       case "results":
         return (
           <div className="space-y-4">
-            <h3 className="font-semibold">Results</h3>
-            {result && Object.entries(result).map(([key, value]) => (
-              <div key={key} className="flex justify-between">
-                <span>{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
-                <strong>{typeof value === 'number' ? value.toFixed(2) : value}</strong>
+            <h3 className="font-semibold">ROI Analysis Results</h3>
+            {result && (
+              <div className="space-y-3">
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">{result.roi}%</div>
+                        <div className="text-sm text-muted-foreground">ROI</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">{result.paybackPeriod}</div>
+                        <div className="text-sm text-muted-foreground">Payback (months)</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Monthly Profit:</span>
+                    <strong>${result.monthlyProfit?.toLocaleString()}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Total Revenue ({result.timePeriod} months):</span>
+                    <strong>${result.totalRevenue?.toLocaleString()}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Total Expenses:</span>
+                    <strong>${result.totalExpenses?.toLocaleString()}</strong>
+                  </div>
+                  <div className="flex justify-between border-t pt-2">
+                    <span>Net Profit:</span>
+                    <strong className={result.netProfit > 0 ? 'text-green-600' : 'text-red-600'}>
+                      ${result.netProfit?.toLocaleString()}
+                    </strong>
+                  </div>
+                </div>
               </div>
-            ))}
-            <Button onClick={() => onComplete?.(result!)} className="w-full">Complete</Button>
+            )}
+            <Button 
+              onClick={() => {
+                // Create a combined result with company info and calculations
+                const combinedResult = {
+                  ...companyInfo,
+                  ...result,
+                  // Map to expected interface fields for backward compatibility
+                  estimatedROI: result.roi,
+                  currentProcessTime: 0, // Not applicable in this calculation
+                  currentCost: result.monthlyExpenses,
+                  automationPotential: 0, // Not applicable
+                  timeSavings: 0, // Not applicable
+                  costSavings: result.netProfit
+                }
+                onComplete?.(combinedResult)
+              }} 
+              className="w-full"
+            >
+              Complete Analysis
+            </Button>
           </div>
         )
-      default: // company-info and fallback
-        return (
-          <div className="space-y-4">
-            <h3 className="font-semibold">Company Info</h3>
-            <p>This step is for collecting company information.</p>
-            <Button onClick={() => setCurrentStep("metrics")} className="w-full">Next</Button>
-          </div>
-        )
+      default:
+        return null
     }
   }
 

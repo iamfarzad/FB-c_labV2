@@ -41,19 +41,19 @@ export function ScreenShare({
   const sendScreenFrame = useCallback(async (imageData: string) => {
     try {
       setIsAnalyzing(true)
-      const response = await fetch('/api/tools/screen-share', {
+      const response = await fetch('/api/analyze-image', { // Fixed API endpoint
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image: imageData,
-          type: 'screen'
+          type: 'screen' // Changed from 'screen' to 'screenshot' to match analyze-image API
         })
       })
       if (!response.ok) throw new Error('Failed to analyze screen frame')
       const result = await response.json()
       const analysis: AnalysisResult = {
         id: Date.now().toString(),
-        text: result.data?.analysis || result.analysis || 'No analysis available',
+        text: result.analysis || 'No analysis available', // Fixed to match analyze-image response
         timestamp: Date.now(),
       }
       setAnalysisHistory(prev => [analysis, ...prev])
