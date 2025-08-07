@@ -74,7 +74,14 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
       const nextAudio = audioQueue[0]
       setAudioQueue(prev => prev.slice(1))
       
-      playAudioRef.current(nextAudio as unknown as string, 'audio/wav') 
+      // Handle both string (base64) and object formats
+      if (typeof nextAudio === 'string') {
+        // Legacy format - assume PCM at 24kHz
+        playAudioRef.current(nextAudio, 'audio/pcm;rate=24000')
+      } else if (nextAudio && typeof nextAudio === 'object' && 'data' in nextAudio) {
+        // New format with mimeType
+        playAudioRef.current((nextAudio as any).data, (nextAudio as any).mimeType || 'audio/pcm;rate=24000')
+      }
     }
   }, [audioQueue]) // playAudioRef.current is stable, so not a dependency
 
@@ -90,43 +97,59 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     try {
       isPlayingRef.current = true
 
-      // Fix: Properly decode base64 audio data
-      let audioData: ArrayBuffer
+      // Convert base64 to raw bytes
+      let bytes: Uint8Array
       if (typeof base64Audio === 'string') {
         try {
-          // Convert base64 string to ArrayBuffer
+          // Convert base64 string to Uint8Array
           const binaryString = atob(base64Audio)
-          const bytes = new Uint8Array(binaryString.length)
+          bytes = new Uint8Array(binaryString.length)
           for (let i = 0; i < binaryString.length; i++) {
             bytes[i] = binaryString.charCodeAt(i)
           }
-          audioData = bytes.buffer
         } catch (error) {
           console.error('❌ Invalid base64 audio data:', error)
           throw new Error('Failed to decode base64 audio data')
         }
       } else {
-        // If it's already an ArrayBuffer, use it directly
-        audioData = base64Audio as unknown as ArrayBuffer
+        // If it's already an ArrayBuffer, convert to Uint8Array
+        bytes = new Uint8Array(base64Audio as unknown as ArrayBuffer)
       }
-      const audioBuffer = await audioContextRef.current?.decodeAudioData(audioData) as AudioBuffer
 
-      const source = audioContextRef.current?.createBufferSource()
-      if (source && audioContextRef.current) {
-        source.buffer = audioBuffer
-        source.connect(audioContextRef.current.destination)
-        source.onended = () => {
-          isPlayingRef.current = false
-          playNextAudioRef.current() // Use the stable ref
-        }
-        source.start(0)
-      } else {
-        throw new Error('AudioBufferSourceNode not created')
+      // Convert 16-bit PCM to Float32Array (following Google's implementation)
+      const float32 = new Float32Array(bytes.length / 2)
+      const dataView = new DataView(bytes.buffer)
+      for (let i = 0; i < bytes.length; i += 2) {
+        // Read 16-bit little-endian PCM and normalize to [-1, 1]
+        float32[i / 2] = dataView.getInt16(i, true) / 32768
       }
+
+      // Create AudioBuffer manually from PCM data
+      // Determine sample rate from mimeType or use default
+      let sampleRate = 24000 // Default for Gemini
+      if (mimeType?.includes('rate=16000')) {
+        sampleRate = 16000
+      } else if (mimeType?.includes('rate=24000')) {
+        sampleRate = 24000
+      }
+
+      const audioBuffer = audioContextRef.current!.createBuffer(1, float32.length, sampleRate)
+      audioBuffer.getChannelData(0).set(float32)
+
+      // Play the audio buffer
+      const source = audioContextRef.current!.createBufferSource()
+      source.buffer = audioBuffer
+      source.connect(audioContextRef.current!.destination)
+      source.onended = () => {
+        isPlayingRef.current = false
+        playNextAudioRef.current() // Play next audio in queue
+      }
+      source.start(0)
+      console.log('[useWebSocketVoice] Playing PCM audio:', float32.length, 'samples at', sampleRate, 'Hz')
     } catch (error) {
-      console.error('❌ Error playing audio:', error)
+      console.error('❌ Error playing PCM audio:', error)
       isPlayingRef.current = false
-      playNextAudioRef.current() // Use the stable ref
+      playNextAudioRef.current() // Try next audio in queue
     }
   }, [initAudioContext, playNextAudioRef]) // Add playNextAudioRef as dependency to ensure latest version
 
@@ -224,13 +247,13 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
               const text = data.payload.serverContent.modelTurn.parts[0].text;
               setTranscript(prev => prev + text);
             }
-            // Handle audio part of the response
+            // Handle audio part of the response - treat as PCM, not MPEG
             if (data.payload?.serverContent?.modelTurn?.inlineData?.data) {
               const audioBase64 = data.payload.serverContent.modelTurn.inlineData.data;
-              const audioBlob = new Blob([Buffer.from(audioBase64, 'base64')], { type: 'audio/mpeg' });
-              const audioUrl = URL.createObjectURL(audioBlob);
-              const audio = new Audio(audioUrl);
-              audio.play();
+              // Queue the PCM audio for playback using the same queue as 'audio' messages
+              setAudioQueue(prev => [...prev, audioBase64])
+              playNextAudioRef.current()
+              console.log('[useWebSocketVoice] Received Gemini audio response (PCM), queued for playback')
             }
             if (data.payload?.serverContent?.turnComplete) {
                 if (onTurnComplete) {
@@ -246,7 +269,11 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
 
           case 'audio':
             if (data.payload.audioData) {
-              setAudioQueue(prev => [...prev, data.payload.audioData])
+              // Store both audio data and mimeType in queue
+              setAudioQueue(prev => [...prev, { 
+                data: data.payload.audioData, 
+                mimeType: data.payload.mimeType || 'audio/pcm;rate=24000' 
+              }])
               playNextAudioRef.current() 
               console.log('[useWebSocketVoice] Received audio from Gemini, queued for playback.', data.payload.audioData.length, 'bytes')
             }

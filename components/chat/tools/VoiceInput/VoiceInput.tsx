@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Mic, MicOff, X, Volume2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { FbcVoiceOrb } from './FbcVoiceOrb';
 
 interface VoiceInputProps {
   onClose: () => void;
@@ -84,6 +85,14 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
     return "text-muted-foreground";
   };
 
+  const getOrbState = () => {
+    if (!isConnected) return 'idle';
+    if (isRecording) return 'listening';
+    if (isProcessing) return 'thinking';
+    if (transcript) return 'talking';
+    return 'idle';
+  };
+
   if (mode === 'card') {
     return (
       <Card className="w-full max-w-md mx-auto">
@@ -104,19 +113,18 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
           </div>
 
           <div className="flex flex-col items-center space-y-4">
-            <Button
+            <button
               onClick={handleMicClick}
-              size="lg"
               disabled={!isConnected}
-              className={cn(
-                "w-16 h-16 rounded-full transition-all duration-200",
-                isRecording 
-                  ? "bg-red-500 hover:bg-red-600 shadow-lg scale-105" 
-                  : "bg-blue-500 hover:bg-blue-600"
-              )}
+              className="relative w-20 h-20 transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={isRecording ? "Stop recording" : "Start recording"}
             >
-              {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
-            </Button>
+              <FbcVoiceOrb 
+                className="w-full h-full"
+                state={getOrbState()}
+                isRecording={isRecording}
+              />
+            </button>
 
             <p className={cn("text-xs text-center", getStatusColor())}>
               {getStatusText()}
@@ -150,19 +158,18 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
         </div>
 
         <div className="flex flex-col items-center space-y-6">
-          <Button
+          <button
             onClick={handleMicClick}
-            size="lg"
             disabled={!isConnected}
-            className={cn(
-              "w-20 h-20 rounded-full transition-all duration-200",
-              isRecording 
-                ? "bg-red-500 hover:bg-red-600 shadow-lg scale-105" 
-                : "bg-blue-500 hover:bg-blue-600"
-            )}
+            className="relative w-32 h-32 transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label={isRecording ? "Stop recording" : "Start recording"}
           >
-            {isRecording ? <MicOff size={32} /> : <Mic size={32} />}
-          </Button>
+            <FbcVoiceOrb 
+              className="w-full h-full"
+              state={getOrbState()}
+              isRecording={isRecording}
+            />
+          </button>
 
           <p className={cn("text-sm text-center", getStatusColor())}>
             {getStatusText()}

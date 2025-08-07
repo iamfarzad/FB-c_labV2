@@ -1,8 +1,46 @@
 # Changelog
 
+## [2025-01-22] - Voice UI Enhancement with F.B/c Orb
+
+### Added
+- **FbcVoiceOrb Component**: Custom animated orb using inverted F.B/c logo design
+  - Different animation states for AI activities:
+    - `idle`: Default state with subtle animations
+    - `listening`: Rotating arc with pulsing core (red)
+    - `thinking`: Multiple arcs with complex animations (blue)
+    - `talking`: Sound wave effects with pulsing (green)
+    - `browsing`: Progressive arc animation (purple)
+  - Inverted gradient design for modern look
+  - Dynamic color transitions based on state
+  - Smooth animations using Framer Motion
+
+### Changed
+- **VoiceInput Component**: Replaced simple button with FbcVoiceOrb
+  - Integrated custom orb for both card and modal modes
+  - Better visual feedback for AI states
+  - More engaging and interactive design
+  - Maintains compact form factor
+
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+### Fixed - 2025-08-07
+- **🎯 CRITICAL FIX**: Fixed PCM audio decoding in WebSocket voice functionality
+  - Replaced incorrect `decodeAudioData` usage with manual PCM to Float32Array conversion
+  - Now properly handles 16-bit little-endian PCM audio from Gemini Live API
+  - Audio playback now works correctly with both 16kHz and 24kHz sample rates
+- **🔊 Fixed audio response handling**: Removed incorrect audio/mpeg MIME type
+  - All Gemini audio responses are now correctly treated as PCM, not MPEG
+  - Unified audio queue handling for both 'audio' and 'gemini_response' messages
+- **🎤 Improved VAD (Voice Activity Detection)**:
+  - Lowered voice detection threshold from 0.01 to 0.005 for better sensitivity
+  - Added comprehensive logging for VAD state debugging
+  - Fixed TURN_COMPLETE signal triggering after silence detection
+- **📝 Added debugging improvements**:
+  - Enhanced logging throughout the voice pipeline
+  - Added volume level logging for VAD debugging
+  - Better error messages for audio playback failures
 
 ### Secure WebSocket Implementation - 2025-01-15
 

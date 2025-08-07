@@ -135,6 +135,7 @@
       config: {
         responseModalities: [Modality.AUDIO, Modality.TEXT],
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } } },
+        inputAudioTranscription: {}, // THE MISSING PIECE - tells Gemini to transcribe input audio
         generationConfig: { maxOutputTokens: DEFAULT_PER_REQUEST_LIMIT },
         systemInstruction: {
           parts: [{
@@ -143,25 +144,24 @@
             - Be conversational, friendly, and helpful
             - Keep responses concise but informative
             - Always acknowledge what the user said before providing your response
-            - Speak clearly and naturally when generating audio responses`
+            - Speak clearly and naturally in your audio responses`
           }]
         },
       },
       callbacks: {
         onopen: () => {
-          console.log(`[${connectionId}] 🚀 Gemini session opened successfully`);
+          console.log(`[${connectionId}] Gemini session opened.`);
           ws.send(JSON.stringify({ type: 'session_started', payload: { connectionId } }));
         },
         onmessage: (message: LiveServerMessage) => {
-          console.log(`[${connectionId}] 📨 Raw Gemini message received:`, JSON.stringify(message, null, 2));
           handleGeminiMessage(connectionId, ws, message);
         },
         onerror: (e: ErrorEvent) => {
-          console.error(`[${connectionId}] 🚨 Gemini session error:`, e);
+          console.error(`[${connectionId}] Gemini session error:`, e.message);
           ws.send(JSON.stringify({ type: 'error', payload: { message: `Gemini Error: ${e.message}` } }));
         },
-        onclose: (e: CloseEvent) => {
-          console.log(`[${connectionId}] 🔚 Gemini session closed:`, e.code, e.reason);
+        onclose: () => {
+          console.log(`[${connectionId}] Gemini session closed.`);
           handleClose(connectionId);
         },
       },

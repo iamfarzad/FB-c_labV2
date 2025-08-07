@@ -39,6 +39,7 @@ export function useVoiceRecorder({
   const lastSpeechTimeRef = useRef<number>(0);
   const isProcessingTurnCompleteRef = useRef<boolean>(false);
   const isRecordingRef = useRef<boolean>(false);
+  const lastVoiceLoggedRef = useRef<boolean>(false);
 
   const initializeAudioContext = useCallback(async () => {
     try {
@@ -104,7 +105,8 @@ export function useVoiceRecorder({
     const volume = dataArray.reduce((sum, val) => sum + val, 0) / dataArray.length / 255;
     setState(prev => ({ ...prev, volume }));
 
-    const hasVoice = volume > 0.01;
+    // Lower threshold for better voice detection (was 0.01)
+    const hasVoice = volume > 0.005;
     if (hasVoice) {
       lastSpeechTimeRef.current = currentTime;
       silenceStartRef.current = null;
@@ -116,13 +118,23 @@ export function useVoiceRecorder({
     const pcmBuffer = convertToPCM16(resampled);
     onAudioChunk(pcmBuffer);
 
+    // Log VAD state for debugging
+    if (hasVoice && !lastVoiceLoggedRef.current) {
+      console.log(`🎤 Voice detected (volume: ${volume.toFixed(3)})`);
+      lastVoiceLoggedRef.current = true;
+    } else if (!hasVoice && lastVoiceLoggedRef.current) {
+      console.log(`🔇 Silence started (volume: ${volume.toFixed(3)})`);
+      lastVoiceLoggedRef.current = false;
+    }
+
     if (silenceStartRef.current && !isProcessingTurnCompleteRef.current && (currentTime - silenceStartRef.current >= vadSilenceThreshold) && (currentTime - lastSpeechTimeRef.current >= vadSilenceThreshold)) {
-      console.log(`🔇 Silence detected, completing turn.`);
+      console.log(`🔇 Silence detected for ${vadSilenceThreshold}ms, completing turn.`);
       isProcessingTurnCompleteRef.current = true;
       silenceStartRef.current = null;
       
       // Add delay to ensure all audio chunks have been sent to server
       setTimeout(() => {
+        console.log('🎯 Triggering TURN_COMPLETE');
         onTurnComplete();
         setTimeout(() => { isProcessingTurnCompleteRef.current = false; }, 1000);
       }, 200); // 200ms delay to ensure audio chunks are processed
