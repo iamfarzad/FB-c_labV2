@@ -458,7 +458,7 @@ ${result.summary}`
         {/* Modals */}
         {showVoiceModal && (
           <VoiceInput
-            mode="card"
+            mode="modal"
             onClose={() => setShowVoiceModal(false)}
             onTranscript={handleVoiceTranscript}
           />

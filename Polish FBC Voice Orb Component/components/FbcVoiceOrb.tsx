@@ -1,7 +1,7 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { cn } from "@/lib/utils"
+import { motion } from "motion/react"
+import { cn } from "../lib/utils"
 
 interface FbcVoiceOrbProps {
   className?: string
@@ -37,7 +37,7 @@ export function FbcVoiceOrb({
       scale: [1, 1.02, 1],
       transition: {
         duration: 4,
-        ease: [0.4, 0, 0.6, 1] as const,
+        ease: [0.4, 0, 0.6, 1],
         repeat: Infinity,
       }
     }
@@ -48,7 +48,7 @@ export function FbcVoiceOrb({
           scale: [1, 1.08, 1],
           transition: {
             duration: 2.5,
-            ease: [0.4, 0, 0.6, 1] as const,
+            ease: [0.4, 0, 0.6, 1],
             repeat: Infinity,
           }
         }
@@ -57,7 +57,7 @@ export function FbcVoiceOrb({
           scale: [1, 1.03, 1.01, 1],
           transition: {
             duration: 3,
-            ease: [0.4, 0, 0.6, 1] as const,
+            ease: [0.4, 0, 0.6, 1],
             repeat: Infinity,
           }
         }
@@ -66,7 +66,7 @@ export function FbcVoiceOrb({
           scale: [1, 1.12, 1.04, 1],
           transition: {
             duration: 1.2,
-            ease: [0.4, 0, 0.6, 1] as const,
+            ease: [0.4, 0, 0.6, 1],
             repeat: Infinity,
           }
         }
@@ -75,7 +75,7 @@ export function FbcVoiceOrb({
           scale: [1, 1.05, 1.02, 1],
           transition: {
             duration: 2,
-            ease: [0.4, 0, 0.6, 1] as const,
+            ease: [0.4, 0, 0.6, 1],
             repeat: Infinity,
           }
         }
@@ -93,7 +93,7 @@ export function FbcVoiceOrb({
           rotate: [0, 1, 0],
           transition: {
             duration: 3,
-            ease: [0.4, 0, 0.6, 1] as const,
+            ease: [0.4, 0, 0.6, 1],
             repeat: Infinity,
           }
         }
@@ -103,7 +103,7 @@ export function FbcVoiceOrb({
           rotate: [0, 3, -2, 1, 0],
           transition: {
             duration: 5,
-            ease: [0.4, 0, 0.6, 1] as const,
+            ease: [0.4, 0, 0.6, 1],
             repeat: Infinity,
           }
         }
@@ -114,7 +114,7 @@ export function FbcVoiceOrb({
           rotate: [0, 0.5, 0],
           transition: {
             duration: 0.8,
-            ease: [0.4, 0, 0.6, 1] as const,
+            ease: [0.4, 0, 0.6, 1],
             repeat: Infinity,
           }
         }
@@ -124,7 +124,7 @@ export function FbcVoiceOrb({
           rotate: [0, 2, -1, 0],
           transition: {
             duration: 4,
-            ease: [0.4, 0, 0.6, 1] as const,
+            ease: [0.4, 0, 0.6, 1],
             repeat: Infinity,
           }
         }
@@ -133,7 +133,7 @@ export function FbcVoiceOrb({
           opacity: [0.7, 0.9, 0.7],
           transition: {
             duration: 6,
-            ease: [0.4, 0, 0.6, 1] as const,
+            ease: [0.4, 0, 0.6, 1],
             repeat: Infinity,
           }
         }
@@ -146,7 +146,7 @@ export function FbcVoiceOrb({
         primary: "#ff5b04",
         secondary: "#ff5b0440",
         accent: "#ff5b0460",
-        dot: "bg-orange-500",
+        dot: "bg-accent",
         glow: "#ff5b04"
       }
     }
@@ -181,7 +181,7 @@ export function FbcVoiceOrb({
           primary: "#ff5b04",
           secondary: "#ff5b0420",
           accent: "#ff5b0440",
-          dot: "bg-orange-500",
+          dot: "bg-accent",
           glow: "#ff5b04"
         }
     }
@@ -321,7 +321,7 @@ export function FbcVoiceOrb({
           }}
           transition={{
             duration: state === 'talking' ? 0.6 : state === 'listening' ? 2.5 : 4,
-            ease: [0.4, 0, 0.6, 1] as const,
+            ease: [0.4, 0, 0.6, 1],
             repeat: Infinity,
           }}
         />
@@ -400,7 +400,7 @@ export function FbcVoiceOrb({
         {/* Recording Indicator */}
         {isRecording && (
           <motion.div
-            className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full shadow-lg"
+            className="absolute -top-2 -right-2 w-5 h-5 bg-accent rounded-full shadow-lg"
             style={{
               boxShadow: `0 0 15px ${colors.primary}80`
             }}

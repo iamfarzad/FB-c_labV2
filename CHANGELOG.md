@@ -25,6 +25,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed - 2025-08-07 (Part 2)
+- **🎯 COMPLETE FIX**: Restored audio chunk streaming to server
+  - Reverted to Web Audio API-based voice recorder that sends continuous audio chunks
+  - Audio chunks are now properly sent to server for buffering
+  - Simple VAD detects 500ms of silence and sends TURN_COMPLETE signal
+  - Server can now receive audio and forward to Gemini when turn is complete
+- **🔊 Maintained PCM audio playback fix**
+  - Raw PCM from Gemini is correctly decoded as Float32Array
+  - AudioBuffer is manually created from PCM data
+  - Supports both 16kHz and 24kHz sample rates
+
 ### Fixed - 2025-08-07
 - **🎯 CRITICAL FIX**: Fixed PCM audio decoding in WebSocket voice functionality
   - Replaced incorrect `decodeAudioData` usage with manual PCM to Float32Array conversion
