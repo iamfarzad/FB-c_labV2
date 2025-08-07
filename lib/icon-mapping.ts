@@ -52,6 +52,7 @@ import {
   Translate as PhosphorLanguages,
   List as PhosphorMenu
 } from '@phosphor-icons/react'
+import { ArrowCircleDown as PhosphorArrowDown } from '@phosphor-icons/react'
 
 // Export mapped icons with their original Lucide names for easy replacement
 export {
@@ -103,7 +104,8 @@ export {
   PhosphorVideoOff as VideoOff,
   PhosphorLink as Link,
   PhosphorLanguages as Languages,
-  PhosphorMenu as Menu
+  PhosphorMenu as Menu,
+  PhosphorArrowDown as ArrowDown
 }
 
 // Icon mapping object for programmatic access

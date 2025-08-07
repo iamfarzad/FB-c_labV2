@@ -15,7 +15,8 @@ import { DemoSessionProvider, useDemoSession } from "@/components/demo-session-m
 import { DemoSessionCard } from "@/components/chat/sidebar/DemoSessionCard"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { ChevronLeft, ChevronRight, BarChart3 } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Plus, ArrowRight, Mic, FileText, Calculator, TrendingUp } from "@/lib/icon-mapping"
 import { cn } from "@/lib/utils"
 import type { Message } from "@/app/(chat)/chat/types/chat"
 import { LeadProgressIndicator } from "@/components/chat/LeadProgressIndicator"
@@ -430,6 +431,22 @@ ${result.summary}`
     handleSendMessage(`I've shared my screen. Here's what I can see: ${analysis}`)
   }
 
+  // Left toolbar actions
+  const handleNewChat = () => {
+    setMessages([])
+    setLeadData({})
+    setConversationStage(ConversationStage.GREETING)
+    setError(null)
+    showSuccess("New chat started")
+  }
+
+  const handleUploadDocument = () => {
+    const fileInput = document.querySelector(
+      'input[type="file"][accept*=".pdf"], input[type="file"][accept*=".doc"], input[type="file"][accept*=".txt"]'
+    ) as HTMLInputElement | null
+    fileInput?.click()
+  }
+
   return (
     <PageShell variant="fullscreen">
       <ChatLayout
@@ -457,6 +474,66 @@ ${result.summary}`
           />
         }
       >
+        {/* Overlays: Left toolbar and minimal progress indicator */}
+        <div className="hidden lg:block fixed left-6 top-24 z-30">
+          <TooltipProvider>
+            <div className="flex flex-col items-center gap-3">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-xl w-11 h-11" onClick={handleNewChat}>
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>New chat</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-xl w-11 h-11" onClick={() => setShowVoiceModal(true)}>
+                    <Mic className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Voice input</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-xl w-11 h-11" onClick={handleUploadDocument}>
+                    <FileText className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Upload document</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-xl w-11 h-11" onClick={() => setShowROICalculatorModal(true)}>
+                    <Calculator className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>ROI calculator</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-xl w-11 h-11" onClick={scrollToBottom}>
+                    <ArrowRight className="w-5 h-5 rotate-90" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Scroll to bottom</TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+        </div>
+
+        <div className="hidden lg:block fixed right-6 top-28 z-30">
+          <div className="flex flex-col items-center gap-3">
+            {Array.from({ length: 7 }).map((_, idx) => {
+              const activeIndex = (stageConfig[conversationStage as keyof typeof stageConfig]?.order || 1) - 1
+              const isActive = idx === activeIndex
+              const isCompleted = idx < activeIndex
+              return (
+                <div key={idx} className={`w-3 h-3 rounded-full ${isActive ? 'bg-[hsl(var(--accent))]' : isCompleted ? 'bg-muted' : 'bg-border'}`} />
+              )
+            })}
+          </div>
+        </div>
         {/* Chat Area - Full Width */}
         {error ? (
           <div className="flex-1 flex items-center justify-center p-4">
@@ -494,14 +571,6 @@ ${result.summary}`
           />
         )}
         
-        {/* Desktop: Always visible progress indicator */}
-        <div className="hidden lg:block">
-          <LeadProgressIndicator 
-            currentStage={conversationStage}
-            leadData={leadData}
-          />
-        </div>
-        
         {/* Mobile: Progress button with modal */}
         <div className="lg:hidden">
           <Sheet>
@@ -518,7 +587,7 @@ ${result.summary}`
                   "transform-gpu" // GPU acceleration for smooth interactions
                 )}
               >
-                <BarChart3 className="h-4 w-4 mr-2" />
+                <TrendingUp className="h-4 w-4 mr-2" />
                 Progress
               </Button>
             </SheetTrigger>

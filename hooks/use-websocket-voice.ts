@@ -14,13 +14,15 @@ interface VoiceSession {
   }
 }
 
+type QueuedAudioItem = string | { data: string; mimeType?: string }
+
 interface WebSocketVoiceHook {
   session: VoiceSession | null
   isConnected: boolean
   isProcessing: boolean
   error: string | null
   transcript: string
-  audioQueue: ArrayBuffer[]
+  audioQueue: QueuedAudioItem[]
   startSession: (leadContext?: any) => Promise<void>
   stopSession: () => void
   sendMessage: (message: string) => Promise<void>
@@ -38,7 +40,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
   const [isProcessing, setIsProcessing] = useState(false)
   const [transcript, setTranscript] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
-  const [audioQueue, setAudioQueue] = useState<ArrayBuffer[]>([])
+  const [audioQueue, setAudioQueue] = useState<QueuedAudioItem[]>([])
   
   const wsRef = useRef<WebSocket | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -154,11 +156,25 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
       wsRef.current = null
     }
 
-    // Production uses port 8080 on Fly.io, local development uses 3001
-    const wsUrl = process.env.NEXT_PUBLIC_LIVE_SERVER_URL || 
-      (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-        ? 'wss://localhost:3001' 
-        : 'wss://fb-consulting-websocket.fly.dev')
+    // Resolve WebSocket URL based on env and runtime to avoid protocol mismatch locally
+    let wsUrl = process.env.NEXT_PUBLIC_LIVE_SERVER_URL
+    try {
+      if (!wsUrl) {
+        const hostname = window.location.hostname
+        const isLocal = hostname === 'localhost' || hostname === '127.0.0.1'
+        if (isLocal) {
+          const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
+          wsUrl = `${scheme}://localhost:3001`
+        } else {
+          // Sensible production default
+          wsUrl = 'wss://fb-consulting-websocket.fly.dev'
+          console.warn('[useWebSocketVoice] NEXT_PUBLIC_LIVE_SERVER_URL not set; defaulting to Fly URL', wsUrl)
+        }
+      }
+    } catch (e) {
+      // window not available (SSR safeguard)
+      wsUrl = wsUrl || 'ws://localhost:3001'
+    }
     console.log(`🔌 [useWebSocketVoice] Attempting to connect to WebSocket: ${wsUrl}`)
     console.log('🌐 [useWebSocketVoice] Current page URL:', window.location.href)
     console.log('🔒 [useWebSocketVoice] Page protocol:', window.location.protocol)

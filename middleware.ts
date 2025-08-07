@@ -12,6 +12,7 @@ export function middleware(req: NextRequest) {
   response.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), display-capture=(self), geolocation=(), payment=()')
   
   // Content Security Policy
+  const isDev = process.env.NODE_ENV === 'development'
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
@@ -19,9 +20,7 @@ export function middleware(req: NextRequest) {
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
     `connect-src 'self' https: https://generativelanguage.googleapis.com https://*.googleapis.com ` +
-    (process.env.NODE_ENV === 'development'
-               ? 'wss://localhost:3001 '
-       : '') +
+    (isDev ? 'wss://localhost:3001 ws://localhost:3001 ' : '') +
     "wss://fb-consulting-websocket.fly.dev wss:",
     "media-src 'self' blob: data: https:",
     "object-src 'none'",

@@ -25,6 +25,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### UI Polish - 2025-08-07
+- Unified focus rings across inputs, selects, textareas, buttons, and cards using brand accent with background offset
+- Added tactile active press state to `Button` (slight translate-y)
+- Increased disabled state contrast for better accessibility
+- Aligned `Select`, `Input`, `Textarea` to use rounded-xl radii and glassy backgrounds with `backdrop-blur`
+- Enhanced `Card` with focus-within ring for keyboard navigation
+
 ### Fixed - 2025-08-07 (Part 2)
 - **🎯 COMPLETE FIX**: Restored audio chunk streaming to server
   - Reverted to Web Audio API-based voice recorder that sends continuous audio chunks

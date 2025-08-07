@@ -13,19 +13,8 @@ const nextConfig = {
     minimumCacheTTL: 31536000, // 1 year
     dangerouslyAllowSVG: true,
   },
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' ws://localhost:8080; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:;",
-          },
-        ],
-      },
-    ]
-  },
+  // NOTE: CSP and Permissions-Policy are managed in `middleware.ts`.
+  // Removed static headers() here to avoid conflicting/overly-restrictive connect-src blocking WS.
   // Enable experimental features for better performance
   experimental: {
                optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],

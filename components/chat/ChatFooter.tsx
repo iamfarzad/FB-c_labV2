@@ -227,7 +227,7 @@ export function ChatFooter({
         className="absolute inset-0 pointer-events-none"
       />
 
-      <div className="max-w-4xl mx-auto px-2 sm:px-4 md:px-6 py-2 sm:py-4 relative z-10">
+      <div className="mx-auto w-full max-w-7xl px-2 sm:px-4 md:px-6 py-2 sm:py-4 relative z-10">
         <form onSubmit={handleSubmit}>
           {/* Hidden File Inputs */}
           <input
@@ -245,19 +245,19 @@ export function ChatFooter({
             className="hidden"
           />
 
-          {/* Clean Input Container with Tool Pills Only */}
+          {/* Compact input like Perplexity */}
           <motion.div
             animate={{
               borderColor: isFocused ? "hsl(var(--accent))" : "hsl(var(--border))",
               boxShadow: isFocused 
-                ? "0 0 0 3px hsl(var(--accent) / 0.1)" 
-                : "0 1px 3px rgba(0,0,0,0.1)"
+                ? "0 0 0 2px hsl(var(--accent) / 0.08)" 
+                : "0 1px 2px rgba(0,0,0,0.06)"
             }}
             transition={{ duration: 0.2 }}
-            className="relative rounded-2xl border bg-card/50 backdrop-blur-sm overflow-hidden"
+            className="relative rounded-full border bg-card/70 backdrop-blur-md overflow-hidden shadow"
           >
-            {/* Tool Pills Row */}
-            <div className="flex items-center gap-1.5 px-3 pt-2.5 pb-1.5 border-b border-border/10">
+            {/* Inline chips left */}
+            <div className="flex items-center gap-2 px-3 py-2 overflow-x-auto no-scrollbar">
               {/* Upload Dropdown */}
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
@@ -277,9 +277,9 @@ export function ChatFooter({
                       )}
                       disabled={isLoading}
                     >
-                      <Plus className="w-3 h-3 mr-1.5" />
+                      <Plus className="w-3.5 h-3.5 mr-1.5" />
                       Upload
-                      <ChevronDown className="w-3 h-3 ml-1" />
+                      <ChevronDown className="w-3.5 h-3.5 ml-1" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-48">
@@ -326,14 +326,14 @@ export function ChatFooter({
                     aria-label={tool.description}
                     title={tool.description}
                   >
-                    <tool.icon className="w-3 h-3 mr-1.5" />
+                    <tool.icon className="w-3.5 h-3.5 mr-1.5" />
                     {tool.label.replace(' Input', '').replace(' Capture', '')}
                   </Button>
                 </motion.div>
               ))}
             </div>
 
-            {/* Input Area - Clean without duplicate buttons */}
+            {/* Input field with embedded send button */}
             <div className="relative">
               <Textarea
                 ref={textareaRef}
@@ -344,19 +344,19 @@ export function ChatFooter({
                 onBlur={() => setIsFocused(false)}
                 onCompositionStart={() => setIsComposing(true)}
                 onCompositionEnd={() => setIsComposing(false)}
-                placeholder="Ask anything about AI automation, business analysis, or upload a document..."
+                placeholder="Ask anything..."
                 className={cn(
-                  "resize-none min-h-[52px] max-h-36 border-0 bg-transparent",
+                  "resize-none min-h-[48px] max-h-32 border-0 bg-transparent rounded-full",
                   "focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                  "placeholder:text-muted-foreground/60 text-base leading-relaxed", // text-base prevents iOS zoom
-                  "pl-3 pr-12 py-3 touch-manipulation" // Better mobile padding and touch handling
+                  "placeholder:text-muted-foreground/60 text-base leading-relaxed",
+                  "pl-3 pr-12 py-2 touch-manipulation"
                 )}
                 disabled={isLoading}
               />
 
               {/* Right Send Button Only */}
               <motion.div
-                className="absolute right-3 bottom-3"
+                className="absolute right-2 bottom-2"
                 whileHover={{ scale: canSend ? 1.05 : 1 }}
                 whileTap={{ scale: canSend ? 0.95 : 1 }}
                 transition={{ type: "spring", stiffness: 400 }}
@@ -365,7 +365,7 @@ export function ChatFooter({
                   type="submit"
                   size="icon"
                   className={cn(
-                    "w-11 h-11 rounded-lg transition-all duration-300",
+                    "w-9 h-9 rounded-full transition-all duration-300 shadow-sm",
                     canSend
                       ? "bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent/80 shadow-md hover:shadow-lg text-accent-foreground"
                       : "bg-muted/50 text-muted-foreground cursor-not-allowed"

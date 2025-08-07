@@ -50,27 +50,28 @@
     }
     }
 
-    // Create server based on environment
-    const healthServer = isLocalDev && Object.keys(sslOptions).length > 0
-    ? https.createServer(sslOptions, (req, res) => {
-        if (req.url === '/health') {
-            res.writeHead(200, { 'Content-Type': 'text/plain' });
-            res.end('OK');
-        } else {
-            res.writeHead(404).end();
-        }
-        })
-    : http.createServer((req, res) => {
-        if (req.url === '/health') {
-            res.writeHead(200, { 'Content-Type': 'text/plain' });
-            res.end('OK');
-        } else {
-            res.writeHead(404).end();
-        }
-        });
+// Create server based on environment
+const useTls = Boolean(process.env.LIVE_SERVER_TLS) && process.env.LIVE_SERVER_TLS !== 'false' && isLocalDev && Object.keys(sslOptions).length > 0
+const healthServer = useTls
+  ? https.createServer(sslOptions, (req, res) => {
+      if (req.url === '/health') {
+        res.writeHead(200, { 'Content-Type': 'text/plain' })
+        res.end('OK')
+      } else {
+        res.writeHead(404).end()
+      }
+    })
+  : http.createServer((req, res) => {
+      if (req.url === '/health') {
+        res.writeHead(200, { 'Content-Type': 'text/plain' })
+        res.end('OK')
+      } else {
+        res.writeHead(404).end()
+      }
+    });
 
-    const server = healthServer.listen(Number(PORT), '0.0.0.0', () => {
-    const protocol = isLocalDev && Object.keys(sslOptions).length > 0 ? 'HTTPS/WSS' : 'HTTP/WS';
+const server = healthServer.listen(Number(PORT), '0.0.0.0', () => {
+const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
     console.log(`🚀 WebSocket server listening on port ${PORT}`);
     console.log(`🔐 Using ${protocol} protocol`);
     });
@@ -84,7 +85,8 @@
     // --- In-Memory Stores ---
     const activeSessions = new Map<string, { ws: WebSocket; session: Session }>();
     const sessionBudgets = new Map<string, SessionBudget>();
-    const bufferedAudioChunks = new Map<string, ArrayBuffer[]>();
+    // Store Node Buffers for simpler concat usage
+    const bufferedAudioChunks = new Map<string, Buffer[]>();
 
     // --- Core Logic ---
 
@@ -151,7 +153,7 @@
             - Be conversational, friendly, and helpful
             - Keep responses concise but informative
             - Always acknowledge what the user said before providing your response
-            - Speak clearly and naturally in your audio responses
+            - Speak clearly and naturally in your audio responses`
           }]
         },
       },
@@ -199,7 +201,13 @@
                     console.log(`[${connectionId}] 🔊 Sending audio response: ${part.inlineData.data.length} bytes`);
                     const audioTokens = Math.ceil(part.inlineData.data.length / 1000);
                     updateSessionBudget(connectionId, 0, audioTokens);
-                    ws.send(JSON.stringify({ type: 'audio', payload: { audioData: part.inlineData.data } }));
+                    ws.send(JSON.stringify({ 
+                      type: 'audio', 
+                      payload: { 
+                        audioData: part.inlineData.data,
+                        mimeType: 'audio/pcm;rate=24000'
+                      } 
+                    }));
                 }
             }
         }
@@ -212,7 +220,7 @@
     async function handleUserMessage(connectionId: string, payload: any) {
         if (payload.audioData && payload.mimeType) {
             const audioDataBuffer = Buffer.from(payload.audioData, 'base64');
-            let sessionAudioBuffers = bufferedAudioChunks.get(connectionId) || [];
+            const sessionAudioBuffers = bufferedAudioChunks.get(connectionId) || [];
             sessionAudioBuffers.push(audioDataBuffer);
             bufferedAudioChunks.set(connectionId, sessionAudioBuffers);
             console.log(`[${connectionId}] Buffered audio chunk (${audioDataBuffer.length} bytes).`);
@@ -228,13 +236,14 @@
             console.log(`[${connectionId}] No buffered audio to send.`);
             return;
         }
-        const mergedAudio = Buffer.concat(audioBuffers.map(b => Buffer.from(b)));
+        const mergedAudio: Buffer = Buffer.concat(audioBuffers as Buffer[]);
         bufferedAudioChunks.delete(connectionId);
         const estimatedTokens = Math.ceil(mergedAudio.length / 1000);
         updateSessionBudget(connectionId, estimatedTokens, 0);
 
         console.log(`[${connectionId}] Sending FULL buffered audio to Gemini (${mergedAudio.length} bytes).`);
-        console.log(`[${connectionId}] 🔍 Audio format: PCM, Base64 length: ${mergedAudio.toString('base64').length}`);
+        const mergedBase64 = Buffer.from(mergedAudio).toString('base64')
+        console.log(`[${connectionId}] 🔍 Audio format: PCM, Base64 length: ${mergedBase64.length}`);
         
         try {
             const audioContent = {
@@ -242,8 +251,9 @@
                     role: 'user',
                     parts: [{
                         inlineData: {
+                            // Match client sample rate explicitly
                             mimeType: 'audio/pcm;rate=16000',
-                            data: mergedAudio.toString('base64'),
+                            data: mergedBase64,
                         },
                     }],
                 }],

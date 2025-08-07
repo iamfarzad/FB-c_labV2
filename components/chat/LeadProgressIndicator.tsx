@@ -12,6 +12,7 @@ interface LeadProgressIndicatorProps {
     company?: string;
   };
   className?: string;
+  variant?: 'card' | 'minimal';
 }
 
 const stageConfig = [
@@ -66,7 +67,7 @@ const stageConfig = [
   }
 ]
 
-export function LeadProgressIndicator({ currentStage, leadData, className = '' }: LeadProgressIndicatorProps) {
+export function LeadProgressIndicator({ currentStage, leadData, className = '', variant = 'card' }: LeadProgressIndicatorProps) {
   const [hoveredStage, setHoveredStage] = useState<string | null>(null)
   
   // Calculate stage statuses based on current stage
@@ -108,13 +109,33 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '' }
     }
   }
 
-  return (
-    <div className={`fixed right-6 top-1/2 -translate-y-1/2 z-40 ${className}`}>
+  if (variant === 'minimal') {
+    return (
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.3, duration: 0.6 }}
-        className="flex flex-col items-center gap-6"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`flex flex-col items-center gap-3 ${className}`}
+      >
+        {stages.map((stage, index) => {
+          const isActive = stage.stage === currentStage
+          const isCompleted = stage.order - 1 < currentStageIndex
+          return (
+            <div key={stage.stage} className="relative">
+              <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-[hsl(var(--accent))]' : isCompleted ? 'bg-muted' : 'bg-border'}`} />
+            </div>
+          )
+        })}
+      </motion.div>
+    )
+  }
+
+  return (
+    <div className={className}>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.4 }}
+        className="flex flex-col items-center gap-6 bg-card/60 backdrop-blur-2xl border border-border/20 rounded-2xl p-4 shadow-lg"
       >
         {/* Header */}
         <motion.div
@@ -204,11 +225,11 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '' }
                     animate={{ opacity: 1, x: 0, scale: 1 }}
                     exit={{ opacity: 0, x: 10, scale: 0.95 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute right-12 top-1/2 -translate-y-1/2 z-10 pointer-events-none"
+                    className="absolute left-12 top-1/2 -translate-y-1/2 z-10 pointer-events-none"
                   >
                     <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-lg shadow-xl p-3 min-w-[240px]">
                       {/* Arrow */}
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-2 h-2 bg-card border-r border-t border-border/50 rotate-45" />
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-card border-l border-b border-border/50 rotate-45" />
 
                       {/* Content */}
                       <div className="space-y-2">

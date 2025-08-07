@@ -4,6 +4,7 @@ interface VoiceRecorderConfig {
   onAudioChunk: (chunk: ArrayBuffer) => void;
   onTurnComplete: () => void;
   vadSilenceThreshold?: number;
+  voiceThreshold?: number;
   sampleRate?: number;
   chunkSize?: number;
 }
@@ -20,6 +21,7 @@ export function useVoiceRecorder({
   onAudioChunk,
   onTurnComplete,
   vadSilenceThreshold = 500, // 500ms of silence triggers turn complete
+  voiceThreshold = 0.002,
   sampleRate = 16000,
   chunkSize = 4096,
 }: VoiceRecorderConfig) {
@@ -164,7 +166,6 @@ export function useVoiceRecorder({
     onAudioChunk(pcmBuffer);
 
     // Simple VAD: detect silence for turn completion
-    const voiceThreshold = 0.002; // Very low threshold for voice detection
     const hasVoice = volume > voiceThreshold;
     
     if (hasVoice) {
@@ -250,6 +251,11 @@ export function useVoiceRecorder({
     }
   }, []);
 
+  const requestPermission = useCallback(async (): Promise<boolean> => {
+    // Triggers a getUserMedia prompt via initializeAudioContext
+    return initializeAudioContext()
+  }, [initializeAudioContext])
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -263,5 +269,5 @@ export function useVoiceRecorder({
     };
   }, [stopRecording]);
 
-  return { ...state, startRecording, stopRecording };
+  return { ...state, startRecording, stopRecording, requestPermission };
 }

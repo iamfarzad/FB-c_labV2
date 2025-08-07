@@ -52,29 +52,30 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const hasStartedRef = useRef(false);
 
   const {
-    isConnected, 
-    isProcessing, 
-    transcript, 
+    isConnected,
+    isProcessing,
+    transcript,
     error: websocketError,
-    startSession, 
-    stopSession, 
-    onAudioChunk, 
+    startSession,
+    stopSession,
+    onAudioChunk,
     onTurnComplete,
   } = useWebSocketVoice();
 
   const {
-    isRecording, 
-    startRecording, 
-    stopRecording, 
+    isRecording,
+    startRecording,
+    stopRecording,
     error: recorderError,
     volume,
-  } = useVoiceRecorder({ 
-    onAudioChunk, 
+    hasPermission,
+    requestPermission,
+  } = useVoiceRecorder({
+    onAudioChunk,
     onTurnComplete 
   });
 
@@ -85,9 +86,7 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
       hasStartedRef.current = true;
 
       console.log('[VoiceInput] Requesting microphone permission...');
-      const permissionGranted = await requestMicrophonePermission();
-      setHasPermission(permissionGranted);
-
+      const permissionGranted = await requestPermission();
       if (!permissionGranted) {
         toast({ 
           title: "Microphone Access Required", 
@@ -128,9 +127,9 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
     const anyError = websocketError || recorderError;
     if (anyError) {
       console.error('[VoiceInput] Error detected:', anyError);
-      toast({ 
-        title: "Voice Error", 
-        description: anyError, 
+      toast({
+        title: "Voice Error",
+        description: anyError,
         variant: "destructive" 
       });
     }
@@ -187,19 +186,33 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
     if (isRecording) {
       console.log('[VoiceInput] Stopping recording...');
       stopRecording();
+      // Always flush buffered audio on manual stop
+      onTurnComplete();
       setIsExpanded(false);
     } else {
+      // If not connected yet, attempt to connect now
       if (!isConnected) {
-        console.log('[VoiceInput] Not connected, cannot start recording');
-        toast({ 
-          title: "Not Connected", 
-          description: "Please wait for connection to establish", 
-          variant: "destructive" 
-        });
-        return;
+        console.log('[VoiceInput] Not connected, attempting to start session before recording');
+        try {
+          await startSession();
+        } catch (e) {
+          console.error('[VoiceInput] Failed to start session before recording:', e);
+        }
       }
-      
+
       try {
+        // Request mic permission first if not granted
+        if (!hasPermission) {
+          const ok = await requestPermission();
+          if (!ok) {
+            toast({
+              title: 'Microphone access denied',
+              description: 'Please allow microphone access in your browser settings and try again.',
+              variant: 'destructive'
+            })
+            return
+          }
+        }
         console.log('[VoiceInput] Starting recording...');
         const success = await startRecording();
         if (success) {
@@ -222,7 +235,11 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
         });
       }
     }
-  }, [isRecording, isConnected, hasPermission, startRecording, stopRecording, toast]);
+<<<<<<< HEAD
+  }, [isRecording, isConnected, hasPermission, startRecording, stopRecording, onTurnComplete, requestPermission, startSession, toast]);
+=======
+  }, [isRecording, isConnected, startRecording, stopRecording, onTurnComplete, hasPermission, requestPermission, toast, startSession]);
+>>>>>>> b042f33 (Voice pipeline: explicit mic permission + Start/Stop with manual TURN_COMPLETE; robust WS URL + CSP cleanup; VAD thresholds configurable; PCM mime fixes; server sends 16k PCM to Gemini; dev TLS toggle; UI feedback. Also remove static CSP from next.config.mjs in favor of middleware.)
 
   const getStatusText = () => {
     if (hasPermission === false) return "Microphone access denied - check browser settings";
@@ -288,17 +305,24 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
           </div>
 
           <div className="flex flex-col items-center space-y-4">
-            <FbcVoiceOrb 
-              size="sm"
-              state={getOrbState()}
-              isRecording={isRecording}
+            <button
               onClick={handleMicClick}
-              disabled={!isConnected}
-            />
+              className="relative w-20 h-20 transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={isRecording ? "Stop recording" : "Start recording"}
+            >
+              <FbcVoiceOrb 
+                className="w-full h-full"
+                state={getOrbState()}
+                isRecording={isRecording}
+              />
+            </button>
 
-            <p className={cn("text-xs text-center", getStatusColor())}>
-              {getStatusText()}
-            </p>
+            <p className={cn("text-xs text-center", getStatusColor())}>{getStatusText()}</p>
+            {!hasPermission && (
+              <div className="text-xs text-yellow-500 text-center">
+                Microphone access denied. Click the mic and allow access in the browser prompt.
+              </div>
+            )}
 
             {/* Retry button for failed connections */}
             {!isConnected && connectionAttempts > 0 && connectionAttempts < 3 && (
@@ -342,28 +366,35 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
         </div>
 
         <div className="flex flex-col items-center space-y-6">
-          <FbcVoiceOrb 
-            size="lg"
-            state={getOrbState()}
-            isRecording={isRecording}
+          <button
             onClick={handleMicClick}
-            disabled={!isConnected}
-          />
+            className="relative w-32 h-32 transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label={isRecording ? "Stop recording" : "Start recording"}
+          >
+            <FbcVoiceOrb 
+              className="w-full h-full"
+              state={getOrbState()}
+              isRecording={isRecording}
+            />
+          </button>
 
-          <p className={cn("text-sm text-center", getStatusColor())}>
-            {getStatusText()}
-          </p>
+          <p className={cn("text-sm text-center", getStatusColor())}>{getStatusText()}</p>
+          {!hasPermission && (
+            <div className="text-xs text-yellow-500 text-center">
+              Microphone access denied. Click the mic and allow access in the browser prompt.
+            </div>
+          )}
 
           {/* Retry button for failed connections */}
           {!isConnected && connectionAttempts > 0 && connectionAttempts < 3 && (
-            <Button
+      <Button
               onClick={retryConnection}
               variant="outline"
               size="sm"
               className="text-xs"
             >
               Retry Connection
-            </Button>
+      </Button>
           )}
 
           <VolumeIndicator />
