@@ -92,3 +92,5 @@ Thumbs.db
 *.tmp
 *.temp
 .cache/
+localhost.pem
+localhost-key.pem

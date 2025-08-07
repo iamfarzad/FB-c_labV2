@@ -12,10 +12,22 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 31536000, // 1 year
     dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-               // Enable experimental features for better performance
-             experimental: {
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' ws://localhost:8080; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:;",
+          },
+        ],
+      },
+    ]
+  },
+  // Enable experimental features for better performance
+  experimental: {
                optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
              },
   // API configuration for security

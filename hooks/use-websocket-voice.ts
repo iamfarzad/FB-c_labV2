@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useToast } from '@/hooks/use-toast'
 
+// WebSocket URL will be configured in the connectWebSocket function
+
 interface VoiceSession {
   connectionId: string
   isActive: boolean
@@ -29,6 +31,7 @@ interface WebSocketVoiceHook {
 }
 
 export function useWebSocketVoice(): WebSocketVoiceHook {
+  console.log('--- useWebSocketVoice HOOK MOUNTED ---');
   const { toast } = useToast()
   const [session, setSession] = useState<VoiceSession | null>(null)
   const [isConnected, setIsConnected] = useState(false)
@@ -157,7 +160,8 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
       wsRef.current = null
     }
 
-    const wsUrl = process.env.NEXT_PUBLIC_LIVE_SERVER_URL || 'ws://localhost:3001'
+    // Production uses port 8080 on Fly.io, local development uses 3001
+    const wsUrl = process.env.NEXT_PUBLIC_LIVE_SERVER_URL || 'wss://localhost:3001'
     console.log(`🔌 [useWebSocketVoice] Attempting to connect to WebSocket: ${wsUrl}`)
     console.log('🌐 [useWebSocketVoice] Current page URL:', window.location.href)
     console.log('🔒 [useWebSocketVoice] Page protocol:', window.location.protocol)
@@ -210,9 +214,29 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
             setSession({
               connectionId: data.payload.connectionId,
               isActive: true,
-              leadContext: session?.leadContext
             })
             console.log('[useWebSocketVoice] Gemini session started.', data.payload)
+            break
+
+          case 'gemini_response':
+            // Handle text part of the response
+            if (data.payload?.serverContent?.modelTurn?.parts?.[0]?.text) {
+              const text = data.payload.serverContent.modelTurn.parts[0].text;
+              setTranscript(prev => prev + text);
+            }
+            // Handle audio part of the response
+            if (data.payload?.serverContent?.modelTurn?.inlineData?.data) {
+              const audioBase64 = data.payload.serverContent.modelTurn.inlineData.data;
+              const audioBlob = new Blob([Buffer.from(audioBase64, 'base64')], { type: 'audio/mpeg' });
+              const audioUrl = URL.createObjectURL(audioBlob);
+              const audio = new Audio(audioUrl);
+              audio.play();
+            }
+            if (data.payload?.serverContent?.turnComplete) {
+                if (onTurnComplete) {
+                    onTurnComplete();
+                }
+            }
             break
 
           case 'text':
@@ -414,7 +438,13 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
   // Callback for voice recorder - properly encode audio data as base64
   const onAudioChunk = useCallback((audioData: ArrayBuffer) => {
     // Convert ArrayBuffer to base64 string
-    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(audioData)))
+    let binary = '';
+    const bytes = new Uint8Array(audioData);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    const base64Audio = btoa(binary);
     
     const payload = JSON.stringify({
       type: 'user_audio',
@@ -454,6 +484,14 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
       }
     }
   }, [connectWebSocket])
+
+  // Cleanup useEffect for lifecycle debugging
+  useEffect(() => {
+    return () => {
+      console.log('--- useWebSocketVoice HOOK UNMOUNTING (Cleanup) ---');
+      wsRef.current?.close();
+    };
+  }, []);
 
   return {
     session,
