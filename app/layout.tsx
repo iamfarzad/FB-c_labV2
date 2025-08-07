@@ -6,6 +6,7 @@ import { DemoSessionProvider } from "@/components/demo-session-manager"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { Toaster } from "@/components/ui/toaster"
+import { PermissionManager } from "@/components/permissions/PermissionManager"
 import { cn } from "@/lib/utils"
 import { StructuredData } from "./structured-data"
 
@@ -45,6 +46,7 @@ export default function RootLayout({
             </main>
             <Footer />
             <Toaster />
+            <PermissionManager />
           </DemoSessionProvider>
         </ThemeProvider>
       </body>

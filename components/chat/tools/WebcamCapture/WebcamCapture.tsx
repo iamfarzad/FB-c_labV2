@@ -58,13 +58,13 @@ export function WebcamCapture({
     try {
       setIsAnalyzing(true)
       
-      const response = await fetch('/api/tools/webcam-capture', { // Corrected API endpoint
+      const response = await fetch('/api/analyze-image', { // Fixed API endpoint
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          image: imageData, // Changed from imageData to image to match schema
+          image: imageData,
           type: 'webcam', // Explicitly set type to 'webcam'
         })
       })
@@ -77,7 +77,7 @@ export function WebcamCapture({
       
       const analysis: AnalysisResult = {
         id: Date.now().toString(),
-        text: result.data?.analysis || result.data?.text || 'No analysis available',
+        text: result.analysis || 'No analysis available',
         timestamp: Date.now(),
         imageData
       }

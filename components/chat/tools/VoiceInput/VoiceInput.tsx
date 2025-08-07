@@ -17,10 +17,43 @@ interface VoiceInputProps {
   onTranscript?: (transcript: string) => void;
 }
 
+// Request microphone permissions upfront
+const requestMicrophonePermission = async (): Promise<boolean> => {
+  try {
+    // Check if permissions API is available
+    if ('permissions' in navigator) {
+      const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+      if (permission.state === 'granted') {
+        return true;
+      }
+    }
+
+    // Try to get user media to trigger permission request
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      audio: {
+        channelCount: 1,
+        sampleRate: { ideal: 16000 },
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      } 
+    });
+    
+    // Stop the stream immediately - we just wanted to check permissions
+    stream.getTracks().forEach(track => track.stop());
+    return true;
+  } catch (error) {
+    console.error('Microphone permission denied or unavailable:', error);
+    return false;
+  }
+};
+
 export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInputProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
   const hasStartedRef = useRef(false);
 
   const {
@@ -45,23 +78,41 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
     onTurnComplete 
   });
 
-  // Initialize WebSocket connection on mount
+  // Request permissions and initialize WebSocket connection on mount
   useEffect(() => {
-    if (!hasStartedRef.current) {
+    const initializeVoiceInput = async () => {
+      if (hasStartedRef.current) return;
       hasStartedRef.current = true;
+
+      console.log('[VoiceInput] Requesting microphone permission...');
+      const permissionGranted = await requestMicrophonePermission();
+      setHasPermission(permissionGranted);
+
+      if (!permissionGranted) {
+        toast({ 
+          title: "Microphone Access Required", 
+          description: "Please allow microphone access to use voice input. Check your browser settings and reload the page.", 
+          variant: "destructive" 
+        });
+        return;
+      }
+
       console.log('[VoiceInput] Initializing WebSocket connection...');
-      startSession().then(() => {
+      try {
+        await startSession();
         console.log('[VoiceInput] WebSocket session started');
         setIsInitialized(true);
-      }).catch((error) => {
+      } catch (error) {
         console.error('[VoiceInput] Failed to start WebSocket session:', error);
         toast({ 
           title: "Connection Error", 
           description: "Failed to connect to voice server. Please try again.", 
           variant: "destructive" 
         });
-      });
-    }
+      }
+    };
+
+    initializeVoiceInput();
 
     // Cleanup on unmount
     return () => {
@@ -92,9 +143,47 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
     }
   }, [transcript, onTranscript]);
 
-  const handleMicClick = useCallback(async () => {
-    console.log('[VoiceInput] Mic button clicked. Recording:', isRecording, 'Connected:', isConnected);
+  // Retry WebSocket connection
+  const retryConnection = useCallback(async () => {
+    if (connectionAttempts >= 3) {
+      toast({
+        title: "Connection Failed",
+        description: "Unable to connect after 3 attempts. Please check your internet connection and try again later.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setConnectionAttempts(prev => prev + 1);
+    console.log(`[VoiceInput] Retrying WebSocket connection (attempt ${connectionAttempts + 1}/3)...`);
     
+    try {
+      await startSession();
+      console.log('[VoiceInput] WebSocket session started on retry');
+      setIsInitialized(true);
+      setConnectionAttempts(0); // Reset on success
+    } catch (error) {
+      console.error('[VoiceInput] Retry failed:', error);
+      toast({
+        title: "Connection Retry Failed",
+        description: `Attempt ${connectionAttempts + 1} failed. ${connectionAttempts < 2 ? 'Will retry...' : 'Please try again later.'}`,
+        variant: "destructive"
+      });
+    }
+  }, [connectionAttempts, startSession, toast]);
+
+  const handleMicClick = useCallback(async () => {
+    console.log('[VoiceInput] Mic button clicked. Recording:', isRecording, 'Connected:', isConnected, 'Permission:', hasPermission);
+    
+    if (hasPermission === false) {
+      toast({ 
+        title: "Microphone Access Denied", 
+        description: "Please allow microphone access in your browser settings and reload the page.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     if (isRecording) {
       console.log('[VoiceInput] Stopping recording...');
       stopRecording();
@@ -133,25 +222,32 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
         });
       }
     }
-  }, [isRecording, isConnected, startRecording, stopRecording, toast]);
+  }, [isRecording, isConnected, hasPermission, startRecording, stopRecording, toast]);
 
   const getStatusText = () => {
-    if (!isConnected) return "Connecting to server...";
-    if (isRecording) return "Listening... Speak now";
-    if (isProcessing) return "Processing your speech...";
-    if (transcript) return "AI has responded";
-    return "Click microphone to start";
+    if (hasPermission === false) return "Microphone access denied - check browser settings";
+    if (hasPermission === null) return "Requesting microphone access...";
+    if (!isConnected && connectionAttempts > 0) return `Connection failed (${connectionAttempts}/3 attempts)`;
+    if (!isConnected) return "Connecting to voice server...";
+    if (isRecording) return "🎤 Listening... Speak now";
+    if (isProcessing) return "🤖 Processing your speech...";
+    if (transcript) return "✅ AI response received";
+    return "Click microphone to start voice chat";
   };
 
   const getStatusColor = () => {
+    if (hasPermission === false) return "text-red-500";
+    if (hasPermission === null) return "text-yellow-500";
+    if (!isConnected && connectionAttempts > 0) return "text-red-500";
     if (!isConnected) return "text-yellow-500";
-    if (isRecording) return "text-red-500";
+    if (isRecording) return "text-green-500";
     if (isProcessing) return "text-blue-500";
     if (transcript) return "text-green-500";
     return "text-muted-foreground";
   };
 
   const getOrbState = () => {
+    if (hasPermission === false) return 'idle';
     if (!isConnected) return 'idle';
     if (isRecording) return 'listening';
     if (isProcessing) return 'thinking';
@@ -204,6 +300,18 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
               {getStatusText()}
             </p>
 
+            {/* Retry button for failed connections */}
+            {!isConnected && connectionAttempts > 0 && connectionAttempts < 3 && (
+              <Button
+                onClick={retryConnection}
+                variant="outline"
+                size="sm"
+                className="text-xs"
+              >
+                Retry Connection
+              </Button>
+            )}
+
             <VolumeIndicator />
 
             {isExpanded && transcript && (
@@ -245,6 +353,18 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
           <p className={cn("text-sm text-center", getStatusColor())}>
             {getStatusText()}
           </p>
+
+          {/* Retry button for failed connections */}
+          {!isConnected && connectionAttempts > 0 && connectionAttempts < 3 && (
+            <Button
+              onClick={retryConnection}
+              variant="outline"
+              size="sm"
+              className="text-xs"
+            >
+              Retry Connection
+            </Button>
+          )}
 
           <VolumeIndicator />
 

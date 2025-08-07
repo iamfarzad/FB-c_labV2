@@ -8,8 +8,8 @@ import { Resend } from 'resend'
 import { getSupabase } from '@/lib/supabase/server'
 import { z } from 'zod'
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Initialize Resend with fallback for build time
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
 // Email request schema
 const emailRequestSchema = z.object({
@@ -200,6 +200,14 @@ function getReadinessMessage(score: number): string {
 
 export async function POST(req: NextRequest) {
   try {
+    // Check if Resend is available
+    if (!resend) {
+      return NextResponse.json(
+        { error: 'Email service not configured' },
+        { status: 503 }
+      )
+    }
+
     // Parse and validate request
     const body = await req.json()
     const validatedData = emailRequestSchema.parse(body)
