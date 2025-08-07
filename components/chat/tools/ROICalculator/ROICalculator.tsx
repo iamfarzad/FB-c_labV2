@@ -14,6 +14,22 @@ import { ToolCardWrapper } from "@/components/chat/ToolCardWrapper"
 import { cn } from "@/lib/utils"
 import type { ROICalculatorProps, ROICalculationResult, WizardStep } from "./ROICalculator.types"
 
+// Type for the API response data
+type ROICalculationAPIResponse = {
+  roi: number;
+  paybackPeriod: number | null;
+  initialInvestment: number;
+  monthlyRevenue: number;
+  monthlyExpenses: number;
+  monthlyProfit: number;
+  totalRevenue: number;
+  totalExpenses: number;
+  totalProfit: number;
+  netProfit: number;
+  timePeriod: number;
+  calculatedAt: string;
+}
+
 const WIZARD_STEPS: WizardStep[] = ["company-info", "metrics", "results"];
 
 export function ROICalculator({
@@ -35,7 +51,7 @@ export function ROICalculator({
     industry: "",
     useCase: ""
   })
-  const [result, setResult] = useState<any | null>(null) // Changed to any since API response doesn't match ROICalculationResult
+  const [result, setResult] = useState<ROICalculationAPIResponse | null>(null)
 
   const fieldLabels: Record<string, string> = {
     initialInvestment: "Initial Investment ($)",

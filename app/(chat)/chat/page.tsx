@@ -328,66 +328,52 @@ function ChatPageContent() {
   }
 
   const handleFileUpload = async (file: File) => {
+    const readFileAsDataURL = (fileToRead: File): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(fileToRead);
+      });
+
+    setIsLoading(true);
     try {
-      // Show loading state
-      setIsLoading(true)
-      
-      // Convert file to base64
-      const reader = new FileReader()
-      reader.onload = async (e) => {
-        const fileContent = e.target?.result as string
-        
-        try {
-          // Call the analyze-document API
-          const response = await fetch('/api/analyze-document', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              document: fileContent,
-              fileName: file.name,
-              mimeType: file.type
-            })
-          })
-          
-          if (!response.ok) {
-            throw new Error('Failed to analyze document')
-          }
-          
-          const result = await response.json()
-          
-          // Add the analysis as a message
-          const analysisMessage = `I've analyzed your document "${file.name}". Here's what I found:\n\n${result.analysis || 'Analysis completed successfully.'}`
-          
-          setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            role: 'assistant',
-            content: analysisMessage,
-          }])
-          
-        } catch (error) {
-          console.error('Document analysis error:', error)
-          setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            role: 'assistant',
-            content: `I apologize, but I encountered an error while analyzing your document "${file.name}". Please try again or contact support if the issue persists.`,
-          }])
-        } finally {
-          setIsLoading(false)
-        }
+      const fileContent = await readFileAsDataURL(file);
+
+      const response = await fetch('/api/analyze-document', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          document: fileContent,
+          fileName: file.name,
+          mimeType: file.type,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze document');
       }
-      
-      reader.onerror = () => {
-        console.error('Error reading file:', file.name)
-        setIsLoading(false)
-      }
-      
-      reader.readAsDataURL(file)
-      
+
+      const result = await response.json();
+
+      const analysisMessage = `I've analyzed your document "${file.name}". Here's what I found:\n\n${result.analysis || 'Analysis completed successfully.'}`;
+
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: analysisMessage,
+      }]);
     } catch (error) {
-      console.error('File upload error:', error)
-      setIsLoading(false)
+      console.error('File upload error:', error);
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `I apologize, but I encountered an error while analyzing your document "${file.name}". Please try again or contact support if the issue persists.`,
+      }]);
+    } finally {
+      setIsLoading(false);
     }
   }
 

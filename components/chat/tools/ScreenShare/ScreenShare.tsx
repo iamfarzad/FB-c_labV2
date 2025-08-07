@@ -46,7 +46,7 @@ export function ScreenShare({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image: imageData,
-          type: 'screen' // Changed from 'screen' to 'screenshot' to match analyze-image API
+          type: 'screen' // Specify this is a screen capture for analysis
         })
       })
       if (!response.ok) throw new Error('Failed to analyze screen frame')

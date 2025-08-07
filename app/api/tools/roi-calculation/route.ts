@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const monthlyProfit = monthlyRevenue - monthlyExpenses
     const totalProfit = monthlyProfit * timePeriod
     const roi = ((totalProfit - initialInvestment) / initialInvestment) * 100
-    const paybackPeriod = monthlyProfit > 0 ? initialInvestment / monthlyProfit : Infinity // in months
+    const paybackPeriod = monthlyProfit > 0 ? initialInvestment / monthlyProfit : null // in months
     const totalRevenue = monthlyRevenue * timePeriod
     const totalExpenses = monthlyExpenses * timePeriod
     const netProfit = totalProfit - initialInvestment
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       status: 'success',
       data: {
         roi: Math.round(roi * 100) / 100, // Round to 2 decimal places
-        paybackPeriod: Math.round(paybackPeriod * 100) / 100,
+        paybackPeriod: paybackPeriod !== null ? Math.round(paybackPeriod * 100) / 100 : null,
         initialInvestment,
         monthlyRevenue,
         monthlyExpenses,
