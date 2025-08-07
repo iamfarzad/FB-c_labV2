@@ -240,17 +240,26 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
         }
     }
 
-    async function handleUserMessage(connectionId: string, payload: any) {
+    async function handleUserMessage(connectionId: string, ws: WebSocket, payload: any) {
         if (payload.audioData && payload.mimeType) {
-            const client = activeSessions.get(connectionId)
+            let client = activeSessions.get(connectionId)
             const audioDataBuffer = Buffer.from(payload.audioData, 'base64');
             console.log(`[${connectionId}] Buffered audio chunk (${audioDataBuffer.length} bytes).`);
             // Try streaming directly if session is ready; otherwise queue
             if (!client) {
-                const q = pendingAudioChunks.get(connectionId) || []
-                q.push({ data: payload.audioData, mimeType: payload.mimeType })
-                pendingAudioChunks.set(connectionId, q)
-                return
+                console.log(`[${connectionId}] ⚙️  No active Gemini session; starting now before forwarding chunk...`)
+                try {
+                  await handleStart(connectionId, ws, {})
+                  client = activeSessions.get(connectionId)
+                } catch (e) {
+                  console.error(`[${connectionId}] ❌ Failed to auto-start session:`, e)
+                }
+                if (!client) {
+                  const q = pendingAudioChunks.get(connectionId) || []
+                  q.push({ data: payload.audioData, mimeType: payload.mimeType })
+                  pendingAudioChunks.set(connectionId, q)
+                  return
+                }
             }
             try {
                 await (client.session as any).sendRealtimeInput({
@@ -339,14 +348,23 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
                         await handleStart(connectionId, ws, parsedMessage.payload);
                         break;
                     case 'user_audio':
-                        await handleUserMessage(connectionId, parsedMessage.payload);
+                        await handleUserMessage(connectionId, ws, parsedMessage.payload);
                         break;
                     case 'TURN_COMPLETE': {
-                        const client = activeSessions.get(connectionId)
+                        let client = activeSessions.get(connectionId)
                         if (!client) {
-                            pendingTurnComplete.set(connectionId, true)
-                            console.log(`[${connectionId}] 🕒 TURN_COMPLETE queued (session not ready).`)
-                            break
+                            console.log(`[${connectionId}] 🕒 TURN_COMPLETE received with no session; starting session now.`)
+                            try {
+                              await handleStart(connectionId, ws, {})
+                              client = activeSessions.get(connectionId)
+                            } catch (e) {
+                              console.error(`[${connectionId}] ❌ Failed to auto-start session on TURN_COMPLETE:`, e)
+                            }
+                        }
+                        if (!client) {
+                          pendingTurnComplete.set(connectionId, true)
+                          console.log(`[${connectionId}] 🕒 TURN_COMPLETE queued (session not ready).`)
+                          break
                         }
                         try {
                           await (client.session as any).sendRealtimeInput({ turnComplete: true })
