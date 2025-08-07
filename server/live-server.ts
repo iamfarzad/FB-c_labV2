@@ -85,8 +85,10 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
     // --- In-Memory Stores ---
     const activeSessions = new Map<string, { ws: WebSocket; session: Session }>();
     const sessionBudgets = new Map<string, SessionBudget>();
-    // Store Node Buffers for simpler concat usage
+    // Store Node Buffers for simpler concat usage (legacy batching)
     const bufferedAudioChunks = new Map<string, Buffer[]>();
+    // Queue audio chunks when session is not yet ready (streaming mode)
+    const pendingAudioChunks = new Map<string, { data: string; mimeType: string }[]>();
     // Queue TURN_COMPLETE when it arrives before Gemini session is ready
     const pendingTurnComplete = new Map<string, boolean>();
 
@@ -174,10 +176,30 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
 
     activeSessions.set(connectionId, { ws, session });
     console.log(`[${connectionId}] Active session stored.`);
+    // Flush any queued audio chunks first
+    const queued = pendingAudioChunks.get(connectionId) || []
+    if (queued.length > 0) {
+      console.log(`[${connectionId}] 🚚 Flushing ${queued.length} queued audio chunks to Gemini`)
+      for (const chunk of queued) {
+        try {
+          await (session as any).sendRealtimeInput({
+            audio: { data: chunk.data, mimeType: chunk.mimeType },
+          })
+        } catch (e) {
+          console.error(`[${connectionId}] ❌ Failed to send queued chunk:`, e)
+        }
+      }
+      pendingAudioChunks.delete(connectionId)
+    }
     if (pendingTurnComplete.get(connectionId)) {
       console.log(`[${connectionId}] 🔁 Processing queued TURN_COMPLETE after session start.`)
       pendingTurnComplete.delete(connectionId)
-      await sendBufferedAudioToGemini(connectionId)
+      try {
+        await (session as any).sendRealtimeInput({ turnComplete: true })
+        console.log(`[${connectionId}] ✅ Sent TURN_COMPLETE to Gemini`)
+      } catch (e) {
+        console.error(`[${connectionId}] ❌ Failed to send TURN_COMPLETE:`, e)
+      }
     }
 
   } catch (error) {
@@ -220,12 +242,28 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
 
     async function handleUserMessage(connectionId: string, payload: any) {
         if (payload.audioData && payload.mimeType) {
+            const client = activeSessions.get(connectionId)
             const audioDataBuffer = Buffer.from(payload.audioData, 'base64');
-            const sessionAudioBuffers = bufferedAudioChunks.get(connectionId) || [];
-            sessionAudioBuffers.push(audioDataBuffer);
-            bufferedAudioChunks.set(connectionId, sessionAudioBuffers);
             console.log(`[${connectionId}] Buffered audio chunk (${audioDataBuffer.length} bytes).`);
-            return; // Wait for TURN_COMPLETE
+            // Try streaming directly if session is ready; otherwise queue
+            if (!client) {
+                const q = pendingAudioChunks.get(connectionId) || []
+                q.push({ data: payload.audioData, mimeType: payload.mimeType })
+                pendingAudioChunks.set(connectionId, q)
+                return
+            }
+            try {
+                await (client.session as any).sendRealtimeInput({
+                  audio: { data: payload.audioData, mimeType: payload.mimeType },
+                })
+            } catch (e) {
+                console.error(`[${connectionId}] ❌ Failed to forward audio chunk to Gemini:`, e)
+                // Fallback: buffer for batch send (legacy)
+                const sessionAudioBuffers = bufferedAudioChunks.get(connectionId) || []
+                sessionAudioBuffers.push(audioDataBuffer)
+                bufferedAudioChunks.set(connectionId, sessionAudioBuffers)
+            }
+            return;
         }
         // Handle text messages if needed in the future
     }
@@ -303,14 +341,23 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
                     case 'user_audio':
                         await handleUserMessage(connectionId, parsedMessage.payload);
                         break;
-                    case 'TURN_COMPLETE':
-                        if (!activeSessions.get(connectionId)) {
+                    case 'TURN_COMPLETE': {
+                        const client = activeSessions.get(connectionId)
+                        if (!client) {
                             pendingTurnComplete.set(connectionId, true)
                             console.log(`[${connectionId}] 🕒 TURN_COMPLETE queued (session not ready).`)
-                            break;
+                            break
                         }
-                        await sendBufferedAudioToGemini(connectionId);
-                        break;
+                        try {
+                          await (client.session as any).sendRealtimeInput({ turnComplete: true })
+                          console.log(`[${connectionId}] ✅ TURN_COMPLETE sent to Gemini`)
+                        } catch (e) {
+                          console.error(`[${connectionId}] ❌ Failed to send TURN_COMPLETE:`, e)
+                          // Fallback to legacy batch send
+                          await sendBufferedAudioToGemini(connectionId)
+                        }
+                        break
+                    }
                 }
             } catch (error) {
                 console.error(`[${connectionId}] Error:`, error);
