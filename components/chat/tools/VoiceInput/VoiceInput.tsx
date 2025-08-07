@@ -6,7 +6,7 @@ import { useWebSocketVoice } from '@/hooks/use-websocket-voice';
 import { useVoiceRecorder } from '@/hooks/use-voice-recorder';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Mic, MicOff, X, Volume2 } from 'lucide-react';
+import { X, Volume2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { FbcVoiceOrb } from './FbcVoiceOrb';
@@ -52,17 +52,13 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
   }, [isRecording, startSession, startRecording, stopRecording]);
   
   useEffect(() => {
-    startSession().then(() => {
-        // Optional: automatically start recording once connected
-        // startRecording(); 
-    });
+    startSession();
     return () => {
       stopRecording();
       stopSession();
     };
-  }, [startSession, stopSession, startRecording, stopRecording]);
+  }, [startSession, stopSession, stopRecording]);
 
-  // Handle transcript updates
   useEffect(() => {
     if (transcript && onTranscript) {
       onTranscript(transcript);

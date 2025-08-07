@@ -79,6 +79,7 @@
     "@radix-ui/react-toggle": "latest",
     "@radix-ui/react-toggle-group": "latest",
     "@radix-ui/react-tooltip": "latest",
+    "@react-email/render": "^1.2.0",
     "@ricky0123/vad-web": "^0.0.24",
     "@supabase/supabase-js": "latest",
     "@tailwindcss/typography": "latest",

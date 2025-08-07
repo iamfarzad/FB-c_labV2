@@ -88,70 +88,41 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
   // Audio playback logic (depends on playNextAudio, so defined after it is stable)
   playAudioRef.current = useCallback(async (base64Audio: string, mimeType: string) => {
     if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-      initAudioContext()
+      initAudioContext();
     }
     if (audioContextRef.current?.state === 'suspended') {
-      await audioContextRef.current.resume()
+      await audioContextRef.current.resume();
     }
 
     try {
-      isPlayingRef.current = true
+      isPlayingRef.current = true;
 
-      // Convert base64 to raw bytes
-      let bytes: Uint8Array
-      if (typeof base64Audio === 'string') {
-        try {
-          // Convert base64 string to Uint8Array
-          const binaryString = atob(base64Audio)
-          bytes = new Uint8Array(binaryString.length)
-          for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i)
-          }
-        } catch (error) {
-          console.error('❌ Invalid base64 audio data:', error)
-          throw new Error('Failed to decode base64 audio data')
-        }
-      } else {
-        // If it's already an ArrayBuffer, convert to Uint8Array
-        bytes = new Uint8Array(base64Audio as unknown as ArrayBuffer)
-      }
+      const bytes = new Uint8Array(atob(base64Audio).split('').map(char => char.charCodeAt(0)));
+      const float32 = new Float32Array(bytes.length / 2);
+      const dataView = new DataView(bytes.buffer);
 
-      // Convert 16-bit PCM to Float32Array (following Google's implementation)
-      const float32 = new Float32Array(bytes.length / 2)
-      const dataView = new DataView(bytes.buffer)
       for (let i = 0; i < bytes.length; i += 2) {
-        // Read 16-bit little-endian PCM and normalize to [-1, 1]
-        float32[i / 2] = dataView.getInt16(i, true) / 32768
+        float32[i / 2] = dataView.getInt16(i, true) / 32768;
       }
 
-      // Create AudioBuffer manually from PCM data
-      // Determine sample rate from mimeType or use default
-      let sampleRate = 24000 // Default for Gemini
-      if (mimeType?.includes('rate=16000')) {
-        sampleRate = 16000
-      } else if (mimeType?.includes('rate=24000')) {
-        sampleRate = 24000
-      }
+      const sampleRate = mimeType?.includes('rate=16000') ? 16000 : 24000;
+      const audioBuffer = audioContextRef.current!.createBuffer(1, float32.length, sampleRate);
+      audioBuffer.getChannelData(0).set(float32);
 
-      const audioBuffer = audioContextRef.current!.createBuffer(1, float32.length, sampleRate)
-      audioBuffer.getChannelData(0).set(float32)
-
-      // Play the audio buffer
-      const source = audioContextRef.current!.createBufferSource()
-      source.buffer = audioBuffer
-      source.connect(audioContextRef.current!.destination)
+      const source = audioContextRef.current!.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContextRef.current!.destination);
       source.onended = () => {
-        isPlayingRef.current = false
-        playNextAudioRef.current() // Play next audio in queue
-      }
-      source.start(0)
-      console.log('[useWebSocketVoice] Playing PCM audio:', float32.length, 'samples at', sampleRate, 'Hz')
+        isPlayingRef.current = false;
+        playNextAudioRef.current();
+      };
+      source.start(0);
     } catch (error) {
-      console.error('❌ Error playing PCM audio:', error)
-      isPlayingRef.current = false
-      playNextAudioRef.current() // Try next audio in queue
+      console.error('Error playing PCM audio:', error);
+      isPlayingRef.current = false;
+      playNextAudioRef.current();
     }
-  }, [initAudioContext, playNextAudioRef]) // Add playNextAudioRef as dependency to ensure latest version
+  }, [initAudioContext]);
 
   // Connect to WebSocket server (only when explicitly called)
   const connectWebSocket = useCallback(() => {

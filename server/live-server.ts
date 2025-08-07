@@ -144,7 +144,7 @@
             - Be conversational, friendly, and helpful
             - Keep responses concise but informative
             - Always acknowledge what the user said before providing your response
-            - Speak clearly and naturally in your audio responses`
+            - Speak clearly and naturally in your audio responses
           }]
         },
       },

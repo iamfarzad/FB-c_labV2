@@ -11,15 +11,15 @@ This document defines the canonical design system for the F.B/c AI project. All 
 All color variables must be defined in `globals.css` and referenced via Tailwind config or CSS custom properties. No hard-coded hex values in components.
 ## 1. Brand Color Palette
 
-| Token                  | Value         | Usage                        |
-|------------------------|--------------|------------------------------|
-| --color-orange-accent  | #ff5b04      | Primary accent, buttons      |
-| --color-orange-accent-hover | #e65200 | Button hover, highlights     |
-| --color-gunmetal       | #1a1a1a      | Main dark bg, text           |
-| --color-gunmetal-lighter | #2a2a2a    | Card bg, dark surfaces       |
-| --color-light-silver   | #f5f5f5      | Main light bg, text          |
-| --color-light-silver-darker | #e0e0e0 | Borders, muted bg            |
----
+  | Token                  | Value         | Usage                        |
+  |------------------------|--------------|------------------------------|
+  | --color-orange-accent  | #ff5b04      | Primary accent, buttons      |
+  | --color-orange-accent-hover | #e65200 | Button hover, highlights     |
+  | --color-gunmetal       | #1a1a1a      | Main dark bg, text           |
+  | --color-gunmetal-lighter | #2a2a2a    | Card bg, dark surfaces       |
+  | --color-light-silver   | #f5f5f5      | Main light bg, text          |
+  | --color-light-silver-darker | #e0e0e0 | Borders, muted bg            |
+  ---
 
 ## 2. Font Stack
 
