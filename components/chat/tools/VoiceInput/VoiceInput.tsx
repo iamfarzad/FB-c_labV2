@@ -235,11 +235,7 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
         });
       }
     }
-<<<<<<< HEAD
   }, [isRecording, isConnected, hasPermission, startRecording, stopRecording, onTurnComplete, requestPermission, startSession, toast]);
-=======
-  }, [isRecording, isConnected, startRecording, stopRecording, onTurnComplete, hasPermission, requestPermission, toast, startSession]);
->>>>>>> b042f33 (Voice pipeline: explicit mic permission + Start/Stop with manual TURN_COMPLETE; robust WS URL + CSP cleanup; VAD thresholds configurable; PCM mime fixes; server sends 16k PCM to Gemini; dev TLS toggle; UI feedback. Also remove static CSP from next.config.mjs in favor of middleware.)
 
   const getStatusText = () => {
     if (hasPermission === false) return "Microphone access denied - check browser settings";
