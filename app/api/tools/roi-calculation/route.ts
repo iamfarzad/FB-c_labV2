@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const monthlyProfit = monthlyRevenue - monthlyExpenses
     const totalProfit = monthlyProfit * timePeriod
     const roi = ((totalProfit - initialInvestment) / initialInvestment) * 100
-    const paybackPeriod = initialInvestment / monthlyProfit // in months
+    const paybackPeriod = monthlyProfit > 0 ? initialInvestment / monthlyProfit : Infinity // in months
     const totalRevenue = monthlyRevenue * timePeriod
     const totalExpenses = monthlyExpenses * timePeriod
     const netProfit = totalProfit - initialInvestment
