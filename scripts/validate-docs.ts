@@ -55,6 +55,9 @@ function extractPathsFromMarkdown(md: string): string[] {
 }
 
 function main() {
+  const args = process.argv.slice(2)
+  const reportIdx = args.indexOf('--report')
+  const reportPath = reportIdx !== -1 ? args[reportIdx + 1] : null
   const all = walk(ROOT).filter(f => f.endsWith('.md'))
   const results: Array<{ doc: string; refs: string[]; missing: string[] }> = []
   let totalRefs = 0
@@ -70,23 +73,42 @@ function main() {
     totalMissing += missing.length
   }
 
-  // Print concise report
-  // eslint-disable-next-line no-console
-  console.log('📑 Documentation reference validation')
-  // eslint-disable-next-line no-console
-  console.log(`Docs scanned: ${all.length}`)
-  // eslint-disable-next-line no-console
-  console.log(`References found: ${totalRefs}`)
-  // eslint-disable-next-line no-console
-  console.log(`Missing references: ${totalMissing}`)
-
-  for (const r of results) {
-    if (r.missing.length === 0) continue
+  if (reportPath) {
+    let md = `# Docs Reference Audit\n\n` +
+      `- Docs scanned: ${all.length}\n` +
+      `- References found: ${totalRefs}\n` +
+      `- Missing references: ${totalMissing}\n\n` +
+      `> Generated: ${new Date().toISOString()}\n\n`
+    for (const r of results) {
+      if (r.missing.length === 0) continue
+      md += `## ${r.doc}\n\n`
+      for (const m of r.missing) {
+        md += `- [ ] ${m}\n`
+      }
+      md += `\n`
+    }
+    const out = path.resolve(ROOT, reportPath)
+    fs.mkdirSync(path.dirname(out), { recursive: true })
+    fs.writeFileSync(out, md, 'utf8')
+  } else {
+    // Print concise report to stdout
     // eslint-disable-next-line no-console
-    console.log(`\n— ${r.doc}`)
-    for (const m of r.missing) {
+    console.log('📑 Documentation reference validation')
+    // eslint-disable-next-line no-console
+    console.log(`Docs scanned: ${all.length}`)
+    // eslint-disable-next-line no-console
+    console.log(`References found: ${totalRefs}`)
+    // eslint-disable-next-line no-console
+    console.log(`Missing references: ${totalMissing}`)
+  
+    for (const r of results) {
+      if (r.missing.length === 0) continue
       // eslint-disable-next-line no-console
-      console.log(`  ✗ ${m}`)
+      console.log(`\n— ${r.doc}`)
+      for (const m of r.missing) {
+        // eslint-disable-next-line no-console
+        console.log(`  ✗ ${m}`)
+      }
     }
   }
 
