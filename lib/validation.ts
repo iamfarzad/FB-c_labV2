@@ -58,6 +58,20 @@ export const chatRequestSchema = z.object({
   }).optional(),
 });
 
+// Translation validation
+export const translationRequestSchema = z.object({
+  text: z.string()
+    .min(1, 'Text is required')
+    .max(10000, 'Text must be less than 10000 characters'),
+  targetLang: z.string()
+    .min(2, 'Target language code is required')
+    .max(10, 'Target language code must be less than 10 characters'),
+  sourceLang: z.string()
+    .min(2, 'Source language code must be at least 2 characters')
+    .max(10, 'Source language code must be less than 10 characters')
+    .optional()
+})
+
 // File upload validation
 export const fileUploadSchema = z.object({
   file: z.any(), // File object from FormData

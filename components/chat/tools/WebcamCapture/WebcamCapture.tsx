@@ -381,7 +381,7 @@ export function WebcamCapture({
           autoPlay
           playsInline
           muted
-          className="w-full rounded-lg border"
+          className="w-full rounded-xl border border-border/20 shadow-md"
         />
         
         {/* Capture Button Overlay */}
@@ -404,7 +404,7 @@ export function WebcamCapture({
           onClick={() => setShowAnalysisPanel(!showAnalysisPanel)}
           variant="ghost"
           size="sm"
-          className="absolute top-4 right-4 bg-black/50 text-white hover:bg-black/70"
+          className="absolute top-4 right-4 bg-black/40 text-white hover:bg-black/60 rounded-full"
         >
           {showAnalysisPanel ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
         </Button>
@@ -421,7 +421,7 @@ export function WebcamCapture({
           >
             {/* Current Analysis */}
             {currentAnalysis && (
-              <Card>
+              <Card className="border border-border/20 rounded-2xl">
                 <CardHeader>
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Brain className="w-4 h-4" />
@@ -429,14 +429,14 @@ export function WebcamCapture({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-700">{currentAnalysis}</p>
+                  <p className="text-sm text-foreground/80">{currentAnalysis}</p>
                 </CardContent>
               </Card>
             )}
 
             {/* Analysis History */}
             {analysisHistory.length > 0 && (
-              <Card>
+              <Card className="border border-border/20 rounded-2xl">
                 <CardHeader>
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Video className="w-4 h-4" />
@@ -447,11 +447,11 @@ export function WebcamCapture({
                   {analysisHistory.slice(-3).map((analysis) => (
                     <div
                       key={analysis.id}
-                      className="p-3 rounded-lg bg-gray-50 border-l-4 border-blue-500"
+                      className="p-3 rounded-lg bg-accent/5 border-l-4 border-accent/60"
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="secondary">AI</Badge>
-                        <span className="text-xs text-gray-500">
+                        <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20">AI</Badge>
+                        <span className="text-xs text-muted-foreground">
                           {new Date(analysis.timestamp).toLocaleTimeString()}
                         </span>
                       </div>
@@ -482,7 +482,7 @@ export function WebcamCapture({
   if (mode === 'modal') {
     return (
       <Dialog open={true} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl rounded-3xl border border-border/20 shadow-xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Camera className="w-5 h-5" />

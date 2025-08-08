@@ -44,6 +44,13 @@ All notable changes to this project will be documented in this file.
   - Supports both 16kHz and 24kHz sample rates
 
 ### Fixed - 2025-08-07
+### Conversational Improvements - 2025-08-07
+- Added `ActivityChip` and parsing in `ChatArea` to render inline activity markers without card wrappers
+  - Use `[ACTIVITY_IN:Label]` and `[ACTIVITY_OUT:Label]` in assistant text; UI renders small chips
+- Expanded assistant system prompts (text and voice) with F.B/c profile, services, workshop, abilities, and fun persona
+  - `app/api/chat/route.ts` base prompt updated
+  - `server/live-server.ts` systemInstruction updated
+
 - **🎯 CRITICAL FIX**: Fixed PCM audio decoding in WebSocket voice functionality
   - Replaced incorrect `decodeAudioData` usage with manual PCM to Float32Array conversion
   - Now properly handles 16-bit little-endian PCM audio from Gemini Live API

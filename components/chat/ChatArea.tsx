@@ -33,6 +33,7 @@ import { ScreenShare } from "@/components/chat/tools/ScreenShare"
 import { BusinessContentRenderer } from "@/components/chat/BusinessContentRenderer"
 import { AIThinkingIndicator, detectAIContext, type AIThinkingContext } from "./AIThinkingIndicator"
 import { AIInsightCard } from "./AIInsightCard"
+import { ActivityChip } from "@/components/chat/activity/ActivityChip"
 import type { 
   VoiceTranscriptResult, 
   VideoAppResult
@@ -52,6 +53,7 @@ interface ChatAreaProps {
   onBusinessInteraction?: (data: BusinessInteractionData) => void
   userContext?: UserBusinessContext
   onSendMessage?: (message: string) => void
+  loadingContext?: AIThinkingContext
 }
 
 export const ChatArea = memo(function ChatArea({
@@ -65,7 +67,8 @@ export const ChatArea = memo(function ChatArea({
   onScreenAnalysis,
   onBusinessInteraction,
   userContext,
-  onSendMessage
+  onSendMessage,
+  loadingContext
 }: ChatAreaProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
@@ -120,6 +123,8 @@ export const ChatArea = memo(function ChatArea({
     
     // Enhanced markdown formatting with better styling and list support
     let formatted = content
+      // Activity chips passthrough placeholder (handled separately before dangerous HTML)
+      .replace(/\[(ACTIVITY_IN|ACTIVITY_OUT):([^\]]+)\]/g, (m) => `@@@ACTIVITY_MARKER@@@${m}@@@`)
       // Handle code blocks first (to avoid conflicts)
       .replace(/```([\s\S]*?)```/g, '<pre class="bg-muted/40 border border-border/30 rounded-lg p-4 my-3 whitespace-pre-wrap break-words overflow-x-auto"><code class="text-sm font-mono">$1</code></pre>')
       // Handle inline code
@@ -141,6 +146,28 @@ export const ChatArea = memo(function ChatArea({
     
     return formatted
   }, [])
+
+  // Extract activity markers and split content into parts
+  const extractActivities = (content: string): { parts: Array<{ type: 'text' | 'activity'; value: string; dir?: 'in' | 'out' }> } => {
+    if (!content) return { parts: [] }
+    const regex = /\[(ACTIVITY_IN|ACTIVITY_OUT):([^\]]+)\]/g
+    const parts: Array<{ type: 'text' | 'activity'; value: string; dir?: 'in' | 'out' }> = []
+    let lastIndex = 0
+    let match: RegExpExecArray | null
+    while ((match = regex.exec(content)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push({ type: 'text', value: content.slice(lastIndex, match.index) })
+      }
+      const dir = match[1] === 'ACTIVITY_IN' ? 'in' : 'out'
+      const label = match[2].trim()
+      parts.push({ type: 'activity', value: label, dir })
+      lastIndex = regex.lastIndex
+    }
+    if (lastIndex < content.length) {
+      parts.push({ type: 'text', value: content.slice(lastIndex) })
+    }
+    return { parts }
+  }
 
   const detectMessageType = useCallback((content: string): { type: string; icon?: React.ReactNode; badge?: string; color?: string } => {
     if (!content) return { type: 'default' }
@@ -286,9 +313,9 @@ export const ChatArea = memo(function ChatArea({
 
     switch (toolType) {
       case 'voice_input':
-        return <VoiceInput mode="card" onCancel={handleCancel} onTranscript={(transcript: string) => onVoiceTranscript(transcript)} />
+        return <VoiceInput mode="card" onClose={handleCancel} onTranscript={(transcript: string) => onVoiceTranscript(transcript)} />
       case 'webcam_capture':
-        return <WebcamCapture onAnalysisComplete={(imageData: string) => onWebcamCapture(imageData)} />
+        return <WebcamCapture onCapture={(imageData: string) => onWebcamCapture(imageData)} onAIAnalysis={() => {}} />
       case 'roi_calculator':
         return <ROICalculator mode="card" onCancel={handleCancel} onComplete={(result: ROICalculationResult) => onROICalculation(result)} />
       case 'video_to_app':
@@ -304,7 +331,7 @@ export const ChatArea = memo(function ChatArea({
           }}
         />
       case 'screen_share':
-        return <ScreenShare onAnalysisComplete={(analysis: string) => onScreenAnalysis(analysis)} />
+        return <ScreenShare onAnalysis={(analysis: string) => onScreenAnalysis(analysis)} />
       default:
         return null
     }
@@ -351,8 +378,8 @@ export const ChatArea = memo(function ChatArea({
       >
         <div 
           className={cn(
-            "mx-auto space-y-3 sm:space-y-4 px-2 sm:px-4 md:px-6 py-4 sm:py-6",
-            "w-full",
+            "mx-auto space-y-3 sm:space-y-4 px-4 sm:px-6 md:px-8 lg:px-24 py-4 sm:py-6",
+            "w-full max-w-[900px]",
             "min-h-full flex flex-col justify-end"
           )} 
           data-testid="messages-container"
@@ -583,17 +610,37 @@ export const ChatArea = memo(function ChatArea({
                                 </motion.div>
                               )}
 
-                              <div
-                                className={cn(
-                                  "prose prose-sm max-w-none leading-relaxed break-words",
-                                  "dark:prose-invert prose-slate text-foreground",
-                                  "prose-headings:mt-4 prose-headings:mb-2 prose-p:mb-3 prose-li:mb-1",
-                                  "prose-strong:text-current prose-em:text-current"
-                                )}
-                                dangerouslySetInnerHTML={{
-                                  __html: formatMessageContent(message.content || ''),
-                                }}
-                              />
+                              {/* Render text with inlined ActivityChips without wrapping chips in HTML */}
+                              <div className="prose prose-sm max-w-none leading-relaxed break-words dark:prose-invert prose-slate text-foreground prose-headings:mt-4 prose-headings:mb-2 prose-p:mb-3 prose-li:mb-1 prose-strong:text-current prose-em:text-current">
+                                {(() => {
+                                  const raw = message.content || ''
+                                  const { parts } = extractActivities(raw)
+                                  if (parts.length === 0) {
+                                    return (
+                                      <span
+                                        dangerouslySetInnerHTML={{ __html: formatMessageContent(raw) }}
+                                      />
+                                    )
+                                  }
+                                  return (
+                                    <>
+                                      {parts.map((p, idx) => {
+                                        if (p.type === 'activity') {
+                                          return (
+                                            <ActivityChip key={`${message.id}-act-${idx}`} direction={p.dir as 'in' | 'out'} label={p.value} className="mx-1 align-middle" />
+                                          )
+                                        }
+                                        return (
+                                          <span
+                                            key={`${message.id}-txt-${idx}`}
+                                            dangerouslySetInnerHTML={{ __html: formatMessageContent(p.value) }}
+                                          />
+                                        )
+                                      })}
+                                    </>
+                                  )
+                                })()}
+                              </div>
 
                               {/* Sources */}
                               {message.sources && message.sources.length > 0 && (
@@ -686,7 +733,7 @@ export const ChatArea = memo(function ChatArea({
                       {/* Show AI Thinking Indicator immediately after the last message when loading */}
                       {isLastMessage && isLoading && (
                         <AIThinkingIndicator 
-                          context={detectAIContext(
+                          context={loadingContext || detectAIContext(
                             message.content || '',
                             '/api/chat'
                           )}

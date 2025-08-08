@@ -167,86 +167,84 @@ export function ChatFooter({
       />
 
       <div className="mx-auto w-full max-w-7xl px-2 sm:px-4 md:px-6 py-2 sm:py-4 relative z-10">
-        <form onSubmit={handleSubmit}>
-          {/* Hidden File Inputs */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.txt,.doc,.docx,.md,.csv,.json"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-          <input
-            ref={imageInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="hidden"
-          />
+        {/* Hidden File Inputs */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.txt,.doc,.docx,.md,.csv,.json"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+        />
 
-          <PillInput
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (canSend) handleSubmit(e)
-            }}
-            placeholder="Ask anything..."
-            disabled={isLoading}
-            waveformChip={voiceDraft ? (
-              <div className="hidden sm:flex items-center h-7 px-2 rounded-full bg-accent/10 text-accent text-xs border border-accent/20">
-                <span className="mr-1">🎤</span>
-                <span className="truncate max-w-[140px]">{voiceDraft}</span>
-              </div>
-            ) : undefined}
-            leftSlot={
-              <div className="flex items-center gap-2">
-                <ToolMenu
-                  onUploadDocument={() => fileInputRef.current?.click()}
-                  onUploadImage={() => imageInputRef.current?.click()}
-                  onWebcam={handleWebcamCapture}
-                  onScreenShare={handleScreenShare}
-                  onROI={handleROICalculator}
-                  disabled={isLoading}
-                />
-                {voiceDraft && (
-                  <button
-                    type="button"
-                    onClick={onClearVoiceDraft}
-                    className="hidden sm:inline-flex items-center h-7 px-2 rounded-full bg-muted text-xs text-foreground/80 border border-border/40"
-                    aria-label="Clear voice draft"
-                  >
-                    •••
-                    <span className="ml-1 truncate max-w-[120px]">{voiceDraft}</span>
-                  </button>
-                )}
-              </div>
-            }
-            rightSlot={
-              <motion.div whileHover={{ scale: canSend ? 1.05 : 1 }} whileTap={{ scale: canSend ? 0.95 : 1 }}>
-                <Button
-                  type="submit"
-                  size="icon"
-                  className={cn(
-                    "w-9 h-9 rounded-full transition-all duration-300 shadow-sm",
-                    canSend
-                      ? "bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent/80 shadow-md hover:shadow-lg text-accent-foreground"
-                      : "bg-muted/50 text-muted-foreground cursor-not-allowed"
-                  )}
-                  disabled={!canSend}
+        <PillInput
+          value={input}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (canSend) handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>)
+          }}
+          placeholder="Ask anything..."
+          disabled={isLoading}
+          waveformChip={voiceDraft ? (
+            <div className="hidden sm:flex items-center h-7 px-2 rounded-full bg-accent/10 text-accent text-xs border border-accent/20">
+              <span className="mr-1">🎤</span>
+              <span className="truncate max-w-[140px]">{voiceDraft}</span>
+            </div>
+          ) : undefined}
+          leftSlot={
+            <div className="flex items-center gap-2">
+              <ToolMenu
+                onUploadDocument={() => fileInputRef.current?.click()}
+                onUploadImage={() => imageInputRef.current?.click()}
+                onWebcam={handleWebcamCapture}
+                onScreenShare={handleScreenShare}
+                onROI={handleROICalculator}
+                disabled={isLoading}
+              />
+              {voiceDraft && (
+                <button
+                  type="button"
+                  onClick={onClearVoiceDraft}
+                  className="hidden sm:inline-flex items-center h-7 px-2 rounded-full bg-muted text-xs text-foreground/80 border border-border/40"
+                  aria-label="Clear voice draft"
                 >
-                  <motion.div
-                    animate={isLoading ? { rotate: 360 } : { rotate: 0 }}
-                    transition={isLoading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}
-                  >
-                    {isLoading ? <Zap className="w-4 h-4" /> : <Send className="w-4 h-4" />}
-                  </motion.div>
-                </Button>
-              </motion.div>
-            }
-          />
-        </form>
+                  •••
+                  <span className="ml-1 truncate max-w-[120px]">{voiceDraft}</span>
+                </button>
+              )}
+            </div>
+          }
+          rightSlot={
+            <motion.div whileHover={{ scale: canSend ? 1.05 : 1 }} whileTap={{ scale: canSend ? 0.95 : 1 }}>
+              <Button
+                type="submit"
+                size="icon"
+                className={cn(
+                  "w-9 h-9 rounded-full transition-all duration-300 shadow-sm",
+                  canSend
+                    ? "bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent/80 shadow-md hover:shadow-lg text-accent-foreground"
+                    : "bg-muted/50 text-muted-foreground cursor-not-allowed"
+                )}
+                disabled={!canSend}
+              >
+                <motion.div
+                  animate={isLoading ? { rotate: 360 } : { rotate: 0 }}
+                  transition={isLoading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}
+                >
+                  {isLoading ? <Zap className="w-4 h-4" /> : <Send className="w-4 h-4" />}
+                </motion.div>
+              </Button>
+            </motion.div>
+          }
+        />
 
         {/* Enhanced Status Bar */}
         <motion.div 

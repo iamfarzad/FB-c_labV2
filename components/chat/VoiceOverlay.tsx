@@ -31,6 +31,7 @@ export function VoiceOverlay({ open, onCancel, onAccept }: VoiceOverlayProps) {
     stopRecording,
     requestPermission,
     hasPermission,
+    volume,
   } = useVoiceRecorder({ onAudioChunk, onTurnComplete })
 
   React.useEffect(() => {
@@ -98,6 +99,14 @@ export function VoiceOverlay({ open, onCancel, onAccept }: VoiceOverlayProps) {
             </div>
 
             <div className="w-full max-w-xl px-6">
+              {/* Live level meter */}
+              <div className="mb-4 h-2 w-full rounded-full bg-muted overflow-hidden">
+                <motion.div
+                  className="h-full bg-accent"
+                  animate={{ width: `${Math.min(100, Math.max(0, Math.round(volume * 100)))}%` }}
+                  transition={{ duration: 0.1, ease: 'linear' }}
+                />
+              </div>
               <div className="h-24 rounded-xl border bg-card/70 p-3 text-sm overflow-auto">
                 {transcript || (isProcessing ? "Processing…" : "Say something and then Accept")}
               </div>

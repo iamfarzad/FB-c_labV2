@@ -180,7 +180,7 @@ export function ScreenShare({
           </div>
       </div>
       <div className="relative">
-        <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg border bg-black" />
+        <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-xl border border-border/20 bg-black shadow-md" />
         <canvas ref={canvasRef} className="hidden" />
         {screenState === 'sharing' ? (
           <Button 
@@ -214,7 +214,7 @@ export function ScreenShare({
   if (mode === 'modal') {
     return (
       <Dialog open={true} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl rounded-3xl border border-border/20 shadow-xl">
           <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Monitor className="w-5 h-5" />

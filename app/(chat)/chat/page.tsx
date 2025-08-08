@@ -22,8 +22,10 @@ import { Plus, ArrowRight, Mic, FileText, Calculator, TrendingUp } from "@/lib/i
 import { cn } from "@/lib/utils"
 import type { Message } from "@/app/(chat)/chat/types/chat"
 import { LeadProgressIndicator } from "@/components/chat/LeadProgressIndicator"
+import type { AIThinkingContext } from "@/components/chat/AIThinkingIndicator"
 import { ConversationStage } from "@/lib/lead-manager"
 import { ErrorHandler, useErrorToast } from "@/components/chat/ErrorHandler"
+import { useBackendHealth } from "@/hooks/use-backend-health"
 
 // Stage configuration for progress display
 const stageConfig = {
@@ -77,7 +79,9 @@ function ChatPageContent() {
   const [leadData, setLeadData] = useState<{name?: string; email?: string; company?: string}>({})
   const [sessionId] = useState(() => Date.now().toString())
   const [error, setError] = useState<Error | null>(null)
+  const [loadingContext, setLoadingContext] = useState<AIThinkingContext | undefined>(undefined)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { apiOk, envOk, check: checkBackend } = useBackendHealth()
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -100,6 +104,13 @@ function ChatPageContent() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  useEffect(() => {
+    if (!apiOk || !envOk) {
+      console.warn("Backend health check failed", { apiOk, envOk })
+      showError(new Error("Backend health check failed"), "chat")
+    }
+  }, [apiOk, envOk])
 
   const addMessage = (message: Omit<Message, "id" | "createdAt">) => {
     const newMessage: Message = {
@@ -170,6 +181,7 @@ function ChatPageContent() {
     })
 
     setIsLoading(true)
+    setLoadingContext('streaming')
 
     try {
       const response = await fetch("/api/chat", {
@@ -275,6 +287,7 @@ function ChatPageContent() {
       })
     } finally {
       setIsLoading(false)
+      setLoadingContext(undefined)
     }
   }
 
@@ -291,6 +304,7 @@ function ChatPageContent() {
   const handleImageUpload = async (imageData: string, fileName: string) => {
     try {
       setIsLoading(true)
+      setLoadingContext('processing_image')
       
       // Call the analyze-image API
       const response = await fetch('/api/analyze-image', {
@@ -330,6 +344,7 @@ function ChatPageContent() {
       }])
     } finally {
       setIsLoading(false)
+      setLoadingContext(undefined)
     }
   }
 
@@ -343,6 +358,7 @@ function ChatPageContent() {
       });
 
     setIsLoading(true);
+    setLoadingContext('analyzing_document')
     try {
       const fileContent = await readFileAsDataURL(file);
 
@@ -382,6 +398,7 @@ function ChatPageContent() {
       }]);
     } finally {
       setIsLoading(false);
+      setLoadingContext(undefined)
     }
   }
 
@@ -457,7 +474,7 @@ ${result.summary}`
   return (
     <PageShell variant="fullscreen">
       <ChatLayout
-        footer={
+        footer={messages.length > 0 ? (
           <ChatFooter
             input={input}
             setInput={setInput}
@@ -481,7 +498,7 @@ ${result.summary}`
             voiceDraft={voiceDraft}
             onClearVoiceDraft={() => setVoiceDraft("")}
           />
-        }
+        ) : undefined}
       >
         {/* Overlays: Left toolbar and minimal progress indicator */}
         <div className="hidden lg:block fixed left-6 top-24 z-30">
@@ -531,8 +548,14 @@ ${result.summary}`
           </TooltipProvider>
         </div>
 
+        {/* Desktop: legacy-style hover rail on right */}
         <div className="hidden lg:block fixed right-6 top-28 z-30">
-          <ProgressDots total={7} active={(stageConfig[conversationStage as keyof typeof stageConfig]?.order || 1) - 1} />
+          <LeadProgressIndicator
+            currentStage={conversationStage}
+            leadData={leadData}
+            variant="card"
+            className="sticky top-28"
+          />
         </div>
         {/* Chat Area - Full Width */}
         {error ? (
@@ -568,45 +591,11 @@ ${result.summary}`
             onVideoAppResult={handleVideoAppResult}
             onScreenAnalysis={handleScreenAnalysis}
             onSendMessage={handleSendMessage}
+            loadingContext={loadingContext}
           />
         )}
         
-        {/* Mobile: Progress button with modal */}
-        <div className="lg:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "fixed z-50",
-                  "top-[calc(80px+env(safe-area-inset-top))] right-4",
-                  "shadow-lg backdrop-blur-sm",
-                  "min-h-[44px] min-w-[44px] px-4 py-2",
-                  "pointer-events-auto", // Ensure it's touchable
-                  "transform-gpu" // GPU acceleration for smooth interactions
-                )}
-              >
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Progress
-              </Button>
-            </SheetTrigger>
-            <SheetContent 
-              side="right" 
-              className={cn(
-                "w-[320px] sm:w-[400px]",
-                "bg-transparent backdrop-blur-md border-transparent" // No color gaussian blur
-              )}
-            >
-              <div className="h-full overflow-y-auto">
-                <LeadProgressIndicator 
-                  currentStage={conversationStage}
-                  leadData={leadData}
-                />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
+        {/* Mobile: no progress overlay; keep UI minimal */}
         
         {/* Voice Overlay */}
         {showVoiceModal && (
