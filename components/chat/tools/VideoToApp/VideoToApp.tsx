@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Video, Sparkles, Loader2, Link, X } from "@/lib/icon-mapping"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -107,7 +108,7 @@ export function VideoToApp({
   }
 
   const VideoToAppUI = () => (
-    <div className="space-y-4">
+    <div className={cn('space-y-4', mode === 'canvas' && 'h-full w-full overflow-hidden p-2') }>
       <Input
         placeholder="Enter video URL (e.g., YouTube)"
         value={videoUrl}
@@ -134,29 +135,22 @@ export function VideoToApp({
         )}
       </Button>
       {generatedAppUrl && (
-        <Card>
-          <CardContent className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">Your Interactive Learning App</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(generatedAppUrl, '_blank')}
-              >
-                <Link className="w-4 h-4 mr-2" />
-                Open in New Tab
-              </Button>
-            </div>
-            <div className="border rounded-lg overflow-hidden h-64 bg-muted/10">
-              <iframe
-                src={generatedAppUrl}
-                className="w-full h-full"
-                title="Generated Learning App Preview"
-                sandbox="allow-scripts allow-same-origin"
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <div className={cn('space-y-3', mode === 'canvas' && 'flex min-h-0 flex-1 flex-col') }>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium">Your Interactive Learning App</p>
+            <Button variant="outline" size="sm" onClick={() => window.open(generatedAppUrl, '_blank')}>
+              <Link className="w-4 h-4 mr-2" /> Open in New Tab
+            </Button>
+          </div>
+          <div className={cn('border rounded-lg overflow-hidden h-64 bg-muted/10', mode === 'canvas' && 'flex-1 h-auto') }>
+            <iframe
+              src={generatedAppUrl}
+              className="h-full w-full"
+              title="Generated Learning App Preview"
+              sandbox="allow-scripts allow-same-origin"
+            />
+          </div>
+        </div>
       )}
     </div>
   )
@@ -183,6 +177,28 @@ export function VideoToApp({
           <VideoToAppUI />
         </DialogContent>
       </Dialog>
+    )
+  }
+
+  if (mode === 'canvas') {
+    return (
+      <div className="flex h-full w-full flex-col overflow-hidden">
+        <div className="flex h-10 items-center justify-between border-b px-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-green-500" />
+            <span>Video → App</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="ghost" onClick={handleGenerate} disabled={isGenerating || !videoUrl || !userPrompt}>
+              Generate
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onClose}>Close</Button>
+          </div>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col p-2">
+          <VideoToAppUI />
+        </div>
+      </div>
     )
   }
 

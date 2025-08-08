@@ -34,6 +34,9 @@ export function useRealTimeVoice() {
   
   // Web Audio API context for playing raw audio data
   const audioContextRef = useRef<AudioContext | null>(null)
+  type PcmChunk = ArrayBuffer
+  const audioQueueRef = useRef<PcmChunk[]>([])
+  const isPlayingRef = useRef(false)
   
   // Initialize Web Audio API context
   useEffect(() => {
@@ -51,79 +54,37 @@ export function useRealTimeVoice() {
     }
   }, [])
 
-  // Decode base64 to raw bytes
-  const decodeBase64 = useCallback((base64: string): Uint8Array => {
-    const binaryString = atob(base64)
-    const len = binaryString.length
-    const bytes = new Uint8Array(len)
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i)
+  const int16ToFloat32 = (i16: Int16Array) => {
+    const f32 = new Float32Array(i16.length)
+    for (let i = 0; i < i16.length; i++) f32[i] = i16[i] / 32768
+    return f32
+  }
+
+  const playQueuedAudio = useCallback(async () => {
+    const ac = audioContextRef.current
+    if (!ac || isPlayingRef.current) return
+    isPlayingRef.current = true
+
+    while (audioQueueRef.current.length > 0) {
+      const chunk = audioQueueRef.current.shift() as ArrayBuffer
+      const i16 = new Int16Array(chunk)
+      const f32 = int16ToFloat32(i16)
+
+      const buffer = ac.createBuffer(1, f32.length, 24000)
+      buffer.copyToChannel(f32, 0, 0)
+
+      const src = ac.createBufferSource()
+      src.buffer = buffer
+      src.connect(ac.destination)
+
+      if (ac.state === 'suspended') await ac.resume()
+
+      const done = new Promise<void>(res => (src.onended = () => res()))
+      src.start()
+      await done
     }
-    return bytes
+    isPlayingRef.current = false
   }, [])
-
-  // Decode raw audio bytes to AudioBuffer
-  const decodeAudioData = useCallback(async (
-    rawBytes: Uint8Array,
-    sampleRate: number = 24000,
-    channels: number = 1
-  ): Promise<AudioBuffer> => {
-    if (!audioContextRef.current) {
-      throw new Error('AudioContext not initialized')
-    }
-
-    // Convert 8-bit PCM to 32-bit float for Web Audio API
-    const audioBuffer = audioContextRef.current.createBuffer(channels, rawBytes.length, sampleRate)
-    const channelData = audioBuffer.getChannelData(0)
-    
-    for (let i = 0; i < rawBytes.length; i++) {
-      // Convert 8-bit unsigned to 32-bit float (-1 to 1)
-      channelData[i] = (rawBytes[i] - 128) / 128
-    }
-    
-    return audioBuffer
-  }, [])
-
-  // Play audio from base64 data using Web Audio API
-  const playAudio = useCallback(async (audioData: string) => {
-    try {
-      console.log('🎵 Playing audio data with Web Audio API...')
-      
-      if (!audioContextRef.current) {
-        throw new Error('AudioContext not initialized')
-      }
-
-      // Resume context if suspended (required for autoplay)
-      if (audioContextRef.current.state === 'suspended') {
-        await audioContextRef.current.resume()
-      }
-
-      // Remove data URL prefix if present
-      const base64Data = audioData.replace('data:audio/wav;base64,', '')
-      
-      // Decode base64 to raw bytes
-      const rawBytes = decodeBase64(base64Data)
-      console.log('🎵 Decoded audio bytes:', rawBytes.length)
-      
-      // Convert to AudioBuffer
-      const audioBuffer = await decodeAudioData(rawBytes)
-      console.log('🎵 Created AudioBuffer:', audioBuffer.length, 'samples')
-      
-      // Create and play audio source
-      const source = audioContextRef.current.createBufferSource()
-      source.buffer = audioBuffer
-      source.connect(audioContextRef.current.destination)
-      
-      source.onended = () => console.log('🎵 Audio playback completed')
-      
-      source.start()
-      console.log('🎵 Audio playback started')
-      
-    } catch (err) {
-      console.error('❌ Failed to play audio:', err)
-      throw err
-    }
-  }, [decodeBase64, decodeAudioData])
 
   // Start direct Gemini Live session
   const startSession = useCallback(async (leadContext?: { leadId: string; leadName: string }) => {
@@ -131,50 +92,54 @@ export function useRealTimeVoice() {
       setError(null)
       setIsProcessing(true)
 
-      // Initialize Gemini client
-      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY
-      if (!apiKey) {
-        throw new Error('GEMINI_API_KEY not configured')
-      }
+      // Get ephemeral token from server (prevents exposing API key)
+      const res = await fetch('/api/gemini/ephemeral-token', { cache: 'no-store' })
+      if (!res.ok) throw new Error(`Token endpoint failed: ${res.status}`)
+      const { token } = await res.json()
+      if (!token) throw new Error('No token returned')
 
-      const genAI = new GoogleGenAI({ apiKey })
+      const genAI = new GoogleGenAI({ apiKey: token })
       
       console.log('🎙️ Starting direct Gemini Live session...')
 
       // Create direct live connection
       const liveSession = await genAI.live.connect({
-        model: 'gemini-2.5-flash-preview-native-audio-dialog',
+        model: 'gemini-live-2.5-flash-preview-native-audio',
         callbacks: {
           onopen: () => {
             console.log('✅ Gemini Live session opened')
             setIsConnected(true)
           },
-          onmessage: (event: any) => {
-            console.log('📨 Received Gemini message:', event.data)
-            
-            // Handle text response
-            if (event.data?.text) {
+          onmessage: async (event: any) => {
+            // Binary audio frames (16-bit PCM)
+            if (event?.data instanceof ArrayBuffer || event?.data?.byteLength) {
+              audioQueueRef.current.push(event.data as ArrayBuffer)
+              playQueuedAudio()
+              return
+            }
+
+            // JSON control/text frames
+            let msg: any = event?.data
+            if (typeof event?.data === 'string') {
+              try { msg = JSON.parse(event.data) } catch { /* ignore */ }
+            }
+
+            if (msg?.serverContent?.turnComplete === true) {
+              setIsProcessing(false)
+              return
+            }
+
+            const text = msg?.text
+            if (typeof text === 'string' && text.length > 0) {
               const newMessage: VoiceMessage = {
                 id: Math.random().toString(36).substring(7),
                 sessionId: 'live-session',
-                message: '', // Will be set by sendMessage
-                response: event.data.text,
+                message: '',
+                response: text,
                 timestamp: new Date(),
-                responseTime: 0
+                responseTime: 0,
               }
               setMessages(prev => [...prev, newMessage])
-            }
-            
-            // Handle audio response
-            if (event.data?.audio) {
-              console.log('🎵 Received audio response')
-              // Convert ArrayBuffer to base64 for playback
-              const audioArray = new Uint8Array(event.data.audio)
-              const base64Audio = btoa(String.fromCharCode(...audioArray))
-              const audioData = `data:audio/wav;base64,${base64Audio}`
-              
-              // Play the audio
-              playAudio(audioData)
             }
           },
           onerror: (error) => {
@@ -219,7 +184,7 @@ export function useRealTimeVoice() {
     } finally {
       setIsProcessing(false)
     }
-  }, [playAudio])
+  }, [])
 
   // Send message via direct Gemini Live connection
   const sendMessage = useCallback(async (message: string) => {
@@ -292,7 +257,7 @@ export function useRealTimeVoice() {
     sendMessage,
     endSession,
     updateVoiceSettings,
-    playAudio,
+    playQueuedAudio,
     
     // Utilities
     clearError: () => setError(null)

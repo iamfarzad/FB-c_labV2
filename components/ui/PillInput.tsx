@@ -52,7 +52,7 @@ export function PillInput({
           disabled={disabled}
           rows={1}
           className={cn(
-            "flex-1 resize-none bg-transparent outline-none",
+            "flex-1 resize-none bg-transparent outline-none overflow-hidden",
             "min-h-[28px] md:min-h-[32px] text-base leading-relaxed",
             "placeholder:text-muted-foreground/60"
           )}

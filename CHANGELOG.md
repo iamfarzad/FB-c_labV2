@@ -25,6 +25,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added - 2025-08-08
+- AI Elements: Synced full component set via `shadcn add https://ai-sdk.dev/elements.json` (updated `code-block`, `inline-citation`, `response`, `ui/carousel`)
+- Gallery page to preview all AI Elements at `app/test/ai-elements/page.tsx` (route: `/test/ai-elements`)
+- Branded AI chat demo at `app/test/ai-chat/page.tsx` using AI Elements with `FbcIcon` for reasoning indicator and AI avatar styling
+
 ### UI Polish - 2025-08-07
 - Unified focus rings across inputs, selects, textareas, buttons, and cards using brand accent with background offset
 - Added tactile active press state to `Button` (slight translate-y)
@@ -50,6 +55,12 @@ All notable changes to this project will be documented in this file.
 - Expanded assistant system prompts (text and voice) with F.B/c profile, services, workshop, abilities, and fun persona
   - `app/api/chat/route.ts` base prompt updated
   - `server/live-server.ts` systemInstruction updated
+
+### Translation Feature - 2025-08-07
+- Backend: Added `POST /api/translate` using Gemini for text translation with validation and activity logging
+- Frontend: Added per-message translate action in `components/chat/ChatArea.tsx`
+  - Quick translate to Spanish (ES) button on assistant messages
+  - Renders translated text inline beneath the message
 
 - **🎯 CRITICAL FIX**: Fixed PCM audio decoding in WebSocket voice functionality
   - Replaced incorrect `decodeAudioData` usage with manual PCM to Float32Array conversion

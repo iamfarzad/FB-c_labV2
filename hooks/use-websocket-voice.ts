@@ -6,6 +6,8 @@ import { useToast } from '@/hooks/use-toast'
 interface VoiceSession {
   connectionId: string
   isActive: boolean
+  languageCode?: string
+  voiceName?: string
   leadContext?: {
     name?: string
     company?: string
@@ -35,18 +37,52 @@ interface WebSocketVoiceHook {
 export function useWebSocketVoice(): WebSocketVoiceHook {
   console.log('--- useWebSocketVoice HOOK MOUNTED ---');
   const { toast } = useToast()
+  const VOICE_BY_LANG: Record<string, string> = {
+    'en-US': 'Puck',
+    'en-GB': 'Puck',
+    'nb-NO': 'Puck',
+    'sv-SE': 'Puck',
+    'de-DE': 'Puck',
+    'es-ES': 'Puck',
+  }
   const [session, setSession] = useState<VoiceSession | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [transcript, setTranscript] = useState<string>('')
+  const transcriptRef = useRef<string>('')
   const [error, setError] = useState<string | null>(null)
   const [audioQueue, setAudioQueue] = useState<QueuedAudioItem[]>([])
+  const [currentTurn, setCurrentTurn] = useState<{ inputPartials: string[]; inputFinal?: string; outputText?: string; completed: boolean }>({ inputPartials: [], completed: false })
   
   const wsRef = useRef<WebSocket | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const audioStreamRef = useRef<MediaStream | null>(null)
   const reconnectingRef = useRef(false)
   const messageQueueRef = useRef<string[]>([])
+  const preferredLanguageRef = useRef<string>('en-US')
+
+  function detectLangBCP47Client(s: string): string {
+    if (/[æøå]/i.test(s)) return 'nb-NO'
+    if (/[äöüß]/i.test(s)) return 'de-DE'
+    if (/[áéíóúñ]/i.test(s)) return 'es-ES'
+    return 'en-US'
+  }
+
+  // Keep a ref of the latest transcript for out-of-react event dispatch
+  useEffect(() => {
+    transcriptRef.current = transcript
+  }, [transcript])
+
+  async function maybeRotateLanguage(finalText: string) {
+    const detected = detectLangBCP47Client(finalText)
+    const current = session?.languageCode || preferredLanguageRef.current || 'en-US'
+    if (detected !== current) {
+      preferredLanguageRef.current = detected
+      try { stopSession() } catch {}
+      // Reconnect will send a new start with updated preferredLanguageRef
+      connectWebSocket()
+    }
+  }
 
   // Audio playback context and playing state
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -55,7 +91,9 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
   // Initialize audio context
   const initAudioContext = useCallback(() => {
     if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({
+        sampleRate: 24000,
+      })
     }
     
     // Resume context if suspended (needed for autoplay)
@@ -179,6 +217,14 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
           console.warn('[useWebSocketVoice] NEXT_PUBLIC_LIVE_SERVER_URL not set; defaulting to Fly URL', wsUrl)
         }
       }
+      // Force mock WS when voiceMock=1 is present (e2e/testing convenience)
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search)
+        if (params.get('voiceMock') === '1') {
+          wsUrl = 'ws://localhost:8787/v1/live'
+          console.log('[useWebSocketVoice] voiceMock=1 detected, overriding WS URL to', wsUrl)
+        }
+      }
     } catch (e) {
       // window not available (SSR safeguard)
       wsUrl = wsUrl || 'ws://localhost:3001'
@@ -218,6 +264,17 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
           console.log('📤 [useWebSocketVoice] Sent queued message')
         }
       }
+
+      // Send start payload with language/voice
+      try {
+        const languageCode = preferredLanguageRef.current || 'en-US'
+        const voiceName = VOICE_BY_LANG[languageCode] || 'Puck'
+        const startMsg = JSON.stringify({ type: 'start', payload: { leadContext: undefined, languageCode, voiceName } })
+        ws.send(startMsg)
+        console.log('📤 [useWebSocketVoice] Sent start payload with language/voice', { languageCode, voiceName })
+      } catch (e) {
+        console.warn('[useWebSocketVoice] Failed to send start payload:', e)
+      }
     }
 
     ws.onmessage = (event) => {
@@ -234,7 +291,9 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
           case 'session_started':
             setSession({
               connectionId: data.payload.connectionId,
-              isActive: true,
+          isActive: true,
+          languageCode: data.payload?.languageCode,
+          voiceName: data.payload?.voiceName,
             })
             console.log('[useWebSocketVoice] Gemini session started.', data.payload)
             break
@@ -256,6 +315,9 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
             if (data.payload?.serverContent?.turnComplete) {
               console.log('[useWebSocketVoice] ✅ Server turn completed - conversation ready for next input')
               setIsProcessing(false)
+              try {
+                window.dispatchEvent(new CustomEvent('voice-turn-complete', { detail: { transcript: transcriptRef.current } }))
+              } catch {}
               // Don't call onTurnComplete here - that's for client turn completion
             }
             break
@@ -277,8 +339,31 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
             }
             break
 
+      case 'input_transcript': {
+        const { text, final } = data.payload || {}
+        setCurrentTurn(t => {
+          if (!t) return t as any
+          if (final) return { ...t, inputFinal: text, inputPartials: [] }
+          return { ...t, inputPartials: [...(t.inputPartials || []), text] }
+        })
+        if (data.payload?.final && typeof data.payload.text === 'string' && data.payload.text.length > 0) {
+          maybeRotateLanguage(data.payload.text)
+        }
+        break
+      }
+
+      case 'model_text': {
+        const { text } = data.payload || {}
+        setCurrentTurn(t => t ? { ...t, outputText: text } : t)
+        break
+      }
+
           case 'turn_complete':
-            setIsProcessing(false)
+        setIsProcessing(false)
+        setCurrentTurn(t => t ? { ...t, completed: true } : t)
+        try {
+          window.dispatchEvent(new CustomEvent('voice-turn-complete', { detail: { transcript: transcriptRef.current } }))
+        } catch {}
             console.log('[useWebSocketVoice] Turn completed by Gemini.')
             break
 
@@ -527,6 +612,20 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     }
     const base64Audio = btoa(binary);
     
+    // If using direct Gemini Live session, send via session API instead of WS
+    const isDirect = process.env.NEXT_PUBLIC_GEMINI_DIRECT === '1'
+    const sessionLike: any = wsRef.current as any
+    if (isDirect && sessionLike && typeof sessionLike.sendRealtimeInput === 'function') {
+      try {
+        sessionLike.sendRealtimeInput({
+          audio: { data: base64Audio, mimeType: 'audio/pcm;rate=16000' },
+        })
+      } catch (e) {
+        console.error('[useWebSocketVoice] Failed to send audio chunk via direct session:', e)
+      }
+      return
+    }
+    
     const payload = JSON.stringify({
       type: 'user_audio',
       payload: { 
@@ -549,6 +648,18 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
 
   // Callback for voice recorder - signal turn complete
   const onTurnComplete = useCallback(() => {
+    // If using direct Gemini Live session, send turnComplete directly
+    const isDirect = process.env.NEXT_PUBLIC_GEMINI_DIRECT === '1'
+    const sessionLike: any = wsRef.current as any
+    if (isDirect && sessionLike && typeof sessionLike.sendRealtimeInput === 'function') {
+      try {
+        sessionLike.sendRealtimeInput({ turnComplete: true })
+      } catch (e) {
+        console.error('[useWebSocketVoice] Failed to send TURN_COMPLETE via direct session:', e)
+      }
+      return
+    }
+    
     const payload = JSON.stringify({
       type: 'TURN_COMPLETE',
       payload: {}

@@ -69,6 +69,7 @@ const stageConfig = [
 
 export function LeadProgressIndicator({ currentStage, leadData, className = '', variant = 'card' }: LeadProgressIndicatorProps) {
   const [hoveredStage, setHoveredStage] = useState<string | null>(null)
+  const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false)
   
   // Calculate stage statuses based on current stage
   const currentStageIndex = stageConfig.findIndex(s => s.stage === currentStage)
@@ -129,13 +130,72 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
     )
   }
 
+  const percent = Math.round(((currentStageIndex + 1) / stages.length) * 100)
+
   return (
     <div className={className}>
+      {/* Mobile dropdown summary */}
+      <div className="md:hidden w-full">
+        <button
+          type="button"
+          aria-expanded={isMobileOpen}
+          onClick={() => setIsMobileOpen(v => !v)}
+          className="inline-flex w-full items-center justify-between gap-3 rounded-lg border border-border/50 bg-background/60 px-3 py-2 text-xs text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-background/40"
+        >
+          <span className="inline-flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--accent))]" />
+            Stage {currentStageIndex + 1}/7
+          </span>
+          <span className="font-medium text-accent">{percent}%</span>
+          <svg
+            className={`h-3.5 w-3.5 transition-transform ${isMobileOpen ? 'rotate-180' : ''}`}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        <AnimatePresence initial={false}>
+          {isMobileOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-2"
+            >
+              <div className="flex flex-col items-center gap-5">
+                {stages.map((stage, index) => {
+                  const isActive = stage.stage === currentStage
+                  const isCompleted = stage.order - 1 < currentStageIndex
+                  return (
+                    <div key={stage.stage} className="relative">
+                      {index < stages.length - 1 && (
+                        <div className={`absolute top-8 left-1/2 -translate-x-1/2 h-6 w-px ${isCompleted ? 'bg-accent/40' : 'bg-border/30'}`} />
+                      )}
+                      <div className={`flex h-9 w-9 items-center justify-center rounded-full border ${isActive ? 'border-accent' : 'border-border/80'} bg-transparent`}>
+                        <span className={`text-[11px] font-medium ${isCompleted ? 'text-accent-foreground' : isActive ? 'text-accent-foreground' : 'text-muted-foreground'}`}>
+                          {isCompleted ? '✓' : index + 1}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Desktop floating indicator (no wrapper background) */}
       <motion.div
+        className="hidden md:flex flex-col items-center gap-6"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.4 }}
-        className="flex flex-col items-center gap-6 bg-card/60 backdrop-blur-2xl border border-border/20 rounded-2xl p-4 shadow-lg"
       >
         {/* Header */}
         <motion.div
@@ -149,14 +209,20 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
           </span>
         </motion.div>
 
-        {/* Vertical Stage Flow */}
-        {stages.map((stage, index) => {
+        {/* Soft floating ambient behind the rail */}
+        <div className="relative">
+          <div className="pointer-events-none absolute inset-0 -z-10 flex justify-center">
+            <div className="h-full w-24 rounded-full bg-[hsl(var(--accent))]/10 opacity-70 blur-2xl [mask-image:radial-gradient(closest-side,black,transparent)]" />
+          </div>
+
+          {/* Vertical Stage Flow */}
+          {stages.map((stage, index) => {
           const isHovered = hoveredStage === stage.stage
           const isActive = stage.status === "active"
           const isCompleted = stage.status === "completed"
 
-          return (
-            <div key={stage.stage} className="relative group">
+            return (
+              <div key={stage.stage} className="relative group">
               {/* Connection Line */}
               {index < stages.length - 1 && (
                 <motion.div
@@ -170,8 +236,8 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
               )}
 
               {/* Stage Dot */}
-              <motion.div
-                className="relative cursor-pointer"
+                <motion.div
+                  className="relative cursor-pointer"
                 onMouseEnter={() => setHoveredStage(stage.stage)}
                 onMouseLeave={() => setHoveredStage(null)}
                 whileHover={{ scale: 1.1 }}
@@ -180,10 +246,14 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.7 + index * 0.1, type: "spring", stiffness: 400 }}
               >
+                {/* Ambient glow for active */}
+                {isActive && (
+                  <div className="absolute -inset-3 rounded-full bg-accent/20 blur-lg" />
+                )}
                 {/* Outer Ring */}
-                <div className={`w-8 h-8 rounded-full border-2 ${
-                  isActive ? 'border-accent' : 'border-border'
-                } bg-card shadow-sm flex items-center justify-center relative overflow-hidden`}>
+                <div className={`w-9 h-9 rounded-full border ${
+                  isActive ? 'border-accent' : 'border-border/80'
+                } bg-card/80 shadow-sm flex items-center justify-center relative overflow-hidden`}>
                   {/* Status Indicator */}
                   <motion.div
                     className={`absolute inset-0 rounded-full ${getStatusColor(stage.status)}`}
@@ -196,7 +266,7 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
                   />
                   
                   {/* Stage Number or Check */}
-                  <span className={`relative z-10 text-xs font-medium ${
+                  <span className={`relative z-10 text-[11px] font-medium ${
                     isCompleted ? 'text-accent-foreground' : 
                     isActive ? 'text-accent-foreground' : 
                     'text-muted-foreground'
@@ -217,19 +287,19 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
                 />
               </motion.div>
 
-              {/* Hover Information Panel */}
+                {/* Hover Information Panel (opens to the left) */}
               <AnimatePresence>
                 {isHovered && (
                   <motion.div
-                    initial={{ opacity: 0, x: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: 10, scale: 0.95 }}
+                      initial={{ opacity: 0, x: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: -10, scale: 0.95 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute left-12 top-1/2 -translate-y-1/2 z-10 pointer-events-none"
+                      className="absolute right-12 top-1/2 -translate-y-1/2 z-10 pointer-events-none"
                   >
-                    <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-lg shadow-xl p-3 min-w-[240px]">
-                      {/* Arrow */}
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-card border-l border-b border-border/50 rotate-45" />
+                      <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-lg shadow-xl p-3 min-w-[240px]">
+                        {/* Arrow (points right-to-left) */}
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-2 h-2 bg-card border-r border-t border-border/50 rotate-45" />
 
                       {/* Content */}
                       <div className="space-y-2">
@@ -276,8 +346,9 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
                 )}
               </AnimatePresence>
             </div>
-          )
-        })}
+            )
+          })}
+        </div>
 
         {/* Progress Percentage */}
         <motion.div
@@ -286,9 +357,7 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2 }}
         >
-          <span className="text-xs font-medium text-accent">
-            {Math.round(((currentStageIndex + 1) / stages.length) * 100)}%
-          </span>
+          <span className="text-xs font-medium text-accent">{percent}%</span>
         </motion.div>
       </motion.div>
     </div>

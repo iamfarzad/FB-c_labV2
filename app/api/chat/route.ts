@@ -703,6 +703,30 @@ Response to use: "${conversationResult.response}"`;
       }
     });
 
+    // Heuristic coach: suggest next best capability based on the latest user message
+    function detectYouTubeURL(text: string): string | null {
+      try {
+        const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/
+        const m = text?.match(regex)
+        return m ? m[0] : null
+      } catch { return null }
+    }
+    function computeNextBestCapability(message: string, ctx: { hasUrlContext: boolean; hasSearch: boolean; lead?: any, stage?: any }): { nextBest: string | null, suggestions: string[] } {
+      const m = (message || '').toLowerCase()
+      const suggestions: string[] = []
+      if (detectYouTubeURL(m)) suggestions.push('video')
+      if (/\b(roi|payback|savings|cost|hours|time|efficiency)\b/.test(m)) suggestions.push('roi')
+      if (/\b(upload|document|pdf|docx|spec|process)\b/.test(m)) suggestions.push('doc')
+      if (/\b(screenshot|image|photo|picture)\b/.test(m)) suggestions.push('image')
+      if (/\b(screen ?share|share your screen|my screen)\b/.test(m)) suggestions.push('screen')
+      if (ctx.hasUrlContext) suggestions.push('webpreview')
+      if (ctx.hasSearch) suggestions.push('search')
+      // Stage-aware nudge
+      if (!suggestions.length && ctx.stage === 3 /* EMAIL_CAPTURE */) suggestions.push('doc')
+      if (!suggestions.length && ctx.stage === 5 /* PROBLEM_DISCOVERY */) suggestions.push('screen')
+      return { nextBest: suggestions[0] || null, suggestions }
+    }
+
     // Create SSE stream
     const stream = new ReadableStream({
       async start(controller) {
@@ -725,6 +749,19 @@ Response to use: "${conversationResult.response}"`;
             };
             console.log('🎯 Sending conversation state:', stateData);
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(stateData)}\n\n`));
+          }
+
+          // Send coach suggestion if we can infer one from the latest user message and context
+          try {
+            const nb = computeNextBestCapability(currentMessage, { hasUrlContext: !!urlContext, hasSearch: !!searchResults, lead: leadData, stage: conversationResult?.newStage })
+            if (nb.nextBest) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ nextBest: nb.nextBest, suggestions: nb.suggestions })}\n\n`))
+            }
+            // Emit capabilityUsed for context processors
+            if (urlContext) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ capabilityUsed: 'webpreview' })}\n\n`))
+            if (searchResults) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ capabilityUsed: 'googleSearch' })}\n\n`))
+          } catch (e) {
+            console.warn('coach suggestion failed', e)
           }
           
           for await (const chunk of responseStream) {

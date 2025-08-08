@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Monitor, Brain, Loader2, X } from "@/lib/icon-mapping"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -23,7 +24,8 @@ export function ScreenShare({
   onAnalysis,
   onClose,
   onCancel,
-  onStream
+  onStream,
+  onLog
 }: ScreenShareProps) {
   const { toast } = useToast()
   const [screenState, setScreenState] = useState<ScreenShareState>("stopped")
@@ -41,6 +43,7 @@ export function ScreenShare({
   const sendScreenFrame = useCallback(async (imageData: string) => {
     try {
       setIsAnalyzing(true)
+      onLog?.({ level: 'log', message: 'Analyzing screen frame…', timestamp: new Date() })
       const response = await fetch('/api/analyze-image', { // Fixed API endpoint
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -51,6 +54,7 @@ export function ScreenShare({
       })
       if (!response.ok) throw new Error('Failed to analyze screen frame')
       const result = await response.json()
+      onLog?.({ level: 'log', message: `Screen analysis: ${result.analysis || 'No analysis'}`, timestamp: new Date() })
       const analysis: AnalysisResult = {
         id: Date.now().toString(),
         text: result.analysis || 'No analysis available', // Fixed to match analyze-image response
@@ -60,6 +64,7 @@ export function ScreenShare({
       onAnalysis?.(analysis.text)
     } catch (e) {
       setError((e as Error).message)
+      onLog?.({ level: 'error', message: `Screen analysis error: ${(e as Error).message}`, timestamp: new Date() })
     } finally {
       setIsAnalyzing(false)
     }
@@ -167,7 +172,7 @@ export function ScreenShare({
   }, [sendScreenFrame])
 
   const ScreenShareUI = () => (
-    <div className="flex flex-col gap-4">
+    <div className={cn('flex flex-col gap-4', mode === 'canvas' && 'h-full w-full overflow-hidden gap-3 p-2')}>
       <div className="flex items-center justify-between">
           <Badge variant={screenState === "sharing" ? "default" : "destructive"}>{screenState}</Badge>
           <div className="flex items-center gap-2">
@@ -179,8 +184,8 @@ export function ScreenShare({
               <span className="text-xs">Auto Analysis</span>
           </div>
       </div>
-      <div className="relative">
-        <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-xl border border-border/20 bg-black shadow-md" />
+      <div className={cn('relative', mode === 'canvas' && 'flex-1 min-h-0')}>
+        <video ref={videoRef} autoPlay playsInline muted className={cn('w-full rounded-xl border border-border/20 bg-black shadow-md', mode === 'canvas' && 'h-full object-contain')} />
         <canvas ref={canvasRef} className="hidden" />
         {screenState === 'sharing' ? (
           <Button 
@@ -232,6 +237,27 @@ export function ScreenShare({
           <ScreenShareUI />
         </DialogContent>
       </Dialog>
+    )
+  }
+
+  if (mode === 'canvas') {
+    return (
+      <div className="flex h-full w-full flex-col overflow-hidden">
+        <div className="flex h-10 items-center justify-between border-b px-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-green-500" />
+            <span>Screen Share</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="ghost" onClick={startScreenShare} disabled={screenState === 'sharing'}>Start</Button>
+            <Button size="sm" variant="ghost" onClick={captureScreenshot} disabled={screenState !== 'sharing' || isAnalyzing}>Capture</Button>
+            <Button size="sm" variant="ghost" onClick={onClose}>Close</Button>
+          </div>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col p-2">
+          <ScreenShareUI />
+        </div>
+      </div>
     )
   }
 

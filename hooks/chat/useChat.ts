@@ -50,6 +50,7 @@ export function useChat({
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
+  const [usedCapabilities, setUsedCapabilities] = useState<Set<string>>(new Set())
   const abortControllerRef = useRef<AbortController | null>(null)
   const lastCallTimeRef = useRef<number>(0)
   const currentSessionIdRef = useRef<string | null>(null)
@@ -152,7 +153,10 @@ export function useChat({
           data: {
             leadContext: data.leadContext,
             sessionId: data.sessionId || uuidv4(),
-            userId: data.userId
+            userId: data.userId,
+            // Keep enhanced flags aligned with the current chat page implementation
+            conversationSessionId: data.sessionId || undefined,
+            enableLeadGeneration: true
           }
         }),
         signal: abortControllerRef.current.signal
@@ -170,6 +174,8 @@ export function useChat({
       }
 
       let assistantContent = ''
+      // Track any structured metadata coming from the server during SSE
+      let assistantSources: Array<{ title?: string; url: string }> | undefined
 
       while (true) {
         const { done, value } = await reader.read()
@@ -189,6 +195,35 @@ export function useChat({
                 updateMessage(assistantMessage.id, {
                   content: assistantContent
                 })
+              }
+              // Track suggested/used capabilities if the server emits hints
+              if (data.capabilityUsed && typeof data.capabilityUsed === 'string') {
+                setUsedCapabilities(prev => new Set(prev).add(data.capabilityUsed))
+                try {
+                  window.dispatchEvent(new CustomEvent('chat-capability-used', { detail: { name: data.capabilityUsed } }))
+                } catch {}
+              }
+              if (data.nextBest && typeof data.nextBest === 'string') {
+                try {
+                  window.dispatchEvent(new CustomEvent('chat-coach-suggestion', { detail: { nextBest: data.nextBest } }))
+                } catch {}
+              }
+              // Allow server to push sources/metadata during stream
+              if (data.sources && Array.isArray(data.sources)) {
+                assistantSources = data.sources
+                updateMessage(assistantMessage.id, {
+                  sources: assistantSources
+                } as any)
+              }
+              // Surface server-side conversation updates to the caller if they care
+              if (data.conversationStage || data.leadData) {
+                // no-op in this hook; expose via custom event on window for now to avoid breaking API
+                // Advanced consumers can listen on this channel
+                try {
+                  window.dispatchEvent(new CustomEvent('chat-server-event', { detail: data }))
+                } catch (_) {
+                  // ignore SSR/windowless
+                }
               }
               
               if (data.done) {

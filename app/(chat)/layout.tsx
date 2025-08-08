@@ -10,5 +10,9 @@ export default function ChatLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return (
+    <div className="relative min-h-screen overflow-hidden">
+      {children}
+    </div>
+  )
 }

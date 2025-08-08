@@ -31,8 +31,26 @@
     // Use PORT for Fly.io compatibility, fallback to 3001 for local development
     const PORT = process.env.PORT || process.env.LIVE_SERVER_PORT || 3001;
 
+    // --- Voice & Language Utilities ---
+    const VOICE_BY_LANG: Record<string, string> = {
+      'en-US': 'Puck',
+      'en-GB': 'Puck',
+      'nb-NO': 'Puck',
+      'sv-SE': 'Puck',
+      'de-DE': 'Puck',
+      'es-ES': 'Puck',
+    };
+
+    function isBcp47(s?: string) {
+      return typeof s === 'string' && /^[A-Za-z]{2,3}(-[A-Za-z]{2}|\-[A-Za-z]{4})?(-[A-Za-z]{2}|\-[0-9]{3})?$/.test(s);
+    }
+
     // --- Server Setup ---
-    const wss = new WebSocketServer({ noServer: true });
+    const wss = new WebSocketServer({
+      noServer: true,
+      perMessageDeflate: false,
+      maxPayload: 10 * 1024 * 1024,
+    });
     // SSL Certificate paths - only use in development
     let sslOptions = {};
     const isLocalDev = process.env.NODE_ENV !== 'production' && !process.env.FLY_APP_NAME;
@@ -82,6 +100,16 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
     });
     });
 
+    // --- Stability: ping clients to keep connections alive ---
+    const pingInterval = setInterval(() => {
+      wss.clients.forEach((ws) => {
+        if (ws.readyState === ws.OPEN) {
+          try { ws.ping(); } catch {}
+        }
+      })
+    }, 25_000)
+    server.on('close', () => clearInterval(pingInterval))
+
     // --- In-Memory Stores ---
     const activeSessions = new Map<string, { ws: WebSocket; session: Session }>();
     const sessionBudgets = new Map<string, SessionBudget>();
@@ -91,8 +119,21 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
     const pendingAudioChunks = new Map<string, { data: string; mimeType: string }[]>();
     // Queue TURN_COMPLETE when it arrives before Gemini session is ready
     const pendingTurnComplete = new Map<string, boolean>();
+    // Prevent duplicate upstream turnComplete while one is in-flight
+    const turnInflight = new Map<string, boolean>();
 
     // --- Core Logic ---
+
+    // Backpressure-aware send helper
+    function safeSend(ws: WebSocket, data: any, isBinary = false) {
+      if (ws.readyState !== ws.OPEN) return
+      if (ws.bufferedAmount > 1_000_000) return
+      try {
+        ws.send(data, { binary: isBinary })
+      } catch (e) {
+        console.error('safeSend error:', e)
+      }
+    }
 
     function initializeSessionBudget(connectionId: string): SessionBudget {
     const budget: SessionBudget = {
@@ -124,7 +165,7 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
     async function handleStart(connectionId: string, ws: WebSocket, payload: any) {
   if (activeSessions.has(connectionId)) {
     console.log(`[${connectionId}] Session already exists. Closing old one.`);
-    activeSessions.get(connectionId)?.session.close();
+    try { activeSessions.get(connectionId)?.session?.close?.(); } catch {}
   }
 
   if (!process.env.GEMINI_API_KEY) {
@@ -134,14 +175,22 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
   }
 
   try {
+    const requestedLang = isBcp47(payload?.languageCode) ? payload.languageCode : undefined
+    const lang = requestedLang || 'en-US'
+    const requestedVoice = typeof payload?.voiceName === 'string' ? payload.voiceName : undefined
+    const voiceName = requestedVoice || VOICE_BY_LANG[lang] || 'Puck'
+
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const session = await ai.live.connect({
-      model: 'models/gemini-live-2.5-flash-preview-native-audio', // THE CORRECT MODEL
+      model: 'gemini-live-2.5-flash-preview-native-audio',
       config: {
         responseModalities: [Modality.AUDIO, Modality.TEXT],
-        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } } },
-        inputAudioTranscription: {}, // THE MISSING PIECE - tells Gemini to transcribe input audio
+        speechConfig: {
+          voiceConfig: { prebuiltVoiceConfig: { voiceName } },
+          languageCode: lang,
+        },
+        inputAudioTranscription: { },
         generationConfig: { maxOutputTokens: DEFAULT_PER_REQUEST_LIMIT },
         // Note: audioConfig is not part of LiveConnectConfig types; input/output rates are inferred from payloads
         systemInstruction: {
@@ -167,10 +216,13 @@ Guidelines:
       callbacks: {
         onopen: () => {
           console.log(`[${connectionId}] Gemini session opened.`);
-          ws.send(JSON.stringify({ type: 'session_started', payload: { connectionId } }));
+          ws.send(JSON.stringify({ type: 'session_started', payload: { connectionId, languageCode: lang, voiceName } }));
         },
         onmessage: (message: LiveServerMessage) => {
-          handleGeminiMessage(connectionId, ws, message);
+          try { handleGeminiMessage(connectionId, ws, message); }
+          catch (e: any) {
+            console.error(`[${connectionId}] handleGeminiMessage error`, e?.message || e)
+          }
         },
         onerror: (e: ErrorEvent) => {
           console.error(`[${connectionId}] Gemini session error:`, e.message);
@@ -219,7 +271,45 @@ Guidelines:
 
     function handleGeminiMessage(connectionId: string, ws: WebSocket, message: LiveServerMessage) {
         console.log(`[${connectionId}] 🎯 Received message from Gemini:`, JSON.stringify(message, null, 2));
-        
+  // --- transcripts extraction (partial/final + model text) ---
+  const inputPartials: string[] = []
+  const inputFinals: string[] = []
+  const modelTexts: string[] = []
+
+  // tolerate schema variations across SDK versions
+  const cands: any[] = [
+    message,
+    (message as any)?.inputTranscription,
+    (message as any)?.serverContent,
+    (message as any)?.clientContent,
+  ].filter(Boolean)
+
+  for (const c of cands) {
+    // partials
+    if (typeof c?.partial === 'string') inputPartials.push(c.partial)
+    if (Array.isArray(c?.partials)) {
+      for (const p of c.partials) if (typeof p?.text === 'string') inputPartials.push(p.text)
+    }
+    // finals
+    if (typeof c?.final === 'string') inputFinals.push(c.final)
+    if (Array.isArray(c?.finals)) {
+      for (const f of c.finals) if (typeof f?.text === 'string') inputFinals.push(f.text)
+    }
+    // model text
+    if (typeof c?.text === 'string') modelTexts.push(c.text)
+    if (Array.isArray(c?.texts)) {
+      for (const t of c.texts) if (typeof t === 'string') modelTexts.push(t)
+    }
+  }
+
+  // emit transcripts to client
+  for (const s of inputPartials) {
+    safeSend(ws, JSON.stringify({ type: 'input_transcript', payload: { text: s, final: false } }))
+  }
+  for (const s of inputFinals) {
+    safeSend(ws, JSON.stringify({ type: 'input_transcript', payload: { text: s, final: true } }))
+  }
+
         if (message.serverContent?.modelTurn?.parts) {
             console.log(`[${connectionId}] 📝 Processing ${message.serverContent.modelTurn.parts.length} parts from Gemini`);
             for (const part of message.serverContent.modelTurn.parts) {
@@ -227,31 +317,47 @@ Guidelines:
                     console.log(`[${connectionId}] 💬 Sending text response: ${part.text.substring(0, 100)}...`);
                     const outputTokens = estimateTokens(part.text);
                     updateSessionBudget(connectionId, 0, outputTokens);
-                    ws.send(JSON.stringify({ type: 'text', payload: { content: part.text } }));
+        // Back-compat + new event name
+        safeSend(ws, JSON.stringify({ type: 'text', payload: { content: part.text } }));
+        safeSend(ws, JSON.stringify({ type: 'model_text', payload: { text: part.text } }));
+        modelTexts.push(part.text)
                 }
                 if (part.inlineData?.data) {
                     console.log(`[${connectionId}] 🔊 Sending audio response: ${part.inlineData.data.length} bytes`);
                     const audioTokens = Math.ceil(part.inlineData.data.length / 1000);
                     updateSessionBudget(connectionId, 0, audioTokens);
-                    ws.send(JSON.stringify({ 
+        safeSend(ws, JSON.stringify({ 
                       type: 'audio', 
                       payload: { 
                         audioData: part.inlineData.data,
                         // Live API outputs 24kHz
                         mimeType: 'audio/pcm;rate=24000'
                       } 
-                    }));
+        }));
                 }
             }
         }
+  // also emit any collected model texts that didn’t come via parts.text
+  for (const t of modelTexts) {
+    safeSend(ws, JSON.stringify({ type: 'model_text', payload: { text: t } }))
+  }
         if (message.serverContent?.turnComplete) {
             console.log(`[${connectionId}] ✅ Turn complete - conversation ready for next input`);
-            ws.send(JSON.stringify({ type: 'turn_complete' }));
+    safeSend(ws, JSON.stringify({ type: 'turn_complete' }));
         }
     }
 
     async function handleUserMessage(connectionId: string, ws: WebSocket, payload: any) {
         if (payload.audioData && payload.mimeType) {
+            // Strictly enforce expected audio payload format to avoid silent failures
+            if (payload.mimeType !== 'audio/pcm;rate=16000') {
+                console.warn(`[${connectionId}] ⚠️  Rejected audio chunk due to unexpected mimeType: ${payload.mimeType}`)
+                return
+            }
+            if (typeof payload.audioData !== 'string' || payload.audioData.length === 0) {
+                console.warn(`[${connectionId}] ⚠️  Rejected audio chunk due to missing/invalid audioData`)
+                return
+            }
             let client = activeSessions.get(connectionId)
             const audioDataBuffer = Buffer.from(payload.audioData, 'base64');
             console.log(`[${connectionId}] Buffered audio chunk (${audioDataBuffer.length} bytes).`);
@@ -345,8 +451,12 @@ Guidelines:
         console.log(`[${connectionId}] Session removed.`);
     }
 
-    wss.on('connection', (ws: WebSocket) => {
+    wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
         const connectionId = uuidv4();
+        // Set TCP no-delay to reduce latency for small frames
+        try { (req.socket as any)?.setNoDelay?.(true) } catch {}
+        // Ensure binary frames are treated as ArrayBuffer
+        try { (ws as any).binaryType = 'arraybuffer' } catch {}
         initializeSessionBudget(connectionId);
         console.log(`[${connectionId}] Client connected. Budget initialized.`);
 
@@ -376,13 +486,20 @@ Guidelines:
                           console.log(`[${connectionId}] 🕒 TURN_COMPLETE queued (session not ready).`)
                           break
                         }
+                        if (turnInflight.get(connectionId)) {
+                          console.log(`[${connectionId}] ⏳ TURN_COMPLETE ignored (already in-flight).`)
+                          break
+                        }
+                        turnInflight.set(connectionId, true)
                         try {
                           await (client.session as any).sendRealtimeInput({ turnComplete: true })
-                          console.log(`[${connectionId}] ✅ TURN_COMPLETE sent to Gemini`)
+                          console.log(`[${connectionId}] ✅ TURN_COMPLETE -> upstream`)
                         } catch (e) {
-                          console.error(`[${connectionId}] ❌ Failed to send TURN_COMPLETE:`, e)
+                          console.error(`[${connectionId}] ❌ TURN_COMPLETE upstream`, e)
                           // Fallback to legacy batch send
                           await sendBufferedAudioToGemini(connectionId)
+                        } finally {
+                          turnInflight.delete(connectionId)
                         }
                         break
                     }
@@ -392,7 +509,10 @@ Guidelines:
             }
         });
 
-        ws.on('close', () => handleClose(connectionId));
+        ws.on('close', () => {
+          try { activeSessions.get(connectionId)?.session?.close?.() } catch {}
+          handleClose(connectionId)
+        });
         ws.on('error', () => handleClose(connectionId));
     });
 

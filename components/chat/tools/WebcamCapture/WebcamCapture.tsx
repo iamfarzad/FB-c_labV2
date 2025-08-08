@@ -26,7 +26,8 @@ export function WebcamCapture({
   onCapture, 
   onClose,
   onCancel,
-  onAIAnalysis 
+  onAIAnalysis,
+  onLog,
 }: WebcamCaptureProps) {
   const { toast } = useToast()
   const [webcamState, setWebcamState] = useState<WebcamState>("initializing")
@@ -57,6 +58,7 @@ export function WebcamCapture({
   const sendVideoFrame = useCallback(async (imageData: string) => {
     try {
       setIsAnalyzing(true)
+      onLog?.({ level: 'log', message: 'Analyzing webcam frame…', timestamp: new Date() })
       
       const response = await fetch('/api/analyze-image', { // Fixed API endpoint
         method: 'POST',
@@ -74,6 +76,7 @@ export function WebcamCapture({
       }
 
       const result = await response.json()
+      onLog?.({ level: 'log', message: `Webcam analysis: ${result.analysis || 'No analysis'}`, timestamp: new Date() })
       
       const analysis: AnalysisResult = {
         id: Date.now().toString(),
@@ -90,6 +93,7 @@ export function WebcamCapture({
       
     } catch (error) {
       console.error('❌ Failed to analyze video frame:', error)
+      onLog?.({ level: 'error', message: `Webcam analysis error: ${error instanceof Error ? error.message : 'Unknown'}`, timestamp: new Date() })
       setError(`Failed to analyze video frame: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsAnalyzing(false)
@@ -345,7 +349,10 @@ export function WebcamCapture({
   }, [inputMode, stream, checkAndInitCamera])
 
   const WebcamUI = () => (
-    <div className="flex flex-col gap-4">
+    <div className={cn(
+      'flex flex-col gap-4',
+      mode === 'canvas' && 'h-full w-full overflow-hidden gap-3 p-2'
+    )}>
       {/* Status and Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -375,13 +382,16 @@ export function WebcamCapture({
       </div>
 
       {/* Video Display */}
-      <div className="relative">
+      <div className={cn('relative', mode === 'canvas' && 'flex-1 min-h-0') }>
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
-          className="w-full rounded-xl border border-border/20 shadow-md"
+          className={cn(
+            'w-full rounded-xl border border-border/20 shadow-md',
+            mode === 'canvas' && 'h-full object-contain'
+          )}
         />
         
         {/* Capture Button Overlay */}
@@ -492,6 +502,29 @@ export function WebcamCapture({
           <WebcamUI />
         </DialogContent>
       </Dialog>
+    )
+  }
+
+  if (mode === 'canvas') {
+    return (
+      <div className="flex h-full w-full flex-col overflow-hidden">
+        {/* Thin top controls */}
+        <div className="flex h-10 items-center justify-between border-b px-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-green-500" />
+            <span>Webcam</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="ghost" onClick={captureImage} disabled={webcamState !== 'active' || isCapturing}>
+              Capture
+            </Button>
+            <Button size="sm" variant="ghost" onClick={handleClose}>Close</Button>
+          </div>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col p-2">
+          <WebcamUI />
+        </div>
+      </div>
     )
   }
 

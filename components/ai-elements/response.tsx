@@ -296,6 +296,8 @@ export const Response = memo(
       <div
         className={cn(
           'size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
+          // Coach CTA chips styling hooks
+          '[&_button[data-coach-cta]]:inline-flex [&_button[data-coach-cta]]:items-center [&_button[data-coach-cta]]:gap-2 [&_button[data-coach-cta]]:px-2.5 [&_button[data-coach-cta]]:py-1.5 [&_button[data-coach-cta]]:rounded-md [&_button[data-coach-cta]]:border [&_button[data-coach-cta]]:text-xs [&_button[data-coach-cta]]:text-foreground/80 [&_button[data-coach-cta]]:border-border/50 [&_button[data-coach-cta]]:bg-card/60 [&_button[data-coach-cta]]:hover:bg-accent/10',
           className,
         )}
         {...props}

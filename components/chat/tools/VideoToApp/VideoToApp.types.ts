@@ -1,5 +1,5 @@
 export interface VideoToAppProps {
-  mode?: 'card' | 'modal'
+  mode?: 'card' | 'modal' | 'canvas'
   videoUrl?: string
   status?: 'pending' | 'analyzing' | 'generating' | 'completed' | 'error'
   progress?: number

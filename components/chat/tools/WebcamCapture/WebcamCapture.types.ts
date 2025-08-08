@@ -1,9 +1,10 @@
 export interface WebcamCaptureProps {
-  mode?: 'card' | 'modal'
+  mode?: 'card' | 'modal' | 'canvas'
   onCapture: (imageData: string) => void
   onClose?: () => void
   onCancel?: () => void
   onAIAnalysis?: (analysis: string) => void
+  onLog?: (log: { level: 'log' | 'warn' | 'error'; message: string; timestamp: Date }) => void
 }
 
 export interface WebcamCaptureModalProps {

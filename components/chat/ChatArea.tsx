@@ -7,7 +7,7 @@ import {
   Copy, Check, Download, Play, Pause, Square, RotateCcw, FileText, 
   ImageIcon, Video, Mic, Calculator, Monitor, Sparkles, Zap, 
   TrendingUp, FileSearch, Brain, Loader2, User, AlertTriangle, 
-  Info, Clock, Target, Edit 
+  Clock, Target, Edit, Languages, Send 
 } from '@/lib/icon-mapping'
 import { FbcIcon } from '@/components/ui/fbc-icon'
 import PillInput from '@/components/ui/PillInput'
@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
+// Separator not needed after removing sources summary
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 // Utils and Types
@@ -31,8 +31,31 @@ import { VideoToApp } from "@/components/chat/tools/VideoToApp"
 import { WebcamCapture } from "@/components/chat/tools/WebcamCapture"
 import { ScreenShare } from "@/components/chat/tools/ScreenShare"
 import { BusinessContentRenderer } from "@/components/chat/BusinessContentRenderer"
+import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "@/components/ai-elements/tool"
 import { AIThinkingIndicator, detectAIContext, type AIThinkingContext } from "./AIThinkingIndicator"
 import { AIInsightCard } from "./AIInsightCard"
+import {
+  InlineCitation,
+  InlineCitationText,
+  InlineCitationCard,
+  InlineCitationCardTrigger,
+  InlineCitationCardBody,
+  InlineCitationCarousel,
+  InlineCitationCarouselContent,
+  InlineCitationCarouselItem,
+  InlineCitationCarouselHeader,
+  InlineCitationCarouselIndex,
+  InlineCitationCarouselPrev,
+  InlineCitationCarouselNext,
+  InlineCitationSource,
+} from "@/components/ai-elements/inline-citation"
+import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ai-elements/reasoning"
+import type { Options } from 'react-markdown'
+import { Response } from "@/components/ai-elements/response"
+import { Actions, Action } from "@/components/ai-elements/actions"
+import { Loader } from "@/components/ai-elements/loader"
+import { WebPreview, WebPreviewNavigation, WebPreviewNavigationButton, WebPreviewUrl, WebPreviewBody, WebPreviewConsole } from "@/components/ai-elements/web-preview"
+import { Suggestions, Suggestion } from "@/components/ai-elements/suggestion"
 import { ActivityChip } from "@/components/chat/activity/ActivityChip"
 import type { 
   VoiceTranscriptResult, 
@@ -54,6 +77,12 @@ interface ChatAreaProps {
   userContext?: UserBusinessContext
   onSendMessage?: (message: string) => void
   loadingContext?: AIThinkingContext
+  showHeroInput?: boolean
+  inputValue?: string
+  onInputChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
+  onHeroEngage?: () => void
+  onOpenVoice?: () => void
+  voiceDraft?: string
 }
 
 export const ChatArea = memo(function ChatArea({
@@ -68,7 +97,13 @@ export const ChatArea = memo(function ChatArea({
   onBusinessInteraction,
   userContext,
   onSendMessage,
-  loadingContext
+  loadingContext,
+  showHeroInput,
+  inputValue,
+  onInputChange,
+  onHeroEngage,
+  onOpenVoice,
+  voiceDraft
 }: ChatAreaProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
@@ -117,6 +152,35 @@ export const ChatArea = memo(function ChatArea({
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
   const [visibleMessages, setVisibleMessages] = useState<Set<string>>(new Set())
   const [hoveredAction, setHoveredAction] = useState<string | null>(null)
+  const [translations, setTranslations] = useState<Record<string, { [lang: string]: string }>>({})
+  const [translating, setTranslating] = useState<Record<string, boolean>>({})
+  const [analysisLogs, setAnalysisLogs] = useState<Array<{ level: 'log' | 'warn' | 'error'; message: string; timestamp: Date }>>([])
+
+  const pushLog = useCallback((log: { level: 'log' | 'warn' | 'error'; message: string; timestamp: Date }) => {
+    setAnalysisLogs(prev => [log, ...prev].slice(0, 100))
+  }, [])
+
+  const handleTranslate = async (messageId: string, text: string, targetLang: string) => {
+    if (!text || !messageId) return
+    setTranslating(prev => ({ ...prev, [messageId]: true }))
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, targetLang })
+      })
+      if (!res.ok) throw new Error('Translation failed')
+      const data = await res.json()
+      setTranslations(prev => ({
+        ...prev,
+        [messageId]: { ...(prev[messageId] || {}), [targetLang]: data.translated }
+      }))
+    } catch (e) {
+      console.error('Translate error:', e)
+    } finally {
+      setTranslating(prev => ({ ...prev, [messageId]: false }))
+    }
+  }
 
   const formatMessageContent = useCallback((content: string): string => {
     if (!content) return ''
@@ -168,6 +232,67 @@ export const ChatArea = memo(function ChatArea({
     }
     return { parts }
   }
+
+  // Build markdown renderer options to turn inline links into InlineCitation hovers when they match message.sources
+  const buildResponseOptions = useCallback((messageForOpts: Message): Options => {
+    const sourceList = (messageForOpts as any)?.sources as Array<{ url: string; title?: string; description?: string }> | undefined
+    return {
+      components: {
+        a: ({ node, children, href, className, ...props }) => {
+          const url = typeof href === 'string' ? href : ''
+          const src = sourceList?.find(s => s.url === url)
+          if (!src) {
+            return (
+              <a
+                className={cn('font-medium text-primary underline', className as string)}
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                {...props}
+              >
+                {children}
+              </a>
+            )
+          }
+          return (
+            <InlineCitation className="inline-flex items-center">
+              <InlineCitationText className="underline decoration-dotted underline-offset-2 decoration-accent">
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn('font-medium', className as string)}
+                  {...props}
+                >
+                  {children}
+                </a>
+              </InlineCitationText>
+              <InlineCitationCard>
+                <InlineCitationCardTrigger sources={[url]} />
+                <InlineCitationCardBody>
+                  <InlineCitationCarousel>
+                    <InlineCitationCarouselContent>
+                      <InlineCitationCarouselItem>
+                        <InlineCitationCarouselHeader>
+                          <span className="text-xs font-medium truncate">
+                            {src.title || (src.url ? new URL(src.url).hostname : 'Source')}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <InlineCitationCarouselIndex>1/1</InlineCitationCarouselIndex>
+                          </div>
+                        </InlineCitationCarouselHeader>
+                        <InlineCitationSource title={src.title} url={src.url} description={src.description} />
+                      </InlineCitationCarouselItem>
+                    </InlineCitationCarouselContent>
+                  </InlineCitationCarousel>
+                </InlineCitationCardBody>
+              </InlineCitationCard>
+            </InlineCitation>
+          )
+        }
+      }
+    }
+  }, [])
 
   const detectMessageType = useCallback((content: string): { type: string; icon?: React.ReactNode; badge?: string; color?: string } => {
     if (!content) return { type: 'default' }
@@ -252,6 +377,29 @@ export const ChatArea = memo(function ChatArea({
     return false
   }
 
+  // Replace bare URLs that match message.sources with markdown links so they render as inline citations
+  const wrapSourcedUrlsWithMarkdown = useCallback((text: string, messageForUrls: Message): string => {
+    if (!text) return text
+    const sources = (messageForUrls as any)?.sources as Array<{ url: string; title?: string }>
+    if (!Array.isArray(sources) || sources.length === 0) return text
+    let output = text
+    for (const src of sources) {
+      if (!src?.url) continue
+      // Skip if already a markdown link to this url
+      if (output.includes(`](${src.url})`)) continue
+      try {
+        const host = new URL(src.url).hostname
+        // Replace exact url occurrences with a markdown link [host](url)
+        const escaped = src.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const re = new RegExp(escaped, 'g')
+        output = output.replace(re, `[${host}](${src.url})`)
+      } catch {
+        // If URL parsing fails, skip
+      }
+    }
+    return output
+  }, [])
+
   const copyToClipboard = useCallback(async (text: string, messageId: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -315,23 +463,51 @@ export const ChatArea = memo(function ChatArea({
       case 'voice_input':
         return <VoiceInput mode="card" onClose={handleCancel} onTranscript={(transcript: string) => onVoiceTranscript(transcript)} />
       case 'webcam_capture':
-        return <WebcamCapture onCapture={(imageData: string) => onWebcamCapture(imageData)} onAIAnalysis={() => {}} />
+        return (
+          <Tool className="rounded-2xl border-border/30">
+            <ToolHeader type={`tool-webcam`} state={"input-available"} />
+            <ToolContent>
+              <ToolOutput output={<WebcamCapture onCapture={(imageData: string) => onWebcamCapture(imageData)} onAIAnalysis={() => {}} onLog={pushLog} />} errorText={undefined} />
+            </ToolContent>
+          </Tool>
+        )
       case 'roi_calculator':
-        return <ROICalculator mode="card" onCancel={handleCancel} onComplete={(result: ROICalculationResult) => onROICalculation(result)} />
+        return (
+          <Tool className="rounded-2xl border-border/30">
+            <ToolHeader type={`tool-roi`} state={"input-available"} />
+            <ToolContent>
+              <ToolOutput output={<ROICalculator mode="card" onCancel={handleCancel} onComplete={(result: ROICalculationResult) => onROICalculation(result)} />} errorText={undefined} />
+            </ToolContent>
+          </Tool>
+        )
       case 'video_to_app':
-        return <VideoToApp 
-          mode="card"
-          videoUrl={`/api/video-uploads/${messageId}`} // Dynamic video URL based on session
-          status="pending"
-          sessionId={messageId}
-          onCancel={handleCancel}
-          onAppGenerated={(url: string) => {
-            console.log('App generated:', url)
-            // TODO: Handle app generation result
-          }}
-        />
+        return (
+          <Tool className="rounded-2xl border-border/30">
+            <ToolHeader type={`tool-video-to-app`} state={"input-available"} />
+            <ToolContent>
+              <ToolOutput
+                output={<VideoToApp 
+                  mode="card"
+                  videoUrl={`/api/video-uploads/${messageId}`}
+                  status="pending"
+                  sessionId={messageId}
+                  onCancel={handleCancel}
+                  onAppGenerated={(url: string) => { console.log('App generated:', url) }}
+                />}
+                errorText={undefined}
+              />
+            </ToolContent>
+          </Tool>
+        )
       case 'screen_share':
-        return <ScreenShare onAnalysis={(analysis: string) => onScreenAnalysis(analysis)} />
+        return (
+          <Tool className="rounded-2xl border-border/30">
+            <ToolHeader type={`tool-screen-share`} state={"input-available"} />
+            <ToolContent>
+              <ToolOutput output={<ScreenShare onAnalysis={(analysis: string) => onScreenAnalysis(analysis)} onLog={pushLog} />} errorText={undefined} />
+            </ToolContent>
+          </Tool>
+        )
       default:
         return null
     }
@@ -342,32 +518,65 @@ export const ChatArea = memo(function ChatArea({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex-1 min-h-[70vh] grid place-items-center px-4"
+      className="flex-1 min-h-[40vh] grid place-items-center px-4"
     >
-      <div className="w-full max-w-3xl">
-        <div className="text-center mb-6">
-          <h3 className="text-2xl sm:text-3xl font-semibold text-foreground">Ready to dive in?</h3>
-          <p className="text-muted-foreground mt-2">Ask anything or paste a link. I’ll handle the rest.</p>
-        </div>
-        {/* Inline PillInput for hero state - delegates to parent via onSendMessage when pressing enter */}
-        <PillInput
-          value={''}
-          placeholder="Ask anything..."
-          onChange={() => { /* no-op: hero uses footer for stateful input; keep visual parity */ }}
-          onSubmit={(e) => e.preventDefault()}
-          leftSlot={<ToolMenu disabled />}
-          rightSlot={<div className="w-9 h-9 rounded-full bg-muted" />}
-        />
+      <div className="text-center w-full">
+        <h3 className="text-2xl sm:text-3xl font-semibold text-foreground">Ready to dive in?</h3>
+        <p className="text-muted-foreground mt-2">Ask anything or paste a link. I’ll handle the rest.</p>
+        {showHeroInput && (
+          <div className="mt-6 max-w-3xl mx-auto">
+            <PillInput
+              value={inputValue || ''}
+              placeholder="Ask anything..."
+              onChange={onInputChange || (() => {})}
+              onSubmit={(e) => { e.preventDefault(); onHeroEngage?.(); onSendMessage?.(inputValue || '') }}
+              leftSlot={<ToolMenu />}
+              rightSlot={
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    aria-label="Voice input"
+                    className="w-9 h-9 rounded-full bg-muted/60 grid place-items-center"
+                    onClick={onOpenVoice}
+                  >
+                    <FbcIcon className="w-4 h-4 text-foreground/70" />
+                  </button>
+                  <button
+                    type="submit"
+                    aria-label="Send"
+                    className="w-9 h-9 rounded-full bg-accent text-accent-foreground grid place-items-center"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onHeroEngage?.();
+                      if (inputValue && inputValue.trim()) onSendMessage?.(inputValue)
+                    }}
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              }
+              waveformChip={voiceDraft ? (
+                <div className="hidden sm:flex items-center h-7 px-2 rounded-full bg-accent/10 text-accent text-xs border border-accent/20">
+                  <span className="mr-1">🎤</span>
+                  <span className="truncate max-w-[140px]">{voiceDraft}</span>
+                </div>
+              ) : undefined}
+            />
+          </div>
+        )}
       </div>
     </motion.div>
-  ), [])
+  ), [showHeroInput, inputValue, onInputChange, onHeroEngage, onSendMessage, onOpenVoice, voiceDraft])
 
   return (
     <div className="flex-1 min-h-0">
       {/* Single scroll container for the entire chat */}
       <div
         ref={scrollAreaRef}
-        className="h-full overflow-y-auto overscroll-contain chat-scroll-container"
+        className={cn(
+          "h-full overscroll-contain chat-scroll-container",
+          messages.length === 0 && !isLoading ? "overflow-hidden" : "overflow-y-auto"
+        )}
         style={{ 
           scrollBehavior: 'smooth',
           WebkitOverflowScrolling: 'touch' // iOS momentum scrolling
@@ -380,7 +589,7 @@ export const ChatArea = memo(function ChatArea({
           className={cn(
             "mx-auto space-y-3 sm:space-y-4 px-4 sm:px-6 md:px-8 lg:px-24 py-4 sm:py-6",
             "w-full max-w-[900px]",
-            "min-h-full flex flex-col justify-end"
+            "min-h-full flex flex-col justify-end pb-24 md:pb-28"
           )} 
           data-testid="messages-container"
         >
@@ -610,16 +819,18 @@ export const ChatArea = memo(function ChatArea({
                                 </motion.div>
                               )}
 
-                              {/* Render text with inlined ActivityChips without wrapping chips in HTML */}
+                              {/* Render text with inlined ActivityChips. Use ai-elements Response for markdown/code when present */}
                               <div className="prose prose-sm max-w-none leading-relaxed break-words dark:prose-invert prose-slate text-foreground prose-headings:mt-4 prose-headings:mb-2 prose-p:mb-3 prose-li:mb-1 prose-strong:text-current prose-em:text-current">
                                 {(() => {
                                   const raw = message.content || ''
                                   const { parts } = extractActivities(raw)
+                                  const processedRaw = wrapSourcedUrlsWithMarkdown(raw, message)
+                                  const containsMarkdown = processedRaw.includes('```') || /`[^`]/.test(processedRaw) || /\]\(https?:\/\//.test(processedRaw)
                                   if (parts.length === 0) {
-                                    return (
-                                      <span
-                                        dangerouslySetInnerHTML={{ __html: formatMessageContent(raw) }}
-                                      />
+                                    return containsMarkdown ? (
+                                      <Response options={buildResponseOptions(message)} className="prose prose-sm max-w-none dark:prose-invert prose-slate">{processedRaw}</Response>
+                                    ) : (
+                                      <span dangerouslySetInnerHTML={{ __html: formatMessageContent(processedRaw) }} />
                                     )
                                   }
                                   return (
@@ -630,11 +841,12 @@ export const ChatArea = memo(function ChatArea({
                                             <ActivityChip key={`${message.id}-act-${idx}`} direction={p.dir as 'in' | 'out'} label={p.value} className="mx-1 align-middle" />
                                           )
                                         }
-                                        return (
-                                          <span
-                                            key={`${message.id}-txt-${idx}`}
-                                            dangerouslySetInnerHTML={{ __html: formatMessageContent(p.value) }}
-                                          />
+                                        const processed = wrapSourcedUrlsWithMarkdown(p.value, message)
+                                        const segmentHasMd = processed.includes('```') || /`[^`]/.test(processed) || /\]\(https?:\/\//.test(processed)
+                                        return segmentHasMd ? (
+                                          <Response key={`${message.id}-md-${idx}`} options={buildResponseOptions(message)} className="prose prose-sm max-w-none dark:prose-invert prose-slate">{processed}</Response>
+                                        ) : (
+                                          <span key={`${message.id}-txt-${idx}`} dangerouslySetInnerHTML={{ __html: formatMessageContent(processed) }} />
                                         )
                                       })}
                                     </>
@@ -642,52 +854,58 @@ export const ChatArea = memo(function ChatArea({
                                 })()}
                               </div>
 
-                              {/* Sources */}
-                              {message.sources && message.sources.length > 0 && (
+                              {/* Sources summary removed; inline citations only */}
+
+                              {/* WebPreview for primary URL */}
+                              {message.role === 'assistant' && Array.isArray((message as any).sources) && (message as any).sources.length > 0 && (
+                                <div className="mt-3">
+                                  <WebPreview defaultUrl={(message as any).sources[0]?.url}>
+                                    <WebPreviewNavigation>
+                                      <WebPreviewNavigationButton tooltip="Back">←</WebPreviewNavigationButton>
+                                      <WebPreviewNavigationButton tooltip="Forward">→</WebPreviewNavigationButton>
+                                      <WebPreviewUrl />
+                                    </WebPreviewNavigation>
+                                    <WebPreviewBody className="rounded-b-lg" />
+                                    <WebPreviewConsole logs={analysisLogs} />
+                                  </WebPreview>
+                                </div>
+                              )}
+
+                              {/* Translated output (ES) */}
+                              {message.role === 'assistant' && translations[message.id]?.['es'] && (
                                 <motion.div
-                                  initial={{ opacity: 0, y: 10 }}
+                                  initial={{ opacity: 0, y: 8 }}
                                   animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: 0.3 }}
-                                  className="mt-4"
+                                  transition={{ duration: 0.2 }}
+                                  className="mt-3 text-sm border-l-2 border-accent/40 pl-3 text-foreground/90"
                                 >
-                                  <Separator className="my-4 opacity-30" />
-                                  <div className="space-y-3">
-                                    <p className="text-xs font-medium opacity-70 flex items-center gap-2">
-                                      <Info className="w-3 h-3" />
-                                      Sources & References:
-                                    </p>
-                                    <div className="space-y-2">
-                                      {message.sources.map((src, idx) => (
-                                        <motion.a
-                                          key={`${message.id}-source-${idx}`}
-                                          initial={{ opacity: 0, x: -10 }}
-                                          animate={{ opacity: 1, x: 0 }}
-                                          transition={{ delay: 0.4 + idx * 0.1 }}
-                                          href={src.url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="block text-xs hover:underline opacity-80 hover:opacity-100 transition-all p-3 bg-muted/30 rounded-lg border border-border/20 hover:border-accent/30 hover:bg-accent/5"
-                                        >
-                                          <div className="font-medium">{src.title || 'Source'}</div>
-                                          <div className="text-muted-foreground mt-1 truncate">{src.url}</div>
-                                        </motion.a>
-                                      ))}
-                                    </div>
-                                  </div>
+                                  <div className="mb-1 text-xs uppercase tracking-wide opacity-70">Translated (ES)</div>
+                                  <div
+                                    className="prose prose-sm max-w-none dark:prose-invert prose-slate"
+                                    dangerouslySetInnerHTML={{ __html: formatMessageContent(translations[message.id]['es']) }}
+                                  />
                                 </motion.div>
                               )}
                             </div>
 
-                            {/* Message Actions - ChatGPT style */}
-                            <motion.div 
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <Button
+                            {/* Suggestions row under assistant messages */}
+                            {message.role === 'assistant' && (
+                              <div className="mt-2">
+                                <Suggestions>
+                                  <Suggestion suggestion="Summarize this" onClick={s => onSendMessage?.(s)} />
+                                  <Suggestion suggestion="Explain step by step" onClick={s => onSendMessage?.(s)} />
+                                  <Suggestion suggestion="Find relevant sources" onClick={s => onSendMessage?.(s)} />
+                                </Suggestions>
+                              </div>
+                            )}
+
+                            {/* Message Actions (ai-elements) */}
+                            <Actions className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Action
+                                tooltip={copiedMessageId === message.id ? 'Copied' : 'Copy'}
+                                aria-label="Copy"
                                 variant="ghost"
-                                size="icon"
-                                className="w-6 h-6 hover:bg-accent/10 transition-colors"
+                                size="sm"
                                 onClick={() => copyToClipboard(message.content || '', message.id)}
                               >
                                 <motion.div
@@ -699,26 +917,36 @@ export const ChatArea = memo(function ChatArea({
                                     <Copy className="w-3 h-3" />
                                   }
                                 </motion.div>
-                              </Button>
-                              
+                              </Action>
                               {message.role === "user" && (
-                                <Button
+                                <Action
+                                  tooltip="Edit"
+                                  aria-label="Edit message"
                                   variant="ghost"
-                                  size="icon"
-                                  className="w-6 h-6 hover:bg-accent/10 transition-colors"
-                                                                onClick={() => {
-                                // Implement edit functionality
-                                const newContent = prompt('Edit message:', message.content)
-                                if (newContent && newContent.trim() !== message.content) {
-                                  // TODO: Add proper edit handler to props
-                                  console.log('Edit message:', message.id, 'New content:', newContent)
-                                }
-                              }}
+                                  size="sm"
+                                  onClick={() => {
+                                    const newContent = prompt('Edit message:', message.content)
+                                    if (newContent && newContent.trim() !== message.content) {
+                                      console.log('Edit message:', message.id, 'New content:', newContent)
+                                    }
+                                  }}
                                 >
                                   <Edit className="w-3 h-3" />
-                                </Button>
+                                </Action>
                               )}
-                            </motion.div>
+                              {message.role === 'assistant' && (
+                                <Action
+                                  tooltip={translating[message.id] ? 'Translating…' : 'Translate to Spanish'}
+                                  aria-label="Translate to Spanish"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleTranslate(message.id, message.content || '', 'es')}
+                                  disabled={!!translating[message.id]}
+                                >
+                                  <Languages className="w-3 h-3" />
+                                </Action>
+                              )}
+                            </Actions>
                           </div>
 
                           {/* User Avatar - Small and minimal */}
@@ -731,13 +959,18 @@ export const ChatArea = memo(function ChatArea({
                       </motion.div>
                       
                       {/* Show AI Thinking Indicator immediately after the last message when loading */}
-                      {isLastMessage && isLoading && (
-                        <AIThinkingIndicator 
-                          context={loadingContext || detectAIContext(
-                            message.content || '',
-                            '/api/chat'
+                      {isLastMessage && (
+                        <div className="mt-2">
+                          {/* Chip-only streaming indicator (unified) */}
+                          {isLoading && (
+                            <AIThinkingIndicator 
+                              context={loadingContext || detectAIContext(
+                                message.content || '',
+                                '/api/chat'
+                              )}
+                            />
                           )}
-                        />
+                        </div>
                       )}
                     </React.Fragment>
                   )

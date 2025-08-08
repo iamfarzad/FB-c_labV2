@@ -2,8 +2,9 @@
 
 import * as React from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
-import { Plus, FileText, ImageIcon, Camera, Monitor, Calculator } from "@/lib/icon-mapping"
+import { Plus, FileText, ImageIcon, Camera, Monitor, Calculator, Video, Download } from "@/lib/icon-mapping"
 import { cn } from "@/lib/utils"
 
 export interface ToolMenuProps {
@@ -12,6 +13,8 @@ export interface ToolMenuProps {
   onWebcam?: () => void
   onScreenShare?: () => void
   onROI?: () => void
+  onVideoToApp?: () => void
+  onPdf?: () => void
   disabled?: boolean
   className?: string
 }
@@ -22,13 +25,17 @@ export function ToolMenu({
   onWebcam,
   onScreenShare,
   onROI,
+  onVideoToApp,
+  onPdf,
   disabled,
   className,
 }: ToolMenuProps) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
           type="button"
           variant="ghost"
           size="touch"
@@ -39,10 +46,13 @@ export function ToolMenu({
             className
           )}
           aria-label="Open tools"
-        >
-          <Plus className="w-3.5 h-3.5" />
-        </Button>
-      </DropdownMenuTrigger>
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent>Tools</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent align="start" className="w-56">
         {onUploadDocument && (
           <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onUploadDocument}>
@@ -67,6 +77,16 @@ export function ToolMenu({
         {onROI && (
           <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onROI}>
             <Calculator className="w-4 h-4" /> ROI calculator
+          </DropdownMenuItem>
+        )}
+        {onVideoToApp && (
+          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onVideoToApp}>
+            <Video className="w-4 h-4" /> Video → App
+          </DropdownMenuItem>
+        )}
+        {onPdf && (
+          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onPdf}>
+            <Download className="w-4 h-4" /> PDF Summary
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

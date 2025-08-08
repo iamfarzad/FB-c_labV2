@@ -25,7 +25,7 @@ async function testGeminiLiveConnection() {
     console.log("✅ Client initialized")
 
     // Test live connection
-    const modelName = 'gemini-2.5-flash-preview-native-audio-dialog'
+    const modelName = 'gemini-live-2.5-flash-preview-native-audio'
     
     console.log(`🎤 Attempting to connect to ${modelName}...`)
 

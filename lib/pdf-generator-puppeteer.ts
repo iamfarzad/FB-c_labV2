@@ -66,6 +66,15 @@ export async function generatePdfWithPuppeteer(
  */
 function generateHtmlContent(data: SummaryData): string {
   const { leadInfo, conversationHistory, leadResearch } = data;
+  // Embed brand logo as data URI if available
+  let logoDataUri = ''
+  try {
+    const logoPath = path.resolve(process.cwd(), 'public/pdf_watermark_logo/fb_bold_3dlogo_base64.svg')
+    const svg = fs.readFileSync(logoPath)
+    const base64 = Buffer.from(svg).toString('base64')
+    logoDataUri = `data:image/svg+xml;base64,${base64}`
+  } catch {}
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.farzadbayat.com'
   
   return `
 <!DOCTYPE html>
@@ -141,12 +150,7 @@ function generateHtmlContent(data: SummaryData): string {
       z-index: 1;
     }
     
-    header .logo {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      opacity: 0.2;
-    }
+    header .logo { position: absolute; top: 16px; right: 16px; opacity: 0.18; width: 120px; height: auto; }
     
     /* Content Sections */
     .content {
@@ -424,6 +428,7 @@ function generateHtmlContent(data: SummaryData): string {
     <header>
       <h1>F.B/c AI Consulting</h1>
       <p class="subtitle">AI-Powered Lead Generation & Consulting Report</p>
+      ${logoDataUri ? `<img class="logo" src="${logoDataUri}" alt="F.B/c"/>` : ''}
     </header>
     
     <div class="content">
@@ -539,6 +544,15 @@ function generateHtmlContent(data: SummaryData): string {
           <p><strong>Short-term (24-48 hours):</strong> Schedule follow-up consultation call</p>
           <p><strong>Mid-term (3-7 days):</strong> Share customized proposal and pricing</p>
         </div>
+      </div>
+      
+      <div class="section page-break">
+        <h2>Next Steps</h2>
+        <div style="display:flex; gap:16px; align-items:center; margin:16px 0;">
+          <a href="${appUrl}/workshop" style="background:#f59e0b;color:#111827;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">Book Workshop</a>
+          <a href="${appUrl}/meetings/book" style="background:#111827;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">Schedule Consulting Call</a>
+        </div>
+        <p style="color:#475569">We recommend a 30–45 min discovery to confirm scope, quantify ROI, and agree on the first milestone.</p>
       </div>
     </div>
     

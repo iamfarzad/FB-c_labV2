@@ -31,6 +31,11 @@ export const API_ROUTES: Record<string, ApiRouteConfig> = {
     realEndpoint: '/api/analyze-image',
     mockEndpoint: '/api/mock/analyze-image',
     requiresApiKey: true
+  },
+  translate: {
+    realEndpoint: '/api/translate',
+    mockEndpoint: '/api/mock/translate',
+    requiresApiKey: true
   }
 };
 
