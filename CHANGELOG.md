@@ -25,6 +25,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Chat UX Polish - 2025-08-08
+- LeadProgressIndicator: removed wrapper/background for a floating look; added soft ambient behind the rail; mobile dropdown summary with expandable vertical steps; kept hover details opening to the left; shows stage index and percent
+- Chat avatars: user avatar now shows a small brand-accent status dot; assistant messages display a compact brand icon while streaming/thinking
+- Prompt/Input: increased textarea min-height on mobile for better usability
+- Quick actions: ensured Screen Share and Webcam quick icons with tooltips; progress chip tooltip lists explored capabilities
+- ROI: inline Guided ROI form scaffolded when suggested by coach; auto-open ROI canvas deferred per product decision
+
 ### Added - 2025-08-08
 - AI Elements: Synced full component set via `shadcn add https://ai-sdk.dev/elements.json` (updated `code-block`, `inline-citation`, `response`, `ui/carousel`)
 - Gallery page to preview all AI Elements at `app/test/ai-elements/page.tsx` (route: `/test/ai-elements`)
