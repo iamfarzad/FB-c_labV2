@@ -104,3 +104,14 @@ LIVE_SERVER_PORT=3001 GEMINI_API_KEY=your_key_here ts-node server/live-server.ts
 \`\`\`
 
 **Note:** This is for local development/testing only. In production (including Vercel), all real-time features are handled by Supabase. You do NOT need to run `server/live-server.ts` in production.
+
+## Feature Flags
+
+- Flags live in `lib/flags.ts` with safe defaults for dev
+- Override via URL: `?ff=all` enables all; `?ff=roi_inline_form,-coach_v2` enables/disables specific flags
+- Persist overrides in localStorage; can toggle in console using `setFlag(name, boolean)`
+- Print active flags:
+
+```bash
+pnpm flags
+```
