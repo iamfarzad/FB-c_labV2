@@ -24,6 +24,7 @@ import { ScreenShare } from '@/components/chat/tools/ScreenShare/ScreenShare'
 import { WebcamCapture } from '@/components/chat/tools/WebcamCapture/WebcamCapture'
 import { VideoToApp } from '@/components/chat/tools/VideoToApp/VideoToApp'
 import useChat from '@/hooks/chat/useChat'
+import { isFlagEnabled } from '@/lib/flags'
 
 export function AIEChat() {
   const [sessionId] = useState(() => (typeof window !== 'undefined' ? (window.localStorage.getItem('demo-session-id') || 'default') : 'default'))
@@ -229,8 +230,8 @@ export function AIEChat() {
                       </div>
                     )}
 
-                    {/* Guided ROI form */}
-                    {m.role === 'assistant' && idx === uiMessages.length - 1 && coachNext === 'roi' && (
+                    {/* Guided ROI form (feature-flagged) */}
+                    {isFlagEnabled('roi_inline_form') && m.role === 'assistant' && idx === uiMessages.length - 1 && coachNext === 'roi' && (
                       <div className="mt-3 rounded-xl border bg-card/60 p-3">
                         <p className="mb-2 text-sm text-muted-foreground">Quick ROI inputs (you can adjust later):</p>
                         <form

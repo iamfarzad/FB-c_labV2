@@ -1,0 +1,17 @@
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: ['**/*.md']
+
+frontend:
+  - changed-files:
+      - any-glob-to-any-file: ['app/**/*', 'components/**/*', 'hooks/**/*', 'styles/**/*']
+
+backend:
+  - changed-files:
+      - any-glob-to-any-file: ['app/api/**/*', 'lib/**/*', 'server/**/*']
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file: ['tests/**/*', '__tests__/**/*']
+
+
