@@ -7,6 +7,7 @@ import { FbcIcon } from "@/components/ui/fbc-icon"
 import { FbcIcon as FbcIconPolished } from "@/fbc-logo-icon/components/fbc-icon"
 import { ClientBrain, ClientZap, ClientSparkles, ClientTarget } from "@/components/ui/client-icons"
 import type { Metadata } from "next"
+import { MotionStagger, MotionItem } from "@/components/ui/client-animations"
 
 export const metadata: Metadata = {
   title: "Farzad Bayat - AI Consultant & Automation Expert | Build AI That Actually Works",
@@ -127,15 +128,19 @@ export default function HomePage() {
         </div>
         
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((feature) => (
-            <Card key={feature.title} className="neu-card transition-all hover:shadow-lg">
-              <CardContent className="p-6 text-center">
-                <feature.icon className="mx-auto h-12 w-12 text-accent mb-4" />
-                <h3 className="text-lg font-semibold text-primary mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground text-sm">{feature.description}</p>
-              </CardContent>
-            </Card>
-          ))}
+          <MotionStagger className="contents">
+            {features.map((feature) => (
+              <MotionItem key={feature.title}>
+                <Card className="neu-card transition-all hover:shadow-lg">
+                  <CardContent className="p-6 text-center">
+                    <feature.icon className="mx-auto h-12 w-12 text-accent mb-4" />
+                    <h3 className="text-lg font-semibold text-primary mb-2">{feature.title}</h3>
+                    <p className="text-muted-foreground text-sm">{feature.description}</p>
+                  </CardContent>
+                </Card>
+              </MotionItem>
+            ))}
+          </MotionStagger>
         </div>
       </PageShell>
 
@@ -151,22 +156,26 @@ export default function HomePage() {
         </div>
         
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          {testimonials.map((testimonial) => (
-            <Card key={testimonial.name} className="neu-card">
-              <CardContent className="p-6">
-                <div className="flex mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-accent text-accent" />
-                  ))}
-                </div>
-                <p className="text-muted-foreground mb-4">"{testimonial.content}"</p>
-                <div>
-                  <div className="font-semibold text-primary">{testimonial.name}</div>
-                  <div className="text-sm text-muted-foreground">{testimonial.role}</div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          <MotionStagger className="contents">
+            {testimonials.map((testimonial) => (
+              <MotionItem key={testimonial.name}>
+                <Card className="neu-card">
+                  <CardContent className="p-6">
+                    <div className="flex mb-4">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="h-4 w-4 fill-accent text-accent" />
+                      ))}
+                    </div>
+                    <p className="text-muted-foreground mb-4">"{testimonial.content}"</p>
+                    <div>
+                      <div className="font-semibold text-primary">{testimonial.name}</div>
+                      <div className="text-sm text-muted-foreground">{testimonial.role}</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </MotionItem>
+            ))}
+          </MotionStagger>
         </div>
       </PageShell>
 
@@ -225,29 +234,37 @@ export default function HomePage() {
         </div>
         
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-          <Card className="neu-card">
-            <CardContent className="p-8">
-              <h3 className="text-xl font-bold text-primary mb-4">AI Consulting & Strategy</h3>
-              <p className="text-muted-foreground mb-6">
-                Comprehensive AI assessment and strategic planning to identify the best opportunities for automation in your business.
-              </p>
-              <Button asChild variant="outline">
-                <Link href="/consulting">Learn More</Link>
-              </Button>
-            </CardContent>
-          </Card>
-          
-          <Card className="neu-card">
-            <CardContent className="p-8">
-              <h3 className="text-xl font-bold text-primary mb-4">Hands-On AI Workshop</h3>
-              <p className="text-muted-foreground mb-6">
-                Interactive workshop where you'll build your first AI automation tool and learn practical implementation strategies.
-              </p>
-              <Button asChild variant="outline">
-                <Link href="/workshop">Join Workshop</Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <MotionStagger className="contents">
+            {[1, 2].map((i) => (
+              <MotionItem key={i}>
+                {i === 1 ? (
+                  <Card className="neu-card">
+                    <CardContent className="p-8">
+                      <h3 className="text-xl font-bold text-primary mb-4">AI Consulting & Strategy</h3>
+                      <p className="text-muted-foreground mb-6">
+                        Comprehensive AI assessment and strategic planning to identify the best opportunities for automation in your business.
+                      </p>
+                      <Button asChild variant="outline">
+                        <Link href="/consulting">Learn More</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="neu-card">
+                    <CardContent className="p-8">
+                      <h3 className="text-xl font-bold text-primary mb-4">Hands-On AI Workshop</h3>
+                      <p className="text-muted-foreground mb-6">
+                        Interactive workshop where you'll build your first AI automation tool and learn practical implementation strategies.
+                      </p>
+                      <Button asChild variant="outline">
+                        <Link href="/workshop">Join Workshop</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </MotionItem>
+            ))}
+          </MotionStagger>
         </div>
       </PageShell>
 

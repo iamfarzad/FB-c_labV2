@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Award, BookOpen, Heart, MessageSquare, Target } from "lucide-react"
 import type { Metadata } from "next"
+import { MotionItem, MotionRise, MotionStagger } from "@/components/ui/client-animations"
 
 export const metadata: Metadata = {
   title: "About Farzad Bayat - Self-Taught AI Consultant with 10,000+ Hours Experience",
@@ -54,8 +55,8 @@ export default function AboutPage() {
       </PageShell>
 
       <PageShell>
-        <div className="grid md:grid-cols-3 gap-10 items-start">
-          <div className="md:col-span-2">
+        <MotionStagger className="grid md:grid-cols-3 gap-10 items-start">
+          <MotionItem className="md:col-span-2">
             <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">My AI Automation Journey</h2>
             <p className="mt-4 text-muted-foreground">
               After 17 years creating and producing TV shows, documentaries, and commercials for major networks across
@@ -68,52 +69,58 @@ export default function AboutPage() {
               doing—starting with GPT-2. Since then, I've discovered what really works in <strong>AI implementation</strong>. My philosophy: you have to build
               and break things yourself to truly understand them.
             </p>
-          </div>
-          <div className="flex justify-center">
+          </MotionItem>
+          <MotionItem className="flex justify-center">
             <Avatar className="w-48 h-48 border-4 border-border shadow-lg">
               <AvatarImage src="/placeholder.svg?width=200&height=200" alt="Farzad Bayat - AI Automation Consultant with 10,000+ hours experience in artificial intelligence and business automation" />
               <AvatarFallback>FB</AvatarFallback>
             </Avatar>
-          </div>
-        </div>
+          </MotionItem>
+        </MotionStagger>
       </PageShell>
 
       <PageShell className="bg-secondary">
-        <h2 className="text-center text-2xl font-bold tracking-tight text-primary sm:text-3xl">Core Values in AI Consulting</h2>
+        <div className="text-center">
+          <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">Core Values in AI Consulting</h2>
+        </div>
         <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {coreValues.map((value) => (
-            <Card key={value.text} className="neu-card transition-all flex flex-col items-center justify-center p-8 text-center">
-              <CardContent className="p-6 text-center">
-                <value.icon className="mx-auto h-10 w-10 text-accent" aria-hidden="true" />
-                <h3 className="mt-4 font-medium text-base">{value.text}</h3>
-              </CardContent>
-            </Card>
-          ))}
+          <MotionStagger className="contents">
+            {coreValues.map((value) => (
+              <MotionItem key={value.text}>
+                <Card className="neu-card transition-all flex flex-col items-center justify-center p-8 text-center">
+                  <CardContent className="p-6 text-center">
+                    <value.icon className="mx-auto h-10 w-10 text-accent" aria-hidden="true" />
+                    <h3 className="mt-4 font-medium text-base">{value.text}</h3>
+                  </CardContent>
+                </Card>
+              </MotionItem>
+            ))}
+          </MotionStagger>
         </div>
       </PageShell>
 
       <PageShell>
-        <div className="grid md:grid-cols-2 gap-10 items-center">
-          <div>
+        <MotionStagger className="grid md:grid-cols-2 gap-10 items-center">
+          <MotionItem>
             <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">My AI Expertise & Strengths</h2>
             <div className="mt-6 space-y-4">
               {skills.map((skill) => (
-                <div key={skill.name}>
+                <MotionItem key={skill.name}>
                   <div className="flex justify-between mb-1">
                     <span className="text-base font-medium text-primary">{skill.name}</span>
                     <span className="text-sm font-medium text-accent">{skill.value}%</span>
                   </div>
                   <Progress value={skill.value} className="[&>div]:bg-accent" />
-                </div>
+                </MotionItem>
               ))}
             </div>
-          </div>
-          <div>
+          </MotionItem>
+          <MotionItem>
             <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">Timeline & AI Milestones</h2>
             <div className="mt-6 flow-root">
               <ul className="-mb-8">
                 {timeline.map((event, eventIdx) => (
-                  <li key={event.year}>
+                  <MotionItem key={event.year}>
                     <div className="relative pb-8">
                       {eventIdx !== timeline.length - 1 ? (
                         <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-border" aria-hidden="true" />
@@ -132,12 +139,12 @@ export default function AboutPage() {
                         </div>
                       </div>
                     </div>
-                  </li>
+                  </MotionItem>
                 ))}
               </ul>
             </div>
-          </div>
-        </div>
+          </MotionItem>
+        </MotionStagger>
       </PageShell>
 
       <PageShell className="bg-secondary">

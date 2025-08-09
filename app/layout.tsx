@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { PermissionManager } from "@/components/permissions/PermissionManager"
 import { cn } from "@/lib/utils"
 import { StructuredData } from "./structured-data"
+import { GlobalBackground } from "@/components/ui/global-background"
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -41,7 +42,9 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <DemoSessionProvider>
             <Header />
-            <main className="min-h-screen">
+            <main className="min-h-screen relative">
+              {/* Global subtle background using tokens */}
+              <GlobalBackground />
               {children}
             </main>
             <Footer />
