@@ -192,7 +192,7 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
 
       {/* Desktop floating indicator (no wrapper background) */}
       <motion.div
-        className={`hidden md:flex flex-col items-center ${variant === 'rail' ? 'gap-8' : 'gap-6'}`}
+        className={`hidden md:flex flex-col items-center ${variant === 'rail' ? 'gap-6' : 'gap-6'}`}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.4 }}
@@ -210,7 +210,11 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
         </motion.div>
 
         {/* Rail body */}
-        <div className="relative">
+        <div className={`relative ${variant === 'rail' ? 'rounded-3xl border border-border/20 bg-background/70 shadow-[0_8px_30px_rgba(0,0,0,0.15)] backdrop-blur px-4 py-5' : ''}`}>
+          {/* Single clean vertical rail for 'rail' variant */}
+          {variant === 'rail' && (
+            <div className="pointer-events-none absolute left-1/2 top-16 bottom-12 -translate-x-1/2 w-px bg-border/30" />
+          )}
           {/* No column background for 'rail' variant */}
           {variant !== 'rail' && (
             <div className="pointer-events-none absolute inset-0 -z-10 flex justify-center">
@@ -226,17 +230,7 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
 
             return (
               <div key={stage.stage} className={`relative group ${variant === 'rail' ? 'mb-8' : ''}`}>
-              {/* Connection Line */}
-              {variant !== 'rail' && index < stages.length - 1 && (
-                <motion.div
-                  className={`absolute top-10 left-1/2 -translate-x-1/2 w-px ${variant === 'rail' ? 'h-10' : 'h-6'} ${
-                    isCompleted ? 'bg-accent/40' : 'bg-border/30'
-                  }`}
-                  initial={{ scaleY: 0 }}
-                  animate={{ scaleY: 1 }}
-                  transition={{ delay: 0.6 + index * 0.1, duration: 0.4 }}
-                />
-              )}
+              {/* Connection handled by single rail line above for 'rail' */}
 
               {/* Stage Dot */}
                 <motion.div
@@ -254,7 +248,7 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
                   <div className="absolute -inset-3 rounded-full bg-accent/20 blur-lg" />
                 )}
                 {/* Outer Ring */}
-                <div className={`w-12 h-12 rounded-full border ${
+                 <div className={`w-12 h-12 rounded-full border ${
                   isActive ? 'border-accent' : 'border-border/70'
                 } bg-transparent shadow-none flex items-center justify-center relative`}>
                   {/* Status Indicator */}
