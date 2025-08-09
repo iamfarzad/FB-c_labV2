@@ -422,6 +422,45 @@
   animation: glow 2s ease-in-out infinite;
 }
 
+@keyframes driftSlow {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  25% { transform: translate3d(10px, -8px, 0) scale(1.02); }
+  50% { transform: translate3d(-6px, 6px, 0) scale(0.99); }
+  75% { transform: translate3d(8px, 4px, 0) scale(1.01); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes driftMedium {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  25% { transform: translate3d(-12px, 10px, 0) scale(1.03); }
+  50% { transform: translate3d(8px, -6px, 0) scale(0.99); }
+  75% { transform: translate3d(-6px, 12px, 0) scale(1.02); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes driftSlower {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  25% { transform: translate3d(6px, 6px, 0) scale(1.01); }
+  50% { transform: translate3d(-10px, 8px, 0) scale(1.0); }
+  75% { transform: translate3d(4px, -8px, 0) scale(1.02); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.animate-drift-slow {
+  animation: driftSlow var(--duration-1000) linear infinite;
+  animation-duration: 22s;
+}
+
+.animate-drift-medium {
+  animation: driftMedium var(--duration-1000) linear infinite;
+  animation-duration: 18s;
+}
+
+.animate-drift-slower {
+  animation: driftSlower var(--duration-1000) linear infinite;
+  animation-duration: 28s;
+}
+
 /* Enhanced responsive breakpoints */
 @media (max-width: 767px) {
   .mobile\:block { display: block; }
