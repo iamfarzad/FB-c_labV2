@@ -209,10 +209,10 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
           </span>
         </motion.div>
 
-        {/* Soft floating ambient behind the rail */}
-        <div className="relative">
+          {/* Soft floating ambient behind the rail (no card chrome) */}
+          <div className="relative">
           <div className="pointer-events-none absolute inset-0 -z-10 flex justify-center">
-            <div className="h-full w-24 rounded-full bg-[hsl(var(--accent))]/10 opacity-70 blur-2xl [mask-image:radial-gradient(closest-side,black,transparent)]" />
+              <div className="h-full w-24 rounded-full bg-[hsl(var(--accent))]/12 blur-2xl [mask-image:radial-gradient(closest-side,black,transparent)]" />
           </div>
 
           {/* Vertical Stage Flow */}
@@ -253,7 +253,7 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
                 {/* Outer Ring */}
                 <div className={`w-9 h-9 rounded-full border ${
                   isActive ? 'border-accent' : 'border-border/80'
-                } bg-card/80 shadow-sm flex items-center justify-center relative overflow-hidden`}>
+                } bg-transparent shadow-none flex items-center justify-center relative`}>
                   {/* Status Indicator */}
                   <motion.div
                     className={`absolute inset-0 rounded-full ${getStatusColor(stage.status)}`}

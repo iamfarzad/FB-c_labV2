@@ -49,8 +49,8 @@ export function CanvasWorkspace({ open, title = 'Canvas', onClose, left, console
           <Panel defaultSize={80} minSize={60}>
             <PanelGroup direction="horizontal" className="h-full w-full">
               {left ? (
-                <Panel defaultSize={22} minSize={16} maxSize={34}>
-                  <div className="h-full w-full overflow-auto border-r p-3 text-sm">
+                <Panel defaultSize={26} minSize={18} maxSize={36} className="max-md:min-w-[220px] max-md:max-w-[280px]">
+                  <div className="h-full w-full overflow-auto border-r p-3 text-sm md:text-xs">
                     {left}
                   </div>
                 </Panel>

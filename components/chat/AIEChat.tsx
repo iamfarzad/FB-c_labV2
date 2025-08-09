@@ -32,6 +32,12 @@ export function AIEChat() {
   const [error, setError] = useState<Error | null>(null)
   const [canvas, setCanvas] = useState<{ type: 'webpreview' | 'screen' | 'webcam' | 'video' | 'pdf'; url?: string } | null>(null)
   const [isVoiceMock, setIsVoiceMock] = useState(false)
+  // Consent gate
+  const [consentChecked, setConsentChecked] = useState(false)
+  const [consentAllowed, setConsentAllowed] = useState(false)
+  const [consentDenied, setConsentDenied] = useState(false)
+  const [consentEmail, setConsentEmail] = useState('')
+  const [consentCompany, setConsentCompany] = useState('')
 
   const { messages, input, setInput, isLoading, error: chatError, sendMessage, handleSubmit, handleInputChange, clearMessages } = useChat({
     data: { sessionId },
@@ -79,6 +85,40 @@ export function AIEChat() {
       }
     } catch {}
   }, [logs, STORAGE_KEY])
+
+  // Check consent on mount
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const res = await fetch('/api/consent', { cache: 'no-store' })
+        if (res.ok) {
+          const j = await res.json()
+          if (j.allow) setConsentAllowed(true)
+        }
+      } catch {}
+      setConsentChecked(true)
+    })()
+  }, [])
+
+  async function handleAllowConsent() {
+    try {
+      const res = await fetch('/api/consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: consentEmail, companyUrl: consentCompany, policyVersion: 'v1' }),
+      })
+      if (!res.ok) throw new Error('consent failed')
+      setConsentAllowed(true)
+      setConsentDenied(false)
+    } catch {
+      alert('Unable to record consent. Please check your email/company and try again.')
+    }
+  }
+
+  function handleDenyConsent() {
+    setConsentDenied(true)
+    setConsentAllowed(false)
+  }
 
   function downloadLogs() {
     try {
@@ -166,7 +206,7 @@ export function AIEChat() {
             <FbcIcon className="h-6 w-6" />
             <div>
               <h1 className="text-lg font-semibold leading-tight tracking-tight">F.B/c — Chat</h1>
-              <p className="text-xs text-muted-foreground">AI Elements + backend streaming</p>
+               <p className="text-xs text-muted-foreground">AI Elements + grounded streaming</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -183,6 +223,45 @@ export function AIEChat() {
           </div>
         </header>
 
+        {/* Consent Hard Gate */}
+        {consentChecked && !consentAllowed && !consentDenied && (
+          <div className="absolute inset-0 z-50 grid place-items-center bg-background/95 p-4">
+            <div className="w-full max-w-lg rounded-xl border bg-card p-4 shadow">
+              <h2 className="text-base font-semibold">Personalize this chat using your public company info?</h2>
+              <p className="mt-1 text-sm text-muted-foreground">We’ll fetch from your company site and LinkedIn to ground results with citations. See our <a href="/privacy" className="underline">Privacy & Terms</a>.</p>
+              <div className="mt-3 grid grid-cols-1 gap-2">
+                <input
+                  type="email"
+                  placeholder="Work email (name@company.com)"
+                  value={consentEmail}
+                  onChange={(e) => setConsentEmail(e.target.value)}
+                  className="rounded-md border border-border/40 bg-background px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/20"
+                />
+                <input
+                  type="text"
+                  placeholder="Company website (optional)"
+                  value={consentCompany}
+                  onChange={(e) => setConsentCompany(e.target.value)}
+                  className="rounded-md border border-border/40 bg-background px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/20"
+                />
+              </div>
+              <div className="mt-3 flex items-center justify-end gap-2">
+                <Button variant="outline" onClick={handleDenyConsent}>No thanks</Button>
+                <Button onClick={handleAllowConsent}>Allow</Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {consentDenied && (
+          <div className="absolute inset-0 z-50 grid place-items-center bg-background/95 p-4">
+            <div className="w-full max-w-md rounded-xl border bg-card p-4 text-center">
+              <h2 className="text-base font-semibold">Consent is required to continue</h2>
+              <p className="mt-1 text-sm text-muted-foreground">We use public company info with citations to personalize results. Review our <a href="/privacy" className="underline">policy</a> and start again anytime.</p>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-1 min-h-0 flex-col">
           <Conversation className="h-full">
             <ConversationContent className="mx-auto w-full max-w-3xl space-y-2 p-4 pb-28 md:pb-32">
@@ -192,8 +271,8 @@ export function AIEChat() {
                     <MessageAvatar src="/placeholder-logo.svg" name="Fbc" />
                   ) : (
                     <div className="relative inline-block">
-                      <MessageAvatar src="/placeholder-user.jpg" name="You" />
-                      <span className="absolute -bottom-0.5 -right-0.5 inline-block h-2.5 w-2.5 rounded-full bg-[hsl(var(--accent))] ring-2 ring-background" />
+                      <MessageAvatar src="/placeholder-user.jpg" name="You" className="ring-2 ring-accent/60" />
+                      <span className="absolute -bottom-0.5 -right-0.5 inline-block h-2.5 w-2.5 rounded-full bg-[hsl(var(--accent))] ring-2 ring-background shadow-[0_0_8px_hsl(var(--accent)/0.7)]" />
                     </div>
                   )}
                   <MessageContent>
@@ -212,7 +291,7 @@ export function AIEChat() {
                     {!!m.text && <Response>{m.text}</Response>}
                     {/* Brand icon near assistant message while streaming */}
                     {m.role === 'assistant' && isLoading && (
-                      <span className="ml-2 inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/40 bg-card/70 align-middle">
+                      <span className="ml-2 inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/40 bg-card/70 align-middle shadow-sm">
                         <FbcIcon className="h-3.5 w-3.5" />
                       </span>
                     )}
@@ -292,7 +371,7 @@ export function AIEChat() {
               </PromptInputToolbar>
               <PromptInputTextarea
                 placeholder="Message F.B/c… (paste a YouTube URL to open Video → App)"
-                className="min-h-[56px] md:min-h-[64px]"
+                className="min-h-[64px] md:min-h-[72px] text-base md:text-sm"
                 value={input}
                 onChange={(e) => {
                   handleInputChange(e as any)
@@ -303,6 +382,7 @@ export function AIEChat() {
                     emitUsed('video')
                   }
                 }}
+                disabled={!consentAllowed}
               />
               <div className="flex items-center justify-between p-1">
                 <div className="flex items-center gap-2">
@@ -388,7 +468,7 @@ export function AIEChat() {
                     </TooltipTrigger>
                     <TooltipContent>Voice</TooltipContent>
                   </Tooltip>
-                  <PromptInputSubmit status={!input ? 'submitted' : undefined} className="rounded-full" />
+                  <PromptInputSubmit status={!input || !consentAllowed ? 'submitted' : undefined} className="rounded-full" />
                 </div>
               </div>
             </PromptInput>
