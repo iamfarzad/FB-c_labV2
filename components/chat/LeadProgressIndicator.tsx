@@ -12,7 +12,7 @@ interface LeadProgressIndicatorProps {
     company?: string;
   };
   className?: string;
-  variant?: 'card' | 'minimal';
+  variant?: 'card' | 'minimal' | 'rail';
 }
 
 const stageConfig = [
@@ -192,14 +192,14 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
 
       {/* Desktop floating indicator (no wrapper background) */}
       <motion.div
-        className="hidden md:flex flex-col items-center gap-6"
+        className={`hidden md:flex flex-col items-center ${variant === 'rail' ? 'gap-8' : 'gap-6'}`}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.4 }}
       >
         {/* Header */}
         <motion.div
-          className="flex items-center gap-2 mb-2"
+          className="flex items-center gap-2 mb-1"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
@@ -209,10 +209,10 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
           </span>
         </motion.div>
 
-          {/* Soft floating ambient behind the rail (no card chrome) */}
-          <div className="relative">
+        {/* Soft floating ambient behind the rail (no card chrome) */}
+        <div className="relative">
           <div className="pointer-events-none absolute inset-0 -z-10 flex justify-center">
-              <div className="h-full w-24 rounded-full bg-[hsl(var(--accent))]/12 blur-2xl [mask-image:radial-gradient(closest-side,black,transparent)]" />
+            <div className="h-full w-24 rounded-full bg-[hsl(var(--accent))]/12 blur-2xl [mask-image:radial-gradient(closest-side,black,transparent)]" />
           </div>
 
           {/* Vertical Stage Flow */}
@@ -222,11 +222,11 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
           const isCompleted = stage.status === "completed"
 
             return (
-              <div key={stage.stage} className="relative group">
+              <div key={stage.stage} className={`relative group ${variant === 'rail' ? 'mb-6' : ''}`}>
               {/* Connection Line */}
               {index < stages.length - 1 && (
                 <motion.div
-                  className={`absolute top-8 left-1/2 -translate-x-1/2 w-px h-6 ${
+                  className={`absolute top-10 left-1/2 -translate-x-1/2 w-px ${variant === 'rail' ? 'h-10' : 'h-6'} ${
                     isCompleted ? 'bg-accent/40' : 'bg-border/30'
                   }`}
                   initial={{ scaleY: 0 }}
@@ -251,7 +251,7 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
                   <div className="absolute -inset-3 rounded-full bg-accent/20 blur-lg" />
                 )}
                 {/* Outer Ring */}
-                 <div className={`w-10 h-10 rounded-full border ${
+                <div className={`w-11 h-11 rounded-full border ${
                   isActive ? 'border-accent' : 'border-border/70'
                 } bg-transparent shadow-none flex items-center justify-center relative`}>
                   {/* Status Indicator */}
@@ -275,7 +275,7 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
                   </span>
                 </div>
 
-                {/* Hover Glow Effect */}
+                  {/* Hover Glow Effect */}
                 <motion.div
                   className="absolute inset-0 rounded-full bg-accent/20 blur-md"
                   initial={{ opacity: 0, scale: 0.8 }}

@@ -481,7 +481,7 @@ export function AIEChat() {
 
           <div className="pointer-events-none fixed right-4 top-24 z-50 hidden md:block">
             <div className="pointer-events-auto">
-              <LeadProgressIndicator currentStage={stage} leadData={lead} variant="card" className="shadow-xl" />
+              <LeadProgressIndicator currentStage={stage} leadData={lead} variant="rail" className="shadow-xl" />
             </div>
           </div>
         </div>
