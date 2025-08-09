@@ -209,11 +209,14 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
           </span>
         </motion.div>
 
-        {/* Soft floating ambient behind the rail (no card chrome) */}
+        {/* Rail body */}
         <div className="relative">
-          <div className="pointer-events-none absolute inset-0 -z-10 flex justify-center">
-            <div className="h-full w-24 rounded-full bg-[hsl(var(--accent))]/12 blur-2xl [mask-image:radial-gradient(closest-side,black,transparent)]" />
-          </div>
+          {/* No column background for 'rail' variant */}
+          {variant !== 'rail' && (
+            <div className="pointer-events-none absolute inset-0 -z-10 flex justify-center">
+              <div className="h-full w-24 rounded-full bg-[hsl(var(--accent))]/12 blur-2xl [mask-image:radial-gradient(closest-side,black,transparent)]" />
+            </div>
+          )}
 
           {/* Vertical Stage Flow */}
           {stages.map((stage, index) => {
@@ -222,9 +225,9 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
           const isCompleted = stage.status === "completed"
 
             return (
-              <div key={stage.stage} className={`relative group ${variant === 'rail' ? 'mb-6' : ''}`}>
+              <div key={stage.stage} className={`relative group ${variant === 'rail' ? 'mb-8' : ''}`}>
               {/* Connection Line */}
-              {index < stages.length - 1 && (
+              {variant !== 'rail' && index < stages.length - 1 && (
                 <motion.div
                   className={`absolute top-10 left-1/2 -translate-x-1/2 w-px ${variant === 'rail' ? 'h-10' : 'h-6'} ${
                     isCompleted ? 'bg-accent/40' : 'bg-border/30'
@@ -251,7 +254,7 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
                   <div className="absolute -inset-3 rounded-full bg-accent/20 blur-lg" />
                 )}
                 {/* Outer Ring */}
-                <div className={`w-11 h-11 rounded-full border ${
+                <div className={`w-12 h-12 rounded-full border ${
                   isActive ? 'border-accent' : 'border-border/70'
                 } bg-transparent shadow-none flex items-center justify-center relative`}>
                   {/* Status Indicator */}
@@ -266,7 +269,7 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
                   />
                   
                   {/* Stage Number or Check */}
-                   <span className={`relative z-10 text-[12px] font-medium ${
+                   <span className={`relative z-10 text-sm font-medium ${
                     isCompleted ? 'text-accent-foreground' : 
                     isActive ? 'text-accent-foreground' : 
                     'text-muted-foreground'
