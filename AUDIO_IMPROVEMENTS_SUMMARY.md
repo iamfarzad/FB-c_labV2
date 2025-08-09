@@ -95,13 +95,13 @@ This document summarizes the comprehensive audio quality and real-time processin
 - Connection state management
 - Cross-browser compatibility
 
-#### **WebRTC Voice Input Modal** (`components/chat/modals/WebRTCVoiceInputModal.tsx`)
+#### **WebRTC Voice Input Modal** (`components/chat/VoiceOverlay.tsx`)
 - Modern UI with real-time feedback
 - Connection quality indicators
 - Live transcription display
 - Comprehensive error handling
 
-#### **WebRTC Connection API** (`app/api/webrtc-connection/route.ts`)
+#### **WebRTC Connection API** (`app/api/gemini-live-conversation/`)
 - Session management
 - ICE candidate handling
 - Connection optimization
@@ -109,7 +109,7 @@ This document summarizes the comprehensive audio quality and real-time processin
 
 ### **Enhanced Existing Components**
 
-#### **Gemini Live API** (`app/api/gemini-live/route.ts`)
+#### **Gemini Live API** (`app/api/gemini-live/route.ts`) // confirm current path; voice overlay listens to chat-server-event
 - Audio quality enhancement integration
 - WebRTC audio processing support
 - Enhanced voice configuration

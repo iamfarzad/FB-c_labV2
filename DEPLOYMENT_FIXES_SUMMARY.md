@@ -22,7 +22,7 @@
 
 **Files Modified**:
 - `components/demo-session-manager.tsx` - Session isolation and cleanup
-- `app/chat/page.tsx` - Enhanced new chat reset functionality
+- `app/(chat)/chat/page.tsx` - Enhanced new chat reset functionality
 
 ### 2. **Document Analysis Endpoint Not Working**
 **Problem**: File uploads showed placeholder messages instead of triggering actual AI document analysis.
@@ -39,7 +39,7 @@
 - ✅ Added progress tracking and error handling
 
 **Files Modified**:
-- `app/chat/page.tsx` - Complete file upload integration
+- `app/(chat)/chat/page.tsx` - Complete file upload integration
 - `app/api/analyze-document/route.ts` - Enhanced document processing
 
 ### 3. **Camera/Microphone Permission Issues**
@@ -57,8 +57,8 @@
 - ✅ Improved user instructions for enabling permissions
 
 **Files Modified**:
-- `components/chat/modals/WebcamModal.tsx` - Enhanced camera permission handling
-- `components/chat/modals/VoiceInputModal.tsx` - Enhanced microphone permission handling
+- `components/chat/tools/WebcamCapture/WebcamCapture.tsx` - Enhanced camera permission handling
+- `components/chat/tools/VoiceInput/VoiceInput.tsx` - Enhanced microphone permission handling
 
 ### 4. **Chat AI Response Quality Issues**
 **Problem**: AI responded with placeholder data ("Hello Test User...") instead of actual responses.

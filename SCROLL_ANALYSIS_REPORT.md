@@ -107,7 +107,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 ### 4. Modal and Dialog Scrolling
 
-#### Video Generator Modal (`app/(chat)/chat/components/VideoToAppGenerator.tsx`)
+#### Video Generator Modal (replaced by `components/chat/tools/VideoToApp/VideoToApp.tsx`)
 ```typescript
 // Modal content scrolling
 <ScrollArea className="h-full">

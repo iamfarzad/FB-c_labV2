@@ -21,19 +21,18 @@ The FB-c_labV2 frontend is a comprehensive AI consulting platform built with Nex
 - **Layout** (`app/layout.tsx`) - Root layout with providers
 
 ### Chat System Components
-- **ChatLayout** (`components/chat/ChatLayout.tsx`) - Main chat container
-- **ChatHeader** (`components/chat/ChatHeader.tsx`) - Chat interface header
-- **ChatMain** (`components/chat/ChatMain.tsx`) - Message display area
+- **AIEChat** (`components/chat/AIEChat.tsx`) - Unified chat interface (replaces ChatMain)
 - **ChatFooter** (`components/chat/ChatFooter.tsx`) - Input and controls
 - **DesktopSidebar** (`components/chat/sidebar/DesktopSidebar.tsx`) - Activity sidebar
-- **LeadCaptureFlow** (`components/chat/LeadCaptureFlow.tsx`) - Lead collection
+- **LeadProgressIndicator** (`components/chat/LeadProgressIndicator.tsx`) - Stage rail
 
-### Modal Components
-- **VoiceInputModal** (`components/chat/modals/VoiceInputModal.tsx`) - Speech-to-text
-- **VoiceOutputModal** (`components/chat/modals/VoiceOutputModal.tsx`) - Text-to-speech
-- **WebcamModal** (`components/chat/modals/WebcamModal.tsx`) - Camera capture
-- **ScreenShareModal** (`components/chat/modals/ScreenShareModal.tsx`) - Screen sharing
-- **Video2AppModal** (`components/chat/modals/Video2AppModal.tsx`) - Video processing
+### Tool Components (Unified)
+- **VoiceInput** (`components/chat/tools/VoiceInput/VoiceInput.tsx`) - Speech-to-text (card/modal/canvas)
+- **WebcamCapture** (`components/chat/tools/WebcamCapture/WebcamCapture.tsx`) - Camera capture (card/modal/canvas)
+- **ScreenShare** (`components/chat/tools/ScreenShare/ScreenShare.tsx`) - Screen sharing (card/modal/canvas)
+- **ROICalculator** (`components/chat/tools/ROICalculator/ROICalculator.tsx`) - ROI (card/modal/canvas)
+- **VideoToApp** (`components/chat/tools/VideoToApp/VideoToApp.tsx`) - Video processing (card/modal/canvas)
+- **CanvasWorkspace** (`components/chat/CanvasWorkspace.tsx`) - Full-screen tool canvas
 - **KeyboardShortcutsModal** (`components/KeyboardShortcutsModal.tsx`) - Shortcuts help
 
 ### Admin Components
@@ -292,9 +291,8 @@ app/
 ├── contact/page.tsx       # Contact page
 ├── workshop/page.tsx      # Workshop page
 ├── admin/page.tsx         # Admin dashboard
-├── chat/
-│   ├── layout.tsx         # Chat layout with providers
-│   └── page.tsx           # Chat interface
+├── (chat)/chat/
+│   └── page.tsx           # Chat interface (renders AIEChat)
 └── test-dashboard/page.tsx # Testing interface
 \`\`\`
 

@@ -17,7 +17,7 @@
 
 ### **Files Modified**
 - `app/api/chat/route.ts`
-- `app/chat/page.tsx`
+- `app/(chat)/chat/page.tsx`
 - `hooks/chat/useChat.ts`
 
 ### **Changes Implemented**
@@ -76,7 +76,7 @@ curl -X POST http://localhost:3000/api/chat \
 
 ### **Files Modified**
 - `app/api/upload/route.ts`
-- `app/chat/page.tsx`
+- `app/(chat)/chat/page.tsx`
 
 ### **Changes Implemented**
 1. ✅ Add session ID headers to upload requests
@@ -132,7 +132,7 @@ curl -X GET http://localhost:3000/api/upload
 - Poor error handling and user feedback
 
 ### **Files Modified**
-- `components/chat/modals/VoiceInputModal.tsx`
+- `components/chat/tools/VoiceInput/VoiceInput.tsx`
 
 ### **Changes Implemented**
 1. ✅ Add proper microphone permission handling with getUserMedia
@@ -185,7 +185,7 @@ curl -X POST http://localhost:3000/api/gemini-live \
 - Poor error handling and user feedback
 
 ### **Files Modified**
-- `components/chat/modals/WebcamModal.tsx`
+- `components/chat/tools/WebcamCapture/WebcamCapture.tsx`
 
 ### **Changes Implemented**
 1. ✅ Add proper camera permission handling with getUserMedia
@@ -241,7 +241,7 @@ curl -X POST http://localhost:3000/api/analyze-image \
 ### **Files Modified**
 - `app/api/video-to-app/route.ts`
 - `lib/model-selector.ts`
-- `components/video-to-app-generator.tsx`
+- `components/chat/tools/VideoToApp/VideoToApp.tsx`
 
 ### **Changes Implemented**
 1. ✅ Add proper timeout handling with 60-second limit

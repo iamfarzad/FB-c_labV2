@@ -34,7 +34,7 @@ This document outlines all the fixes applied to resolve production deployment is
 **Problem**: The chat page was failing during production build with "Cannot read properties of undefined (reading 'call')" error.
 
 **Fix**:
-- Added `export const dynamic = 'force-dynamic'` to `app/chat/page.tsx`
+- Added `export const dynamic = 'force-dynamic'` to `app/(chat)/chat/page.tsx`
 - This prevents Next.js from trying to prerender the chat page during build
 - The page now renders dynamically on each request
 
@@ -74,9 +74,8 @@ This document outlines all the fixes applied to resolve production deployment is
 - Added proper tables and indexes for production use
 
 ### Frontend Components
-- `app/chat/page.tsx` - Added dynamic export and fixed types
-- `app/chat/types/lead-capture.ts` - Updated type definitions
-- `components/chat/ChatMain.tsx` - Fixed ref types
+- `app/(chat)/chat/page.tsx` - Added dynamic export and fixed types
+- `components/chat/AIEChat.tsx` - Unified chat interface
 - `components/chat/ChatFooter.tsx` - Fixed ref types
 
 ### Infrastructure

@@ -144,9 +144,8 @@ import { VoiceInput } from "@/components/chat/tools/VoiceInput"
 - `components/chat/modals/Video2AppModal.tsx`
 
 ## Files Updated
-- `app/(chat)/chat/page.tsx` - Updated imports and usage
-- `components/chat/ChatArea.tsx` - Updated imports and usage
-- `components/chat/cards/index.ts` - Cleaned up exports
+- `app/(chat)/chat/page.tsx` - Updated to render `AIEChat`
+- `components/chat/AIEChat.tsx` - New unified chat
 
 ## Testing Status
 - ✅ All components compile without TypeScript errors

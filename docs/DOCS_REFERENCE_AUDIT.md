@@ -1,10 +1,10 @@
 # Docs Reference Audit
 
-- Docs scanned: 110
-- References found: 383
-- Missing references: 103
+- Docs scanned: 111
+- References found: 381
+- Missing references: 85
 
-> Generated: 2025-08-08T21:35:15.118Z
+> Generated: 2025-08-09T18:53:53.754Z
 
 ## API_FIXES_AND_VALIDATION_COMPLETE.md
 
@@ -12,8 +12,6 @@
 
 ## AUDIO_IMPROVEMENTS_SUMMARY.md
 
-- [ ] components/chat/modals/WebRTCVoiceInputModal.tsx
-- [ ] app/api/webrtc-connection/route.ts
 - [ ] app/api/gemini-live/route.ts
 
 ## COMPONENT_CONSOLIDATION_COMPLETE.md
@@ -28,12 +26,6 @@
 - [ ] components/chat/modals/ScreenShareModal.tsx
 - [ ] components/chat/modals/ROICalculatorModal.tsx
 - [ ] components/chat/modals/Video2AppModal.tsx
-
-## DEPLOYMENT_FIXES_SUMMARY.md
-
-- [ ] app/chat/page.tsx
-- [ ] components/chat/modals/WebcamModal.tsx
-- [ ] components/chat/modals/VoiceInputModal.tsx
 
 ## DUPLICATE_FILES_AUDIT.md
 
@@ -75,19 +67,12 @@
 ## PRODUCTION_DEPLOYMENT_FIXES.md
 
 - [ ] lib/activity-logger.ts
-- [ ] app/chat/page.tsx
-- [ ] app/chat/types/lead-capture.ts
-- [ ] components/chat/ChatMain.tsx
 
 ## REPOSITORY_SECURITY_AND_CLEANUP_COMPLETE.md
 
 - [ ] supabase/migrations/20250804180000_performance_optimization.sql
 - [ ] supabase/migrations/20250804190000_rls_policy_optimization.sql
 - [ ] supabase/migrations/20250804200000_monitoring_setup.sql
-
-## SCROLL_ANALYSIS_REPORT.md
-
-- [ ] app/(chat)/chat/components/VideoToAppGenerator.tsx
 
 ## SEO_OPTIMIZATION_REPORT.md
 
@@ -122,11 +107,8 @@
 
 ## TODO_FIXES_PRIORITIZED.md
 
-- [ ] app/chat/page.tsx
-- [ ] components/chat/modals/VoiceInputModal.tsx
-- [ ] components/chat/modals/WebcamModal.tsx
-- [ ] components/video-to-app-generator.tsx
 - [ ] components/chat/modals/ROICalculatorModal.tsx
+- [ ] app/chat/page.tsx
 - [ ] components/chat/modals/ScreenShareModal.tsx
 - [ ] app/api/demo-session/route.ts
 - [ ] app/api/gemini-live/route.ts
@@ -152,12 +134,6 @@
 
 ## frontend_design.md
 
-- [ ] components/chat/ChatMain.tsx
-- [ ] components/chat/modals/VoiceInputModal.tsx
-- [ ] components/chat/modals/VoiceOutputModal.tsx
-- [ ] components/chat/modals/WebcamModal.tsx
-- [ ] components/chat/modals/ScreenShareModal.tsx
-- [ ] components/chat/modals/Video2AppModal.tsx
 - [ ] app/chat/context/ChatProvider.tsx
 - [ ] scripts/test-unified-voice.ts
 
