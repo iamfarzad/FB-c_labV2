@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Award, BookOpen, Heart, MessageSquare, Target } from "lucide-react"
 import type { Metadata } from "next"
 import { MotionItem, MotionRise, MotionStagger } from "@/components/ui/client-animations"
+import { ConsultPrepChecklist } from "@/components/about/ConsultPrepChecklist"
 
 export const metadata: Metadata = {
   title: "About Farzad Bayat - Self-Taught AI Consultant with 10,000+ Hours Experience",
@@ -158,6 +159,9 @@ export default function AboutPage() {
               <Link href="/contact" title="Book free AI consultation call with expert consultant Farzad Bayat">Book a Free AI Consultation Call</Link>
             </Button>
           </div>
+        </div>
+        <div className="mt-8 max-w-3xl mx-auto">
+          <ConsultPrepChecklist />
         </div>
       </PageShell>
     </>

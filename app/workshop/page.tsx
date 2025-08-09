@@ -4,6 +4,7 @@ import Link from "next/link"
 import { CheckCircle, Book } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { MotionStagger, MotionItem, MotionRise } from "@/components/ui/client-animations"
+import { WorkshopPersonalizer } from "@/components/workshop/WorkshopPersonalizer"
 
 export const metadata = {
   title: "AI Training Workshops & Team Programs | Farzad Bayat",
@@ -37,6 +38,10 @@ export default function WorkshopPage() {
             <Link href="/workshop-waitlist">Join Workshop Waitlist</Link>
           </Button>
         </div>
+      </PageShell>
+
+      <PageShell>
+        <WorkshopPersonalizer />
       </PageShell>
 
       <PageShell className="min-h-screen">

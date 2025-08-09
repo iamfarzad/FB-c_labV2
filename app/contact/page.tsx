@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar, Mail } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { MotionStagger, MotionItem, MotionRise } from "@/components/ui/client-animations"
+import { ConsultPrepChecklist } from "@/components/about/ConsultPrepChecklist"
 
 export const metadata = {
   title: "Book AI Consultation | Contact Farzad Bayat - AI Consultant",
@@ -52,6 +53,9 @@ export default function ContactPage() {
             </Card>
           </MotionItem>
         </MotionStagger>
+      </div>
+      <div className="mx-auto mt-10 max-w-3xl">
+        <ConsultPrepChecklist />
       </div>
     </PageShell>
   )
