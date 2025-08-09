@@ -251,8 +251,8 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
                   <div className="absolute -inset-3 rounded-full bg-accent/20 blur-lg" />
                 )}
                 {/* Outer Ring */}
-                <div className={`w-9 h-9 rounded-full border ${
-                  isActive ? 'border-accent' : 'border-border/80'
+                 <div className={`w-10 h-10 rounded-full border ${
+                  isActive ? 'border-accent' : 'border-border/70'
                 } bg-transparent shadow-none flex items-center justify-center relative`}>
                   {/* Status Indicator */}
                   <motion.div
@@ -266,7 +266,7 @@ export function LeadProgressIndicator({ currentStage, leadData, className = '', 
                   />
                   
                   {/* Stage Number or Check */}
-                  <span className={`relative z-10 text-[11px] font-medium ${
+                   <span className={`relative z-10 text-[12px] font-medium ${
                     isCompleted ? 'text-accent-foreground' : 
                     isActive ? 'text-accent-foreground' : 
                     'text-muted-foreground'

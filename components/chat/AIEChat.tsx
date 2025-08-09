@@ -268,11 +268,12 @@ export function AIEChat() {
               {uiMessages.map((m, idx) => (
                 <Message key={m.id} from={m.role}>
                   {m.role === 'assistant' ? (
-                    <MessageAvatar src="/placeholder-logo.svg" name="Fbc" />
+                    <div className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/40 bg-card/80 shadow-sm">
+                      <FbcIcon className="h-4 w-4" />
+                    </div>
                   ) : (
-                    <div className="relative inline-block">
-                      <MessageAvatar src="/placeholder-user.jpg" name="You" className="ring-2 ring-accent/60" />
-                      <span className="absolute -bottom-0.5 -right-0.5 inline-block h-2.5 w-2.5 rounded-full bg-[hsl(var(--accent))] ring-2 ring-background shadow-[0_0_8px_hsl(var(--accent)/0.7)]" />
+                    <div className="relative inline-flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-[hsl(var(--accent))/0.6]">
+                      <span className="absolute -bottom-0.5 -right-0.5 inline-block h-2.5 w-2.5 rounded-full bg-[hsl(var(--accent))] shadow-[0_0_8px_hsl(var(--accent)/0.7)]" />
                     </div>
                   )}
                   <MessageContent>
@@ -280,7 +281,6 @@ export function AIEChat() {
                       <Reasoning defaultOpen={false} isStreaming={isLoading} duration={3}>
                         <ReasoningTrigger>
                           <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                            <FbcIcon className="h-4 w-4" />
                             <p>Thinking…</p>
                           </div>
                         </ReasoningTrigger>
@@ -290,11 +290,7 @@ export function AIEChat() {
 
                     {!!m.text && <Response>{m.text}</Response>}
                     {/* Brand icon near assistant message while streaming */}
-                    {m.role === 'assistant' && isLoading && (
-                      <span className="ml-2 inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/40 bg-card/70 align-middle shadow-sm">
-                        <FbcIcon className="h-3.5 w-3.5" />
-                      </span>
-                    )}
+                    {/* Removed brand chip under assistant output while streaming */}
 
                     {!!m.sources?.length && (
                       <div className="mt-2">
