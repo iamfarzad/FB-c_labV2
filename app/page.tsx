@@ -26,23 +26,23 @@ export const metadata: Metadata = {
 const features = [
   {
     icon: ClientBrain,
-    title: "AI Strategy & Implementation",
-    description: "Custom AI solutions designed for your specific business needs and workflows."
-  },
-  {
-    icon: FbcIcon,
-    title: "Intelligent Chatbots",
-    description: "Advanced conversational AI that understands context and delivers real value."
+    title: "ROI Calculator & Business Case",
+    description: "Estimate savings and payback with real numbers for your workflow. Get a clear, lead-ready business case."
   },
   {
     icon: ClientZap,
-    title: "Workflow Automation",
-    description: "Streamline repetitive tasks with smart automation that learns and adapts."
+    title: "Document & Screenshot Analysis",
+    description: "Upload a process doc or screenshot—get automation opportunities and next steps in seconds."
   },
   {
     icon: ClientTarget,
-    title: "Rapid Prototyping",
-    description: "Quick proof-of-concepts to validate AI solutions before full implementation."
+    title: "AI Copilots & Chatbots",
+    description: "Design practical copilots powered by your data and tools that actually ship and scale."
+  },
+  {
+    icon: ClientSparkles,
+    title: "Live Screen Share Feedback",
+    description: "Share your screen for fast, actionable guidance—like having an AI systems co‑pilot in the room."
   }
 ]
 
@@ -92,38 +92,36 @@ export default function HomePage() {
             Build AI That Actually <span className="text-accent">Works</span>
           </h1>
           <p className="mt-6 text-xl text-muted-foreground max-w-2xl mx-auto">
-            I'm Farzad Bayat, an AI consultant with 10,000+ hours of hands-on experience. 
-            I build practical AI automation solutions that deliver real business results—not just hype.
+            Practical AI, shipped. Get a personalized plan, ROI estimate, and a clear path from idea to working automation.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Button asChild size="lg" className="bg-accent hover:bg-accent/90">
               <Link href="/contact">
-                Start Your AI Project
+                Book Free AI Consultation
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="border-primary hover:bg-primary/10">
               <Link href="/chat" className="flex items-center">
                 <FbcIcon className="mr-2 h-4 w-4" />
-                Talk with F.B/c AI
+                Try the AI Demo
               </Link>
             </Button>
             <Button asChild variant="ghost" size="lg" className="text-muted-foreground hover:text-foreground">
-              <Link href="/about">Learn My Story</Link>
+              <Link href="/workshop">Team Workshop</Link>
             </Button>
           </div>
         </div>
       </PageShell>
 
-
       {/* Features Section */}
       <PageShell>
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-            AI Solutions That Drive Results
+            AI That Drives Measurable Results
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            From intelligent chatbots to workflow automation, I build AI systems that solve real business problems.
+            Explore capabilities built around business value—from discovery to ROI to deployment.
           </p>
         </div>
         
@@ -140,6 +138,44 @@ export default function HomePage() {
                 </Card>
               </MotionItem>
             ))}
+          </MotionStagger>
+        </div>
+      </PageShell>
+
+      {/* How It Works Section */}
+      <PageShell className="bg-secondary">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">How It Works</h2>
+          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+            A simple, respectful flow that meets you where you are and produces a lead-ready summary.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <MotionStagger className="contents">
+            <MotionItem>
+              <Card className="neu-card">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold text-primary mb-2">1) Share Context</h3>
+                  <p className="text-muted-foreground">Tell me about one process you’d fix. Upload a doc or screenshot if helpful.</p>
+                </CardContent>
+              </Card>
+            </MotionItem>
+            <MotionItem>
+              <Card className="neu-card">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold text-primary mb-2">2) Explore Capabilities</h3>
+                  <p className="text-muted-foreground">Try ROI, doc/image analysis, or live feedback—opt in as you like.</p>
+                </CardContent>
+              </Card>
+            </MotionItem>
+            <MotionItem>
+              <Card className="neu-card">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold text-primary mb-2">3) Get Your Plan</h3>
+                  <p className="text-muted-foreground">Receive a personalized summary with ROI and next steps. Then book a call or workshop.</p>
+                </CardContent>
+              </Card>
+            </MotionItem>
           </MotionStagger>
         </div>
       </PageShell>
@@ -190,22 +226,22 @@ export default function HomePage() {
               <div className="flex items-start gap-3">
                 <Lightbulb className="h-6 w-6 text-accent mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-primary">Practical Experience</h3>
-                  <p className="text-muted-foreground">10,000+ hours building real AI solutions, not just theory.</p>
+                  <h3 className="font-semibold text-primary">Outcome-First, Not Hype</h3>
+                  <p className="text-muted-foreground">You get working automation, a clear ROI view, and a PDF you can share with stakeholders.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <Users className="h-6 w-6 text-accent mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-primary">Business-Focused</h3>
-                  <p className="text-muted-foreground">I understand business needs and build AI that delivers ROI.</p>
+                  <h3 className="font-semibold text-primary">Guided, Respectful Flow</h3>
+                  <p className="text-muted-foreground">Try capabilities at your pace. I surface value, not pressure.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <ClientTarget className="h-6 w-6 text-accent mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-primary">Rapid Implementation</h3>
-                  <p className="text-muted-foreground">Quick prototypes and fast deployment to get results sooner.</p>
+                  <h3 className="font-semibold text-primary">Fast Prototyping</h3>
+                  <p className="text-muted-foreground">Move from idea to working copilot or workflow quickly—then iterate.</p>
                 </div>
               </div>
             </div>
@@ -213,7 +249,7 @@ export default function HomePage() {
           <div className="bg-gradient-to-br from-accent/10 to-primary/10 rounded-lg p-8">
             <h3 className="text-xl font-bold text-primary mb-4">Ready to Transform Your Business?</h3>
             <p className="text-muted-foreground mb-6">
-              Let's discuss how AI automation can streamline your workflows and boost productivity.
+              Book a free consultation to map your first automation and see the ROI potential.
             </p>
             <Button asChild className="w-full bg-accent hover:bg-accent/90">
               <Link href="/contact">Schedule Free Consultation</Link>
@@ -229,41 +265,38 @@ export default function HomePage() {
             How I Can Help Your Business
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            From strategy to implementation, I provide end-to-end AI solutions.
+            From strategy to implementation, you’ll get a practical plan and working AI.
           </p>
         </div>
         
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           <MotionStagger className="contents">
-            {[1, 2].map((i) => (
-              <MotionItem key={i}>
-                {i === 1 ? (
-                  <Card className="neu-card">
-                    <CardContent className="p-8">
-                      <h3 className="text-xl font-bold text-primary mb-4">AI Consulting & Strategy</h3>
-                      <p className="text-muted-foreground mb-6">
-                        Comprehensive AI assessment and strategic planning to identify the best opportunities for automation in your business.
-                      </p>
-                      <Button asChild variant="outline">
-                        <Link href="/consulting">Learn More</Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card className="neu-card">
-                    <CardContent className="p-8">
-                      <h3 className="text-xl font-bold text-primary mb-4">Hands-On AI Workshop</h3>
-                      <p className="text-muted-foreground mb-6">
-                        Interactive workshop where you'll build your first AI automation tool and learn practical implementation strategies.
-                      </p>
-                      <Button asChild variant="outline">
-                        <Link href="/workshop">Join Workshop</Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </MotionItem>
-            ))}
+            <MotionItem>
+              <Card className="neu-card">
+                <CardContent className="p-8">
+                  <h3 className="text-xl font-bold text-primary mb-4">AI Consulting & Strategy</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Assess your processes, pick high‑ROI opportunities, and design copilots that ship.
+                  </p>
+                  <Button asChild variant="outline">
+                    <Link href="/consulting">Learn More</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </MotionItem>
+            <MotionItem>
+              <Card className="neu-card">
+                <CardContent className="p-8">
+                  <h3 className="text-xl font-bold text-primary mb-4">Hands-On AI Workshop</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Bring your workflow. Leave with a prototype, a playbook, and next steps your team can own.
+                  </p>
+                  <Button asChild variant="outline">
+                    <Link href="/workshop">Join Workshop</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </MotionItem>
           </MotionStagger>
         </div>
       </PageShell>
@@ -272,20 +305,20 @@ export default function HomePage() {
       <PageShell>
         <div className="text-center bg-gradient-to-r from-accent/10 to-primary/10 rounded-2xl p-12">
           <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl mb-4">
-            Ready to Build AI That Works?
+            Get Your Personalized AI Plan & ROI Snapshot
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Stop wasting time on AI solutions that don't deliver. Let's build something that actually moves your business forward.
+            In one session, we’ll outline the automation opportunity, the expected impact, and the fastest way to ship a working result.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-accent hover:bg-accent/90">
               <Link href="/contact">
-                Start Your Project Today
+                Book Free Consultation
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href="/chat">Try AI Chat Demo</Link>
+              <Link href="/workshop">Team Workshop</Link>
             </Button>
           </div>
         </div>

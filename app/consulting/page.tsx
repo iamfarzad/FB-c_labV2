@@ -64,7 +64,7 @@ export default function ConsultingPage() {
                 </div>
                 <CardTitle className="text-2xl">AI Consulting & Automation Services</CardTitle>
                 <CardDescription>
-                  Hands-on AI consulting help for companies that want to use artificial intelligence to cut costs, save time, and improve accuracy through automation.
+                  Outcome-first consulting: map high‑ROI opportunities, design practical copilots, and ship working automation—not slide decks.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -77,7 +77,7 @@ export default function ConsultingPage() {
                   ))}
                 </ul>
                 <Button asChild className="mt-6 w-full">
-                  <Link href="/contact">Request Your Custom AI Consulting Quote</Link>
+                  <Link href="/contact">Book Free ROI Consultation</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -89,7 +89,7 @@ export default function ConsultingPage() {
                   <Cpu className="h-8 w-8 text-primary" />
                 </div>
                 <CardTitle className="text-2xl">AI Workshops & Team Training Programs</CardTitle>
-                <CardDescription>Teach your team how to use AI tools properly and build real AI automation solutions.</CardDescription>
+                <CardDescription>Bring your process. Leave with a prototype, a playbook, and next steps your team can run.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -101,7 +101,7 @@ export default function ConsultingPage() {
                   ))}
                 </div>
                 <Button asChild variant="outline" className="mt-6 w-full bg-transparent">
-                  <Link href="/workshop">Join Free AI Training Preview</Link>
+                  <Link href="/workshop">View Workshop Format</Link>
                 </Button>
               </CardContent>
             </Card>

@@ -34,7 +34,7 @@ export default function WorkshopPage() {
         </MotionRise>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Button asChild size="lg">
-            <Link href="/workshop-waitlist">Join the AI Training Waitlist</Link>
+            <Link href="/workshop-waitlist">Join Workshop Waitlist</Link>
           </Button>
         </div>
       </PageShell>
@@ -49,8 +49,7 @@ export default function WorkshopPage() {
                 </div>
                 <CardTitle className="text-2xl">What to Expect from AI Training</CardTitle>
                 <CardDescription>
-                  These AI workshops are built from real-world AI implementation experience—not theory. Every AI training session is designed to give your
-                  team a working understanding of AI automation and implementation.
+                  Hands-on and practical: understand what matters, build a small but working automation, and leave with a plan.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -89,7 +88,7 @@ export default function WorkshopPage() {
               </CardContent>
               <CardFooter>
                 <Button asChild variant="outline" className="w-full bg-transparent">
-                  <Link href="/contact">Book AI Consultation Instead</Link>
+                  <Link href="/contact">Prefer 1:1? Book Consultation</Link>
                 </Button>
               </CardFooter>
             </Card>
