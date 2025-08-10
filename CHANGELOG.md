@@ -25,6 +25,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### UI Motion Polish - 2025-08-09
+- Added reusable micro-animation components: `components/ui/fade-in.tsx`, `components/ui/motion-card.tsx`, `components/ui/stat-counter.tsx`
+- Home (`app/page.tsx`):
+  - Hero: added conic orbit ring and refined ambient glow behind F.B/c icon
+  - Features grid: staggered fade-in and magnetic hover glow via `MotionCard`
+- Consulting (`app/consulting/page.tsx`):
+  - Animated service/workshop cards using `FadeIn` + `MotionCard`
+  - Embedded `ROICalculator` (card mode) inline to enable immediate interaction
+
+### Progressive Discovery Additions - 2025-08-09
+- Global progress tracker chip to visualize explored capabilities: `components/experience/progress-tracker.tsx`
+- Citations trust microtile to preview grounded answers: `components/experience/citations-demo.tsx`
+- Wired into Home and Consulting pages; ready to reuse across About/Workshop/Contact
+
 ### Chat UX Polish - 2025-08-08
 - LeadProgressIndicator: removed wrapper/background for a floating look; added soft ambient behind the rail; mobile dropdown summary with expandable vertical steps; kept hover details opening to the left; shows stage index and percent
 - Chat avatars: user avatar now shows a small brand-accent status dot; assistant messages display a compact brand icon while streaming/thinking

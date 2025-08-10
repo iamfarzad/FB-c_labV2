@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Award, BookOpen, Heart, MessageSquare, Target } from "lucide-react"
 import type { Metadata } from "next"
+import { MotionCard } from "@/components/ui/motion-card"
+import { FadeIn } from "@/components/ui/fade-in"
+import { ProgressTracker } from "@/components/experience/progress-tracker"
+import { CitationsDemo } from "@/components/experience/citations-demo"
 
 export const metadata: Metadata = {
   title: "About Farzad Bayat - Self-Taught AI Consultant with 10,000+ Hours Experience",
@@ -54,6 +58,9 @@ export default function AboutPage() {
       </PageShell>
 
       <PageShell>
+        <div className="mb-6 flex justify-center">
+          <ProgressTracker />
+        </div>
         <div className="grid md:grid-cols-3 gap-10 items-start">
           <div className="md:col-span-2">
             <h2 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">My AI Automation Journey</h2>
@@ -70,10 +77,18 @@ export default function AboutPage() {
             </p>
           </div>
           <div className="flex justify-center">
-            <Avatar className="w-48 h-48 border-4 border-border shadow-lg">
-              <AvatarImage src="/placeholder.svg?width=200&height=200" alt="Farzad Bayat - AI Automation Consultant with 10,000+ hours experience in artificial intelligence and business automation" />
-              <AvatarFallback>FB</AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <div className="absolute inset-0 -z-10">
+                <div className="absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full 
+                                bg-[conic-gradient(from_0deg,theme(colors.accent.DEFAULT),transparent_60%)] 
+                                opacity-25 blur-xl animate-[spin_18s_linear_infinite]" />
+                <div className="absolute left-1/2 top-1/2 h-60 w-60 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/20" />
+              </div>
+              <Avatar className="w-48 h-48 border-4 border-border shadow-lg">
+                <AvatarImage src="/placeholder.svg?width=200&height=200" alt="Farzad Bayat - AI Automation Consultant with 10,000+ hours experience in artificial intelligence and business automation" />
+                <AvatarFallback>FB</AvatarFallback>
+              </Avatar>
+            </div>
           </div>
         </div>
       </PageShell>
@@ -81,13 +96,15 @@ export default function AboutPage() {
       <PageShell className="bg-secondary">
         <h2 className="text-center text-2xl font-bold tracking-tight text-primary sm:text-3xl">Core Values in AI Consulting</h2>
         <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {coreValues.map((value) => (
-            <Card key={value.text} className="neu-card transition-all flex flex-col items-center justify-center p-8 text-center">
-              <CardContent className="p-6 text-center">
-                <value.icon className="mx-auto h-10 w-10 text-accent" aria-hidden="true" />
-                <h3 className="mt-4 font-medium text-base">{value.text}</h3>
-              </CardContent>
-            </Card>
+          {coreValues.map((value, i) => (
+            <FadeIn key={value.text} delay={i * 0.06}>
+              <MotionCard className="neu-card transition-all flex flex-col items-center justify-center p-8 text-center">
+                <CardContent className="p-6 text-center">
+                  <value.icon className="mx-auto h-10 w-10 text-accent transition-transform group-hover:scale-110" aria-hidden="true" />
+                  <h3 className="mt-4 font-medium text-base">{value.text}</h3>
+                </CardContent>
+              </MotionCard>
+            </FadeIn>
           ))}
         </div>
       </PageShell>
@@ -116,7 +133,9 @@ export default function AboutPage() {
                   <li key={event.year}>
                     <div className="relative pb-8">
                       {eventIdx !== timeline.length - 1 ? (
-                        <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-border" aria-hidden="true" />
+                        <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-border overflow-hidden" aria-hidden="true">
+                          <span className="block h-full w-full bg-accent animate-[grow_1.2s_ease-out_forwards]" />
+                        </span>
                       ) : null}
                       <div className="relative flex space-x-3">
                         <div>
@@ -138,6 +157,10 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
+      </PageShell>
+
+      <PageShell>
+        <CitationsDemo />
       </PageShell>
 
       <PageShell className="bg-secondary">

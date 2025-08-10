@@ -4,6 +4,11 @@ import Link from "next/link"
 import { Check, Zap, Cpu } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
+import { MotionCard } from "@/components/ui/motion-card"
+import { FadeIn } from "@/components/ui/fade-in"
+import { ROICalculator } from "@/components/chat/tools/ROICalculator/ROICalculator"
+import { ProgressTracker } from "@/components/experience/progress-tracker"
+import { CitationsDemo } from "@/components/experience/citations-demo"
 
 export const metadata = {
   title: "AI Consulting Services & Automation Solutions | Farzad Bayat",
@@ -54,8 +59,12 @@ export default function ConsultingPage() {
       </PageShell>
 
       <PageShell>
+        <div className="mb-6 flex justify-center">
+          <ProgressTracker />
+        </div>
         <div className="grid md:grid-cols-2 gap-8 items-start">
-          <Card className="neu-card transition-all">
+          <FadeIn>
+          <MotionCard className="neu-card transition-all">
             <CardHeader className="text-center">
               <div className="mx-auto w-fit p-3 bg-primary/10 rounded-md mb-2">
                 <Zap className="h-8 w-8 text-primary" />
@@ -74,12 +83,17 @@ export default function ConsultingPage() {
                   </li>
                 ))}
               </ul>
+              <div className="mt-6">
+                <ROICalculator mode="card" />
+              </div>
               <Button asChild className="mt-6 w-full">
                 <Link href="/contact">Request Your Custom AI Consulting Quote</Link>
               </Button>
             </CardContent>
-          </Card>
-          <Card className="neu-card transition-all">
+          </MotionCard>
+          </FadeIn>
+          <FadeIn delay={0.08}>
+          <MotionCard className="neu-card transition-all">
             <CardHeader className="text-center">
               <div className="mx-auto w-fit p-3 bg-primary/10 rounded-md mb-2">
                 <Cpu className="h-8 w-8 text-primary" />
@@ -100,8 +114,13 @@ export default function ConsultingPage() {
                 <Link href="/workshop">Join Free AI Training Preview</Link>
               </Button>
             </CardContent>
-          </Card>
+          </MotionCard>
+          </FadeIn>
         </div>
+      </PageShell>
+
+      <PageShell>
+        <CitationsDemo />
       </PageShell>
     </>
   )

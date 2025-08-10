@@ -3,6 +3,11 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { CheckCircle, Book } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { MotionCard } from "@/components/ui/motion-card"
+import { FadeIn } from "@/components/ui/fade-in"
+import { ROICalculator } from "@/components/chat/tools/ROICalculator/ROICalculator"
+import { ProgressTracker } from "@/components/experience/progress-tracker"
+import { CitationsDemo } from "@/components/experience/citations-demo"
 
 export const metadata = {
   title: "AI Training Workshops & Team Programs | Farzad Bayat",
@@ -37,8 +42,12 @@ export default function WorkshopPage() {
       </PageShell>
 
       <PageShell className="min-h-screen">
+        <div className="mb-6 flex justify-center">
+          <ProgressTracker />
+        </div>
         <div className="grid md:grid-cols-2 gap-10 items-center">
-          <Card className="h-full neu-card transition-all">
+          <FadeIn>
+          <MotionCard className="h-full neu-card transition-all">
             <CardHeader>
               <div className="p-3 bg-primary/10 rounded-md">
                 <Book className="h-6 w-6 text-primary" />
@@ -53,14 +62,16 @@ export default function WorkshopPage() {
               <ul className="space-y-4">
                 {workshopFeatures.map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 flex-shrink-0 transition-transform group-hover:scale-110" />
                     <span>{feature}</span>
                   </li>
                 ))}
               </ul>
             </CardContent>
-          </Card>
-          <Card className="h-full bg-secondary neu-card transition-all">
+          </MotionCard>
+          </FadeIn>
+          <FadeIn delay={0.08}>
+          <MotionCard className="h-full bg-secondary neu-card transition-all">
             <CardHeader>
               <CardTitle className="text-2xl">AI Training Workshop Details</CardTitle>
             </CardHeader>
@@ -80,14 +91,33 @@ export default function WorkshopPage() {
                 <h3 className="text-lg font-semibold">AI Training Delivery Options</h3>
                 <p className="text-muted-foreground">On-site AI training (Norway + Europe) or Remote AI workshops (Global).</p>
               </div>
+              <div>
+                <h3 className="text-lg font-semibold">Preview the Hands-on Exercise</h3>
+                <div className="grid sm:grid-cols-2 gap-3 mt-3">
+                  <Button asChild variant="outline">
+                    <Link href="/chat?preset=bot">Build your first chatbot</Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/chat?preset=automation">Automate a task</Link>
+                  </Button>
+                </div>
+                <div className="mt-4">
+                  <ROICalculator mode="card" />
+                </div>
+              </div>
             </CardContent>
             <CardFooter>
               <Button asChild variant="outline" className="w-full bg-transparent">
                 <Link href="/contact">Book AI Consultation Instead</Link>
               </Button>
             </CardFooter>
-          </Card>
+          </MotionCard>
+          </FadeIn>
         </div>
+      </PageShell>
+
+      <PageShell>
+        <CitationsDemo />
       </PageShell>
     </>
   )

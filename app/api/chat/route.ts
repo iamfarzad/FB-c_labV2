@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import { streamPerplexity } from '@/lib/providers/perplexity';
 import { getSupabase } from '@/lib/supabase/server';
 import type { NextRequest } from 'next/server';
 import { chatRequestSchema, validateRequest, sanitizeString } from '@/lib/validation';
@@ -442,6 +443,21 @@ export async function POST(req: NextRequest) {
       enableLeadGeneration = true
     } = enhancedData;
 
+    // Enforce consent hard-gate: require cookie fbc-consent.allow === true
+    const consentCookie = req.cookies.get('fbc-consent')?.value
+    let consentAllow = false
+    let consentDomains: string[] = []
+    if (consentCookie) {
+      try {
+        const parsed = JSON.parse(consentCookie)
+        consentAllow = !!parsed.allow
+        if (Array.isArray(parsed.allowedDomains)) consentDomains = parsed.allowedDomains
+      } catch {}
+    }
+    if (!consentAllow) {
+      return new Response(JSON.stringify({ error: 'CONSENT_REQUIRED' }), { status: 403 })
+    }
+
     // Sanitize messages
     const sanitizedMessages = messages.map((message: Message) => ({
       ...message,
@@ -596,13 +612,11 @@ Response to use: "${conversationResult.response}"`;
       systemPrompt += searchResults;
     }
 
-    // Initialize Gemini client
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY environment variable is not set');
-    }
-
-    const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    const model = genAI.models.generateContentStream;
+    const provider = (process.env.PROVIDER || 'gemini').toLowerCase()
+    const usePerplexity = provider === 'perplexity'
+    let responseStream: any
+    let actualInputTokens = 0
+    let actualOutputTokens = 0
 
     // Prepare optimized content for Gemini with caching and summarization
     const conversationMessages: ConversationMessage[] = sanitizedMessages.map(msg => ({
@@ -614,61 +628,77 @@ Response to use: "${conversationResult.response}"`;
       conversationMessages,
       systemPrompt,
       sessionId || 'default',
-      4000 // Max history tokens
+      4000
     );
 
     // Create optimized generation config with token limits
     const optimizedConfig = createOptimizedConfig('chat', {
-      maxOutputTokens: 2048, // Prevent unbounded generation
+      maxOutputTokens: 2048,
       temperature: 0.7
     });
 
     // Generate response with enhanced configuration
-    let responseStream;
-    let actualInputTokens = optimizedContent.estimatedTokens;
-    let actualOutputTokens = 0;
-    
-    // Build configuration with thinking, tools support, and optimization
-    const config = {
-      ...optimizedConfig,
-      thinkingConfig: {
-        thinkingBudget: thinkingBudget,
-      },
-      tools,
-    };
+    actualInputTokens = optimizedContent.estimatedTokens
+    const contents = optimizedContent.contents
 
-    // Log optimization results
-    console.log(`💡 Chat optimization: ${optimizedContent.usedCache ? 'Used cache' : 'Created new'}, estimated tokens: ${optimizedContent.estimatedTokens}${optimizedContent.summary ? ', with summary' : ''}`);
-
-    const contents = optimizedContent.contents;
-    
-    try {
-      responseStream = await model({
-        model: modelSelection.model,
-        config,
-        contents
-      });
-
-      // Use optimized token estimation
-      // actualInputTokens already set from optimizedContent.estimatedTokens
-      actualOutputTokens = Math.min(optimizedConfig.maxOutputTokens, actualInputTokens * 0.6); // Estimate based on input with cap
-    } catch (error: any) {
-      // Log failed activity
-      await logServerActivity({
-        type: 'error',
-        title: 'AI Response Generation Failed',
-        description: error.message || 'Unknown error during AI processing',
-        status: 'failed',
-        metadata: { correlationId, sessionId, model: modelSelection.model, error: error.message }
-      });
-
-      logConsoleActivity('error', 'Failed to generate response', {
-        correlationId,
-        error: error.message || 'Unknown error',
-        sessionId,
-        model: modelSelection.model
-      });
-      throw error;
+    if (provider === 'mock') {
+      // Cheap mock stream for dev/preview
+      async function *gen() {
+        yield { text: 'Mock response: ' }
+        yield { text: 'hello from F.B/c. ' }
+        yield { text: 'Switch PROVIDER=perplexity for live grounded output.' }
+      }
+      responseStream = gen()
+      actualOutputTokens = 64
+    } else if (usePerplexity) {
+      // Perplexity streaming path
+      const pplxKey = process.env.PERPLEXITY_API_KEY
+      if (!pplxKey) throw new Error('Missing PERPLEXITY_API_KEY')
+      const messagesForPplx = [
+        { role: 'system' as const, content: systemPrompt },
+        ...sanitizedMessages.map(m => ({ role: (m.role === 'system' ? 'system' : (m.role as 'user' | 'assistant')), content: m.content }))
+      ]
+      const stageForModel = conversationResult?.newStage
+      const earlyStage = stageForModel === 0 || stageForModel === 1
+      const pplxModel = earlyStage ? 'sonar-reasoning-pro' : 'sonar-pro'
+      const enableSearch = !earlyStage
+      responseStream = streamPerplexity({
+        apiKey: pplxKey,
+        messages: messagesForPplx,
+        options: {
+          model: pplxModel,
+          web_search: enableSearch,
+          // Narrow to consented domains if provided
+          search_domain_filter: consentDomains,
+          web_search_options: { search_context_size: 'low' },
+          max_output_tokens: earlyStage ? 256 : 1024,
+          temperature: earlyStage ? 0.1 : 0.3
+        }
+      })
+      actualOutputTokens = 1024 // conservative cap for logging
+    } else if (provider === 'gemini') {
+      // Fallback to existing Gemini path
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error('GEMINI_API_KEY environment variable is not set')
+      }
+      const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+      const model = genAI.models.generateContentStream
+      const config = {
+        ...optimizedConfig,
+        thinkingConfig: { thinkingBudget: thinkingBudget },
+        tools,
+      }
+      console.log(`💡 Chat optimization: ${optimizedContent.usedCache ? 'Used cache' : 'Created new'}, estimated tokens: ${optimizedContent.estimatedTokens}${optimizedContent.summary ? ', with summary' : ''}`)
+      try {
+        responseStream = await model({ model: modelSelection.model, config, contents })
+        actualOutputTokens = Math.min(optimizedConfig.maxOutputTokens, actualInputTokens * 0.6)
+      } catch (error: any) {
+        await logServerActivity({ type: 'error', title: 'AI Response Generation Failed', description: error.message || 'Unknown error during AI processing', status: 'failed', metadata: { correlationId, sessionId, model: modelSelection.model, error: error.message } })
+        logConsoleActivity('error', 'Failed to generate response', { correlationId, error: error.message || 'Unknown error', sessionId, model: modelSelection.model })
+        throw error
+      }
+    } else {
+      throw new Error(`Unsupported provider: ${provider}`)
     }
 
     // Usage tracking is now handled client-side with the simplified demo session system
@@ -764,9 +794,21 @@ Response to use: "${conversationResult.response}"`;
             console.warn('coach suggestion failed', e)
           }
           
-          for await (const chunk of responseStream) {
-            const text = chunk.text || '';
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: text })}\n\n`));
+          if (provider === 'mock') {
+            for await (const chunk of responseStream) {
+              const text = (chunk as any)?.text || ''
+              if (text) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: text })}\n\n`))
+            }
+          } else if (usePerplexity) {
+            for await (const evt of responseStream) {
+              if (evt.content) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: evt.content })}\n\n`))
+              if (evt.citations) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ sources: evt.citations.map((u: string) => ({ url: u })) })}\n\n`))
+            }
+          } else {
+            for await (const chunk of responseStream) {
+              const text = chunk.text || ''
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: text })}\n\n`))
+            }
           }
           controller.close();
         } catch (error: any) {

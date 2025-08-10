@@ -2,6 +2,10 @@ import { PageHeader, PageShell } from "@/components/page-shell"
 import { Button } from "@/components/ui/button"
 import { Calendar, Mail } from "lucide-react"
 import { Card } from "@/components/ui/card"
+import { MotionCard } from "@/components/ui/motion-card"
+import { FadeIn } from "@/components/ui/fade-in"
+import { ProgressTracker } from "@/components/experience/progress-tracker"
+import { CitationsDemo } from "@/components/experience/citations-demo"
 
 export const metadata = {
   title: "Book AI Consultation | Contact Farzad Bayat - AI Consultant",
@@ -20,8 +24,14 @@ export default function ContactPage() {
         title="Book Your Free AI Consultation Call"
         subtitle="Let's discuss how AI automation can reduce costs, streamline your workflows, or help your team get started with real AI implementation tools."
       />
-      <div className="mx-auto mt-16 grid max-w-4xl grid-cols-1 gap-8 md:grid-cols-2">
-        <Card className="neu-card transition-all flex flex-col items-center justify-center p-8 text-center">
+      <div className="mx-auto mt-16 max-w-4xl">
+        <div className="mb-6 flex justify-center">
+          <ProgressTracker />
+        </div>
+      </div>
+      <div className="mx-auto grid max-w-4xl grid-cols-1 gap-8 md:grid-cols-2">
+        <FadeIn>
+        <MotionCard className="neu-card transition-all flex flex-col items-center justify-center p-8 text-center">
           <div className="mb-4 rounded-full bg-primary/10 p-4">
             <Calendar className="h-8 w-8 text-primary" />
           </div>
@@ -32,8 +42,10 @@ export default function ContactPage() {
               Book Your AI Consultation
             </a>
           </Button>
-        </Card>
-        <Card className="neu-card transition-all flex flex-col items-center justify-center p-8 text-center">
+        </MotionCard>
+        </FadeIn>
+        <FadeIn delay={0.08}>
+        <MotionCard className="neu-card transition-all flex flex-col items-center justify-center p-8 text-center">
           <div className="mb-4 rounded-full bg-primary/10 p-4">
             <Mail className="h-8 w-8 text-primary" />
           </div>
@@ -42,7 +54,11 @@ export default function ContactPage() {
           <Button asChild className="mt-6 w-full bg-transparent" variant="outline">
             <a href="/contact-form">Send Message</a>
           </Button>
-        </Card>
+        </MotionCard>
+        </FadeIn>
+      </div>
+      <div className="mx-auto mt-8 max-w-4xl">
+        <CitationsDemo />
       </div>
     </PageShell>
   )

@@ -7,6 +7,10 @@ import { FbcIcon } from "@/components/ui/fbc-icon"
 import { FbcIcon as FbcIconPolished } from "@/fbc-logo-icon/components/fbc-icon"
 import { ClientBrain, ClientZap, ClientSparkles, ClientTarget } from "@/components/ui/client-icons"
 import type { Metadata } from "next"
+import { MotionCard } from "@/components/ui/motion-card"
+import { FadeIn } from "@/components/ui/fade-in"
+import { ProgressTracker } from "@/components/experience/progress-tracker"
+import { CitationsDemo } from "@/components/experience/citations-demo"
 
 export const metadata: Metadata = {
   title: "Farzad Bayat - AI Consultant & Automation Expert | Build AI That Actually Works",
@@ -77,13 +81,17 @@ export default function HomePage() {
       <PageShell className="pt-20 pb-16">
         <div className="text-center max-w-4xl mx-auto">
           <div className="flex justify-center mb-16 relative">
-            {/* Pulsating orange glow background */}
             <div className="absolute inset-0 flex justify-center items-center">
-              <div className="w-56 h-56 bg-accent/20 rounded-full blur-xl animate-pulse"></div>
-              <div className="absolute w-64 h-64 bg-accent/10 rounded-full blur-2xl animate-pulse [animation-delay:0.5s]"></div>
+              <div className="w-56 h-56 bg-accent/20 rounded-full blur-xl animate-pulse" />
+              <div className="absolute w-64 h-64 bg-accent/10 rounded-full blur-2xl animate-pulse [animation-delay:0.5s]" />
             </div>
-            {/* F.B/c Icon */}
             <div className="relative z-10">
+              <div className="absolute inset-0 -z-10">
+                <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full 
+                                bg-[conic-gradient(from_0deg,theme(colors.accent.DEFAULT),transparent_60%)] 
+                                opacity-30 blur-2xl animate-[spin_14s_linear_infinite]" />
+                <div className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/20 animate-pulse" />
+              </div>
               <FbcIconPolished className="w-48 h-48" />
             </div>
           </div>
@@ -117,6 +125,9 @@ export default function HomePage() {
 
       {/* Features Section */}
       <PageShell>
+        <div className="mb-6 flex justify-center">
+          <ProgressTracker />
+        </div>
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
             AI Solutions That Drive Results
@@ -127,14 +138,16 @@ export default function HomePage() {
         </div>
         
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((feature) => (
-            <Card key={feature.title} className="neu-card transition-all hover:shadow-lg">
-              <CardContent className="p-6 text-center">
-                <feature.icon className="mx-auto h-12 w-12 text-accent mb-4" />
-                <h3 className="text-lg font-semibold text-primary mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground text-sm">{feature.description}</p>
-              </CardContent>
-            </Card>
+          {features.map((feature, i) => (
+            <FadeIn key={feature.title} delay={i * 0.06}>
+              <MotionCard className="neu-card transition-all hover:shadow-lg">
+                <CardContent className="p-6 text-center">
+                  <feature.icon className="mx-auto h-12 w-12 text-accent mb-4 transition-transform group-hover:scale-110" />
+                  <h3 className="text-lg font-semibold text-primary mb-2">{feature.title}</h3>
+                  <p className="text-muted-foreground text-sm">{feature.description}</p>
+                </CardContent>
+              </MotionCard>
+            </FadeIn>
           ))}
         </div>
       </PageShell>
@@ -168,6 +181,11 @@ export default function HomePage() {
             </Card>
           ))}
         </div>
+      </PageShell>
+
+      {/* Citations Preview */}
+      <PageShell>
+        <CitationsDemo />
       </PageShell>
 
       {/* Why Choose Me Section */}

@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ToolCardWrapper } from "@/components/chat/ToolCardWrapper"
 import { cn } from "@/lib/utils"
 import type { ROICalculatorProps, ROICalculationResult, WizardStep } from "./ROICalculator.types"
+import { markCapabilityUsed } from "@/components/experience/progress-tracker"
 
 // Type for the API response data
 type ROICalculationAPIResponse = {
@@ -72,6 +73,8 @@ export function ROICalculator({
       setResult(data.data); // API returns data in data field
       setCurrentStep("results");
       toast({ title: "ROI Calculation Complete", description: "Your ROI analysis is ready!" });
+      // mark capability as explored
+      markCapabilityUsed("roi")
     } catch (error) {
       console.error('ROI calculation error:', error);
       toast({ 
