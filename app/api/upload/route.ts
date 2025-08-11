@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
           type: file.type,
           url: fileUrl,
           uploaded_at: new Date().toISOString(),
-          session_id: request.headers.get('x-demo-session-id') || null,
+          session_id: request.headers.get('x-intelligence-session-id') || null,
           user_id: request.headers.get('x-user-id') || null
         })
         if (logError) console.error('Failed to log upload:', logError)

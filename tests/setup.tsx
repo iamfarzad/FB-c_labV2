@@ -23,6 +23,18 @@ jest.mock('next/image', () => ({
   },
 }));
 
+// Mock Radix Tooltip to avoid provider requirement in tests
+jest.mock('@radix-ui/react-tooltip', () => {
+  const React = require('react')
+  return {
+    __esModule: true,
+    Provider: ({ children }: any) => <>{children}</>,
+    Root: ({ children }: any) => <>{children}</>,
+    Trigger: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+    Content: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  }
+})
+
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { WebcamCaptureSchema } from '@/lib/services/tool-service'
+import { recordCapabilityUsed } from '@/lib/context/capabilities'
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,6 +30,10 @@ export async function POST(req: NextRequest) {
         analysis,
         processedAt: new Date().toISOString()
       }
+    }
+    const sessionId = req.headers.get('x-intelligence-session-id') || undefined
+    if (sessionId) {
+      try { await recordCapabilityUsed(String(sessionId), 'webcam', { analysis, imageSize: image.length, format: analysis.format }) } catch {}
     }
 
     return NextResponse.json(response, { status: 200 })

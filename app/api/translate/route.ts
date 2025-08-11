@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai'
 import type { NextRequest } from 'next/server'
+import { recordCapabilityUsed } from '@/lib/context/capabilities'
 import { translationRequestSchema, validateRequest, sanitizeString } from '@/lib/validation'
 import { logServerActivity } from '@/lib/server-activity-logger'
 
@@ -13,8 +14,9 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ error: 'Validation failed', details: validation.errors }), { status: 400 })
     }
 
-    const { text, targetLang, sourceLang } = validation.data
+    const { text, targetLang, sourceLang, sessionId: bodySessionId } = validation.data as any
     const cleanText = sanitizeString(text)
+    const sessionId = bodySessionId || req.headers.get('x-intelligence-session-id') || null
 
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY environment variable is not set')
@@ -48,6 +50,12 @@ ${cleanText}
     })
 
     const translated = result.response?.text() ?? ''
+
+    if (sessionId) {
+      try {
+        await recordCapabilityUsed(String(sessionId), 'translate', { targetLang, sourceLang, inputLength: cleanText.length, outputLength: translated.length })
+      } catch {}
+    }
 
     await logServerActivity({
       type: 'ai_stream',

@@ -53,6 +53,8 @@ These variables enhance functionality but have default values.
 |----------|-------------|---------|---------|
 | `GOOGLE_SEARCH_API_KEY` | Google Custom Search API | None | Web search in chat |
 | `GOOGLE_SEARCH_ENGINE_ID` | Custom Search Engine ID | None | Web search context |
+| `EMBEDDINGS_ENABLED` | Enable pgvector memory enrichment | `false` | Gate embeddings insert/query |
+| `LIVE_ENABLED` | Enable Gemini Live client wiring | `false` | Gate live session features |
 
 ### Demo/Trial Configuration
 
@@ -115,6 +117,8 @@ RESEND_FROM_EMAIL="Dev <dev@example.com>"
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NODE_ENV=development
+EMBEDDINGS_ENABLED=false
+LIVE_ENABLED=false
 
 # Dev Tools
 DEBUG=true

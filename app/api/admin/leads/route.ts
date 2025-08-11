@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") || ""
     const period = searchParams.get("period") || "7d"
+    const intent = searchParams.get("intent") || "all"
 
     // Calculate date range
     const now = new Date()
@@ -27,13 +28,17 @@ export async function GET(request: NextRequest) {
 
     let query = supabaseService
       .from("lead_summaries")
-      .select("*")
+      .select("id, name, email, company_name, lead_score, conversation_summary, consultant_brief, ai_capabilities_shown, intent_type, created_at")
       .gte("created_at", startDate.toISOString())
       .order("created_at", { ascending: false })
 
     // Apply search filter
     if (search) {
       query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,company_name.ilike.%${search}%`)
+    }
+
+    if (intent && intent !== 'all') {
+      query = query.eq('intent_type', intent)
     }
 
     const { data: leads, error } = await query

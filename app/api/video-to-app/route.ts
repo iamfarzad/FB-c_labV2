@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
   
   try {
     // Extract session and user info
-    const sessionId = request.headers.get('x-demo-session-id') || undefined
+    const sessionId = request.headers.get('x-intelligence-session-id') || undefined
     const userId = request.headers.get('authorization')?.replace('Bearer ', '') || undefined
     
     const { action, videoUrl, spec } = await request.json()

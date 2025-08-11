@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ROICalculationSchema } from '@/lib/services/tool-service'
+import { recordCapabilityUsed } from '@/lib/context/capabilities'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+    const sessionId = (body?.sessionId as string | undefined) || req.headers.get('x-intelligence-session-id') || undefined
     
     // Validate input using Zod schema
     const validatedData = ROICalculationSchema.parse(body)
@@ -37,6 +39,23 @@ export async function POST(req: NextRequest) {
         timePeriod,
         calculatedAt: new Date().toISOString()
       }
+    }
+    // Record capability usage (server is source of truth)
+    if (sessionId) {
+      try {
+        await recordCapabilityUsed(String(sessionId), 'roi', {
+          input: {
+            initialInvestment,
+            monthlyRevenue,
+            monthlyExpenses,
+            timePeriod,
+          },
+          output: {
+            roi: response.data.roi,
+            paybackPeriod: response.data.paybackPeriod,
+          },
+        })
+      } catch {}
     }
 
     return NextResponse.json(response, { status: 200 })

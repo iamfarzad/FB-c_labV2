@@ -93,7 +93,7 @@ export function useRealTimeVoice() {
       setIsProcessing(true)
 
       // Get ephemeral token from server (prevents exposing API key)
-      const res = await fetch('/api/gemini/ephemeral-token', { cache: 'no-store' })
+      const res = await fetch('/api/live/token', { method: 'POST', cache: 'no-store' })
       if (!res.ok) throw new Error(`Token endpoint failed: ${res.status}`)
       const { token } = await res.json()
       if (!token) throw new Error('No token returned')

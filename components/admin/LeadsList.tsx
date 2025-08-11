@@ -18,6 +18,7 @@ interface Lead {
   conversation_summary: string
   consultant_brief: string
   ai_capabilities_shown: string[]
+  intent_type?: string
   created_at: string
   last_interaction?: string
   engagement_type: string
@@ -33,10 +34,11 @@ export function LeadsList({ searchTerm, period }: LeadsListProps) {
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+  const [intentFilter, setIntentFilter] = useState<'all'|'consulting'|'workshop'|'other'>('all')
 
   useEffect(() => {
     fetchLeads()
-  }, [searchTerm, period])
+  }, [searchTerm, period, intentFilter])
 
   const fetchLeads = async () => {
     try {
@@ -44,6 +46,7 @@ export function LeadsList({ searchTerm, period }: LeadsListProps) {
         search: searchTerm,
         period: period,
       })
+      if (intentFilter !== 'all') params.set('intent', intentFilter)
       const response = await fetch(`/api/admin/leads?${params}`)
       const data = await response.json()
       setLeads(data.leads || [])
@@ -101,9 +104,22 @@ export function LeadsList({ searchTerm, period }: LeadsListProps) {
       <Card>
         <CardHeader>
           <CardTitle>Leads Overview</CardTitle>
-          <CardDescription>{leads.length} leads found • Filter by search term and time period</CardDescription>
+          <CardDescription>{leads.length} leads found • Filter by search term, period and intent</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-3 flex items-center gap-2">
+            <label className="text-sm text-muted-foreground">Intent</label>
+            <select
+              className="rounded-md border bg-background px-2 py-1 text-sm"
+              value={intentFilter}
+              onChange={(e) => setIntentFilter(e.target.value as any)}
+            >
+              <option value="all">All</option>
+              <option value="consulting">Consulting</option>
+              <option value="workshop">Workshop</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -111,6 +127,7 @@ export function LeadsList({ searchTerm, period }: LeadsListProps) {
                   <TableHead>Lead</TableHead>
                   <TableHead>Company</TableHead>
                   <TableHead>Score</TableHead>
+                  <TableHead>Intent</TableHead>
                   <TableHead>Engagement</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
@@ -155,6 +172,13 @@ export function LeadsList({ searchTerm, period }: LeadsListProps) {
                         <div className={`w-2 h-2 rounded-full ${getScoreColor(lead.lead_score)}`} />
                         <span className="font-medium">{lead.lead_score}</span>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {lead.intent_type ? (
+                        <Badge variant="outline" className="text-xs capitalize">{lead.intent_type}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">

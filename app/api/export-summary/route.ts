@@ -3,6 +3,7 @@ import { getSupabase } from '@/lib/supabase/server';
 import { logServerActivity } from '@/lib/server-activity-logger';
 import { generatePdfWithPuppeteer, generatePdfPath, sanitizeTextForPdf } from '@/lib/pdf-generator-puppeteer';
 import fs from 'fs';
+import { recordCapabilityUsed } from '@/lib/context/capabilities';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,7 +104,8 @@ Based on this conversation, here are the key insights and next steps:
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, leadEmail } = await req.json();
+    const { sessionId: bodySessionId, leadEmail } = await req.json();
+    const sessionId = bodySessionId || req.headers.get('x-intelligence-session-id');
 
     if (!sessionId) {
       return new Response(JSON.stringify({ error: 'Session ID required' }), {
@@ -187,6 +189,11 @@ export async function POST(req: NextRequest) {
           fileSize: pdfBuffer.length
         }
       });
+
+      // Record capability usage
+      try {
+        await recordCapabilityUsed(String(sessionId), 'exportPdf', { fileSize: pdfBuffer.length })
+      } catch {}
 
       // Return the PDF as a download
       return new Response(pdfBuffer, {

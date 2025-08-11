@@ -8,6 +8,7 @@ interface Message {
   timestamp: Date
   imageUrl?: string
   sources?: Array<{ title: string; url: string }>
+  citations?: Array<{ uri: string; title?: string }>
 }
 
 interface ChatData {
@@ -142,7 +143,7 @@ export function useChat({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-demo-session-id': data.sessionId || 'anonymous'
+          'x-intelligence-session-id': data.sessionId || 'anonymous'
         },
         body: JSON.stringify({
           messages: [...messages, userMessage].map(msg => ({

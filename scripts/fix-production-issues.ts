@@ -85,7 +85,7 @@ class ProductionFixer {
         headers: [
           { key: 'Access-Control-Allow-Origin', value: '*' },
           { key: 'Access-Control-Allow-Methods', value: 'POST, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, x-correlation-id, x-demo-session-id, x-user-id' }
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, x-correlation-id, x-intelligence-session-id, x-user-id' }
         ]
       }
 
@@ -232,7 +232,7 @@ export async function OPTIONS() {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, x-correlation-id, x-demo-session-id, x-user-id',
+      'Access-Control-Allow-Headers': 'Content-Type, x-correlation-id, x-intelligence-session-id, x-user-id',
     },
   })
 }

@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       type: 'admin_chat',
       title: 'Admin Chat Request Started',
       description: 'Admin chat session initiated',
-      status: 'started',
+      status: 'in_progress',
       metadata: { correlationId }
     })
 
@@ -114,7 +114,7 @@ Use this real-time data to provide informed, actionable advice.`
 
     // Prepare optimized content for Gemini with admin context and caching
     const conversationMessages: ConversationMessage[] = sanitizedMessages.map(msg => ({
-      role: msg.role === 'assistant' ? 'model' : msg.role,
+      role: msg.role === 'assistant' ? 'model' : 'user',
       content: msg.content
     }));
 

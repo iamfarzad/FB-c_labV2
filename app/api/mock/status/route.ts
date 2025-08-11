@@ -15,6 +15,7 @@ export async function GET() {
     redirectedEndpoints: [
       '/api/chat → /api/mock/chat',
       '/api/lead-research → /api/mock/lead-research',
+      '/api/intelligence/lead-research → /api/mock/lead-research',
       'Other Gemini APIs → /api/mock/chat (fallback)'
     ],
     message: MOCK_CONFIG.enabled 

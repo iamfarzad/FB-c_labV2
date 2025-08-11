@@ -5,6 +5,17 @@ import { createOptimizedConfig } from '@/lib/gemini-config-enhanced'
 import { selectModelForFeature, estimateTokens } from '@/lib/model-selector'
 import { enforceBudgetAndLog } from '@/lib/token-usage-logger'
 import { checkDemoAccess, recordDemoUsage, DemoFeature } from '@/lib/demo-budget-manager'
+import { recordCapabilityUsed } from '@/lib/context/capabilities'
+import { embedTexts } from '@/lib/embeddings/gemini'
+import { upsertEmbeddings } from '@/lib/embeddings/query'
+const rl = new Map<string, { count: number; reset: number }>()
+const idem = new Map<string, { expires: number; body: any }>()
+function checkRate(key: string, max: number, windowMs: number) {
+  const now = Date.now(); const rec = rl.get(key)
+  if (!rec || rec.reset < now) { rl.set(key, { count: 1, reset: now + windowMs }); return true }
+  if (rec.count >= max) return false
+  rec.count++; return true
+}
 
 export async function OPTIONS() {
   return new Response(null, {
@@ -12,7 +23,7 @@ export async function OPTIONS() {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, x-correlation-id, x-demo-session-id, x-user-id',
+      'Access-Control-Allow-Headers': 'Content-Type, x-correlation-id, x-intelligence-session-id, x-user-id',
     },
   })
 }
@@ -30,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get session ID for demo budget tracking
-    const sessionId = request.headers.get('x-demo-session-id') || undefined
+    const sessionId = request.headers.get('x-intelligence-session-id') || undefined
     const userId = request.headers.get('x-user-id') || undefined
 
     // Estimate tokens for the analysis
@@ -155,12 +166,35 @@ Focus on identifying business process improvements and automation opportunities.
       )
     }
 
-    return NextResponse.json({
+    const headerSessionId = request.headers.get('x-intelligence-session-id') || undefined
+    const idemKey = request.headers.get('x-idempotency-key') || undefined
+    const rlKey = `screenshot:${headerSessionId || 'anon'}`
+    if (!checkRate(rlKey, 10, 60_000)) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+    if (headerSessionId && idemKey) {
+      const k = `${headerSessionId}:${idemKey}`
+      const cached = idem.get(k)
+      if (cached && cached.expires > Date.now()) return NextResponse.json(cached.body)
+    }
+    if (headerSessionId) {
+      try { await recordCapabilityUsed(String(headerSessionId), 'screenshot', { tokens: actualInputTokens + actualOutputTokens }) } catch {}
+    }
+
+    const body = {
       analysis: analysisResult,
       modelUsed: modelSelection.model,
       tokensUsed: actualInputTokens + actualOutputTokens,
       estimatedCost: modelSelection.estimatedCost
-    })
+    }
+    if (headerSessionId && idemKey) idem.set(`${headerSessionId}:${idemKey}`, { expires: Date.now() + 5 * 60_000, body })
+    if (process.env.EMBEDDINGS_ENABLED === 'true' && headerSessionId) {
+      try {
+        if (analysisResult?.trim()) {
+          const vecs = await embedTexts([analysisResult], 1536)
+          if (vecs && vecs[0]) await upsertEmbeddings(String(headerSessionId), 'screenshot', [analysisResult], vecs)
+        }
+      } catch {}
+    }
+    return NextResponse.json(body)
 
   } catch (error: any) {
     console.error('Screenshot analysis error:', error)

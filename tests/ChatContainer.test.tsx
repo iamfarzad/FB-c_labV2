@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { ThemeProvider } from 'next-themes/dist/ThemeProvider'
+import { ThemeProvider } from 'next-themes'
 import { ChatContainer } from '@/app/(chat)/chat/components/ChatContainer'
 
 describe('ChatContainer Component', () => {

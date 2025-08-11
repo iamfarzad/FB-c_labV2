@@ -2,6 +2,21 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ChatFooter } from '@/components/chat/ChatFooter';
 
+// Mock complex child components to isolate footer
+jest.mock('@/components/chat/ToolMenu', () => ({
+  ToolMenu: (props: any) => <button aria-label="mock-toolmenu" onClick={props.onUploadDocument}>Tools</button>
+}))
+jest.mock('@/components/ui/PillInput', () => ({
+  __esModule: true,
+  default: ({ value, onChange, onSubmit, leftSlot, rightSlot, placeholder }: any) => (
+    <form onSubmit={onSubmit} aria-label="pill-input-form">
+      {leftSlot}
+      <textarea placeholder={placeholder} value={value} onChange={onChange} />
+      {rightSlot}
+    </form>
+  )
+}))
+
 // Mock the hooks and dependencies
 jest.mock('@/hooks/use-toast', () => ({
   useToast: () => ({

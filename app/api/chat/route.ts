@@ -1,4 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
+import { embedTexts } from '@/lib/embeddings/gemini'
+import { queryTopK } from '@/lib/embeddings/query'
 import { streamPerplexity } from '@/lib/providers/perplexity';
 import { getSupabase } from '@/lib/supabase/server';
 import type { NextRequest } from 'next/server';
@@ -406,7 +408,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get session ID from headers or cookies
-    const sessionId = req.headers.get('x-demo-session-id') || req.cookies.get('demo-session-id')?.value;
+    const sessionId = req.headers.get('x-intelligence-session-id') || req.cookies.get('demo-session-id')?.value;
 
     // Authentication check (optional for demo)
     const isAuthenticated = auth.success;
@@ -586,6 +588,23 @@ export async function POST(req: NextRequest) {
 
     // Build system prompt with enhanced context
     let systemPrompt = await buildEnhancedSystemPrompt(leadContext, messages[messages.length - 1]?.content || '', sessionId || null);
+
+    // Optional memory enrichment (pgvector) under flag
+    if (process.env.EMBEDDINGS_ENABLED === 'true' && sessionId) {
+      try {
+        const currentText = messages[messages.length - 1]?.content || ''
+        if (currentText.trim()) {
+          const vec = await embedTexts([currentText], 1536)
+          if (vec && vec[0]) {
+            const hits = await queryTopK(sessionId, vec[0], 5)
+            if (Array.isArray(hits) && hits.length) {
+              const mem = hits.map((h: any, i: number) => `M${i + 1}. ${h.text}`).join('\n')
+              systemPrompt += `\n\nMemory Facts (top-k):\n${mem}`
+            }
+          }
+        }
+      } catch {}
+    }
     
     // Add conversation stage context if available
     if (conversationResult) {
@@ -654,12 +673,17 @@ Response to use: "${conversationResult.response}"`;
       // Perplexity streaming path
       const pplxKey = process.env.PERPLEXITY_API_KEY
       if (!pplxKey) throw new Error('Missing PERPLEXITY_API_KEY')
-      const messagesForPplx = [
-        { role: 'system' as const, content: systemPrompt },
-        ...sanitizedMessages.map(m => ({ role: (m.role === 'system' ? 'system' : (m.role as 'user' | 'assistant')), content: m.content }))
+      const messagesForPplx: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = [
+        { role: 'system', content: systemPrompt },
+        ...sanitizedMessages.map((m: Message) => ({
+          role: m.role,
+          content: m.content,
+        })),
       ]
       const stageForModel = conversationResult?.newStage
-      const earlyStage = stageForModel === 0 || stageForModel === 1
+      const earlyStage =
+        stageForModel === ConversationStage.GREETING ||
+        stageForModel === ConversationStage.NAME_COLLECTION
       const pplxModel = earlyStage ? 'sonar-reasoning-pro' : 'sonar-pro'
       const enableSearch = !earlyStage
       responseStream = streamPerplexity({

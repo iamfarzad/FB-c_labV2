@@ -19,7 +19,11 @@ export async function POST(req: NextRequest) {
         cost: 0.002,
         model: 'gemini-pro-mock',
         processingTime: 500
-      }
+      },
+      sources: [
+        { title: 'AI Elements', url: 'https://ai-sdk.dev/elements' },
+        { title: 'F.B/c Site', url: 'https://www.farzadbayat.com' }
+      ]
     }
 
     // Return as streaming response to match real API behavior
@@ -31,6 +35,7 @@ export async function POST(req: NextRequest) {
           JSON.stringify({ type: 'start', id: mockResponse.id }),
           JSON.stringify({ type: 'content', content: mockResponse.content }),
           JSON.stringify({ type: 'metadata', metadata: mockResponse.metadata }),
+          JSON.stringify({ type: 'sources', sources: mockResponse.sources }),
           JSON.stringify({ type: 'end' })
         ]
 

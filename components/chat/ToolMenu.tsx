@@ -15,6 +15,9 @@ export interface ToolMenuProps {
   onROI?: () => void
   onVideoToApp?: () => void
   onPdf?: () => void
+  onUrlContext?: () => void
+  onCalc?: () => void
+  onCode?: () => void
   disabled?: boolean
   className?: string
 }
@@ -27,6 +30,9 @@ export function ToolMenu({
   onROI,
   onVideoToApp,
   onPdf,
+  onUrlContext,
+  onCalc,
+  onCode,
   disabled,
   className,
 }: ToolMenuProps) {
@@ -87,6 +93,21 @@ export function ToolMenu({
         {onPdf && (
           <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onPdf}>
             <Download className="w-4 h-4" /> PDF Summary
+          </DropdownMenuItem>
+        )}
+        {onUrlContext && (
+          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onUrlContext}>
+            <span className="w-4 h-4">🌐</span> URL Context
+          </DropdownMenuItem>
+        )}
+        {onCalc && (
+          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onCalc}>
+            <Calculator className="w-4 h-4" /> Custom Calc
+          </DropdownMenuItem>
+        )}
+        {onCode && (
+          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onCode}>
+            <FileText className="w-4 h-4" /> Code Blueprint
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

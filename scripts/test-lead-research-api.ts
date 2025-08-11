@@ -43,7 +43,7 @@ async function testLeadResearchAPI() {
     console.log(`   Payload:`, JSON.stringify(testCase.payload, null, 2));
     
     try {
-      const response = await fetch(`${baseUrl}/api/lead-research`, {
+      const response = await fetch(`${baseUrl}/api/intelligence/lead-research`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ async function testLeadResearchAPI() {
   }
   
   console.log('\n\n📊 API Verification Summary:');
-  console.log('- Endpoint: /api/lead-research');
+  console.log('- Endpoint: /api/intelligence/lead-research');
   console.log('- Method: POST');
   console.log('- Required Fields: email, sessionId');
   console.log('- Optional Fields: name, company');

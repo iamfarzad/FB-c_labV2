@@ -489,11 +489,7 @@ function ChatOverlayDemo() {
           <ErrorHandler error={new Error('Transient example error')} context="chat" />
         </div>
       )}
-      <VoiceOverlay
-        open={openVoice}
-        onCancel={() => setOpenVoice(false)}
-        onAccept={() => setOpenVoice(false)}
-      />
+      <VoiceOverlay open={openVoice} onCancel={() => setOpenVoice(false)} onAccept={() => setOpenVoice(false)} />
     </Section>
   )
 }

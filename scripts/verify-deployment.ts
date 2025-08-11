@@ -23,7 +23,7 @@ async function testEndpoint(path: string, method: 'GET' | 'POST' = 'GET', body?:
       method,
       headers: {
         'Content-Type': 'application/json',
-        'x-demo-session-id': 'deployment-test',
+        'x-intelligence-session-id': 'deployment-test',
       },
       body: body ? JSON.stringify(body) : undefined,
     });

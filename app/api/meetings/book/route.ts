@@ -3,6 +3,15 @@ import { EmailService } from "@/lib/email-service"
 import { MeetingScheduler } from "@/lib/meeting-scheduler"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
+import { recordCapabilityUsed } from "@/lib/context/capabilities"
+const rl = new Map<string, { count: number; reset: number }>()
+const idem = new Map<string, { expires: number; body: any }>()
+function checkRate(key: string, max: number, windowMs: number) {
+  const now = Date.now(); const rec = rl.get(key)
+  if (!rec || rec.reset < now) { rl.set(key, { count: 1, reset: now + windowMs }); return true }
+  if (rec.count >= max) return false
+  rec.count++; return true
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -54,14 +63,22 @@ export async function POST(req: NextRequest) {
     }
 
     // Send confirmation email
-    const emailSent = await EmailService.sendMeetingConfirmation({
-      name: bookingData.name,
-      email: bookingData.email,
-      meetingDate: MeetingScheduler.formatMeetingDate(bookingData.preferredDate),
-      meetingTime: MeetingScheduler.formatMeetingTime(bookingData.preferredTime, bookingData.timeZone),
+    const emailSent = await EmailService.sendMeetingConfirmationEmail({
+      attendeeName: bookingData.name,
+      attendeeEmail: bookingData.email,
+      date: MeetingScheduler.formatMeetingDate(bookingData.preferredDate),
+      time: MeetingScheduler.formatMeetingTime(bookingData.preferredTime, bookingData.timeZone),
+      duration: 30,
       meetingLink,
-      timeZone: bookingData.timeZone,
     })
+
+    const sessionId = req.headers.get('x-intelligence-session-id') || undefined
+    const idemKey = req.headers.get('x-idempotency-key') || undefined
+    const rlKey = `meeting:${sessionId || 'anon'}`
+    if (!checkRate(rlKey, 6, 60_000)) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+    if (sessionId) {
+      try { await recordCapabilityUsed(String(sessionId), 'meeting', { meetingId, date: bookingData.preferredDate, time: bookingData.preferredTime }) } catch {}
+    }
 
     return NextResponse.json({
       success: true,

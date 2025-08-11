@@ -53,7 +53,7 @@ async function testLeadCapture(): Promise<void> {
     console.log('\n📡 Testing related API endpoints...')
     
     const endpoints = [
-      '/api/lead-research',
+      '/api/intelligence/lead-research',
       '/api/admin/leads',
       '/api/admin/stats'
     ]

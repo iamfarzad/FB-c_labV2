@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import { FbcIcon } from '@/components/ui/fbc-icon'
@@ -24,11 +24,19 @@ import { ScreenShare } from '@/components/chat/tools/ScreenShare/ScreenShare'
 import { WebcamCapture } from '@/components/chat/tools/WebcamCapture/WebcamCapture'
 import { VideoToApp } from '@/components/chat/tools/VideoToApp/VideoToApp'
 import useChat from '@/hooks/chat/useChat'
+import { useConversationalIntelligence } from '@/hooks/useConversationalIntelligence'
 import { isFlagEnabled } from '@/lib/flags'
+import CitationDisplay from '@/components/chat/CitationDisplay'
+import SuggestedActions from '@/components/intelligence/SuggestedActions'
 
 export function AIEChat() {
-  const [sessionId] = useState(() => (typeof window !== 'undefined' ? (window.localStorage.getItem('demo-session-id') || 'default') : 'default'))
+  const [sessionId, setSessionId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    const sid = window.localStorage.getItem('intelligence-session-id')
+    return sid || null
+  })
   const [openVoice, setOpenVoice] = useState(false)
+  const liveEnabled = process.env.NEXT_PUBLIC_LIVE_ENABLED !== 'false'
   const [error, setError] = useState<Error | null>(null)
   const [canvas, setCanvas] = useState<{ type: 'webpreview' | 'screen' | 'webcam' | 'video' | 'pdf'; url?: string } | null>(null)
   const [isVoiceMock, setIsVoiceMock] = useState(false)
@@ -39,8 +47,25 @@ export function AIEChat() {
   const [consentEmail, setConsentEmail] = useState('')
   const [consentCompany, setConsentCompany] = useState('')
 
-  const { messages, input, setInput, isLoading, error: chatError, sendMessage, handleSubmit, handleInputChange, clearMessages } = useChat({
-    data: { sessionId },
+  // Persist session id to single source of truth only
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (sessionId && window.localStorage.getItem('intelligence-session-id') !== sessionId) {
+      window.localStorage.setItem('intelligence-session-id', sessionId)
+    }
+  }, [sessionId])
+
+  // Conversational Intelligence
+  const { 
+    context, 
+    isLoading: contextLoading, 
+    fetchContextFromLocalSession, 
+    clearContextCache, 
+    generatePersonalizedGreeting 
+  } = useConversationalIntelligence()
+
+  const { messages, input, setInput, isLoading, error: chatError, sendMessage, handleSubmit, handleInputChange, clearMessages, addMessage } = useChat({
+    data: { sessionId: sessionId ?? undefined },
     onError: (e) => setError(e),
   })
 
@@ -86,31 +111,75 @@ export function AIEChat() {
     } catch {}
   }, [logs, STORAGE_KEY])
 
-  // Check consent on mount
+  // Check consent on mount and restore existing session
   useEffect(() => {
     ;(async () => {
       try {
         const res = await fetch('/api/consent', { cache: 'no-store' })
         if (res.ok) {
           const j = await res.json()
-          if (j.allow) setConsentAllowed(true)
+          if (j.allow) {
+            setConsentAllowed(true)
+            // If consent was already given, check for existing session ID
+            const existingSessionId = window.localStorage.getItem('intelligence-session-id')
+            if (existingSessionId) {
+              console.log('🔄 Restoring existing session:', existingSessionId)
+              setSessionId(existingSessionId)
+            }
+          }
         }
       } catch {}
       setConsentChecked(true)
     })()
   }, [])
 
+  // Fetch intelligence context when consent is allowed
+  useEffect(() => {
+    if (consentAllowed) {
+      fetchContextFromLocalSession()
+    }
+  }, [consentAllowed, fetchContextFromLocalSession])
+
   async function handleAllowConsent() {
     try {
+      // Step 1: Record consent
       const res = await fetch('/api/consent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: consentEmail, companyUrl: consentCompany, policyVersion: 'v1' }),
       })
       if (!res.ok) throw new Error('consent failed')
+      
+      // Step 2: Initialize intelligence session
+      const sessionInitRes = await fetch('/api/intelligence/session-init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          sessionId: sessionId || undefined,
+          email: consentEmail, 
+          name: consentEmail.split('@')[0], // Extract name from email
+          companyUrl: consentCompany 
+        }),
+      })
+      
+      if (sessionInitRes.ok) {
+        const sessionData = await sessionInitRes.json()
+        // Store sessionId for future use
+        if (sessionData.sessionId) {
+          localStorage.setItem('intelligence-session-id', sessionData.sessionId)
+          setSessionId(sessionData.sessionId)
+          addLog(`intelligence: session initialized - ${sessionData.sessionId}`)
+          
+          // Clear cache and force fresh fetch since we know context changed
+          clearContextCache()
+          await fetchContextFromLocalSession({ force: true })
+        }
+      }
+      
       setConsentAllowed(true)
       setConsentDenied(false)
-    } catch {
+    } catch (error) {
+      console.error('Consent or session init failed:', error)
       alert('Unable to record consent. Please check your email/company and try again.')
     }
   }
@@ -149,19 +218,113 @@ export function AIEChat() {
   const [canvasInput, setCanvasInput] = useState('')
   const [coachNext, setCoachNext] = useState<string | null>(null)
   const [coachAll, setCoachAll] = useState<string[]>([])
-  const [usedCaps, setUsedCaps] = useState<Set<string>>(new Set())
+
   const [showRoiForm, setShowRoiForm] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const lastContextRefreshRef = useRef(0)
+  const intentPostedRef = useRef(false)
 
   function emitUsed(name: string) {
     try { window.dispatchEvent(new CustomEvent('chat-capability-used', { detail: { name } })) } catch {}
-    setUsedCaps(prev => new Set(prev).add(name))
+
+    // Throttle context refreshes to at most once every 1.5s
+    const now = Date.now()
+    if (now - lastContextRefreshRef.current >= 1500) {
+      lastContextRefreshRef.current = now
+      clearContextCache()
+      fetchContextFromLocalSession({ force: true })
+    }
+  }
+
+  // Post intent on first user message
+  useEffect(() => {
+    if (!consentAllowed || !sessionId) return
+    // Reset guard when session changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId])
+
+  useEffect(() => {
+    if (!consentAllowed || !sessionId) return
+    const lastUser = [...messages].reverse().find(m => m.role === 'user')
+    if (!lastUser) return
+    if (intentPostedRef.current) return
+    ;(async () => {
+      try {
+        const res = await fetch('/api/intelligence/intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, userMessage: lastUser.content })
+        })
+        if (res.ok) {
+          const j = await res.json()
+          addLog(`intent: ${j.type} (${Math.round((j.confidence || 0) * 100)}%)`)
+        }
+      } catch {}
+      intentPostedRef.current = true
+    })()
+  // Only react to messages length to catch the first send
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length, consentAllowed, sessionId])
+
+  function handleSuggestionRun(s: { capability?: string; label: string }) {
+    const cap = s.capability
+    if (!cap) return
+    switch (cap) {
+      case 'search':
+        setSearchOpen(true)
+        setSearchQuery('')
+        break
+      case 'roi':
+        addLog('suggestion → ROI')
+        setCoachNext('roi')
+        emitUsed('roi')
+        break
+      case 'screenShare':
+        addLog('suggestion → screen share')
+        setCanvas({ type: 'screen' })
+        emitUsed('screenShare')
+        break
+      case 'translate':
+        addLog('suggestion → translate')
+        emitUsed('translate')
+        break
+      case 'meeting':
+        addLog('suggestion → schedule meeting')
+        emitUsed('meeting')
+        break
+      case 'doc':
+        addLog('suggestion → document analysis')
+        emitUsed('doc')
+        break
+      case 'image':
+        addLog('suggestion → image analysis')
+        setCanvas({ type: 'webcam' })
+        emitUsed('image')
+        break
+      case 'video2app':
+        addLog('suggestion → video2app')
+        setCanvas({ type: 'video' })
+        emitUsed('video2app')
+        break
+      case 'exportPdf':
+        addLog('suggestion → export PDF')
+        setCanvas({ type: 'pdf' })
+        emitUsed('exportPdf')
+        break
+      default:
+        addLog(`suggestion → ${cap}`)
+        emitUsed(cap)
+    }
   }
 
   const uiMessages = useMemo(() => messages.map(m => ({
     id: m.id,
     role: m.role,
     text: m.content,
-    sources: m.sources
+    sources: m.sources,
+    citations: m.citations
   })), [messages])
 
   useEffect(() => {
@@ -190,12 +353,19 @@ export function AIEChat() {
     }
     const onUsed = (e: Event) => {
       const ce = e as CustomEvent<any>
-      if (ce.detail?.name) setUsedCaps(prev => new Set(prev).add(String(ce.detail.name)))
+      if (ce.detail?.name) {
+        // Capability usage is now tracked server-side via context
+        console.log(`Capability used: ${ce.detail.name}`)
+      }
     }
     window.addEventListener('chat-server-event', onServerEvent as EventListener)
     window.addEventListener('chat-coach-suggestion', onCoach as EventListener)
     window.addEventListener('chat-capability-used', onUsed as EventListener)
-    return () => window.removeEventListener('chat-server-event', onServerEvent as EventListener)
+    return () => {
+      window.removeEventListener('chat-server-event', onServerEvent as EventListener)
+      window.removeEventListener('chat-coach-suggestion', onCoach as EventListener)
+      window.removeEventListener('chat-capability-used', onUsed as EventListener)
+    }
   }, [])
 
   return (
@@ -265,6 +435,18 @@ export function AIEChat() {
         <div className="flex flex-1 min-h-0 flex-col">
           <Conversation className="h-full">
             <ConversationContent className="mx-auto w-full max-w-3xl space-y-2 p-4 pb-28 md:pb-32">
+              {/* Personalized greeting when context is loaded and no messages yet */}
+              {context && uiMessages.length === 0 && !isLoading && (
+                <Message from="assistant">
+                  <div className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/40 bg-card/80 shadow-sm">
+                    <FbcIcon className="h-4 w-4" />
+                  </div>
+                  <MessageContent>
+                    <Response>{generatePersonalizedGreeting(context)}</Response>
+                  </MessageContent>
+                </Message>
+              )}
+              
               {uiMessages.map((m, idx) => (
                 <Message key={m.id} from={m.role}>
                   {m.role === 'assistant' ? (
@@ -291,6 +473,9 @@ export function AIEChat() {
                     {!!m.text && <Response>{m.text}</Response>}
                     {/* Brand icon near assistant message while streaming */}
                     {/* Removed brand chip under assistant output while streaming */}
+
+                    {/* Citations from grounded search */}
+                    <CitationDisplay citations={m.citations} />
 
                     {!!m.sources?.length && (
                       <div className="mt-2">
@@ -351,6 +536,8 @@ export function AIEChat() {
           </Conversation>
 
           <div className="sticky bottom-0 z-50 mx-auto w-full max-w-3xl bg-gradient-to-t from-background via-background/90 to-transparent px-4 pb-4 pt-2">
+            {/* Phase 2: Suggested actions */}
+            <SuggestedActions sessionId={sessionId} stage={stage as any} onRun={handleSuggestionRun} />
             <PromptInput onSubmit={handleSubmit}>
               <PromptInputToolbar>
                 <PromptInputTools>
@@ -358,28 +545,89 @@ export function AIEChat() {
                     onUploadDocument={() => { addLog('tool: upload document'); emitUsed('doc'); }}
                     onUploadImage={() => { addLog('tool: upload image'); emitUsed('image'); }}
                     onWebcam={() => { setCanvas({ type: 'webcam' }); addLog('canvas: open webcam'); emitUsed('webcam'); }}
-                    onScreenShare={() => { setCanvas({ type: 'screen' }); addLog('canvas: open screen share'); emitUsed('screen'); }}
+                    onScreenShare={() => { setCanvas({ type: 'screen' }); addLog('canvas: open screen share'); emitUsed('screenShare'); }}
                     onROI={() => { addLog('tool: ROI calculator'); emitUsed('roi'); }}
-                    onVideoToApp={() => { setCanvas({ type: 'video' }); addLog('canvas: open video2app'); emitUsed('video'); }}
-                    onPdf={() => { setCanvas({ type: 'pdf' }); addLog('canvas: open pdf summary'); emitUsed('pdf'); }}
+                    onVideoToApp={() => { setCanvas({ type: 'video' }); addLog('canvas: open video2app'); emitUsed('video2app'); }}
+                    onPdf={() => { setCanvas({ type: 'pdf' }); addLog('canvas: open pdf summary'); emitUsed('exportPdf'); }}
+                    onUrlContext={async () => {
+                      try {
+                        const input = prompt('Analyze URL or paste text:')
+                        if (!input) return
+                        const isUrl = /^(https?:\/\/)/i.test(input)
+                        addLog(`tool: urlContext → ${isUrl ? 'url' : 'text'}`)
+                        const res = await fetch('/api/tools/url', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'x-intelligence-session-id': sessionId || '' },
+                          body: JSON.stringify(isUrl ? { url: input, sessionId } : { text: input, sessionId })
+                        })
+                        if (!res.ok) throw new Error(`urlContext failed: ${res.status}`)
+                        const j = await res.json()
+                        const out = j?.output
+                        const title = out?.title || (out?.url || 'URL Context')
+                        const desc = out?.description || (out?.extractedText ? String(out.extractedText).slice(0, 240) : '')
+                        addMessage({ role: 'assistant', content: `${title}\n\n${desc}`.trim() })
+                        emitUsed('urlContext')
+                      } catch (e: any) {
+                        addLog(`urlContext: error → ${e?.message || 'unknown'}`, 'error')
+                      }
+                    }}
+                    onCalc={async () => {
+                      try {
+                        const nums = prompt('Enter numbers (comma-separated):')
+                        if (!nums) return
+                        const op = prompt('Operation (sum|avg|min|max, default=stats):') || 'stats'
+                        addLog(`tool: calc → ${op}`)
+                        const values = nums.split(',').map(s => Number(s.trim())).filter(n => Number.isFinite(n))
+                        if (values.length === 0) return
+                        const res = await fetch('/api/tools/calc', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'x-intelligence-session-id': sessionId || '' },
+                          body: JSON.stringify({ values, op, sessionId })
+                        })
+                        if (!res.ok) throw new Error(`calc failed: ${res.status}`)
+                        const j = await res.json()
+                        addMessage({ role: 'assistant', content: `Calc result (${op}): ${typeof j.output === 'object' ? JSON.stringify(j.output) : j.output}` })
+                        emitUsed('calc')
+                      } catch (e: any) {
+                        addLog(`calc: error → ${e?.message || 'unknown'}`, 'error')
+                      }
+                    }}
+                    onCode={async () => {
+                      try {
+                        const spec = prompt('Enter a short blueprint/spec to echo:')
+                        if (!spec) return
+                        addLog('tool: code')
+                        const res = await fetch('/api/tools/code', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'x-intelligence-session-id': sessionId || '' },
+                          body: JSON.stringify({ spec, sessionId })
+                        })
+                        if (!res.ok) throw new Error(`code failed: ${res.status}`)
+                        const j = await res.json()
+                        addMessage({ role: 'assistant', content: String(j.output || '') })
+                        emitUsed('code')
+                      } catch (e: any) {
+                        addLog(`code: error → ${e?.message || 'unknown'}`, 'error')
+                      }
+                    }}
                   />
                 </PromptInputTools>
               </PromptInputToolbar>
-              <PromptInputTextarea
-                placeholder="Message F.B/c… (paste a YouTube URL to open Video → App)"
-                className="min-h-[64px] md:min-h-[72px] text-base md:text-sm"
-                value={input}
-                onChange={(e) => {
-                  handleInputChange(e as any)
-                  const url = detectYouTubeURL(e.target.value)
-                  if (url) {
-                    setCanvas({ type: 'video', url })
-                    addLog(`detected youtube url → open video2app: ${url}`)
-                    emitUsed('video')
-                  }
-                }}
-                disabled={!consentAllowed}
-              />
+                <PromptInputTextarea
+                  placeholder="Message F.B/c… (paste a YouTube URL to open Video → App)"
+                  className="min-h-[64px] md:min-h-[72px] text-base md:text-sm"
+                  value={input}
+                  onChange={(e) => {
+                    handleInputChange(e as any)
+                    const url = detectYouTubeURL(e.target.value)
+                    if (url) {
+                      setCanvas({ type: 'video', url })
+                      addLog(`detected youtube url → open video2app: ${url}`)
+                      emitUsed('video2app')
+                    }
+                  }}
+                  disabled={!consentAllowed}
+                />
               <div className="flex items-center justify-between p-1">
                 <div className="flex items-center gap-2">
                   {coachNext === 'roi' && (
@@ -395,7 +643,7 @@ export function AIEChat() {
                   {coachNext === 'video' && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button data-coach-cta onClick={() => { addLog('coach → video'); setCanvas({ type: 'video' }); emitUsed('video'); }} aria-label="Open Video to App">
+                        <button data-coach-cta onClick={() => { addLog('coach → video'); setCanvas({ type: 'video' }); emitUsed('video2app'); }} aria-label="Open Video to App">
                           <Video className="h-3.5 w-3.5" /> Video → App
                         </button>
                       </TooltipTrigger>
@@ -405,7 +653,7 @@ export function AIEChat() {
                   {coachNext === 'screen' && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button data-coach-cta onClick={() => { addLog('coach → screen'); setCanvas({ type: 'screen' }); emitUsed('screen'); }} aria-label="Share screen">
+                        <button data-coach-cta onClick={() => { addLog('coach → screen'); setCanvas({ type: 'screen' }); emitUsed('screenShare'); }} aria-label="Share screen">
                           <Monitor className="h-3.5 w-3.5" /> Share Screen
                         </button>
                       </TooltipTrigger>
@@ -434,15 +682,34 @@ export function AIEChat() {
                   )}
                 </div>
                 <div className="flex items-center gap-3">
+                  <button
+                    className="hidden md:inline-flex items-center gap-1 rounded-full border border-border/50 bg-card/60 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"
+                    onClick={async () => {
+                      const toEmail = prompt('Send summary to email:')
+                      if (!toEmail) return
+                      addLog(`finish: generate + email summary → ${toEmail}`)
+                      try {
+                        const gen = await fetch('/api/export-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId }) })
+                        if (!gen.ok) throw new Error(`export failed: ${gen.status}`)
+                        const res = await fetch('/api/send-pdf-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, toEmail }) })
+                        if (!res.ok) throw new Error(`send failed: ${res.status}`)
+                        addLog('finish: emailed summary')
+                      } catch (e: any) {
+                        addLog(`finish: email error → ${e?.message || 'unknown'}`, 'error')
+                      }
+                    }}
+                  >
+                    Finish & Email
+                  </button>
                   {/* Progress chip */}
                   <div className="hidden md:inline-flex items-center gap-1 rounded-full border border-border/50 bg-card/60 px-2 py-0.5 text-[11px] text-muted-foreground">
                     <span className="inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
-                    {usedCaps.size}/16 explored
+                    {context?.capabilities?.length || 0}/16 explored
                   </div>
                   {/* Minimal icon buttons (no extra chrome) */}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button aria-label="PDF Summary" className="text-muted-foreground hover:text-foreground" onClick={() => { setCanvas({ type: 'pdf' }); addLog('canvas: open pdf (quick)'); emitUsed('pdf') }}>
+                      <button aria-label="PDF Summary" className="text-muted-foreground hover:text-foreground" onClick={() => { setCanvas({ type: 'pdf' }); addLog('canvas: open pdf (quick)'); emitUsed('exportPdf') }}>
                         <Download className="h-4 w-4" />
                       </button>
                     </TooltipTrigger>
@@ -450,27 +717,36 @@ export function AIEChat() {
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button aria-label="Video → App" className="text-muted-foreground hover:text-foreground" onClick={() => { setCanvas({ type: 'video' }); addLog('canvas: open video2app (quick)'); emitUsed('video') }}>
+                      <button aria-label="Video → App" className="text-muted-foreground hover:text-foreground" onClick={() => { setCanvas({ type: 'video' }); addLog('canvas: open video2app (quick)'); emitUsed('video2app') }}>
                         <Video className="h-4 w-4" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Video → App</TooltipContent>
                   </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button aria-label="Voice" className="text-muted-foreground hover:text-foreground" onClick={() => { setOpenVoice(true); addLog('voice: open overlay'); emitUsed('voice') }}>
-                        <FbcIcon className="h-4 w-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Voice</TooltipContent>
-                  </Tooltip>
+                  {liveEnabled && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button aria-label="Voice" className="text-muted-foreground hover:text-foreground" onClick={() => { setOpenVoice(true); addLog('voice: open overlay') }}>
+                          <FbcIcon className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Voice</TooltipContent>
+                    </Tooltip>
+                  )}
                   <PromptInputSubmit status={!input || !consentAllowed ? 'submitted' : undefined} className="rounded-full" />
                 </div>
               </div>
             </PromptInput>
           </div>
 
-          <VoiceOverlay open={openVoice} onCancel={() => { setOpenVoice(false); addLog('voice: cancel'); }} onAccept={() => { setOpenVoice(false); addLog('voice: accept'); }} />
+          {liveEnabled && (
+            <VoiceOverlay
+              open={openVoice}
+              sessionId={sessionId}
+              onCancel={() => { setOpenVoice(false); addLog('voice: cancel'); }}
+              onAccept={(t: string) => { setOpenVoice(false); addLog('voice: accept'); if (t && t.trim()) setInput(t) }}
+            />
+          )}
           {error || chatError ? (
             <div className="fixed inset-0 z-[60] grid place-items-center bg-background/70 backdrop-blur-sm p-4">
               <div className="max-w-md w-full">
@@ -628,8 +904,11 @@ export function AIEChat() {
                 <Button size="sm" onClick={async () => {
                   const toEmail = prompt('Send to email address:')
                   if (!toEmail) return
-                  addLog(`pdf: email send → ${toEmail}`)
+                  addLog(`pdf: generating + email send → ${toEmail}`)
                   try {
+                    // Ensure export is generated before emailing
+                    const gen = await fetch('/api/export-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId }) })
+                    if (!gen.ok) throw new Error(`export failed: ${gen.status}`)
                     const res = await fetch('/api/send-pdf-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, toEmail }) })
                     if (!res.ok) throw new Error(`send failed: ${res.status}`)
                     addLog('pdf: email sent')
@@ -639,7 +918,7 @@ export function AIEChat() {
                 }}>Send via Email</Button>
                 <Button size="sm" onClick={() => setCanvas(null)}>Close</Button>
               </div>
-              <iframe className="h-full w-full rounded border" src={`/api/export-summary?sessionId=${encodeURIComponent(sessionId)}`} />
+              <iframe className="h-full w-full rounded border" src={`/api/export-summary?sessionId=${encodeURIComponent(sessionId || '')}`} />
             </div>
           )}
         </CanvasWorkspace>

@@ -50,6 +50,7 @@ export function middleware(req: NextRequest) {
     '/api/analyze-screenshot',
     '/api/video-to-app',
     '/api/lead-research',
+    '/api/intelligence/lead-research',
     '/api/educational-content',
     '/api/ai-stream',
     '/api/export-summary'
@@ -66,7 +67,11 @@ export function middleware(req: NextRequest) {
     // Map specific routes to existing mock endpoints
     if (req.nextUrl.pathname.startsWith('/api/chat')) {
       mockUrl.pathname = '/api/mock/chat'
+    } else if (req.nextUrl.pathname.startsWith('/api/export-summary')) {
+      mockUrl.pathname = '/api/mock/export-summary'
     } else if (req.nextUrl.pathname.startsWith('/api/lead-research')) {
+      mockUrl.pathname = '/api/mock/lead-research'
+    } else if (req.nextUrl.pathname.startsWith('/api/intelligence/lead-research')) {
       mockUrl.pathname = '/api/mock/lead-research'
     } else {
       // For other routes, use a generic mock endpoint
@@ -93,6 +98,7 @@ export const config = {
     '/api/analyze-screenshot/:path*',
     '/api/video-to-app/:path*',
     '/api/lead-research/:path*',
+    '/api/intelligence/lead-research/:path*',
     '/api/educational-content/:path*',
     '/api/ai-stream/:path*',
     '/api/export-summary/:path*'

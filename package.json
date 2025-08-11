@@ -120,6 +120,7 @@
     "node-mocks-http": "latest",
     "node-notifier": "latest",
     "path": "latest",
+    "pdf-lib": "^1.17.1",
     "pdfkit": "latest",
     "puppeteer": "latest",
     "react": "^19",

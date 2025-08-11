@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer';
 import fs from 'fs';
 import path from 'path';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
 interface SummaryData {
   leadInfo: {
@@ -30,34 +31,113 @@ export async function generatePdfWithPuppeteer(
   summaryData: SummaryData,
   outputPath: string
 ): Promise<void> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
-
-  try {
-    const page = await browser.newPage();
-    
-    // Generate HTML content
-    const htmlContent = generateHtmlContent(summaryData);
-    
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-    
-    // Generate PDF
-    await page.pdf({
-      path: outputPath,
-      format: 'A4',
-      margin: {
-        top: '20mm',
-        right: '20mm',
-        bottom: '20mm',
-        left: '20mm'
-      },
-      printBackground: true
+  const preferChrome = process.env.PDF_USE_PUPPETEER === 'true'
+  // Prefer Chrome only if explicitly enabled; otherwise use pure JS pdf-lib
+  if (preferChrome) try {
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
+    try {
+      const page = await browser.newPage();
+      const htmlContent = generateHtmlContent(summaryData);
+      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+      await page.pdf({
+        path: outputPath,
+        format: 'A4',
+        margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
+        printBackground: true,
+      });
+      return
+    } finally {
+      await browser.close();
+    }
+  } catch (err) {
+    console.error('Puppeteer not available, falling back to pdf-lib:', (err as any)?.message || err)
+    await generatePdfWithPdfLib(summaryData, outputPath)
+  }
+  else {
+    await generatePdfWithPdfLib(summaryData, outputPath)
+  }
+}
 
-  } finally {
-    await browser.close();
+async function generatePdfWithPdfLib(summaryData: SummaryData, outputPath: string): Promise<void> {
+  const pdfDoc = await PDFDocument.create()
+  const page = pdfDoc.addPage([595.28, 841.89]) // A4 in points
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+
+  let y = 800
+  const marginX = 40
+  const lineHeight = 14
+
+  const drawText = (text: string, opts?: { size?: number; color?: any; bold?: boolean }) => {
+    const size = opts?.size ?? 11
+    const color = opts?.color ?? rgb(0.1, 0.1, 0.1)
+    page.drawText(text, { x: marginX, y, size, color, font: opts?.bold ? fontBold : font })
+    y -= lineHeight * 1.2
+  }
+
+  // Header
+  drawText('F.B/c AI Consulting', { size: 20, bold: true })
+  drawText('AI-Powered Lead Generation & Consulting Report', { size: 12, color: rgb(0.29, 0.33, 0.39) })
+  y -= 8
+
+  // Lead info
+  drawText('Lead Information', { size: 14, bold: true })
+  drawText(`Name: ${summaryData.leadInfo.name || 'Unknown'}`)
+  drawText(`Email: ${summaryData.leadInfo.email || 'Unknown'}`)
+  if (summaryData.leadInfo.company) drawText(`Company: ${summaryData.leadInfo.company}`)
+  if (summaryData.leadInfo.role) drawText(`Role: ${summaryData.leadInfo.role}`)
+  drawText(`Session ID: ${summaryData.sessionId}`)
+  y -= 4
+
+  // Executive Summary
+  if (summaryData.leadResearch?.conversation_summary) {
+    drawText('Executive Summary', { size: 14, bold: true })
+    wrapAndDrawText(sanitizeTextForPdf(summaryData.leadResearch.conversation_summary))
+    y -= 4
+  }
+
+  // Consultant Brief
+  if (summaryData.leadResearch?.consultant_brief) {
+    drawText('Consultant Brief', { size: 14, bold: true })
+    wrapAndDrawText(sanitizeTextForPdf(summaryData.leadResearch.consultant_brief))
+    y -= 4
+  }
+
+  // Footer
+  y = Math.max(y, 60)
+  page.drawText('Farzad Bayat — AI Consulting Specialist', { x: marginX, y: 50, size: 10, color: rgb(0.42, 0.45, 0.5), font })
+  page.drawText('www.farzadbayat.com', { x: marginX, y: 36, size: 10, color: rgb(0.98, 0.75, 0.14), font })
+
+  const pdfBytes = await pdfDoc.save()
+  await fs.promises.writeFile(outputPath, pdfBytes)
+
+  function wrapAndDrawText(text: string, size = 11) {
+    const maxWidth = 595.28 - marginX * 2
+    const words = text.split(/\s+/)
+    let line = ''
+    for (const word of words) {
+      const test = line ? line + ' ' + word : word
+      const width = (font.widthOfTextAtSize(test, size))
+      if (width > maxWidth) {
+        page.drawText(line, { x: marginX, y, size, font, color: rgb(0.28, 0.32, 0.35) })
+        y -= lineHeight
+        line = word
+        if (y < 80) { // add new page
+          y = 800
+          const newPage = pdfDoc.addPage([595.28, 841.89])
+          page.drawText = newPage.drawText.bind(newPage)
+        }
+      } else {
+        line = test
+      }
+    }
+    if (line) {
+      page.drawText(line, { x: marginX, y, size, font, color: rgb(0.28, 0.32, 0.35) })
+      y -= lineHeight
+    }
   }
 }
 

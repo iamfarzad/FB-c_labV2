@@ -4,6 +4,17 @@ import { createOptimizedConfig } from '@/lib/gemini-config-enhanced'
 import { selectModelForFeature, estimateTokens } from '@/lib/model-selector'
 import { enforceBudgetAndLog } from '@/lib/token-usage-logger'
 import { checkDemoAccess, recordDemoUsage, DemoFeature } from '@/lib/demo-budget-manager'
+import { embedTexts } from '@/lib/embeddings/gemini'
+import { upsertEmbeddings } from '@/lib/embeddings/query'
+const rl = new Map<string, { count: number; reset: number }>()
+const idem = new Map<string, { expires: number; body: any }>()
+function checkRate(key: string, max: number, windowMs: number) {
+  const now = Date.now(); const rec = rl.get(key)
+  if (!rec || rec.reset < now) { rl.set(key, { count: 1, reset: now + windowMs }); return true }
+  if (rec.count >= max) return false
+  rec.count++; return true
+}
+import { recordCapabilityUsed } from '@/lib/context/capabilities'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,8 +28,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No document data provided' }, { status: 400 })
     }
 
-    // Get session ID for demo budget tracking
-    const sessionId = request.headers.get('x-demo-session-id') || undefined
+    // Get session ID for tracking
+    const sessionId = request.headers.get('x-intelligence-session-id') || undefined
+    const idemKey = request.headers.get('x-idempotency-key') || undefined
+
+    const rlKey = `doc:${sessionId || 'anon'}`
+    if (!checkRate(rlKey, 10, 60_000)) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+    if (sessionId && idemKey) {
+      const k = `${sessionId}:${idemKey}`
+      const cached = idem.get(k)
+      if (cached && cached.expires > Date.now()) return NextResponse.json(cached.body)
+    }
     const userId = request.headers.get('x-user-id') || undefined
 
     // Estimate tokens for the document content
@@ -136,13 +156,39 @@ Please provide a structured analysis with clear sections.`
       )
     }
 
-    return NextResponse.json({
+    if (sessionId) {
+      try {
+        await recordCapabilityUsed(String(sessionId), 'doc', {
+          fileName,
+          mimeType,
+          tokensUsed: actualInputTokens + actualOutputTokens,
+        })
+      } catch {}
+    }
+
+    const bodyOut = {
       analysis: analysisResult,
       fileName,
       modelUsed: modelSelection.model,
       tokensUsed: actualInputTokens + actualOutputTokens,
       estimatedCost: modelSelection.estimatedCost
-    })
+    }
+
+    if (sessionId && idemKey) {
+      idem.set(`${sessionId}:${idemKey}`, { expires: Date.now() + 5 * 60_000, body: bodyOut })
+    }
+
+    // Optional memory insert (flag)
+    if (process.env.EMBEDDINGS_ENABLED === 'true' && sessionId) {
+      try {
+        if (analysisResult?.trim()) {
+          const vecs = await embedTexts([analysisResult], 1536)
+          if (vecs && vecs[0]) await upsertEmbeddings(String(sessionId), 'doc', [analysisResult], vecs)
+        }
+      } catch {}
+    }
+
+    return NextResponse.json(bodyOut)
 
   } catch (error: any) {
     console.error('Document analysis error:', error)

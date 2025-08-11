@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
         : null
 
       if (baseUrl) {
-        fetch(`${baseUrl}/api/lead-research`, {
+        fetch(`${baseUrl}/api/intelligence/lead-research`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

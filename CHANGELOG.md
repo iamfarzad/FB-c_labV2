@@ -25,6 +25,31 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Security and DB Policies - 2025-08-11
+- Synced Supabase RLS with production:
+  - conversation_contexts, intent_classifications, capability_usage: authenticated users can only read their own by email/session mapping
+  - conversation_insights, follow_up_tasks, voice_sessions: authenticated users restricted via `leads.user_id = auth.uid()` for SELECT/INSERT
+- Replaced permissive public policies on conversation tables with strict ownership checks
+- Hardened DB functions:
+  - Added `public.secure_function_template` with SECURITY DEFINER and empty search_path
+  - Replaced `get_slow_queries` with SECURITY DEFINER and revoked PUBLIC EXECUTE
+- Index maintenance:
+  - Added missing `idx_leads_user_id`
+  - Dropped a set of unused/duplicate indexes to cut bloat and planner noise
+
+### Phase 1–2 Stabilization - 2025-08-10
+### Voice Overlay Modernization - 2025-08-11
+- Replaced legacy `VoiceOverlay` implementation with wrapper around `components/chat/tools/VoiceInput` (FbcVoiceOrb UI)
+- Removed deprecated `hooks/useLiveSession.ts`; unified on WebSocket pipeline with VAD and TURN handling
+- Ensures 16kHz PCM chunking, 500ms VAD silence threshold, and TURN_COMPLETE routing server-side
+
+- Conversational Intelligence Phase 1: session persistence hardened, idempotent `session-init`, stable `context` with ETag/304 and rate limits, unified `intelligence-session-id`.
+- Conversational Intelligence Phase 2: added `POST /api/intelligence/intent` and `POST /api/intelligence/suggestions`, UI `SuggestedActions` and wiring in `AIEChat` (first user message → intent; suggestions rendered and actionable).
+- Capability tracking: server-side recording for `translate` and `exportPdf`; progress chip and suggestions now reflect server snapshot.
+- Suggestion engine: simple role/industry ranking.
+- Tests: unit (intent detector, suggestion engine) and Playwright e2e for Phase 2 acceptance.
+- Dev: fixed `scripts/check-dev-processes.js` (ESM→CJS) to allow `pnpm dev:safe` with port/process guard.
+
 ### UI Motion Polish - 2025-08-09
 - Added reusable micro-animation components: `components/ui/fade-in.tsx`, `components/ui/motion-card.tsx`, `components/ui/stat-counter.tsx`
 - Home (`app/page.tsx`):

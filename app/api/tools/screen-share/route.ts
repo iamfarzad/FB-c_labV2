@@ -5,6 +5,7 @@ import { selectModelForFeature, estimateTokens } from '@/lib/model-selector'
 import { enforceBudgetAndLog } from '@/lib/token-usage-logger'
 import { checkDemoAccess, recordDemoUsage, DemoFeature } from '@/lib/demo-budget-manager'
 import { ScreenShareSchema } from '@/lib/services/tool-service'
+import { recordCapabilityUsed } from '@/lib/context/capabilities'
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,6 +29,9 @@ export async function POST(req: NextRequest) {
           processedAt: new Date().toISOString()
         }
       }
+      if (sessionId) {
+        try { await recordCapabilityUsed(String(sessionId), 'screenShare', { mode: 'fallback', imageSize: image.length }) } catch {}
+      }
       return NextResponse.json(response, { status: 200 })
     }
     
@@ -35,8 +39,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No image data provided' }, { status: 400 })
     }
 
-    // Get session ID for demo budget tracking
-    const sessionId = req.headers.get('x-demo-session-id') || undefined
+    // Get session ID for tracking
+    const sessionId = req.headers.get('x-intelligence-session-id') || undefined
     const userId = req.headers.get('x-user-id') || undefined
 
     // Estimate tokens for the analysis
@@ -145,6 +149,10 @@ Focus on identifying business process improvements and automation opportunities.
           isBase64: image.startsWith('data:image'),
           processedAt: new Date().toISOString()
         }
+      }
+
+      if (sessionId) {
+        try { await recordCapabilityUsed(String(sessionId), 'screenShare', { insights: response.data.insights, imageSize: image.length }) } catch {}
       }
 
       return NextResponse.json(response, { status: 200 })

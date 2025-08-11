@@ -332,11 +332,7 @@ export default function AIEChatPage() {
             </PromptInput>
           </div>
           {/* Voice overlay trigger */}
-          <VoiceOverlay
-            open={openVoice}
-            onCancel={() => setOpenVoice(false)}
-            onAccept={() => setOpenVoice(false)}
-          />
+          <VoiceOverlay open={openVoice} onCancel={() => setOpenVoice(false)} onAccept={() => setOpenVoice(false)} />
           {/* Error overlay */}
           {error && (
             <div className="fixed inset-0 z-[60] grid place-items-center bg-background/70 backdrop-blur-sm p-4">

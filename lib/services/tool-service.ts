@@ -44,7 +44,7 @@ export const handleROICalculation = async (result: ROICalculationResult) => {
     const validatedResult = ROICalculationSchema.parse(result)
     
     // Business logic for ROI calculation
-    const response = await fetch('/api/tools/roi-calculation', {
+    const response = await fetch('/api/calculate-roi', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(validatedResult)

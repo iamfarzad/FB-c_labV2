@@ -116,7 +116,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, x-correlation-id, x-demo-session-id, x-user-id"
+          "value": "Content-Type, x-correlation-id, x-intelligence-session-id, x-user-id"
         }
       ]
     }

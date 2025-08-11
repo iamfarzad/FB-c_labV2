@@ -18,7 +18,7 @@ export const API_ROUTES: Record<string, ApiRouteConfig> = {
     requiresApiKey: true
   },
   leadResearch: {
-    realEndpoint: '/api/lead-research',
+    realEndpoint: '/api/intelligence/lead-research',
     mockEndpoint: '/api/mock/lead-research',
     requiresApiKey: true
   },

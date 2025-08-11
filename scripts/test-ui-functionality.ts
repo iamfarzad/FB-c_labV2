@@ -89,7 +89,7 @@ async function testGeminiLiveAPI() {
 }
 
 async function testLeadResearchAPI() {
-  const response = await fetch(`${BASE_URL}/api/lead-research`, {
+  const response = await fetch(`${BASE_URL}/api/intelligence/lead-research`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
