@@ -578,67 +578,6 @@ export function AIEChat() {
                     onScreenShare={() => { setCanvas({ type: 'screen' }); addLog('canvas: open screen share'); emitUsed('screenShare'); }}
                     onROI={() => { addLog('tool: ROI calculator'); emitUsed('roi'); }}
                     onVideoToApp={() => { setCanvas({ type: 'video' }); addLog('canvas: open video2app'); emitUsed('video2app'); }}
-                    onUrlContext={async () => {
-                      try {
-                        const input = prompt('Analyze URL or paste text:')
-                        if (!input) return
-                        const isUrl = /^(https?:\/\/)/i.test(input)
-                        addLog(`tool: urlContext → ${isUrl ? 'url' : 'text'}`)
-                        const res = await fetch('/api/tools/url', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json', 'x-intelligence-session-id': sessionId || '' },
-                          body: JSON.stringify(isUrl ? { url: input, sessionId } : { text: input, sessionId })
-                        })
-                        if (!res.ok) throw new Error(`urlContext failed: ${res.status}`)
-                        const j = await res.json()
-                        const out = j?.output
-                        const title = out?.title || (out?.url || 'URL Context')
-                        const desc = out?.description || (out?.extractedText ? String(out.extractedText).slice(0, 240) : '')
-                        addMessage({ role: 'assistant', content: `${title}\n\n${desc}`.trim() })
-                        emitUsed('urlContext')
-                      } catch (e: any) {
-                        addLog(`urlContext: error → ${e?.message || 'unknown'}`, 'error')
-                      }
-                    }}
-                    onCalc={async () => {
-                      try {
-                        const nums = prompt('Enter numbers (comma-separated):')
-                        if (!nums) return
-                        const op = prompt('Operation (sum|avg|min|max, default=stats):') || 'stats'
-                        addLog(`tool: calc → ${op}`)
-                        const values = nums.split(',').map(s => Number(s.trim())).filter(n => Number.isFinite(n))
-                        if (values.length === 0) return
-                        const res = await fetch('/api/tools/calc', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json', 'x-intelligence-session-id': sessionId || '' },
-                          body: JSON.stringify({ values, op, sessionId })
-                        })
-                        if (!res.ok) throw new Error(`calc failed: ${res.status}`)
-                        const j = await res.json()
-                        addMessage({ role: 'assistant', content: `Calc result (${op}): ${typeof j.output === 'object' ? JSON.stringify(j.output) : j.output}` })
-                        emitUsed('calc')
-                      } catch (e: any) {
-                        addLog(`calc: error → ${e?.message || 'unknown'}`, 'error')
-                      }
-                    }}
-                    onCode={async () => {
-                      try {
-                        const spec = prompt('Enter a short blueprint/spec to echo:')
-                        if (!spec) return
-                        addLog('tool: code')
-                        const res = await fetch('/api/tools/code', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json', 'x-intelligence-session-id': sessionId || '' },
-                          body: JSON.stringify({ spec, sessionId })
-                        })
-                        if (!res.ok) throw new Error(`code failed: ${res.status}`)
-                        const j = await res.json()
-                        addMessage({ role: 'assistant', content: String(j.output || '') })
-                        emitUsed('code')
-                      } catch (e: any) {
-                        addLog(`code: error → ${e?.message || 'unknown'}`, 'error')
-                      }
-                    }}
                   />
                 </PromptInputTools>
               </PromptInputToolbar>

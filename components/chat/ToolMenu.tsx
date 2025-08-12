@@ -14,9 +14,6 @@ export interface ToolMenuProps {
   onScreenShare?: () => void
   onROI?: () => void
   onVideoToApp?: () => void
-  onUrlContext?: () => void
-  onCalc?: () => void
-  onCode?: () => void
   disabled?: boolean
   className?: string
 }
@@ -28,9 +25,6 @@ export function ToolMenu({
   onScreenShare,
   onROI,
   onVideoToApp,
-  onUrlContext,
-  onCalc,
-  onCode,
   disabled,
   className,
 }: ToolMenuProps) {
@@ -86,21 +80,6 @@ export function ToolMenu({
         {onVideoToApp && (
           <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onVideoToApp}>
             <Video className="w-4 h-4" /> Video → App
-          </DropdownMenuItem>
-        )}
-        {onUrlContext && (
-          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onUrlContext}>
-            <span className="w-4 h-4">🌐</span> URL Context
-          </DropdownMenuItem>
-        )}
-        {onCalc && (
-          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onCalc}>
-            <Calculator className="w-4 h-4" /> Custom Calc
-          </DropdownMenuItem>
-        )}
-        {onCode && (
-          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onCode}>
-            <FileText className="w-4 h-4" /> Code Blueprint
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
