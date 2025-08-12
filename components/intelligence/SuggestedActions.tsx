@@ -55,12 +55,12 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun }: Props) 
   return (
     <div className="mt-2 flex flex-wrap gap-2">
       {suggestions.map(s => (
-        <Button
-          key={s.id}
-          size="sm"
-          variant={s.capability === 'exportPdf' ? 'default' : 'outline'}
-          onClick={() => onRun?.(s)}
-        >
+            <Button
+              key={s.id}
+              size="sm"
+              variant={s.capability === 'exportPdf' ? 'default' : 'outline'}
+              onClick={() => onRun?.(s)}
+            >
           {s.label}
         </Button>
       ))}

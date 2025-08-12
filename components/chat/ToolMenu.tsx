@@ -4,7 +4,7 @@ import * as React from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
-import { Plus, FileText, ImageIcon, Camera, Monitor, Calculator, Video, Download } from "@/lib/icon-mapping"
+import { Plus, FileText, ImageIcon, Camera, Monitor, Calculator, Video } from "@/lib/icon-mapping"
 import { cn } from "@/lib/utils"
 
 export interface ToolMenuProps {
@@ -14,7 +14,6 @@ export interface ToolMenuProps {
   onScreenShare?: () => void
   onROI?: () => void
   onVideoToApp?: () => void
-  onPdf?: () => void
   onUrlContext?: () => void
   onCalc?: () => void
   onCode?: () => void
@@ -29,7 +28,6 @@ export function ToolMenu({
   onScreenShare,
   onROI,
   onVideoToApp,
-  onPdf,
   onUrlContext,
   onCalc,
   onCode,
@@ -88,11 +86,6 @@ export function ToolMenu({
         {onVideoToApp && (
           <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onVideoToApp}>
             <Video className="w-4 h-4" /> Video → App
-          </DropdownMenuItem>
-        )}
-        {onPdf && (
-          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onPdf}>
-            <Download className="w-4 h-4" /> PDF Summary
           </DropdownMenuItem>
         )}
         {onUrlContext && (

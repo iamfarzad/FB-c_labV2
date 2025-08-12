@@ -548,7 +548,6 @@ export function AIEChat() {
                     onScreenShare={() => { setCanvas({ type: 'screen' }); addLog('canvas: open screen share'); emitUsed('screenShare'); }}
                     onROI={() => { addLog('tool: ROI calculator'); emitUsed('roi'); }}
                     onVideoToApp={() => { setCanvas({ type: 'video' }); addLog('canvas: open video2app'); emitUsed('video2app'); }}
-                    onPdf={() => { setCanvas({ type: 'pdf' }); addLog('canvas: open pdf summary'); emitUsed('exportPdf'); }}
                     onUrlContext={async () => {
                       try {
                         const input = prompt('Analyze URL or paste text:')
