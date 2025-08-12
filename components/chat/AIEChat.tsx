@@ -28,6 +28,10 @@ import { useConversationalIntelligence } from '@/hooks/useConversationalIntellig
 import { isFlagEnabled } from '@/lib/flags'
 import CitationDisplay from '@/components/chat/CitationDisplay'
 import SuggestedActions from '@/components/intelligence/SuggestedActions'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
 export function AIEChat() {
   const [sessionId, setSessionId] = useState<string | null>(() => {
@@ -650,25 +654,7 @@ export function AIEChat() {
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <button
-                    className="hidden md:inline-flex items-center gap-1 rounded-full border border-border/50 bg-card/60 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"
-                    onClick={async () => {
-                      const toEmail = prompt('Send summary to email:')
-                      if (!toEmail) return
-                      addLog(`finish: generate + email summary → ${toEmail}`)
-                      try {
-                        const gen = await fetch('/api/export-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId }) })
-                        if (!gen.ok) throw new Error(`export failed: ${gen.status}`)
-                        const res = await fetch('/api/send-pdf-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, toEmail }) })
-                        if (!res.ok) throw new Error(`send failed: ${res.status}`)
-                        addLog('finish: emailed summary')
-                      } catch (e: any) {
-                        addLog(`finish: email error → ${e?.message || 'unknown'}`, 'error')
-                      }
-                    }}
-                  >
-                    Finish & Email
-                  </button>
+                  <FinishAndEmailButton sessionId={sessionId} addLog={addLog} />
                   {/* Progress chip */}
                   <div className="hidden md:inline-flex items-center gap-1 rounded-full border border-border/50 bg-card/60 px-2 py-0.5 text-[11px] text-muted-foreground">
                     <span className="inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
@@ -885,6 +871,63 @@ export function AIEChat() {
         </CanvasWorkspace>
       </div>
     </TooltipProvider>
+  )
+}
+
+function FinishAndEmailButton({ sessionId, addLog }: { sessionId: string | null, addLog: (msg: string, level?: any) => void }) {
+  const [open, setOpen] = useState(false)
+  const [email, setEmail] = useState('contact@farzadbayat.com')
+  const [isSending, setIsSending] = useState(false)
+  return (
+    <>
+      <button
+        className="hidden md:inline-flex items-center gap-1 rounded-full border border-border/50 bg-card/60 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"
+        onClick={() => setOpen(true)}
+      >
+        Finish & Email
+      </button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send summary via email</DialogTitle>
+            <DialogDescription>We’ll generate the PDF and email it to the recipient.</DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault()
+              const toEmail = email.trim()
+              if (!toEmail) return
+              setIsSending(true)
+              addLog(`finish: generate + email summary → ${toEmail}`)
+              try {
+                const gen = await fetch('/api/export-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId }) })
+                if (!gen.ok) throw new Error(`export failed: ${gen.status}`)
+                const res = await fetch('/api/send-pdf-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, toEmail }) })
+                if (!res.ok) throw new Error(`send failed: ${res.status}`)
+                addLog('finish: emailed summary')
+                setOpen(false)
+              } catch (e: any) {
+                addLog(`finish: email error → ${e?.message || 'unknown'}`, 'error')
+              } finally {
+                setIsSending(false)
+              }
+            }}
+            className="space-y-3"
+          >
+            <div className="space-y-1">
+              <Label htmlFor="finish-email">Recipient email</Label>
+              <Input id="finish-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" required />
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <button type="button" className={cn('h-9 rounded-md border px-3 text-sm', 'border-border/50 bg-card/60 text-muted-foreground hover:text-foreground')} onClick={() => setOpen(false)} disabled={isSending}>Cancel</button>
+              <button type="submit" className={cn('h-9 rounded-md bg-primary px-3 text-sm text-primary-foreground hover:opacity-90', isSending && 'opacity-70')} disabled={isSending}>
+                {isSending ? 'Sending…' : 'Send'}
+              </button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
