@@ -63,6 +63,12 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun }: Props) 
             >
           {s.label}
         </Button>
+            {s.id === 'meeting' && (
+              <div className="mt-2 w-full">
+                <script src="https://app.cal.com/embed/embed.js" defer />
+                <cal-inline username="farzad-bayat" event="30min" style={{ width: '100%', height: '540px' }} />
+              </div>
+            )}
       ))}
     </div>
   )

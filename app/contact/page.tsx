@@ -36,12 +36,13 @@ export default function ContactPage() {
             <Calendar className="h-8 w-8 text-primary" />
           </div>
           <h3 className="text-xl font-bold">Schedule Your AI Consultation</h3>
-          <p className="mt-2 text-muted-foreground">Use my Calendly link to book a 30-minute AI consultation call that works for your schedule.</p>
-          <Button asChild className="mt-6 w-full">
-            <a href="https://calendly.com/farzad-bayat/30min" target="_blank" rel="noopener noreferrer">
-              Book Your AI Consultation
-            </a>
-          </Button>
+          <p className="mt-2 text-muted-foreground">Book a free 30‑minute call. Picks a time from my live availability.</p>
+          {/* Cal.com inline embed */}
+          <div className="mt-6 w-full rounded-xl border bg-background/60 p-2 md:p-4">
+            <script src="https://app.cal.com/embed/embed.js" defer />
+            {/* username/event can be changed here */}
+            <cal-inline username="farzad-bayat" event="30min" style={{ width: '100%', height: '650px' }} />
+          </div>
         </MotionCard>
         </FadeIn>
         <FadeIn delay={0.08}>
