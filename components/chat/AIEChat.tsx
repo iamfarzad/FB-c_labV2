@@ -706,14 +706,7 @@ export function AIEChat() {
                     {context?.capabilities?.length || 0}/16 explored
                   </div>
                   {/* Minimal icon buttons (no extra chrome) */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button aria-label="PDF Summary" className="text-muted-foreground hover:text-foreground" onClick={() => { setCanvas({ type: 'pdf' }); addLog('canvas: open pdf (quick)'); emitUsed('exportPdf') }}>
-                        <Download className="h-4 w-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>PDF Summary</TooltipContent>
-                  </Tooltip>
+                  {null}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button aria-label="Video → App" className="text-muted-foreground hover:text-foreground" onClick={() => { setCanvas({ type: 'video' }); addLog('canvas: open video2app (quick)'); emitUsed('video2app') }}>
