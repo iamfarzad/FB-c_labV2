@@ -53,10 +53,17 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun }: Props) 
 
   // Only surface PDF-related CTAs as chips; all other tools (search, video2app, etc.)
   // should render inline when the AI actually uses them.
-  const visible = suggestions.filter(s => {
+  // Ensure we always surface a booking CTA alongside PDF
+  const hasMeeting = suggestions.some(s => s?.capability === 'meeting')
+  const augmented = hasMeeting
+    ? suggestions
+    : [...suggestions, { id: 'meeting-static', capability: 'meeting', label: 'Book a Call' } as Suggestion]
+
+  const visible = augmented.filter(s => {
     if (!s) return false
     if (s.capability === 'exportPdf') return true
     if (s.id === 'finish' && s.capability === 'exportPdf') return true
+    if (s.capability === 'meeting') return true
     return false
   })
   if (visible.length === 0) return null
