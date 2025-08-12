@@ -41,7 +41,7 @@ export default function ContactPage() {
           <div className="mt-6 w-full rounded-xl border bg-background/60 p-2 md:p-4">
             <script src="https://app.cal.com/embed/embed.js" defer />
             {/* username/event can be changed here */}
-            <cal-inline username="farzad-bayat" event="30min" style={{ width: '100%', height: '650px' }} />
+            <cal-inline data-ui="true" username="farzad-bayat" event="30min" style={{ width: '100%', height: '650px' }} />
           </div>
         </MotionCard>
         </FadeIn>

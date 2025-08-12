@@ -15,14 +15,15 @@ export function middleware(req: NextRequest) {
   const isDev = process.env.NODE_ENV === 'development'
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.cal.com",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
     `connect-src 'self' https: https://generativelanguage.googleapis.com https://*.googleapis.com ` +
     (isDev ? 'wss://localhost:3001 ws://localhost:3001 ws://localhost:8787 ' : '') +
-    "wss://fb-consulting-websocket.fly.dev wss:",
+    "wss://fb-consulting-websocket.fly.dev wss: https://app.cal.com https://api.cal.com https://*.cal.com",
     "media-src 'self' blob: data: https:",
+    "frame-src 'self' https://app.cal.com https://*.cal.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
