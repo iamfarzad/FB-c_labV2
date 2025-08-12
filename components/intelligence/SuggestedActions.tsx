@@ -50,11 +50,20 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun }: Props) 
 
   if (!sessionId) return null
   if (isLoading && suggestions.length === 0) return null
-  if (suggestions.length === 0) return null
+
+  // Only surface PDF-related CTAs as chips; all other tools (search, video2app, etc.)
+  // should render inline when the AI actually uses them.
+  const visible = suggestions.filter(s => {
+    if (!s) return false
+    if (s.capability === 'exportPdf') return true
+    if (s.id === 'finish' && s.capability === 'exportPdf') return true
+    return false
+  })
+  if (visible.length === 0) return null
 
   return (
     <div className="mt-2 flex flex-wrap gap-2">
-      {suggestions.map(s => (
+      {visible.map(s => (
             <Button
               key={s.id}
               size="sm"
