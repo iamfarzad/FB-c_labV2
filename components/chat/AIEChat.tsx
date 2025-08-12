@@ -268,9 +268,39 @@ export function AIEChat() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length, consentAllowed, sessionId])
 
-  function handleSuggestionRun(s: { capability?: string; label: string }) {
+  async function handleSuggestionRun(s: { id?: string; capability?: string; label: string }) {
     const cap = s.capability
     if (!cap) return
+    // Fast-lane: Finish & Email (generate + email, no canvas)
+    if (s.id === 'finish' && cap === 'exportPdf') {
+      try {
+        addLog('finish: generating pdf')
+        const gen = await fetch('/api/export-summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
+        })
+        if (!gen.ok) throw new Error(`export failed: ${gen.status}`)
+        addLog('finish: pdf generated')
+        const toEmail = (lead?.email || '').trim() || prompt('Send to email:') || ''
+        if (!toEmail) {
+          addLog('finish: email skipped (no address)', 'warn' as any)
+          return
+        }
+        addLog(`finish: emailing → ${toEmail}`)
+        const res = await fetch('/api/send-pdf-summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, toEmail })
+        })
+        if (!res.ok) throw new Error(`send failed: ${res.status}`)
+        addLog('finish: email sent')
+        emitUsed('exportPdf')
+      } catch (e: any) {
+        addLog(`finish: error → ${e?.message || 'unknown'}`, 'error')
+      }
+      return
+    }
     switch (cap) {
       case 'search':
         setSearchOpen(true)
