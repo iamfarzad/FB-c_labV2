@@ -508,6 +508,19 @@ export const ChatArea = memo(function ChatArea({
             </ToolContent>
           </Tool>
         )
+      case 'meeting':
+        return (
+          <Tool className="rounded-2xl border-border/30">
+            <ToolHeader type={`tool-meeting`} state={"input-available"} />
+            <ToolContent>
+              <div className="w-full">
+                {/* Cal.com inline embed */}
+                <script src="https://app.cal.com/embed/embed.js" defer />
+                <cal-inline username="farzad-bayat" event="30min" style={{ width: '100%', height: '540px' }} />
+              </div>
+            </ToolContent>
+          </Tool>
+        )
       default:
         return null
     }
