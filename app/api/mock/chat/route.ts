@@ -32,11 +32,11 @@ export async function POST(req: NextRequest) {
       start(controller) {
         // Send the response in chunks to simulate streaming
         const chunks = [
-          JSON.stringify({ type: 'start', id: mockResponse.id }),
-          JSON.stringify({ type: 'content', content: mockResponse.content }),
-          JSON.stringify({ type: 'metadata', metadata: mockResponse.metadata }),
-          JSON.stringify({ type: 'sources', sources: mockResponse.sources }),
-          JSON.stringify({ type: 'end' })
+          `data: ${JSON.stringify({ type: 'start', id: mockResponse.id })}`,
+          `data: ${JSON.stringify({ type: 'content', content: mockResponse.content })}`,
+          `data: ${JSON.stringify({ type: 'metadata', metadata: mockResponse.metadata })}`,
+          `data: ${JSON.stringify({ type: 'sources', sources: mockResponse.sources })}`,
+          `data: ${JSON.stringify({ type: 'end' })}`
         ]
 
         let index = 0
