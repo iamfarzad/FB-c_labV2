@@ -63,7 +63,6 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun }: Props) 
             >
           {s.label}
         </Button>
-            {/* Inline booking is rendered by ChatArea when toolType==='meeting' */}
       ))}
     </div>
   )
