@@ -207,14 +207,16 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     try {
       if (!wsUrl) {
         const hostname = window.location.hostname
-        const isLocal = hostname === 'localhost' || hostname === '127.0.0.1'
-        if (isLocal) {
-          const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
-          wsUrl = `${scheme}://localhost:3001`
+        const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
+        const isPrivateLan = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname)
+        const isLoopback = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.local')
+        if (isPrivateLan || isLoopback) {
+          // Use the current host for LAN access instead of forcing localhost
+          wsUrl = `${scheme}://${hostname}:3001`
         } else {
-          // Sensible production default
+          // Production default
           wsUrl = 'wss://fb-consulting-websocket.fly.dev'
-          console.warn('[useWebSocketVoice] NEXT_PUBLIC_LIVE_SERVER_URL not set; defaulting to Fly URL', wsUrl)
+          console.warn('[useWebSocketVoice] Non-local host detected; defaulting to Fly URL', { hostname, wsUrl })
         }
       }
       // Force mock WS when voiceMock=1 is present (e2e/testing convenience)
