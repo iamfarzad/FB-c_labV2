@@ -203,21 +203,21 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     }
 
     // Resolve WebSocket URL based on env and runtime to avoid protocol mismatch locally
-    let wsUrl = process.env.NEXT_PUBLIC_LIVE_SERVER_URL
+    let wsUrl: string | undefined
     try {
-      if (!wsUrl) {
-        const hostname = window.location.hostname
-        const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
-        const isPrivateLan = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname)
-        const isLoopback = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.local')
-        if (isPrivateLan || isLoopback) {
-          // Use the current host for LAN access instead of forcing localhost
-          wsUrl = `${scheme}://${hostname}:3001`
-        } else {
-          // Production default
-          wsUrl = 'wss://fb-consulting-websocket.fly.dev'
-          console.warn('[useWebSocketVoice] Non-local host detected; defaulting to Fly URL', { hostname, wsUrl })
-        }
+      const hostname = window.location.hostname
+      const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
+      const isPrivateLan = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname)
+      const isLoopback = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.local')
+      if (isPrivateLan || isLoopback) {
+        // ALWAYS prefer local WS when page is local/LAN, regardless of env var
+        wsUrl = `${scheme}://${hostname}:3001`
+      } else if (process.env.NEXT_PUBLIC_LIVE_SERVER_URL) {
+        wsUrl = process.env.NEXT_PUBLIC_LIVE_SERVER_URL
+      } else {
+        // Production default
+        wsUrl = 'wss://fb-consulting-websocket.fly.dev'
+        console.warn('[useWebSocketVoice] Non-local host detected; defaulting to Fly URL', { hostname, wsUrl })
       }
       // Force mock WS when voiceMock=1 is present (e2e/testing convenience)
       if (typeof window !== 'undefined') {
