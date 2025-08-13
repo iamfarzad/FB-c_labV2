@@ -1,4 +1,6 @@
 // Legacy API Routes test suite — skipped under App Router implementation
-describe.skip('Chat API Route (legacy)', () => {})
+describe('Chat API Route (legacy)', () => {
+  it.skip('skipped', () => {})
+})
 
 export {}
