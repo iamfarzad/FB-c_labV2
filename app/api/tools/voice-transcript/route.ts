@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { VoiceTranscriptSchema } from '@/lib/services/tool-service'
+import type { ToolRunResult } from '@/types/intelligence'
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,9 +18,9 @@ export async function POST(req: NextRequest) {
     const wordCount = processedTranscript.split(' ').length
     const estimatedDuration = wordCount * 0.5 // Rough estimate: 2 words per second
     
-    const response = {
-      status: 'success',
-      data: {
+    const response: ToolRunResult = {
+      ok: true,
+      output: {
         transcript: processedTranscript,
         wordCount,
         estimatedDuration,
@@ -33,23 +34,9 @@ export async function POST(req: NextRequest) {
     console.error('Voice transcript API error:', error)
     
     if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json(
-        { 
-          status: 'error',
-          error: 'Invalid input data',
-          details: error.message 
-        },
-        { status: 400 }
-      )
+      return NextResponse.json({ ok: false, error: 'Invalid input data' } satisfies ToolRunResult, { status: 400 })
     }
     
-    return NextResponse.json(
-      { 
-        status: 'error',
-        error: 'Internal server error',
-        details: 'Failed to process voice transcript'
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ ok: false, error: 'Internal server error' } satisfies ToolRunResult, { status: 500 })
   }
 }

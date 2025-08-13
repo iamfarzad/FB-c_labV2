@@ -37,7 +37,7 @@ export function middleware(req: NextRequest) {
     return response
   }
 
-  const enableMocking = process.env.ENABLE_GEMINI_MOCKING === 'true'
+  const enableMocking = process.env.ENABLE_GEMINI_MOCKING === 'true' || process.env.FBC_USE_MOCKS === '1' || process.env.NEXT_PUBLIC_USE_MOCKS === '1'
   if (!enableMocking) {
     return response
   }

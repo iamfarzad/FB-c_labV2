@@ -1,4 +1,5 @@
-import { GoogleGenAI } from '@google/genai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
+import { isMockEnabled } from '@/lib/mock-control'
 import type { NextRequest } from 'next/server'
 import { recordCapabilityUsed } from '@/lib/context/capabilities'
 import { translationRequestSchema, validateRequest, sanitizeString } from '@/lib/validation'
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
     const cleanText = sanitizeString(text)
     const sessionId = bodySessionId || req.headers.get('x-intelligence-session-id') || null
 
-    if (!process.env.GEMINI_API_KEY || process.env.ENABLE_GEMINI_MOCKING === 'true') {
+    if (!process.env.GEMINI_API_KEY || isMockEnabled()) {
       const mocked = `[mock-${targetLang}] ${cleanText}`
       if (sessionId) {
         try { await recordCapabilityUsed(String(sessionId), 'translate', { targetLang, sourceLang, inputLength: cleanText.length, outputLength: mocked.length, mocked: true }) } catch {}
@@ -42,8 +43,8 @@ export async function POST(req: NextRequest) {
       metadata: { correlationId, length: cleanText.length }
     })
 
-    const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
-    const model = client.models.generateContent
+    const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+    const model = client.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
     const prompt = `Translate the following text${sourceLang ? ` from ${sourceLang}` : ''} into ${targetLang}.
 Preserve meaning, tone, and formatting. Return only the translated text, no preface.
@@ -53,13 +54,12 @@ Text:
 ${cleanText}
 """`
 
-    const result = await model({
-      model: 'gemini-2.0-flash',
+    const result = await model.generateContent({
       contents: [ { role: 'user', parts: [{ text: prompt }] } ],
-      config: { maxOutputTokens: Math.min(4096, Math.ceil(cleanText.length * 1.2)) }
+      generationConfig: { maxOutputTokens: Math.min(4096, Math.ceil(cleanText.length * 1.2)) }
     })
 
-    const translated = result.response?.text() ?? ''
+    const translated = result.response?.text() || ''
 
     if (sessionId) {
       try { await recordCapabilityUsed(String(sessionId), 'translate', { targetLang, sourceLang, inputLength: cleanText.length, outputLength: translated.length }) } catch {}
@@ -82,7 +82,7 @@ ${cleanText}
       status: 'failed',
       metadata: { correlationId }
     })
-    return new Response(JSON.stringify({ ok: false, error: 'Internal error', details: error.message || 'Unknown error' } satisfies ToolRunResult), { status: 500 })
+    return new Response(JSON.stringify({ ok: false, error: 'Internal error' } satisfies ToolRunResult), { status: 500 })
   }
 }
 

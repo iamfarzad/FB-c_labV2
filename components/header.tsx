@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Menu, Languages, Check } from "@/lib/icon-mapping"
 import { FbcIcon } from "@/components/ui/fbc-icon"
-import { FbcLogo } from "@/components/ui/fbc-logo"
+// Temporarily hide text logo; keep orb icon only
+const FbcLogo = ({ className }: { className?: string }) => null as any
 import { ThemeToggle } from "@/components/theme-toggle"
 import { cn } from "@/lib/utils"
 import { useState } from "react"

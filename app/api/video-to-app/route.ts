@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { GoogleGenAI } from "@google/genai"
 import { createHash } from "crypto"
 import { createOptimizedConfig } from "@/lib/gemini-config-enhanced"
+import { isMockEnabled } from "@/lib/mock-control"
 import { parseJSON, parseHTML } from "@/lib/parse-utils"
 import { SPEC_FROM_VIDEO_PROMPT, CODE_REGION_OPENER, CODE_REGION_CLOSER, SPEC_ADDENDUM } from "@/lib/ai-prompts"
 import { getYouTubeVideoId } from "@/lib/youtube"
@@ -30,8 +31,22 @@ async function generateText(options: {
 }): Promise<string> {
   const { modelName, prompt, videoUrl, temperature = 0.75, correlationId } = options
 
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY environment variable is not set")
+  if (!process.env.GEMINI_API_KEY || isMockEnabled()) {
+    // Mock fallback so UI can function without budget/keys
+    const isSpec = options.prompt.includes("pedagogist and product designer")
+    if (isSpec) {
+      return JSON.stringify({
+        spec: `{
+  "title": "Interactive Learning App (Mock)",
+  "modules": [
+    { "title": "Key Ideas", "steps": ["Concept 1", "Concept 2"] },
+    { "title": "Practice", "steps": ["Quiz", "Flashcards"] }
+  ],
+  "cta": "Try the quiz and review answers"
+}`
+      })
+    }
+    return `<!doctype html><html><head><meta charset="utf-8"/><title>Video App (Mock)</title><meta name="viewport" content="width=device-width, initial-scale=1"/></head><body style="font-family:system-ui;padding:20px"><h1>Interactive Learning App (Mock)</h1><p>This is a mock app generated without an API key.</p><ul><li>Module: Key Ideas</li><li>Practice: Quiz</li></ul><button onclick="alert('Mock quiz complete')">Start Quiz</button></body></html>`
   }
 
   const genAI = new GoogleGenAI({

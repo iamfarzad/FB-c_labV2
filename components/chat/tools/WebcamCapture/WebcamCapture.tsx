@@ -76,11 +76,12 @@ export function WebcamCapture({
       }
 
       const result = await response.json()
-      onLog?.({ level: 'log', message: `Webcam analysis: ${result.analysis || 'No analysis'}`, timestamp: new Date() })
+      const analysisText = result?.output?.analysis || result?.analysis || 'No analysis'
+      onLog?.({ level: 'log', message: `Webcam analysis: ${analysisText}` , timestamp: new Date() })
       
       const analysis: AnalysisResult = {
         id: Date.now().toString(),
-        text: result.analysis || 'No analysis available',
+        text: analysisText,
         timestamp: Date.now(),
         imageData
       }

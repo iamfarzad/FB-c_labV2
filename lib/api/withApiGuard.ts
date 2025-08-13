@@ -21,7 +21,7 @@ export function withApiGuard<TSchema extends z.ZodTypeAny>(opts: {
   function checkLimit(req: NextRequest): NextResponse | null {
     if (!opts.rateLimit) return null
     const now = Date.now()
-    const key = (opts.rateLimit.key?.(req)) || (req.headers.get('x-intelligence-session-id') || req.ip || 'ip')
+    const key = (opts.rateLimit.key?.(req)) || (req.headers.get('x-intelligence-session-id') || getClientIp(req))
     const rec = store.get(key)
     if (!rec || rec.reset < now) {
       store.set(key, { count: 1, reset: now + opts.rateLimit.windowMs })
@@ -65,6 +65,14 @@ export function withApiGuard<TSchema extends z.ZodTypeAny>(opts: {
       return NextResponse.json({ ok: false, error: 'Internal error' }, { status: 500, headers: { 'x-request-id': requestId } })
     }
   }
+}
+
+function getClientIp(req: NextRequest): string {
+  const xff = req.headers.get('x-forwarded-for')
+  if (xff && xff.trim()) return xff.split(',')[0]!.trim()
+  const rip = req.headers.get('x-real-ip')
+  if (rip && rip.trim()) return rip
+  try { return new URL(req.url).hostname || 'ip' } catch { return 'ip' }
 }
 
 

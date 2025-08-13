@@ -54,10 +54,11 @@ export function ScreenShare({
       })
       if (!response.ok) throw new Error('Failed to analyze screen frame')
       const result = await response.json()
-      onLog?.({ level: 'log', message: `Screen analysis: ${result.analysis || 'No analysis'}`, timestamp: new Date() })
+      const analysisText = result?.output?.analysis || result?.analysis || 'No analysis'
+      onLog?.({ level: 'log', message: `Screen analysis: ${analysisText}`, timestamp: new Date() })
       const analysis: AnalysisResult = {
         id: Date.now().toString(),
-        text: result.analysis || 'No analysis available', // Fixed to match analyze-image response
+        text: analysisText,
         timestamp: Date.now(),
       }
       setAnalysisHistory(prev => [analysis, ...prev])

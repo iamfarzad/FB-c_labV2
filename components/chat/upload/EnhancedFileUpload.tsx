@@ -18,16 +18,28 @@ export function EnhancedFileUpload() {
   const { addActivity } = useChatContext()
   const [files, setFiles] = useState<UploadedFile[]>([])
 
-  const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      const newFiles = acceptedFiles.map((file) => ({ file, progress: 0 }))
-      setFiles((prev) => [...prev, ...newFiles])
-      addActivity({ type: "file-upload", status: "in-progress", content: `${acceptedFiles.length} file(s) added` })
-      // Simulate upload
-      newFiles.forEach((f) => simulateUpload(f))
-    },
-    [addActivity],
-  )
+  const uploadReal = useCallback(async (uploadedFile: UploadedFile) => {
+    try {
+      const form = new FormData()
+      form.append('file', uploadedFile.file)
+      const res = await fetch('/api/upload', { method: 'POST', body: form })
+      if (!res.ok) throw new Error(await res.text())
+      const j = await res.json()
+      addActivity({ type: 'file-upload', status: 'success', content: `${uploadedFile.file.name} → ${j.url}` })
+      setFiles(prev => prev.map(f => f.file === uploadedFile.file ? { ...f, progress: 100 } : f))
+    } catch (e: any) {
+      const msg = e?.message || 'Upload failed'
+      setFiles(prev => prev.map(f => f.file === uploadedFile.file ? { ...f, error: msg } : f))
+      addActivity({ type: 'file-upload', status: 'error', content: `${uploadedFile.file.name}: ${msg}` })
+    }
+  }, [addActivity])
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const newFiles = acceptedFiles.map((file) => ({ file, progress: 0 }))
+    setFiles((prev) => [...prev, ...newFiles])
+    addActivity({ type: 'file-upload', status: 'in-progress', content: `${acceptedFiles.length} file(s) added` })
+    newFiles.forEach((f) => uploadReal(f))
+  }, [addActivity, uploadReal])
 
   const simulateUpload = (uploadedFile: UploadedFile) => {
     const interval = setInterval(() => {

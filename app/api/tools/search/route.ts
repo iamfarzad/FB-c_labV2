@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const idemKey = request.headers.get('x-idempotency-key') || undefined
 
     if (!query) {
-      return NextResponse.json({ error: 'Query is required' }, { status: 400 })
+      return NextResponse.json({ ok: false, error: 'Query is required' }, { status: 400 })
     }
 
     const rlKey = `search:${effectiveSessionId || 'anon'}`
@@ -50,12 +50,7 @@ export async function POST(request: NextRequest) {
       } catch {}
     }
 
-    const body = {
-      answer: result.text,
-      citations: result.citations,
-      query,
-      sessionId: effectiveSessionId
-    }
+    const body = { ok: true, output: { answer: result.text, citations: result.citations, query, sessionId: effectiveSessionId } }
 
     if (effectiveSessionId && idemKey) {
       idem.set(`${effectiveSessionId}:${idemKey}`, { expires: Date.now() + 5 * 60_000, body })
@@ -65,10 +60,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ Search tool error:', error)
-    return NextResponse.json(
-      { error: 'Search failed', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ ok: false, error: 'Search failed', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }
 

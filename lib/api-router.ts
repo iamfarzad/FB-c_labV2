@@ -43,8 +43,9 @@ export const API_ROUTES: Record<string, ApiRouteConfig> = {
  * Determines if mocking is enabled based on environment variables
  */
 export function isMockingEnabled(): boolean {
+  if (process.env.FBC_USE_MOCKS === '1' || process.env.NEXT_PUBLIC_USE_MOCKS === '1') return true
   return process.env.ENABLE_GEMINI_MOCKING === 'true' || 
-         (process.env.NODE_ENV === 'development' && !process.env.GEMINI_API_KEY);
+         (process.env.NODE_ENV === 'development' && !process.env.GEMINI_API_KEY)
 }
 
 /**
@@ -161,9 +162,11 @@ export function createMockRedirectResponse(request: Request): Response | null {
 export function logApiRouting() {
   if (process.env.NODE_ENV === 'development') {
     console.info('🔧 API Routing Configuration:');
-    console.info(`   ENABLE_GEMINI_MOCKING: ${process.env.ENABLE_GEMINI_MOCKING}`);
-    console.info(`   GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? 'Set' : 'Missing'}`);
-    console.info(`   Mocking enabled: ${isMockingEnabled()}`);
+    console.info(`   ENABLE_GEMINI_MOCKING: ${process.env.ENABLE_GEMINI_MOCKING}`)
+    console.info(`   FBC_USE_MOCKS: ${process.env.FBC_USE_MOCKS}`)
+    console.info(`   NEXT_PUBLIC_USE_MOCKS: ${process.env.NEXT_PUBLIC_USE_MOCKS}`)
+    console.info(`   GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? 'Set' : 'Missing'}`)
+    console.info(`   Mocking enabled: ${isMockingEnabled()}`)
     
     Object.entries(API_ROUTES).forEach(([routeName, config]) => {
       const endpoint = isMockingEnabled() ? config.mockEndpoint : config.realEndpoint;

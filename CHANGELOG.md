@@ -107,6 +107,9 @@ All notable changes to this project will be documented in this file.
 - Standardized tool responses to `ToolRunResult { ok, output, error?, citations? }`
 - Added canonical ROI route: `app/api/tools/roi/route.ts`
 - Normalized Screen Share output to `ToolRunResult`; will rename path to `/api/tools/screen` in a follow-up commit
+  - Completed: removed legacy `app/api/tools/screen-share/route.ts`; canonical path is `/api/tools/screen`
+  - Completed: removed legacy `app/api/tools/webcam-capture/route.ts`; canonical path is `/api/tools/webcam`
+  - Added `FBC_USE_MOCKS`/`NEXT_PUBLIC_USE_MOCKS` env toggle for mock fallbacks in tools (screen, video-to-app)
 - Updated callers:
   - `components/chat/ChatArea.tsx` now calls `/api/tools/translate`
   - `components/chat/tools/ROICalculator/ROICalculator.tsx` now calls `/api/tools/roi`

@@ -38,7 +38,8 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun }: Props) 
         })
         if (!res.ok) throw new Error('failed')
         const j = await res.json()
-        if (!cancelled) setSuggestions(j.suggestions || [])
+        const list = (j?.output?.suggestions || j?.suggestions || []) as Suggestion[]
+        if (!cancelled) setSuggestions(list)
       } catch {
         if (!cancelled) setSuggestions([])
       } finally {
