@@ -9,6 +9,8 @@ import { ROICalculator } from "@/components/chat/tools/ROICalculator/ROICalculat
 import { ProgressTracker } from "@/components/experience/progress-tracker"
 import { CourseProgressChip } from "@/components/workshop/CourseProgressChip"
 import { CourseOutline } from "@/components/workshop/CourseOutline"
+import dynamic from "next/dynamic"
+const WorkshopPanel = dynamic(() => import('@/components/workshop/WorkshopPanel').then(m => m.WorkshopPanel), { ssr: false })
 import { CitationsDemo } from "@/components/experience/citations-demo"
 import dynamic from "next/dynamic"
 import { WORKSHOP_MODULES } from "@/components/workshop/education-modules"
@@ -51,35 +53,7 @@ export default function WorkshopPage() {
       </PageShell>
 
       <PageShell>
-        <div className="grid md:grid-cols-2 gap-10 items-start">
-          <FadeIn>
-          <MotionCard className="h-full neu-card transition-all">
-            <CardHeader>
-              <div className="p-3 bg-primary/10 rounded-md">
-                <Book className="h-6 w-6 text-primary" aria-hidden="true" />
-              </div>
-              <CardTitle className="text-2xl">What to Expect from AI Training</CardTitle>
-              <CardDescription>
-                These AI workshops are built from real-world AI implementation experience—not theory. Every AI training session is designed to give your
-                team a working understanding of AI automation and implementation.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-4">
-                {workshopFeatures.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 flex-shrink-0 transition-transform group-hover:scale-110" aria-hidden="true" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </MotionCard>
-          </FadeIn>
-          <FadeIn delay={0.08}>
-          <CourseOutline />
-          </FadeIn>
-        </div>
+        <WorkshopPanel />
       </PageShell>
 
       <PageShell>
