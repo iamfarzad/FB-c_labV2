@@ -94,20 +94,22 @@ jest.mock('@supabase/supabase-js', () => ({
 }))
 
 // Mock Next.js server Request for API tests
-jest.mock('next/server', () => {
-  const actual = jest.requireActual('next/server')
-  class MockRequest {
-    constructor(url, init) {
-      this.url = url
-      this.method = init?.method || 'GET'
-      this.headers = new Map(Object.entries(init?.headers || {}))
-      this._body = init?.body
+try {
+  jest.mock('next/server', () => {
+    const actual = jest.requireActual('next/server')
+    class MockRequest {
+      constructor(url, init) {
+        this.url = url
+        this.method = init?.method || 'GET'
+        this.headers = new Map(Object.entries(init?.headers || {}))
+        this._body = init?.body
+      }
+      json() { try { return Promise.resolve(JSON.parse(this._body || '{}')) } catch { return Promise.resolve({}) } }
+      headers = { get: (k) => this.headers.get(k) }
     }
-    json() { try { return Promise.resolve(JSON.parse(this._body || '{}')) } catch { return Promise.resolve({}) } }
-    headers = { get: (k) => this.headers.get(k) }
-  }
-  return { ...actual, NextRequest: MockRequest }
-})
+    return { ...actual, NextRequest: MockRequest }
+  })
+} catch {}
 
 // Minimal global fetch for Node env tests
 if (typeof fetch === 'undefined') {
@@ -119,3 +121,11 @@ if (typeof fetch === 'undefined') {
 
 // Ensure keys used by providers exist during tests
 process.env.GEMINI_API_KEY ||= 'test-key'
+// Polyfills for JSDOM
+if (typeof TextEncoder === 'undefined') {
+  const { TextEncoder, TextDecoder } = require('util')
+  // @ts-ignore
+  global.TextEncoder = TextEncoder
+  // @ts-ignore
+  global.TextDecoder = TextDecoder
+}
