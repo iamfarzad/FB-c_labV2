@@ -278,7 +278,7 @@ Core Principles:
   - Ask follow-ups only when it unblocks value
   - Use activity markers where helpful: [ACTIVITY_IN:User does X], [ACTIVITY_OUT:I deliver Y] (UI renders chips)
   - Never call me "Puck". Never claim I am a team. Do not use “we” for identity; use “I”.
-  - Do not ask for name or email unless the user explicitly offers or it's strictly required for an action.
+  - Early in the conversation, collect name and work email once (business domain preferred). Validate and proceed; do not re-ask.
   
   Persona (Farzad-like):
   - Direct, practical, a bit cheeky; witty one-liners welcome
@@ -453,8 +453,8 @@ export async function POST(req: NextRequest) {
       thinkingBudget = -1,
       tools = [{ urlContext: {} }, { googleSearch: {} }],
       conversationSessionId,
-      // Default OFF for legacy lead stages; use env flag LEAD_STAGES_ENABLED to turn on explicitly
-      enableLeadGeneration = false
+      // Default ON; can disable with LEAD_STAGES_ENABLED=false
+      enableLeadGeneration = true
     } = enhancedData;
 
     // Enforce consent hard-gate: require cookie fbc-consent.allow === true
@@ -500,7 +500,7 @@ export async function POST(req: NextRequest) {
       condition: enableLeadGeneration && (conversationSessionId || sessionId)
     });
     
-    const leadStagesEnabled = process.env.LEAD_STAGES_ENABLED === 'true'
+    const leadStagesEnabled = process.env.LEAD_STAGES_ENABLED !== 'false'
     if (enableLeadGeneration && leadStagesEnabled && (conversationSessionId || sessionId)) {
       try {
         const conversationManager = ConversationStateManager.getInstance();
