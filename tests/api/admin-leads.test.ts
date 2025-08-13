@@ -58,7 +58,7 @@ import { GET } from '@/app/api/admin/leads/route'
 
 describe('admin leads API', () => {
   it('filters by intent=consulting', async () => {
-    const req: any = { url: 'http://localhost/api/admin/leads?intent=consulting&period=7d', headers: { get: (k: string) => (k === 'x-user-role' ? 'admin' : undefined) } }
+    const req: any = { url: 'http://localhost/api/admin/leads?intent=consulting&period=90d', headers: { get: (k: string) => (k === 'x-user-role' ? 'admin' : undefined) } }
     const res: any = await GET(req)
     expect(res.ok).toBe(true)
     const body = await res.json()
