@@ -15,7 +15,7 @@
       "maxDuration": 60,
       "memory": 1024
     },
-    "app/api/analyze-document/route.ts": {
+    "app/api/tools/screen/route.ts": {
       "maxDuration": 45,
       "memory": 1024
     },
@@ -23,7 +23,7 @@
       "maxDuration": 45,
       "memory": 1024
     },
-    "app/api/analyze-image/route.ts": {
+    "app/api/tools/webcam/route.ts": {
       "maxDuration": 30,
       "memory": 1024
     },
@@ -104,7 +104,7 @@
       ]
     },
     {
-      "source": "/api/(gemini-live|analyze-image|analyze-screenshot|video-to-app)/(.*)",
+      "source": "/api/(gemini-live|tools/webcam|tools/screen|analyze-screenshot|video-to-app)/(.*)",
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",

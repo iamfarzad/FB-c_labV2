@@ -23,12 +23,12 @@ export const API_ROUTES: Record<string, ApiRouteConfig> = {
     requiresApiKey: true
   },
   analyzeDocument: {
-    realEndpoint: '/api/analyze-document',
+    realEndpoint: '/api/tools/screen',
     mockEndpoint: '/api/mock/analyze-document',
     requiresApiKey: true
   },
   analyzeImage: {
-    realEndpoint: '/api/analyze-image',
+    realEndpoint: '/api/tools/webcam',
     mockEndpoint: '/api/mock/analyze-image',
     requiresApiKey: true
   },

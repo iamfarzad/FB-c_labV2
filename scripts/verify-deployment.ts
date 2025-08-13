@@ -79,7 +79,7 @@ async function runDeploymentTests() {
     }),
     
     // Test image analysis (should be rate limited)
-    () => testEndpoint('/api/analyze-image', 'POST', {
+    () => testEndpoint('/api/tools/webcam', 'POST', {
       imageData: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD//2Q==',
       type: 'webcam'
     }),

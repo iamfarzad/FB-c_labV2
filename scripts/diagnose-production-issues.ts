@@ -78,7 +78,7 @@ class ProductionDiagnostic {
     const testImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
     
     try {
-      const response = await fetch(`${this.baseUrl}/api/analyze-image`, {
+      const response = await fetch(`${this.baseUrl}/api/tools/webcam`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -113,7 +113,7 @@ class ProductionDiagnostic {
     const testImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
     
     try {
-      const response = await fetch(`${this.baseUrl}/api/analyze-screenshot`, {
+      const response = await fetch(`${this.baseUrl}/api/tools/screen`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

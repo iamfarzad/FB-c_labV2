@@ -60,7 +60,7 @@ export function WebcamCapture({
       setIsAnalyzing(true)
       onLog?.({ level: 'log', message: 'Analyzing webcam frame…', timestamp: new Date() })
       
-      const response = await fetch('/api/analyze-image', { // Fixed API endpoint
+      const response = await fetch('/api/tools/webcam', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

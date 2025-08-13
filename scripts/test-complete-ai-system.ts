@@ -140,7 +140,7 @@ class CompleteAISystemTester {
     const startTime = Date.now()
     try {
       // Test Webcam Analysis
-      const webcamResponse = await fetch(`${API_BASE}/api/analyze-image`, {
+      const webcamResponse = await fetch(`${API_BASE}/api/tools/webcam`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -156,7 +156,7 @@ class CompleteAISystemTester {
       const webcamData = await webcamResponse.json()
 
       // Test Screen Analysis
-      const screenResponse = await fetch(`${API_BASE}/api/analyze-image`, {
+      const screenResponse = await fetch(`${API_BASE}/api/tools/screen`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

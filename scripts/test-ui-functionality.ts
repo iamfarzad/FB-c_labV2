@@ -108,7 +108,7 @@ async function testLeadResearchAPI() {
 }
 
 async function testImageAnalysisAPI() {
-  const response = await fetch(`${BASE_URL}/api/analyze-image`, {
+  const response = await fetch(`${BASE_URL}/api/tools/webcam`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -128,7 +128,7 @@ async function testImageAnalysisAPI() {
 }
 
 async function testDocumentAnalysisAPI() {
-  const response = await fetch(`${BASE_URL}/api/analyze-document`, {
+  const response = await fetch(`${BASE_URL}/api/tools/screen`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

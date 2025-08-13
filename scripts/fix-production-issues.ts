@@ -55,8 +55,8 @@ class ProductionFixer {
       // Ensure AI functions have adequate timeouts
       const requiredFunctions = {
         'app/api/gemini-live/route.ts': { maxDuration: 45, memory: 1024 },
-        'app/api/analyze-image/route.ts': { maxDuration: 30, memory: 1024 },
-        'app/api/analyze-screenshot/route.ts': { maxDuration: 30, memory: 1024 },
+        'app/api/tools/webcam/route.ts': { maxDuration: 30, memory: 1024 },
+        'app/api/tools/screen/route.ts': { maxDuration: 30, memory: 1024 },
         'app/api/video-to-app/route.ts': { maxDuration: 60, memory: 1024 },
       }
 
@@ -127,8 +127,8 @@ class ProductionFixer {
     // Check each AI API route for proper error handling
     const apiRoutes = [
       'app/api/gemini-live/route.ts',
-      'app/api/analyze-image/route.ts',
-      'app/api/analyze-screenshot/route.ts',
+      'app/api/tools/webcam/route.ts',
+      'app/api/tools/screen/route.ts',
       'app/api/video-to-app/route.ts',
     ]
 
@@ -210,8 +210,8 @@ if (!process.env.GEMINI_API_KEY) {
 
     const routesToFix = [
       'app/api/gemini-live/route.ts',
-      'app/api/analyze-image/route.ts',
-      'app/api/analyze-screenshot/route.ts'
+      'app/api/tools/webcam/route.ts',
+      'app/api/tools/screen/route.ts'
     ]
 
     for (const route of routesToFix) {
