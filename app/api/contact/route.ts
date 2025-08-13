@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     // 3. Send auto-reply confirmation
 
     // For now, we'll log the contact form submission
-    console.log('Contact form submission:', {
+    console.info('Contact form submission:', {
       name,
       email,
       company,

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { GoogleGenAI } from "@google/genai"
 import { createHash } from "crypto"
 import { createOptimizedConfig } from "@/lib/gemini-config-enhanced"
+import { isMockEnabled } from "@/lib/mock-control"
 import { parseJSON, parseHTML } from "@/lib/parse-utils"
 import { SPEC_FROM_VIDEO_PROMPT, CODE_REGION_OPENER, CODE_REGION_CLOSER, SPEC_ADDENDUM } from "@/lib/ai-prompts"
 import { getYouTubeVideoId } from "@/lib/youtube"
@@ -30,8 +31,22 @@ async function generateText(options: {
 }): Promise<string> {
   const { modelName, prompt, videoUrl, temperature = 0.75, correlationId } = options
 
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY environment variable is not set")
+  if (!process.env.GEMINI_API_KEY || isMockEnabled()) {
+    // Mock fallback so UI can function without budget/keys
+    const isSpec = options.prompt.includes("pedagogist and product designer")
+    if (isSpec) {
+      return JSON.stringify({
+        spec: `{
+  "title": "Interactive Learning App (Mock)",
+  "modules": [
+    { "title": "Key Ideas", "steps": ["Concept 1", "Concept 2"] },
+    { "title": "Practice", "steps": ["Quiz", "Flashcards"] }
+  ],
+  "cta": "Try the quiz and review answers"
+}`
+      })
+    }
+    return `<!doctype html><html><head><meta charset="utf-8"/><title>Video App (Mock)</title><meta name="viewport" content="width=device-width, initial-scale=1"/></head><body style="font-family:system-ui;padding:20px"><h1>Interactive Learning App (Mock)</h1><p>This is a mock app generated without an API key.</p><ul><li>Module: Key Ideas</li><li>Practice: Quiz</li></ul><button onclick="alert('Mock quiz complete')">Start Quiz</button></body></html>`
   }
 
   const genAI = new GoogleGenAI({
@@ -59,13 +74,13 @@ async function generateText(options: {
       if (videoUrl) {
         // Extract transcript from YouTube video
         try {
-          console.log(`📺 Extracting transcript for video:`, { videoUrl, correlationId })
+          console.info(`📺 Extracting transcript for video:`, { videoUrl, correlationId })
           
           const transcriptData = await getYouTubeTranscript(videoUrl)
           const summarizedTranscript = summarizeTranscript(transcriptData.transcript, 3000)
           const keyTopics = extractKeyTopics(transcriptData.transcript)
           
-          console.log(`✅ Transcript extracted:`, { 
+          console.info(`✅ Transcript extracted:`, { 
             transcriptLength: transcriptData.transcript.length,
             summarizedLength: summarizedTranscript.length,
             keyTopics: keyTopics.slice(0, 5),
@@ -157,7 +172,7 @@ export const POST = withFullSecurity(async function POST(request: NextRequest) {
     
   const { action, videoUrl, spec, userPrompt } = await request.json()
 
-    console.log(`🎬 Video-to-App API called:`, {
+    console.info(`🎬 Video-to-App API called:`, {
       action,
       videoUrl: videoUrl ? `${videoUrl.substring(0, 50)}...` : 'none',
       sessionId,
@@ -193,7 +208,7 @@ export const POST = withFullSecurity(async function POST(request: NextRequest) {
       const estimatedTokens = estimateTokens(SPEC_FROM_VIDEO_PROMPT + videoUrl)
       const modelSelection = selectModelForFeature('video_to_app', estimatedTokens, !!sessionId)
       
-      console.log(`📊 Model selection:`, {
+      console.info(`📊 Model selection:`, {
         model: modelSelection.model,
         estimatedCost: modelSelection.estimatedCost,
         reason: modelSelection.reason,
@@ -216,14 +231,14 @@ export const POST = withFullSecurity(async function POST(request: NextRequest) {
       )
       
       if (!budgetResult.allowed) {
-        console.log(`🚫 Budget exceeded:`, { reason: budgetResult.reason, correlationId })
+        console.info(`🚫 Budget exceeded:`, { reason: budgetResult.reason, correlationId })
         return NextResponse.json({ 
           error: 'Budget exceeded', 
           details: budgetResult.reason 
         }, { status: 429 })
       }
       
-      console.log(`🚀 Starting spec generation:`, { correlationId })
+      console.info(`🚀 Starting spec generation:`, { correlationId })
       
       // Use selected model for video analysis
       const userIntent = (userPrompt && typeof userPrompt === 'string' && userPrompt.trim().length)
@@ -237,7 +252,7 @@ export const POST = withFullSecurity(async function POST(request: NextRequest) {
         correlationId,
       })
 
-      console.log(`✅ Spec generation completed:`, { 
+      console.info(`✅ Spec generation completed:`, { 
         responseLength: specResponse.length,
         correlationId 
       })
@@ -264,7 +279,7 @@ export const POST = withFullSecurity(async function POST(request: NextRequest) {
           .insert([{ type: 'video_app_spec', content: parsedSpec, metadata: { hash, videoId: videoIdForHash, intent: (userPrompt || '').trim() } }])
       } catch {}
 
-      console.log(`📋 Spec processing completed:`, { 
+      console.info(`📋 Spec processing completed:`, { 
         finalLength: parsedSpec.length,
         responseTime: Date.now() - startTime,
         correlationId 
@@ -280,7 +295,7 @@ export const POST = withFullSecurity(async function POST(request: NextRequest) {
       
       // Compute cache key if spec includes our addendum and possibly include a hash fallback
       let videoIdForHash = ''
-      let intentForHash = ''
+      const intentForHash = ''
       try {
         // Attempt to extract from previous metadata if provided in body later
         const maybeVideoMatch = spec.match(/Video URL:\s*(.*)/i)
@@ -313,7 +328,7 @@ export const POST = withFullSecurity(async function POST(request: NextRequest) {
       const estimatedTokens = estimateTokens(spec)
       const modelSelection = selectModelForFeature('video_to_app', estimatedTokens, !!sessionId)
       
-      console.log(`📊 Code generation model selection:`, {
+      console.info(`📊 Code generation model selection:`, {
         model: modelSelection.model,
         estimatedCost: modelSelection.estimatedCost,
         reason: modelSelection.reason,
@@ -336,14 +351,14 @@ export const POST = withFullSecurity(async function POST(request: NextRequest) {
       )
       
       if (!budgetResult.allowed) {
-        console.log(`🚫 Budget exceeded for code generation:`, { reason: budgetResult.reason, correlationId })
+        console.info(`🚫 Budget exceeded for code generation:`, { reason: budgetResult.reason, correlationId })
         return NextResponse.json({ 
           error: 'Budget exceeded', 
           details: budgetResult.reason 
         }, { status: 429 })
       }
       
-      console.log(`🚀 Starting code generation:`, { correlationId })
+      console.info(`🚀 Starting code generation:`, { correlationId })
       
       // Use selected model for code generation
       const codeResponse = await generateText({
@@ -351,7 +366,7 @@ export const POST = withFullSecurity(async function POST(request: NextRequest) {
         prompt: spec,
       })
 
-      console.log(`✅ Code generation completed:`, { 
+      console.info(`✅ Code generation completed:`, { 
         responseLength: codeResponse.length,
         correlationId 
       })
@@ -377,14 +392,14 @@ export const POST = withFullSecurity(async function POST(request: NextRequest) {
           .select()
           .single()
         if (!error && data?.id) {
-          console.log('📝 Stored artifact', data.id)
+          console.info('📝 Stored artifact', data.id)
           artifactId = data.id
         }
       } catch (e) {
         console.warn('Artifact storage failed or unavailable')
       }
 
-      console.log(`💻 Code processing completed:`, { 
+      console.info(`💻 Code processing completed:`, { 
         finalLength: code.length,
         responseTime: Date.now() - startTime,
         correlationId 

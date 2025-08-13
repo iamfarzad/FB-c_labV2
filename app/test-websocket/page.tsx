@@ -19,7 +19,7 @@ export default function WebSocketTestPage() {
     const wsUrl =
       process.env.NEXT_PUBLIC_LIVE_SERVER_URL ||
       'wss://fb-consulting-websocket.fly.dev'
-    console.log('Connecting to:', wsUrl)
+    console.info('Connecting to:', wsUrl)
 
     setError(null)
     setMessages(prev => [...prev, `Connecting to ${wsUrl}...`])
@@ -39,13 +39,13 @@ export default function WebSocketTestPage() {
 
       ws.onopen = () => {
         clearTimeout(connectionTimeout)
-        console.log('WebSocket connected')
+        console.info('WebSocket connected')
         setIsConnected(true)
         setMessages(prev => [...prev, '✅ Connected successfully!'])
       }
 
       ws.onmessage = (event) => {
-        console.log('Received message:', event.data)
+        console.info('Received message:', event.data)
         setMessages(prev => [...prev, `📨 Received: ${event.data}`])
       }
 
@@ -56,7 +56,7 @@ export default function WebSocketTestPage() {
       }
 
       ws.onclose = (event) => {
-        console.log('WebSocket closed:', event.code, event.reason)
+        console.info('WebSocket closed:', event.code, event.reason)
         setIsConnected(false)
         setMessages(prev => [
           ...prev,

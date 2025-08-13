@@ -74,7 +74,7 @@ class AdminMonitoringService {
 
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 Admin Action:', {
+      console.info('🔍 Admin Action:', {
         timestamp: logEntry.timestamp,
         user: userEmail,
         action: logEntry.action,

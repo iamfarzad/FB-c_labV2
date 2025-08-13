@@ -60,7 +60,7 @@ export function WebcamCapture({
       setIsAnalyzing(true)
       onLog?.({ level: 'log', message: 'Analyzing webcam frame…', timestamp: new Date() })
       
-      const response = await fetch('/api/analyze-image', { // Fixed API endpoint
+      const response = await fetch('/api/tools/webcam', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,11 +76,12 @@ export function WebcamCapture({
       }
 
       const result = await response.json()
-      onLog?.({ level: 'log', message: `Webcam analysis: ${result.analysis || 'No analysis'}`, timestamp: new Date() })
+      const analysisText = result?.output?.analysis || result?.analysis || 'No analysis'
+      onLog?.({ level: 'log', message: `Webcam analysis: ${analysisText}` , timestamp: new Date() })
       
       const analysis: AnalysisResult = {
         id: Date.now().toString(),
-        text: result.analysis || 'No analysis available',
+        text: analysisText,
         timestamp: Date.now(),
         imageData
       }
@@ -126,7 +127,7 @@ export function WebcamCapture({
             ctx.drawImage(video, 0, 0)
             const imageData = canvas.toDataURL('image/jpeg', 0.8)
             analysisCount++;
-            console.log(`📹 Webcam auto-analysis ${analysisCount}/${maxAnalysisPerSession}`);
+            console.info(`📹 Webcam auto-analysis ${analysisCount}/${maxAnalysisPerSession}`);
             await sendVideoFrame(imageData)
           }
         }

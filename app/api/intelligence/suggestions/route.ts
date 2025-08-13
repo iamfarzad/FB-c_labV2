@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { ToolRunResult } from '@/types/intelligence'
 import { z } from 'zod'
 import { ContextStorage } from '@/lib/context/context-storage'
 import type { ContextSnapshot, IntentResult } from '@/types/intelligence'
@@ -11,7 +12,7 @@ const Body = z.object({ sessionId: z.string().min(1), stage: z.string().optional
 
 export const POST = withApiGuard({ schema: Body, requireSession: false, rateLimit: { windowMs: 3000, max: 5 }, handler: async ({ body }) => {
   const raw = await contextStorage.get(body.sessionId)
-  if (!raw) return NextResponse.json({ ok: false, error: 'Context not found' }, { status: 404 })
+  if (!raw) return NextResponse.json({ ok: false, error: 'Context not found' } satisfies ToolRunResult, { status: 404 })
   const snapshot: ContextSnapshot = {
     lead: { email: raw.email, name: raw.name },
     company: raw.company_context ?? undefined,
@@ -31,7 +32,8 @@ export const POST = withApiGuard({ schema: Body, requireSession: false, rateLimi
       suggestions.unshift({ id: 'video2app', label: 'Turn video into app blueprint', action: 'run_tool', capability: 'video2app' })
     }
   } catch {}
-  return NextResponse.json({ ok: true, suggestions })
+  // Back-compat: keep top-level suggestions array
+  return NextResponse.json({ ok: true, output: { suggestions }, suggestions } as any)
 }})
 
 

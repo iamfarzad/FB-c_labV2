@@ -78,27 +78,27 @@ describe('Tool capability recording', () => {
     expect(recordCapabilityUsed).toHaveBeenCalledWith(sessionId, 'search', expect.anything())
   })
 
-  test('doc → /api/analyze-document', async () => {
+  test('doc → /api/tools/screen', async () => {
     process.env.GEMINI_API_KEY = 'test'
-    const { POST } = await import('@/app/api/analyze-document/route')
-    const res = await POST(makeReq({ data: 'text', mimeType: 'text/plain', fileName: 'x.txt' }, sidHeaders))
+    const { POST } = await import('@/app/api/tools/screen/route')
+    const res = await POST(makeReq({ image: 'data:image/png;base64,AAA', type: 'document' }, sidHeaders))
     expect(res.status).toBe(200)
     expect(recordCapabilityUsed).toHaveBeenCalledWith(sessionId, 'doc', expect.anything())
   })
 
-  test('image → /api/analyze-image', async () => {
+  test('image → /api/tools/webcam', async () => {
     process.env.GEMINI_API_KEY = 'test'
-    const { POST } = await import('@/app/api/analyze-image/route')
+    const { POST } = await import('@/app/api/tools/webcam/route')
     const base64 = 'data:image/jpeg;base64,AAA'
     const res = await POST(makeReq({ image: base64, type: 'webcam' }, sidHeaders))
     expect(res.status).toBe(200)
     expect(recordCapabilityUsed).toHaveBeenCalledWith(sessionId, 'image', expect.anything())
   })
 
-  test('screenshot → /api/analyze-screenshot', async () => {
+  test('screenshot → /api/tools/screen', async () => {
     process.env.GEMINI_API_KEY = 'test'
-    const { POST } = await import('@/app/api/analyze-screenshot/route')
-    const res = await POST(makeReq({ imageData: 'AAA', description: 'desc' }, sidHeaders))
+    const { POST } = await import('@/app/api/tools/screen/route')
+    const res = await POST(makeReq({ image: 'data:image/jpeg;base64,AAA', type: 'screen' }, sidHeaders))
     expect(res.status).toBe(200)
     expect(recordCapabilityUsed).toHaveBeenCalledWith(sessionId, 'screenshot', expect.anything())
   })

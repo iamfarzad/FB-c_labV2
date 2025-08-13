@@ -2,9 +2,9 @@
 
 - Docs scanned: 122
 - References found: 438
-- Missing references: 102
+- Missing references: 107
 
-> Generated: 2025-08-13T14:39:11.559Z
+> Generated: 2025-08-13T16:33:48.491Z
 
 ## CHANGELOG.md
 
@@ -23,16 +23,21 @@
 - [ ] app/api/send-summary-email/route.ts
 - [ ] supabase/migrations/2025XXXX_conversational_intelligence.sql
 
-## Documents_progress_overtime/API_FIXES_AND_VALIDATION_COMPLETE.md
+## LEAD_GENERATION_SYSTEM_IMPLEMENTATION_COMPLETE.md
 
+- [ ] app/api/lead-research/route.ts
+
+## archive/Documents_progress_overtime/API_FIXES_AND_VALIDATION_COMPLETE.md
+
+- [ ] app/api/analyze-document/route.ts
 - [ ] app/api/lead-research/route.ts
 - [ ] components/chat/tools/*
 
-## Documents_progress_overtime/AUDIO_IMPROVEMENTS_SUMMARY.md
+## archive/Documents_progress_overtime/AUDIO_IMPROVEMENTS_SUMMARY.md
 
 - [ ] app/api/gemini-live/route.ts
 
-## Documents_progress_overtime/COMPONENT_CONSOLIDATION_COMPLETE.md
+## archive/Documents_progress_overtime/COMPONENT_CONSOLIDATION_COMPLETE.md
 
 - [ ] components/chat/cards/VoiceInputCard.tsx
 - [ ] components/chat/cards/WebcamCaptureCard.tsx
@@ -45,7 +50,11 @@
 - [ ] components/chat/modals/ROICalculatorModal.tsx
 - [ ] components/chat/modals/Video2AppModal.tsx
 
-## Documents_progress_overtime/DUPLICATE_FILES_AUDIT.md
+## archive/Documents_progress_overtime/DEPLOYMENT_FIXES_SUMMARY.md
+
+- [ ] app/api/analyze-document/route.ts
+
+## archive/Documents_progress_overtime/DUPLICATE_FILES_AUDIT.md
 
 - [ ] components/chat/voice/CleanVoiceUI.tsx
 - [ ] components/chat/webcam/Webcam.tsx
@@ -69,7 +78,7 @@
 - [ ] components/chat/modals/webcam/WebcamHeader.tsx
 - [ ] components/chat/modals/VoiceOutputModal.tsx
 
-## Documents_progress_overtime/FINAL_CLEANUP_REPORT.md
+## archive/Documents_progress_overtime/FINAL_CLEANUP_REPORT.md
 
 - [ ] components/chat/screen/EnhancedScreenShare.tsx
 - [ ] components/chat/voice/EnhancedVoiceUI.tsx
@@ -82,37 +91,38 @@
 - [ ] components/chat/modals/voice-output/
 - [ ] components/chat/modals/VoiceOutputModal.tsx
 
-## Documents_progress_overtime/FIXES_IMPLEMENTATION_SUMMARY.md
+## archive/Documents_progress_overtime/FIXES_IMPLEMENTATION_SUMMARY.md
 
 - [ ] app/api/tools/roi-calculation/route.ts
 
-## Documents_progress_overtime/PRODUCTION_DEPLOYMENT_FIXES.md
+## archive/Documents_progress_overtime/PRODUCTION_DEPLOYMENT_FIXES.md
 
 - [ ] lib/activity-logger.ts
+- [ ] app/api/analyze-image/route.ts
 
-## Documents_progress_overtime/REPOSITORY_SECURITY_AND_CLEANUP_COMPLETE.md
+## archive/Documents_progress_overtime/REPOSITORY_SECURITY_AND_CLEANUP_COMPLETE.md
 
 - [ ] supabase/migrations/20250804180000_performance_optimization.sql
 - [ ] supabase/migrations/20250804190000_rls_policy_optimization.sql
 - [ ] supabase/migrations/20250804200000_monitoring_setup.sql
 
-## Documents_progress_overtime/SEO_OPTIMIZATION_REPORT.md
+## archive/Documents_progress_overtime/SEO_OPTIMIZATION_REPORT.md
 
 - [ ] components/chat/ChatMain.tsx
 
-## Documents_progress_overtime/SUPABASE_DATABASE_OPTIMIZATION_AUDIT.md
+## archive/Documents_progress_overtime/SUPABASE_DATABASE_OPTIMIZATION_AUDIT.md
 
 - [ ] supabase/migrations/20250804180000_performance_optimization.sql
 - [ ] supabase/migrations/20250804190000_rls_policy_optimization.sql
 - [ ] supabase/migrations/20250804200000_monitoring_setup.sql
 
-## Documents_progress_overtime/SUPABASE_OPTIMIZATION_IMPLEMENTATION_COMPLETE.md
+## archive/Documents_progress_overtime/SUPABASE_OPTIMIZATION_IMPLEMENTATION_COMPLETE.md
 
 - [ ] supabase/migrations/20250804180000_performance_optimization.sql
 - [ ] supabase/migrations/20250804190000_rls_policy_optimization.sql
 - [ ] supabase/migrations/20250804200000_monitoring_setup.sql
 
-## Documents_progress_overtime/TESTING_SUMMARY.md
+## archive/Documents_progress_overtime/TESTING_SUMMARY.md
 
 - [ ] tests/playwright/chat.spec.ts
 - [ ] tests/components/ChatInput.test.tsx
@@ -120,7 +130,7 @@
 - [ ] tests/playwright/chat-visual.spec.ts
 - [ ] tests/setup.ts
 
-## Documents_progress_overtime/THEVISIONFOR_FBC.md
+## archive/Documents_progress_overtime/THEVISIONFOR_FBC.md
 
 - [ ] app/api/chat-enhanced/route.ts
 - [ ] lib/ai/gemini-live-client.ts
@@ -129,48 +139,46 @@
 - [ ] components/chat/tools/*
 - [ ] lib/cache.ts
 
-## Documents_progress_overtime/TODO_FIXES_PRIORITIZED.md
+## archive/Documents_progress_overtime/TODO_FIXES_PRIORITIZED.md
 
 - [ ] components/chat/modals/ROICalculatorModal.tsx
 - [ ] app/chat/page.tsx
 - [ ] components/chat/modals/ScreenShareModal.tsx
 - [ ] app/api/demo-session/route.ts
+- [ ] app/api/analyze-document/route.ts
+- [ ] app/api/analyze-screenshot/route.ts
 - [ ] app/api/gemini-live/route.ts
 - [ ] app/api/lead-research/route.ts
 
-## Documents_progress_overtime/VERTICAL_PROCESS_CHAIN_IMPLEMENTATION.md
+## archive/Documents_progress_overtime/VERTICAL_PROCESS_CHAIN_IMPLEMENTATION.md
 
 - [ ] components/chat/activity/TimelineActivityLog.tsx
 
-## Documents_progress_overtime/VIDEOTOAPP_CONSOLIDATION_COMPLETE.md
+## archive/Documents_progress_overtime/VIDEOTOAPP_CONSOLIDATION_COMPLETE.md
 
 - [ ] app/(chat)/chat/components/VideoToAppGenerator.tsx
 
-## Documents_progress_overtime/admin-migration.md
+## archive/Documents_progress_overtime/admin-migration.md
 
 - [ ] components/admin/ → app/admin/components/
 
-## Documents_progress_overtime/frontend_design.md
+## archive/Documents_progress_overtime/frontend_design.md
 
 - [ ] app/chat/context/ChatProvider.tsx
 - [ ] scripts/test-unified-voice.ts
 
-## Documents_progress_overtime/global-audit.md
+## archive/Documents_progress_overtime/global-audit.md
 
 - [ ] components/ui/ (shadcn/ui)
 - [ ] components/demo-session-manager.tsx (if chat-specific)
 - [ ] components/test-status-indicator.tsx (if admin-specific)
 - [ ] components/ui-test-dashboard.tsx (if admin-specific)
 
-## Documents_progress_overtime/migration-plan.md
+## archive/Documents_progress_overtime/migration-plan.md
 
 - [ ] components/video-to-app-generator.tsx
 - [ ] components/lead-research-modal.tsx
 - [ ] components/educational-content.tsx
-
-## LEAD_GENERATION_SYSTEM_IMPLEMENTATION_COMPLETE.md
-
-- [ ] app/api/lead-research/route.ts
 
 ## docs/ACTIVITY_SYSTEM.md
 

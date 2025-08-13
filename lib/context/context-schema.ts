@@ -1,5 +1,23 @@
 import { z } from 'zod'
 
+export const ConsentInput = z.object({
+  email: z.string().email(),
+  name: z.string().min(1),
+  companyUrl: z.string().url().optional()
+})
+
+export const SessionInitInput = z.object({
+  sessionId: z.string().min(1),
+  email: z.string().email(),
+  name: z.string().optional(),
+  companyUrl: z.string().url().optional()
+})
+
+export type ConsentInput = z.infer<typeof ConsentInput>
+export type SessionInitInput = z.infer<typeof SessionInitInput>
+
+import { z } from 'zod'
+
 export const CompanySchema = z.object({
   name: z.string(),
   domain: z.string(),

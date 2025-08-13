@@ -108,7 +108,7 @@ export function LeadCaptureFlow({
       }
 
       const result = await response.json()
-      console.log('Lead capture success:', result)
+      console.info('Lead capture success:', result)
 
       onComplete({
         name: formData.name,

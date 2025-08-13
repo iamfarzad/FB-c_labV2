@@ -23,12 +23,12 @@ export const API_ROUTES: Record<string, ApiRouteConfig> = {
     requiresApiKey: true
   },
   analyzeDocument: {
-    realEndpoint: '/api/analyze-document',
+    realEndpoint: '/api/tools/screen',
     mockEndpoint: '/api/mock/analyze-document',
     requiresApiKey: true
   },
   analyzeImage: {
-    realEndpoint: '/api/analyze-image',
+    realEndpoint: '/api/tools/webcam',
     mockEndpoint: '/api/mock/analyze-image',
     requiresApiKey: true
   },
@@ -43,8 +43,9 @@ export const API_ROUTES: Record<string, ApiRouteConfig> = {
  * Determines if mocking is enabled based on environment variables
  */
 export function isMockingEnabled(): boolean {
+  if (process.env.FBC_USE_MOCKS === '1' || process.env.NEXT_PUBLIC_USE_MOCKS === '1') return true
   return process.env.ENABLE_GEMINI_MOCKING === 'true' || 
-         (process.env.NODE_ENV === 'development' && !process.env.GEMINI_API_KEY);
+         (process.env.NODE_ENV === 'development' && !process.env.GEMINI_API_KEY)
 }
 
 /**
@@ -59,7 +60,7 @@ export function getApiEndpoint(routeName: keyof typeof API_ROUTES): string {
   const shouldUseMock = isMockingEnabled();
   
   if (shouldUseMock) {
-    console.log(`🔧 Using mock endpoint for ${routeName}: ${route.mockEndpoint}`);
+    console.info(`🔧 Using mock endpoint for ${routeName}: ${route.mockEndpoint}`);
     return route.mockEndpoint;
   }
 
@@ -83,7 +84,7 @@ export async function callApi(
   const baseUrl = typeof window !== 'undefined' ? '' : process.env.BASE_URL || 'http://localhost:3000';
   const fullUrl = `${baseUrl}${endpoint}`;
 
-  console.log(`📡 API call: ${routeName} -> ${endpoint}`);
+  console.info(`📡 API call: ${routeName} -> ${endpoint}`);
 
   return fetch(fullUrl, {
     ...options,
@@ -149,7 +150,7 @@ export function createMockRedirectResponse(request: Request): Response | null {
   const [routeName, config] = routeEntry;
   const mockUrl = new URL(config.mockEndpoint, url.origin);
   
-  console.log(`🔄 Redirecting ${pathname} to ${config.mockEndpoint}`);
+  console.info(`🔄 Redirecting ${pathname} to ${config.mockEndpoint}`);
 
   // Create a new request to the mock endpoint
   return Response.redirect(mockUrl.toString(), 307); // Temporary redirect
@@ -160,14 +161,16 @@ export function createMockRedirectResponse(request: Request): Response | null {
  */
 export function logApiRouting() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('🔧 API Routing Configuration:');
-    console.log(`   ENABLE_GEMINI_MOCKING: ${process.env.ENABLE_GEMINI_MOCKING}`);
-    console.log(`   GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? 'Set' : 'Missing'}`);
-    console.log(`   Mocking enabled: ${isMockingEnabled()}`);
+    console.info('🔧 API Routing Configuration:');
+    console.info(`   ENABLE_GEMINI_MOCKING: ${process.env.ENABLE_GEMINI_MOCKING}`)
+    console.info(`   FBC_USE_MOCKS: ${process.env.FBC_USE_MOCKS}`)
+    console.info(`   NEXT_PUBLIC_USE_MOCKS: ${process.env.NEXT_PUBLIC_USE_MOCKS}`)
+    console.info(`   GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? 'Set' : 'Missing'}`)
+    console.info(`   Mocking enabled: ${isMockingEnabled()}`)
     
     Object.entries(API_ROUTES).forEach(([routeName, config]) => {
       const endpoint = isMockingEnabled() ? config.mockEndpoint : config.realEndpoint;
-      console.log(`   ${routeName}: ${endpoint}`);
+      console.info(`   ${routeName}: ${endpoint}`);
     });
   }
 }

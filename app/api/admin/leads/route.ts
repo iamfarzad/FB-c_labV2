@@ -2,8 +2,9 @@ import { supabaseService } from "@/lib/supabase/client"
 import { type NextRequest, NextResponse } from "next/server"
 import { adminAuthMiddleware } from "@/lib/auth"
 import { adminRateLimit } from "@/lib/rate-limiting"
+import { withAdminAuth } from "@/lib/api/withAdminAuth"
 
-export async function GET(request: NextRequest) {
+export const GET = withAdminAuth(async function(request: NextRequest) {
   // Check rate limiting
   const rateLimitResult = adminRateLimit(request);
   if (rateLimitResult) {
@@ -64,4 +65,4 @@ export async function GET(request: NextRequest) {
     console.error("Admin leads error:", error)
     return NextResponse.json({ error: "Failed to fetch leads" }, { status: 500 })
   }
-}
+})

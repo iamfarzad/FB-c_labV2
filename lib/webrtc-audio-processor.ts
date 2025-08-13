@@ -78,7 +78,7 @@ export class WebRTCAudioProcessor {
         const state = this.peerConnection?.connectionState || "unknown"
         this.isConnected = state === "connected"
         this.onConnectionStateChange?.(state)
-        console.log("WebRTC connection state:", state)
+        console.info("WebRTC connection state:", state)
       }
 
       // Set up data channel for audio streaming
@@ -88,7 +88,7 @@ export class WebRTCAudioProcessor {
       })
 
       dataChannel.onopen = () => {
-        console.log("WebRTC data channel opened")
+        console.info("WebRTC data channel opened")
       }
 
       dataChannel.onmessage = (event) => {
@@ -97,7 +97,7 @@ export class WebRTCAudioProcessor {
         }
       }
 
-      console.log("✅ WebRTC audio processor initialized")
+      console.info("✅ WebRTC audio processor initialized")
     } catch (error) {
       console.error("❌ Failed to initialize WebRTC audio processor:", error)
       throw error
@@ -140,7 +140,7 @@ export class WebRTCAudioProcessor {
       // Set up audio processing
       await this.setupAudioProcessing()
 
-      console.log("✅ Audio capture started with WebRTC")
+      console.info("✅ Audio capture started with WebRTC")
       return this.localStream
     } catch (error) {
       console.error("❌ Failed to start audio capture:", error)
@@ -206,7 +206,7 @@ export class WebRTCAudioProcessor {
       source.connect(this.audioProcessor)
       this.audioProcessor.connect(this.audioContext.destination)
 
-      console.log("✅ Real-time audio processing set up")
+      console.info("✅ Real-time audio processing set up")
     } catch (error) {
       console.error("❌ Failed to set up audio processing:", error)
       throw error
@@ -264,7 +264,7 @@ export class WebRTCAudioProcessor {
       }
 
       await this.peerConnection.setRemoteDescription(description)
-      console.log("✅ Remote description set")
+      console.info("✅ Remote description set")
     } catch (error) {
       console.error("❌ Failed to set remote description:", error)
       throw error
@@ -344,7 +344,7 @@ export class WebRTCAudioProcessor {
       }
 
       this.isConnected = false
-      console.log("✅ WebRTC audio processor cleaned up")
+      console.info("✅ WebRTC audio processor cleaned up")
     } catch (error) {
       console.error("❌ Error during cleanup:", error)
     }

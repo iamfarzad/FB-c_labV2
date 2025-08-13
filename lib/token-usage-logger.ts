@@ -68,7 +68,7 @@ export class TokenUsageLogger {
       if (error) {
         console.error('Failed to log token usage:', error)
       } else {
-        console.log(`Token usage logged: ${log.feature} - ${log.total_tokens} tokens - $${log.estimated_cost.toFixed(4)}`)
+        console.info(`Token usage logged: ${log.feature} - ${log.total_tokens} tokens - $${log.estimated_cost.toFixed(4)}`)
       }
     } catch (error) {
       console.error('Token usage logging failed:', error)

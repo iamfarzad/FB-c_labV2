@@ -22,12 +22,12 @@ async function runTest(name: string, testFn: () => Promise<any>): Promise<void> 
     await testFn()
     const duration = Date.now() - startTime
     results.push({ name, status: 'PASS', message: 'Test completed successfully', duration })
-    console.log(`✅ ${name} (${duration}ms)`)
+    console.info(`✅ ${name} (${duration}ms)`)
   } catch (error) {
     const duration = Date.now() - startTime
     const message = error instanceof Error ? error.message : 'Unknown error'
     results.push({ name, status: 'FAIL', message, duration })
-    console.log(`❌ ${name}: ${message}`)
+    console.info(`❌ ${name}: ${message}`)
   }
 }
 
@@ -108,7 +108,7 @@ async function testLeadResearchAPI() {
 }
 
 async function testImageAnalysisAPI() {
-  const response = await fetch(`${BASE_URL}/api/analyze-image`, {
+  const response = await fetch(`${BASE_URL}/api/tools/webcam`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -128,7 +128,7 @@ async function testImageAnalysisAPI() {
 }
 
 async function testDocumentAnalysisAPI() {
-  const response = await fetch(`${BASE_URL}/api/analyze-document`, {
+  const response = await fetch(`${BASE_URL}/api/tools/screen`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -270,7 +270,7 @@ async function testMiddlewareRouting() {
 }
 
 async function main() {
-  console.log('🧪 Starting Comprehensive UI and Functionality Tests...\n')
+  console.info('🧪 Starting Comprehensive UI and Functionality Tests...\n')
   
   // Test mock system
   await runTest('Mock Status Check', testMockStatus)
@@ -292,31 +292,31 @@ async function main() {
   await runTest('Chat Page', testChatPage)
   
   // Summary
-  console.log('\n📊 Test Results Summary:')
-  console.log('=' * 50)
+  console.info('\n📊 Test Results Summary:')
+  console.info('=' * 50)
   
   const passed = results.filter(r => r.status === 'PASS').length
   const failed = results.filter(r => r.status === 'FAIL').length
   const total = results.length
   
-  console.log(`✅ Passed: ${passed}`)
-  console.log(`❌ Failed: ${failed}`)
-  console.log(`📈 Success Rate: ${((passed / total) * 100).toFixed(1)}%`)
+  console.info(`✅ Passed: ${passed}`)
+  console.info(`❌ Failed: ${failed}`)
+  console.info(`📈 Success Rate: ${((passed / total) * 100).toFixed(1)}%`)
   
   if (failed > 0) {
-    console.log('\n🚨 Failed Tests:')
+    console.info('\n🚨 Failed Tests:')
     results.filter(r => r.status === 'FAIL').forEach(result => {
-      console.log(`  • ${result.name}: ${result.message}`)
+      console.info(`  • ${result.name}: ${result.message}`)
     })
   }
   
-  console.log('\n🎯 Next Steps:')
+  console.info('\n🎯 Next Steps:')
   if (failed === 0) {
-    console.log('  ✅ All tests passed! The system is working correctly.')
+    console.info('  ✅ All tests passed! The system is working correctly.')
   } else {
-    console.log('  🔧 Fix the failed tests above before proceeding.')
-    console.log('  🧪 Run browser tests to check UI interactions.')
-    console.log('  📱 Test mobile responsiveness.')
+    console.info('  🔧 Fix the failed tests above before proceeding.')
+    console.info('  🧪 Run browser tests to check UI interactions.')
+    console.info('  📱 Test mobile responsiveness.')
   }
 }
 

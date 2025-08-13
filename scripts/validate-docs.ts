@@ -93,21 +93,21 @@ function main() {
   } else {
     // Print concise report to stdout
     // eslint-disable-next-line no-console
-    console.log('📑 Documentation reference validation')
+    console.info('📑 Documentation reference validation')
     // eslint-disable-next-line no-console
-    console.log(`Docs scanned: ${all.length}`)
+    console.info(`Docs scanned: ${all.length}`)
     // eslint-disable-next-line no-console
-    console.log(`References found: ${totalRefs}`)
+    console.info(`References found: ${totalRefs}`)
     // eslint-disable-next-line no-console
-    console.log(`Missing references: ${totalMissing}`)
+    console.info(`Missing references: ${totalMissing}`)
   
     for (const r of results) {
       if (r.missing.length === 0) continue
       // eslint-disable-next-line no-console
-      console.log(`\n— ${r.doc}`)
+      console.info(`\n— ${r.doc}`)
       for (const m of r.missing) {
         // eslint-disable-next-line no-console
-        console.log(`  ✗ ${m}`)
+        console.info(`  ✗ ${m}`)
       }
     }
   }

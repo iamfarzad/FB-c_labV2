@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { ToolRunResult } from '@/types/intelligence'
 import { ContextStorage } from '@/lib/context/context-storage'
 import crypto from 'crypto'
 
@@ -56,13 +57,13 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const sessionId = searchParams.get('sessionId') || req.headers.get('x-intelligence-session-id')
 
-    if (!sessionId) return NextResponse.json({ error: 'Missing sessionId parameter' }, { status: 400 })
+    if (!sessionId) return NextResponse.json({ ok: false, error: 'Missing sessionId parameter' } satisfies ToolRunResult, { status: 400 })
 
     // Rate limiting check
     if (!checkRateLimit(sessionId)) {
       const state = getRateState(sessionId)
       const retryAfterSec = Math.max(1, Math.ceil((state.resetTime - Date.now()) / 1000))
-      return new NextResponse(JSON.stringify({ error: 'Rate limit exceeded. Please wait before retrying.' }), {
+      return new NextResponse(JSON.stringify({ ok: false, error: 'Rate limit exceeded. Please wait before retrying.' } satisfies ToolRunResult), {
         status: 429,
         headers: {
           'Content-Type': 'application/json',
@@ -75,7 +76,7 @@ export async function GET(req: NextRequest) {
     }
 
     const context = await contextStorage.get(sessionId)
-    if (!context) return NextResponse.json({ error: 'Context not found' }, { status: 404 })
+    if (!context) return NextResponse.json({ ok: false, error: 'Context not found' } satisfies ToolRunResult, { status: 404 })
 
     // Return merged context snapshot
     const snapshot = {
@@ -106,7 +107,8 @@ export async function GET(req: NextRequest) {
       return res304
     }
 
-    const response = NextResponse.json(snapshot)
+    // Back-compat: include snapshot fields at top-level
+    const response = NextResponse.json({ ok: true, output: snapshot, ...snapshot } as any)
     const state200 = getRateState(sessionId)
     response.headers.set('ETag', etag)
     response.headers.set('Cache-Control', 'private, max-age=5, must-revalidate')
@@ -117,6 +119,6 @@ export async function GET(req: NextRequest) {
     return response
 
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: 'Internal server error' } satisfies ToolRunResult, { status: 500 })
   }
 }

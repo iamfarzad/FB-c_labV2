@@ -5,7 +5,7 @@ import { BookCallButton } from '@/components/meeting/BookCallButton'
 import Link from "next/link"
 import { ArrowRight, Lightbulb, Star, Users } from "lucide-react"
 import { FbcIcon } from "@/components/ui/fbc-icon"
-import { FbcIcon as FbcIconPolished } from "@/fbc-logo-icon/components/fbc-icon"
+import { FbcIcon as FbcIconPolished } from "@/components/ui/fbc-icon"
 import { ClientBrain, ClientZap, ClientSparkles, ClientTarget } from "@/components/ui/client-icons"
 import type { Metadata } from "next"
 import { MotionCard } from "@/components/ui/motion-card"

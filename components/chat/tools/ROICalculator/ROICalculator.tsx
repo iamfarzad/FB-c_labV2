@@ -70,7 +70,8 @@ export function ROICalculator({
       });
       if (!response.ok) throw new Error("Calculation failed");
       const data = await response.json();
-      setResult(data.data); // API returns data in data field
+      if (!data?.ok || !data?.output) throw new Error("Invalid ROI API response");
+      setResult(data.output);
       setCurrentStep("results");
       toast({ title: "ROI Calculation Complete", description: "Your ROI analysis is ready!" });
       // mark capability as explored

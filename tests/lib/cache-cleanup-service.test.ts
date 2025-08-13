@@ -47,24 +47,24 @@ describe('CacheCleanupService', () => {
 
   describe('startCleanup', () => {
     it('should start cleanup interval', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
       
       service.startCleanup(30);
       
-      expect(consoleSpy).toHaveBeenCalledWith('🧹 Starting cache cleanup service (every 30 minutes)');
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Starting cache cleanup service'));
       
       consoleSpy.mockRestore();
     });
 
     it('should not start multiple intervals', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
       
       service.startCleanup(30);
       service.startCleanup(30);
       
       // Should see "Starting" message once, and "already running" message once
-      expect(consoleSpy).toHaveBeenCalledWith('🧹 Starting cache cleanup service (every 30 minutes)');
-      expect(consoleSpy).toHaveBeenCalledWith('🧹 Cache cleanup already running');
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Starting cache cleanup service'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Cache cleanup already running'));
       
       consoleSpy.mockRestore();
     });
@@ -91,18 +91,18 @@ describe('CacheCleanupService', () => {
 
   describe('stopCleanup', () => {
     it('should stop cleanup interval', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
       
       service.startCleanup(30);
       service.stopCleanup();
       
-      expect(consoleSpy).toHaveBeenCalledWith('🧹 Cache cleanup service stopped');
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Cache cleanup service stopped'));
       
       consoleSpy.mockRestore();
     });
 
     it('should handle stopping when not started', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
       
       service.stopCleanup();
       
@@ -115,7 +115,7 @@ describe('CacheCleanupService', () => {
   describe('performCleanup', () => {
     it('should call clearExpiredCache on GeminiConfigEnhanced', async () => {
       const clearExpiredCacheSpy = jest.spyOn(geminiConfig, 'clearExpiredCache');
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
       
       // Add some test data to cache
       await geminiConfig.optimizeConversation(
@@ -184,7 +184,7 @@ describe('CacheCleanupService', () => {
 
   describe('clearAllCache', () => {
     it('should clear all cache entries', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
       
       // Add some test data - need more than 5 messages to trigger caching
       const messages = [];

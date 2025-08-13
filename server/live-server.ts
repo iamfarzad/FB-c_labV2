@@ -59,7 +59,7 @@ let wss: WebSocketServer
         key: fs.readFileSync(path.join(__dirname, '..', 'localhost-key.pem')),
         cert: fs.readFileSync(path.join(__dirname, '..', 'localhost.pem')),
         };
-        console.log('🔐 SSL certificates loaded for local development');
+        console.info('🔐 SSL certificates loaded for local development');
     } catch (error) {
         console.warn('⚠️  SSL certificates not found. Run: mkcert localhost');
         console.warn('Falling back to HTTP for local development');
@@ -88,8 +88,8 @@ const healthServer = useTls
 
 const server = healthServer.listen(Number(PORT), '0.0.0.0', () => {
 const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
-    console.log(`🚀 WebSocket server listening on port ${PORT}`);
-    console.log(`🔐 Using ${protocol} protocol`);
+    console.info(`🚀 WebSocket server listening on port ${PORT}`);
+    console.info(`🔐 Using ${protocol} protocol`);
     });
 
 // Initialize WebSocket server bound to the HTTP(S) server
@@ -171,7 +171,7 @@ nodeProcess?.on('unhandledRejection', (reason: unknown) => {
         budget.totalTokensUsed += totalTokens;
         budget.totalCost += cost;
         budget.lastMessageTime = new Date();
-        console.log(`[${connectionId}] Budget update: ${budget.messageCount} messages, ${budget.totalTokensUsed} tokens, $${budget.totalCost.toFixed(6)} cost`);
+        console.info(`[${connectionId}] Budget update: ${budget.messageCount} messages, ${budget.totalTokensUsed} tokens, $${budget.totalCost.toFixed(6)} cost`);
     }
 
     function estimateTokens(text: string): number {
@@ -183,19 +183,19 @@ nodeProcess?.on('unhandledRejection', (reason: unknown) => {
   const now = Date.now()
   const prev = lastStartAt.get(connectionId) || 0
   if (now - prev < 1000) {
-    console.log(`[${connectionId}] start() ignored due to 1s cooldown window`)
+    console.info(`[${connectionId}] start() ignored due to 1s cooldown window`)
     return
   }
   lastStartAt.set(connectionId, now)
 
   if (activeSessions.has(connectionId)) {
-    console.log(`[${connectionId}] Session already exists. Closing old one.`);
+    console.info(`[${connectionId}] Session already exists. Closing old one.`);
     try { activeSessions.get(connectionId)?.session?.close?.(); } catch {}
   }
 
   // Deduplicate concurrent starts
   if (sessionStarting.has(connectionId)) {
-    console.log(`[${connectionId}] start() already in progress; skipping duplicate call.`)
+    console.info(`[${connectionId}] start() already in progress; skipping duplicate call.`)
     return
   }
   sessionStarting.add(connectionId)
@@ -249,7 +249,7 @@ Guidelines:
       },
       callbacks: {
         onopen: () => {
-          console.log(`[${connectionId}] Gemini session opened.`);
+          console.info(`[${connectionId}] Gemini session opened.`);
           ws.send(JSON.stringify({ type: 'session_started', payload: { connectionId, languageCode: lang, voiceName } }));
           // Guard: if no client audio arrives quickly, nudge the session with a brief silence to keep it open
           try { clearTimeout(firstAudioTimers.get(connectionId) as any) } catch {}
@@ -263,7 +263,7 @@ Guidelines:
                 await (session as any).sendRealtimeInput({
                   audio: { data: b64, mimeType: 'audio/pcm;rate=16000' },
                 })
-                console.log(`[${connectionId}] 🫧 Injected 100ms silence to keep Gemini session warm`)
+                console.info(`[${connectionId}] 🫧 Injected 100ms silence to keep Gemini session warm`)
               }
             } catch (e) {
               console.warn(`[${connectionId}] Silence keepalive failed:`, e)
@@ -288,7 +288,7 @@ Guidelines:
           safeSend(ws as any, JSON.stringify({ type: 'error', payload: { message: `Gemini Error: ${detail.message}`, detail } }));
         },
         onclose: () => {
-          console.log(`[${connectionId}] Gemini session closed.`);
+          console.info(`[${connectionId}] Gemini session closed.`);
           // Do not tear down browser WS; just clear active session so next turn can start lazily
           activeSessions.delete(connectionId)
           try { clearTimeout(firstAudioTimers.get(connectionId) as any) } catch {}
@@ -300,11 +300,11 @@ Guidelines:
     });
 
     activeSessions.set(connectionId, { ws, session });
-    console.log(`[${connectionId}] Active session stored.`);
+    console.info(`[${connectionId}] Active session stored.`);
     // Flush any queued audio chunks first
     const queued = pendingAudioChunks.get(connectionId) || []
     if (queued.length > 0) {
-      console.log(`[${connectionId}] 🚚 Flushing ${queued.length} queued audio chunks to Gemini`)
+      console.info(`[${connectionId}] 🚚 Flushing ${queued.length} queued audio chunks to Gemini`)
       for (const chunk of queued) {
         try {
           await (session as any).sendRealtimeInput({
@@ -319,11 +319,11 @@ Guidelines:
       pendingAudioChunks.delete(connectionId)
     }
     if (pendingTurnComplete.get(connectionId)) {
-      console.log(`[${connectionId}] 🔁 Processing queued TURN_COMPLETE after session start.`)
+      console.info(`[${connectionId}] 🔁 Processing queued TURN_COMPLETE after session start.`)
       pendingTurnComplete.delete(connectionId)
       try {
         await (session as any).sendRealtimeInput({ turnComplete: true })
-        console.log(`[${connectionId}] ✅ Sent TURN_COMPLETE to Gemini`)
+        console.info(`[${connectionId}] ✅ Sent TURN_COMPLETE to Gemini`)
       } catch (e) {
         console.error(`[${connectionId}] ❌ Failed to send TURN_COMPLETE:`, e)
       }
@@ -338,7 +338,7 @@ Guidelines:
 }
 
     function handleGeminiMessage(connectionId: string, ws: WebSocket, message: LiveServerMessage) {
-        console.log(`[${connectionId}] 🎯 Received message from Gemini:`, JSON.stringify(message, null, 2));
+        console.info(`[${connectionId}] 🎯 Received message from Gemini:`, JSON.stringify(message, null, 2));
   // --- transcripts extraction (partial/final + model text) ---
   const inputPartials: string[] = []
   const inputFinals: string[] = []
@@ -379,10 +379,10 @@ Guidelines:
   }
 
         if (message.serverContent?.modelTurn?.parts) {
-            console.log(`[${connectionId}] 📝 Processing ${message.serverContent.modelTurn.parts.length} parts from Gemini`);
+            console.info(`[${connectionId}] 📝 Processing ${message.serverContent.modelTurn.parts.length} parts from Gemini`);
             for (const part of message.serverContent.modelTurn.parts) {
                 if (part.text) {
-                    console.log(`[${connectionId}] 💬 Sending text response: ${part.text.substring(0, 100)}...`);
+                    console.info(`[${connectionId}] 💬 Sending text response: ${part.text.substring(0, 100)}...`);
                     const outputTokens = estimateTokens(part.text);
                     updateSessionBudget(connectionId, 0, outputTokens);
         // Back-compat + new event name
@@ -391,7 +391,7 @@ Guidelines:
         modelTexts.push(part.text)
                 }
                 if (part.inlineData?.data) {
-                    console.log(`[${connectionId}] 🔊 Sending audio response: ${part.inlineData.data.length} bytes`);
+                    console.info(`[${connectionId}] 🔊 Sending audio response: ${part.inlineData.data.length} bytes`);
                     const audioTokens = Math.ceil(part.inlineData.data.length / 1000);
                     updateSessionBudget(connectionId, 0, audioTokens);
         safeSend(ws, JSON.stringify({ 
@@ -410,7 +410,7 @@ Guidelines:
     safeSend(ws, JSON.stringify({ type: 'model_text', payload: { text: t } }))
   }
         if (message.serverContent?.turnComplete) {
-            console.log(`[${connectionId}] ✅ Turn complete - conversation ready for next input`);
+            console.info(`[${connectionId}] ✅ Turn complete - conversation ready for next input`);
     safeSend(ws, JSON.stringify({ type: 'turn_complete' }));
         }
     }
@@ -429,14 +429,14 @@ Guidelines:
             }
             let client = activeSessions.get(connectionId)
             const audioDataBuffer = Buffer.from(payload.audioData, 'base64');
-            console.log(`[${connectionId}] Buffered audio chunk (${audioDataBuffer.length} bytes).`);
+            console.info(`[${connectionId}] Buffered audio chunk (${audioDataBuffer.length} bytes).`);
             lastClientAudioAt.set(connectionId, Date.now())
             // Never auto-start on raw chunk; require explicit client 'start' to avoid restart loops
             if (!client) {
               const q = pendingAudioChunks.get(connectionId) || []
               q.push({ data: payload.audioData, mimeType: payload.mimeType })
               pendingAudioChunks.set(connectionId, q)
-              console.log(`[${connectionId}] ⏸️ Queued audio (no active session). Waiting for explicit start.`)
+              console.info(`[${connectionId}] ⏸️ Queued audio (no active session). Waiting for explicit start.`)
               return
             }
             try {
@@ -460,11 +460,11 @@ Guidelines:
         const client = activeSessions.get(connectionId);
         const audioBuffers = bufferedAudioChunks.get(connectionId);
         if (!audioBuffers || audioBuffers.length === 0) {
-            console.log(`[${connectionId}] No buffered audio to send.`);
+            console.info(`[${connectionId}] No buffered audio to send.`);
             return;
         }
         if (!client) {
-            console.log(`[${connectionId}] TURN_COMPLETE received but Gemini session not ready yet. Will send after session starts.`);
+            console.info(`[${connectionId}] TURN_COMPLETE received but Gemini session not ready yet. Will send after session starts.`);
             pendingTurnComplete.set(connectionId, true);
             return;
         }
@@ -473,9 +473,9 @@ Guidelines:
         const estimatedTokens = Math.ceil(mergedAudio.length / 1000);
         updateSessionBudget(connectionId, estimatedTokens, 0);
 
-        console.log(`[${connectionId}] Sending FULL buffered audio to Gemini (${mergedAudio.length} bytes).`);
+        console.info(`[${connectionId}] Sending FULL buffered audio to Gemini (${mergedAudio.length} bytes).`);
         const mergedBase64 = (Buffer as any).from(mergedAudio).toString('base64')
-        console.log(`[${connectionId}] 🔍 Audio format: PCM, Base64 length: ${mergedBase64.length}`);
+        console.info(`[${connectionId}] 🔍 Audio format: PCM, Base64 length: ${mergedBase64.length}`);
         
         try {
             const audioContent = {
@@ -492,9 +492,9 @@ Guidelines:
                 turnComplete: true,
             };
             
-            console.log(`[${connectionId}] 📤 Sending content structure:`, JSON.stringify(audioContent, null, 2));
+            console.info(`[${connectionId}] 📤 Sending content structure:`, JSON.stringify(audioContent, null, 2));
             await client.session.sendClientContent(audioContent);
-            console.log(`[${connectionId}] ✅ Audio successfully sent to Gemini, waiting for response...`);
+            console.info(`[${connectionId}] ✅ Audio successfully sent to Gemini, waiting for response...`);
         } catch (error) {
             console.error(`[${connectionId}] ❌ Failed to send audio to Gemini:`, error);
             console.error(`[${connectionId}] ❌ Error details:`, JSON.stringify(error, null, 2));
@@ -512,7 +512,7 @@ Guidelines:
         sessionBudgets.delete(connectionId);
         bufferedAudioChunks.delete(connectionId);
         pendingTurnComplete.delete(connectionId);
-        console.log(`[${connectionId}] Session removed.`);
+        console.info(`[${connectionId}] Session removed.`);
     }
 
 wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
@@ -522,7 +522,7 @@ wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
         // Ensure binary frames are treated as ArrayBuffer
         try { (ws as any).binaryType = 'arraybuffer' } catch {}
         initializeSessionBudget(connectionId);
-        console.log(`[${connectionId}] Client connected. Budget initialized.`);
+        console.info(`[${connectionId}] Client connected. Budget initialized.`);
 
   // Immediately acknowledge connection so client can distinguish WS liveness from Gemini readiness
   safeSend(ws, JSON.stringify({ type: 'connected', payload: { connectionId } }))
@@ -541,17 +541,17 @@ wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
                         let client = activeSessions.get(connectionId)
                         if (!client) {
                           pendingTurnComplete.set(connectionId, true)
-                          console.log(`[${connectionId}] 🕒 TURN_COMPLETE queued (session not ready). Waiting for explicit start.`)
+                          console.info(`[${connectionId}] 🕒 TURN_COMPLETE queued (session not ready). Waiting for explicit start.`)
                           break
                         }
                         if (turnInflight.get(connectionId)) {
-                          console.log(`[${connectionId}] ⏳ TURN_COMPLETE ignored (already in-flight).`)
+                          console.info(`[${connectionId}] ⏳ TURN_COMPLETE ignored (already in-flight).`)
                           break
                         }
                         turnInflight.set(connectionId, true)
                         try {
                           await (client.session as any).sendRealtimeInput({ turnComplete: true })
-                          console.log(`[${connectionId}] ✅ TURN_COMPLETE -> upstream`)
+                          console.info(`[${connectionId}] ✅ TURN_COMPLETE -> upstream`)
                         } catch (e) {
                           console.error(`[${connectionId}] ❌ TURN_COMPLETE upstream`, e)
                           // Fallback to legacy batch send
@@ -568,7 +568,7 @@ wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
         });
 
   ws.on('close', (code: number, reason: Buffer) => {
-    console.log(`[${connectionId}] Browser WS closed. Code: ${code}, Reason: ${reason?.toString?.() || 'N/A'}`)
+    console.info(`[${connectionId}] Browser WS closed. Code: ${code}, Reason: ${reason?.toString?.() || 'N/A'}`)
           try { activeSessions.get(connectionId)?.session?.close?.() } catch {}
           handleClose(connectionId)
         });
@@ -578,4 +578,4 @@ wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
         });
     });
 
-    console.log('Server setup complete.');
+    console.info('Server setup complete.');

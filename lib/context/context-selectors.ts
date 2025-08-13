@@ -1,3 +1,11 @@
+export function selectCompanyName(ctx: any): string | undefined {
+  return ctx?.company?.name || ctx?.lead?.company
+}
+
+export function selectRole(ctx: any): string | undefined {
+  return ctx?.role || ctx?.person?.role
+}
+
 import type { ContextSnapshot } from './context-schema'
 
 export function getLeadEmail(ctx: ContextSnapshot | null | undefined): string | undefined {

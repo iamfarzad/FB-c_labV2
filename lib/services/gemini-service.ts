@@ -4,7 +4,7 @@
  * Includes error handling, token estimation, and budget enforcement
  */
 
-import { GoogleGenAI, GenerativeModel } from '@google/genai'
+import { GoogleGenerativeAI, type GenerateContentRequest, type GenerateContentResponse } from '@google/generative-ai'
 import { createOptimizedConfig } from '@/lib/gemini-config-enhanced'
 import { selectModelForFeature, estimateTokens, estimateTokensForMessages } from '@/lib/model-selector'
 import { enforceBudgetAndLog } from '@/lib/token-usage-logger'
@@ -33,14 +33,14 @@ export interface GeminiResponse {
 }
 
 class GeminiService {
-  private client: GoogleGenAI
+  private client: GoogleGenerativeAI
   private supabase: any
 
   constructor() {
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY environment variable is not set')
     }
-    this.client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+    this.client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     this.supabase = getSupabase()
   }
 
@@ -94,19 +94,14 @@ class GeminiService {
       })
       
       // Generate content
-      const model = this.client.models.generateContent
-      const result = await model({
-        model: modelSelection.model,
-        config,
+      const model = this.client.getGenerativeModel({ model: modelSelection.model })
+      const result = await model.generateContent({
         contents: [
-          {
-            role: 'user',
-            parts: [{ text: prompt }]
-          }
-        ]
+          { role: 'user', parts: [{ text: prompt }] }
+        ],
+        generationConfig: config
       })
-      
-      const text = result.candidates?.[0]?.content?.parts?.[0]?.text || ''
+      const text = result.response?.text() || ''
       
       // Record usage if demo session
       if (sessionId) {
@@ -182,27 +177,20 @@ class GeminiService {
       })
       
       // Generate analysis
-      const model = this.client.models.generateContent
-      const result = await model({
-        model: modelSelection.model,
-        config,
+      const model = this.client.getGenerativeModel({ model: modelSelection.model })
+      const result = await model.generateContent({
         contents: [
           {
             role: 'user',
             parts: [
               { text: prompt },
-              {
-                inlineData: {
-                  mimeType,
-                  data: base64Data
-                }
-              }
+              { inlineData: { mimeType, data: base64Data } }
             ]
           }
-        ]
+        ],
+        generationConfig: config
       })
-      
-      const analysis = result.candidates?.[0]?.content?.parts?.[0]?.text || 'No analysis available'
+      const analysis = result.response?.text() || 'No analysis available'
       
       // Record usage
       if (sessionId) {
@@ -276,27 +264,20 @@ class GeminiService {
       })
       
       // Generate analysis
-      const model = this.client.models.generateContent
-      const result = await model({
-        model: modelSelection.model,
-        config,
+      const model = this.client.getGenerativeModel({ model: modelSelection.model })
+      const result = await model.generateContent({
         contents: [
           {
             role: 'user',
             parts: [
               { text: analysisPrompt },
-              {
-                inlineData: {
-                  mimeType,
-                  data: documentData
-                }
-              }
+              { inlineData: { mimeType, data: documentData } }
             ]
           }
-        ]
+        ],
+        generationConfig: config
       })
-      
-      const analysis = result.candidates?.[0]?.content?.parts?.[0]?.text || 'No analysis available'
+      const analysis = result.response?.text() || 'No analysis available'
       
       // Record usage
       if (sessionId) {
@@ -434,25 +415,17 @@ class GeminiService {
       })
       
       // Generate streaming response
-      const model = this.client.models.generateContentStream
-      const response = await model({
-        model: modelSelection.model,
-        config,
+      const model = this.client.getGenerativeModel({ model: modelSelection.model })
+      const stream = await model.generateContentStream({
         contents: [
           ...history,
-          {
-            role: 'user',
-            parts: [{ text: prompt }]
-          }
-        ]
+          { role: 'user', parts: [{ text: prompt }] }
+        ],
+        generationConfig: config
       })
-      
-      // Stream chunks
-      for await (const chunk of response) {
-        const text = chunk.candidates?.[0]?.content?.parts?.[0]?.text
-        if (text) {
-          yield text
-        }
+      for await (const chunk of stream.stream) {
+        const text = chunk.text()
+        if (text) yield text
       }
       
       // Record usage

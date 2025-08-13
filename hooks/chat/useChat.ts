@@ -60,7 +60,7 @@ export function useChat({
   // Reset messages when session changes
   useEffect(() => {
     if (data.sessionId && data.sessionId !== currentSessionIdRef.current) {
-      console.log('🔄 Session changed, resetting messages:', {
+      console.info('🔄 Session changed, resetting messages:', {
         oldSession: currentSessionIdRef.current,
         newSession: data.sessionId
       })
@@ -98,7 +98,7 @@ export function useChat({
     // 🚫 RATE LIMITING: Prevent rapid successive calls
     const now = Date.now()
     if (now - lastCallTimeRef.current < DEBOUNCE_DELAY) {
-      console.log('🚫 Rate limited: Skipping rapid call', {
+      console.info('🚫 Rate limited: Skipping rapid call', {
         timeSinceLastCall: now - lastCallTimeRef.current,
         content: content.substring(0, 50)
       })
@@ -132,7 +132,7 @@ export function useChat({
       // Create new abort controller
       abortControllerRef.current = new AbortController()
 
-      console.log('📤 Sending message:', {
+      console.info('📤 Sending message:', {
         contentLength: content.length,
         sessionId: data.sessionId,
         leadContext: data.leadContext,
@@ -235,7 +235,7 @@ export function useChat({
                   timestamp: new Date()
                 }
                 
-                console.log('✅ Message completed:', {
+                console.info('✅ Message completed:', {
                   responseLength: assistantContent.length,
                   timestamp: new Date().toISOString()
                 })

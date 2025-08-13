@@ -37,7 +37,7 @@ export function middleware(req: NextRequest) {
     return response
   }
 
-  const enableMocking = process.env.ENABLE_GEMINI_MOCKING === 'true'
+  const enableMocking = process.env.ENABLE_GEMINI_MOCKING === 'true' || process.env.FBC_USE_MOCKS === '1' || process.env.NEXT_PUBLIC_USE_MOCKS === '1'
   if (!enableMocking) {
     return response
   }
@@ -46,9 +46,11 @@ export function middleware(req: NextRequest) {
   const geminiRoutes = [
     '/api/chat',
     '/api/gemini-live',
-    '/api/analyze-image',
-    '/api/analyze-document',
-    '/api/analyze-screenshot',
+    // Canonicalized routes under /api/tools/*
+    '/api/tools/translate',
+    '/api/tools/screen',
+    '/api/tools/webcam',
+    '/api/tools/voice-transcript',
     '/api/video-to-app',
     '/api/intelligence/lead-research',
     '/api/educational-content',
@@ -71,12 +73,15 @@ export function middleware(req: NextRequest) {
       mockUrl.pathname = '/api/mock/export-summary'
     } else if (req.nextUrl.pathname.startsWith('/api/intelligence/lead-research')) {
       mockUrl.pathname = '/api/mock/lead-research'
+    } else if (req.nextUrl.pathname.startsWith('/api/analyze-image') || req.nextUrl.pathname.startsWith('/api/analyze-document') || req.nextUrl.pathname.startsWith('/api/analyze-screenshot')) {
+      // Legacy analysis endpoints redirect to a canonical mock
+      mockUrl.pathname = '/api/mock/chat'
     } else {
       // For other routes, use a generic mock endpoint
       mockUrl.pathname = '/api/mock/chat' // Fallback to chat mock
     }
     
-    console.log(`🟠 [MIDDLEWARE] Redirecting ${req.nextUrl.pathname} to ${mockUrl.pathname}`)
+    console.info(`🟠 [MIDDLEWARE] Redirecting ${req.nextUrl.pathname} to ${mockUrl.pathname}`)
     
     return NextResponse.rewrite(mockUrl)
   }
@@ -91,9 +96,7 @@ export const config = {
     // Specific API routes for mocking
     '/api/chat/:path*',
     '/api/gemini-live/:path*',
-    '/api/analyze-image/:path*',
-    '/api/analyze-document/:path*',
-    '/api/analyze-screenshot/:path*',
+    // legacy analysis endpoints are redirected above
     '/api/video-to-app/:path*',
     '/api/lead-research/:path*',
     '/api/intelligence/lead-research/:path*',

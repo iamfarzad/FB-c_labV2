@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { POST as chatHandler } from '@/app/api/chat/route';
-import { POST as analyzeImageHandler } from '@/app/api/analyze-image/route';
-import { POST as analyzeDocumentHandler } from '@/app/api/analyze-document/route';
+import { POST as analyzeImageHandler } from '@/app/api/tools/webcam/route';
+import { POST as analyzeDocumentHandler } from '@/app/api/tools/screen/route';
 import { POST as geminiLiveHandler } from '@/app/api/gemini-live/route';
 import { GeminiConfigEnhanced } from '@/lib/gemini-config-enhanced';
 
@@ -185,7 +185,7 @@ describe('Optimized API Routes', () => {
 
   describe('Image Analysis Route Optimization', () => {
     const createImageRequest = (body: any) => {
-      return new NextRequest('http://localhost:3000/api/analyze-image', {
+      return new NextRequest('http://localhost:3000/api/tools/webcam', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -236,7 +236,7 @@ describe('Optimized API Routes', () => {
 
   describe('Document Analysis Route Optimization', () => {
     const createDocumentRequest = (body: any) => {
-      return new NextRequest('http://localhost:3000/api/analyze-document', {
+      return new NextRequest('http://localhost:3000/api/tools/screen', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { ToolRunResult } from '@/types/intelligence'
 import { LeadResearchService } from '@/lib/intelligence/lead-research'
 import { ContextStorage } from '@/lib/context/context-storage'
 import { embedTexts } from '@/lib/embeddings/gemini'
@@ -11,14 +12,9 @@ export async function POST(request: NextRequest) {
   try {
     const { sessionId, email, name, companyUrl, provider = 'google' } = await request.json()
 
-    if (!sessionId || !email) {
-      return NextResponse.json(
-        { error: 'Session ID and email are required' },
-        { status: 400 }
-      )
-    }
+    if (!sessionId || !email) return NextResponse.json({ ok: false, error: 'Session ID and email are required' } satisfies ToolRunResult, { status: 400 })
 
-    console.log('🔍 Lead research started:', {
+    console.info('🔍 Lead research started:', {
       sessionId,
       email,
       name,
@@ -46,7 +42,7 @@ export async function POST(request: NextRequest) {
       if (vectors.length) await upsertEmbeddings(sessionId, 'lead_research', texts, vectors)
     }
 
-    console.log('✅ Lead research completed:', {
+    console.info('✅ Lead research completed:', {
       company: researchResult.company,
       person: researchResult.person,
       role: researchResult.role,
@@ -54,19 +50,16 @@ export async function POST(request: NextRequest) {
       citations: researchResult.citations?.length || 0
     })
 
-    return NextResponse.json({
+    return NextResponse.json({ ok: true, output: {
       company: researchResult.company,
       person: researchResult.person,
       role: researchResult.role,
       scores: { confidence: researchResult.confidence },
       citations: researchResult.citations || []
-    })
+    } } satisfies ToolRunResult)
 
   } catch (error) {
     console.error('❌ Lead research failed:', error)
-    return NextResponse.json(
-      { error: 'Lead research failed' },
-      { status: 500 }
-    )
+    return NextResponse.json({ ok: false, error: 'Lead research failed' } satisfies ToolRunResult, { status: 500 })
   }
 }

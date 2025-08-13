@@ -42,7 +42,7 @@ describe('Performance: Response Time Tests', () => {
         const endTime = Date.now();
         const responseTime = endTime - startTime;
 
-        console.log(`Endpoint ${endpoint.path}: ${responseTime}ms`);
+        console.info(`Endpoint ${endpoint.path}: ${responseTime}ms`);
         expect(responseTime).toBeLessThan(2000);
         expect(response.status).not.toBe(500);
       }
@@ -71,7 +71,7 @@ describe('Performance: Response Time Tests', () => {
       const successfulResponses = responses.filter(r => r.status === 200).length;
       const averageTime = totalTime / concurrentRequests;
 
-      console.log(`Concurrent requests: ${successfulResponses}/${concurrentRequests} successful, avg time: ${averageTime}ms`);
+      console.info(`Concurrent requests: ${successfulResponses}/${concurrentRequests} successful, avg time: ${averageTime}ms`);
       
       expect(successfulResponses).toBeGreaterThan(concurrentRequests * 0.8); // 80% success rate
       expect(averageTime).toBeLessThan(3000); // 3 seconds average
@@ -93,7 +93,7 @@ describe('Performance: Response Time Tests', () => {
         const endTime = Date.now();
         const queryTime = endTime - startTime;
 
-        console.log(`Query ${queryTest.name}: ${queryTime}ms`);
+        console.info(`Query ${queryTest.name}: ${queryTime}ms`);
         expect(queryTime).toBeLessThan(500);
         expect(error).toBeNull();
       }
@@ -113,7 +113,7 @@ describe('Performance: Response Time Tests', () => {
         const endTime = Date.now();
         const queryTime = endTime - startTime;
 
-        console.log(`Indexed query ${queryTest.name}: ${queryTime}ms`);
+        console.info(`Indexed query ${queryTest.name}: ${queryTime}ms`);
         expect(queryTime).toBeLessThan(200); // Indexed queries should be faster
         expect(error).toBeNull();
       }
@@ -141,7 +141,7 @@ describe('Performance: Response Time Tests', () => {
         const endTime = Date.now();
         const uploadTime = endTime - startTime;
 
-        console.log(`File upload ${file.name} (${file.size} bytes): ${uploadTime}ms`);
+        console.info(`File upload ${file.name} (${file.size} bytes): ${uploadTime}ms`);
         expect(uploadTime).toBeLessThan(30000);
         expect(response.status).toBe(200);
       }
@@ -166,7 +166,7 @@ describe('Performance: Response Time Tests', () => {
       const successfulQueries = results.filter(r => !r.error).length;
       const averageTime = totalTime / connectionCount;
 
-      console.log(`Connection pooling test: ${successfulQueries}/${connectionCount} successful, avg time: ${averageTime}ms`);
+      console.info(`Connection pooling test: ${successfulQueries}/${connectionCount} successful, avg time: ${averageTime}ms`);
       
       expect(successfulQueries).toBe(connectionCount);
       expect(averageTime).toBeLessThan(100); // Should be very fast with connection pooling

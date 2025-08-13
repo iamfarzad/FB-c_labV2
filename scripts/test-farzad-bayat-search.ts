@@ -7,7 +7,7 @@
 import { GoogleGenAI } from '@google/genai'
 
 async function testFarzadBayatSearch() {
-  console.log('🔍 Testing specific search for Farzad Bayat\n')
+  console.info('🔍 Testing specific search for Farzad Bayat\n')
 
   const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
@@ -20,7 +20,7 @@ async function testFarzadBayatSearch() {
   ]
 
   for (const query of searchQueries) {
-    console.log(`📋 Testing query: "${query}"`)
+    console.info(`📋 Testing query: "${query}"`)
     
     try {
       const prompt = `
@@ -68,21 +68,21 @@ If no profile is found or it's not the right person, return:
       const jsonMatch = text.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         const searchResult = JSON.parse(jsonMatch[0])
-        console.log('✅ Result:', searchResult)
+        console.info('✅ Result:', searchResult)
         
         // Check if this is the right person
         if (searchResult.fullName === 'Farzad Bayat' || searchResult.profileUrl?.includes('farzad-bayat')) {
-          console.log('🎯 FOUND THE RIGHT PERSON!')
+          console.info('🎯 FOUND THE RIGHT PERSON!')
         }
       } else {
-        console.log('❌ No JSON found in response')
+        console.info('❌ No JSON found in response')
       }
       
     } catch (error) {
       console.error('❌ Search failed:', error)
     }
     
-    console.log('---\n')
+    console.info('---\n')
   }
 }
 

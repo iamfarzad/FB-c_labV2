@@ -81,7 +81,7 @@ export const MOCK_CONFIG = {
 }
 
 export function logMockActivity(endpoint: string, correlationId: string) {
-  console.log(`🟠 [MOCK] ${endpoint} called with correlation ID: ${correlationId}`)
+  console.info(`🟠 [MOCK] ${endpoint} called with correlation ID: ${correlationId}`)
 }
 
 export function generateCorrelationId(): string {

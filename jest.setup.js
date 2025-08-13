@@ -1,8 +1,10 @@
+require('@testing-library/jest-dom')
+
 // Optional: configure or set up a testing framework before each test
 // if you delete this file, remove `setupFilesAfterEnv` from `jest.config.mjs`
 
 // Used for things like setting up mock servers or global mocks.
-import '@testing-library/jest-dom'
+// CJS only for Jest setup
 
 // Provide test env vars and mock external email service to reduce noisy warnings during API tests
 if (process.env.NODE_ENV === 'test') {
@@ -92,26 +94,38 @@ jest.mock('@supabase/supabase-js', () => ({
 }))
 
 // Mock Next.js server Request for API tests
-jest.mock('next/server', () => {
-  const actual = jest.requireActual('next/server')
-  class MockRequest {
-    constructor(url, init) {
-      this.url = url
-      this.method = init?.method || 'GET'
-      this.headers = new Map(Object.entries(init?.headers || {}))
-      this._body = init?.body
+try {
+  jest.mock('next/server', () => {
+    const actual = jest.requireActual('next/server')
+    class MockRequest {
+      constructor(url, init) {
+        this.url = url
+        this.method = init?.method || 'GET'
+        this.headers = new Map(Object.entries(init?.headers || {}))
+        this._body = init?.body
+      }
+      json() { try { return Promise.resolve(JSON.parse(this._body || '{}')) } catch { return Promise.resolve({}) } }
+      headers = { get: (k) => this.headers.get(k) }
     }
-    json() { try { return Promise.resolve(JSON.parse(this._body || '{}')) } catch { return Promise.resolve({}) } }
-    headers = { get: (k) => this.headers.get(k) }
-  }
-  return { ...actual, NextRequest: MockRequest }
-})
+    return { ...actual, NextRequest: MockRequest }
+  })
+} catch {}
 
 // Minimal global fetch for Node env tests
 if (typeof fetch === 'undefined') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  global.fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args))
+  const fetchImpl = require('node-fetch')
+  // @ts-ignore
+  global.fetch = fetchImpl.default || fetchImpl
 }
 
 // Ensure keys used by providers exist during tests
 process.env.GEMINI_API_KEY ||= 'test-key'
+// Polyfills for JSDOM
+if (typeof TextEncoder === 'undefined') {
+  const { TextEncoder, TextDecoder } = require('util')
+  // @ts-ignore
+  global.TextEncoder = TextEncoder
+  // @ts-ignore
+  global.TextDecoder = TextDecoder
+}

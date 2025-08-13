@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { ToolRunResult } from '@/types/intelligence'
 import { z } from 'zod'
 import { withApiGuard } from '@/lib/api/withApiGuard'
 import { ContextStorage } from '@/lib/context/context-storage'
@@ -20,7 +21,7 @@ export const POST = withApiGuard({
   rateLimit: { windowMs: 2000, max: 6 },
   handler: async ({ body, sessionId }) => {
     try {
-      if (!sessionId) return NextResponse.json({ ok: false, error: 'missing_session' }, { status: 400 })
+      if (!sessionId) return NextResponse.json({ ok: false, error: 'missing_session' } satisfies ToolRunResult, { status: 400 })
       const existing = await storage.get(sessionId)
       const prev = (existing?.tool_outputs?.education as any) || { completed: [], xp: 0, badges: [] }
       const completed = Array.isArray(prev.completed) ? prev.completed : []
@@ -33,9 +34,9 @@ export const POST = withApiGuard({
       const snippet = `Education: ${body.moduleTitle || body.moduleId} → ${body.stepTitle || body.stepId} (+${body.xp} XP)`
       const last_user_message = `${(existing?.last_user_message || '').toString()}\n\n${snippet}`.trim()
       await storage.update(sessionId, { tool_outputs, last_user_message })
-      return NextResponse.json({ ok: true })
+      return NextResponse.json({ ok: true, output: { xp: education.xp, completed: education.completed } } satisfies ToolRunResult)
     } catch (e: any) {
-      return NextResponse.json({ ok: false, error: 'server_error', message: e?.message || 'unknown' }, { status: 500 })
+      return NextResponse.json({ ok: false, error: 'server_error', details: e?.message || 'unknown' } satisfies ToolRunResult, { status: 500 })
     }
   }
 })

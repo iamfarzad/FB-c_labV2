@@ -133,11 +133,11 @@ Use this real-time data to provide informed, actionable advice.`
 
     // Generate response
     let responseStream
-    let actualInputTokens = optimizedContent.estimatedTokens
+    const actualInputTokens = optimizedContent.estimatedTokens
     let actualOutputTokens = 0
     
     // Log optimization results for admin monitoring
-    console.log(`🔧 Admin chat optimization: ${optimizedContent.usedCache ? 'Used cache' : 'Created new'}, estimated tokens: ${optimizedContent.estimatedTokens}${optimizedContent.summary ? ', with summary' : ''}`);
+    console.info(`🔧 Admin chat optimization: ${optimizedContent.usedCache ? 'Used cache' : 'Created new'}, estimated tokens: ${optimizedContent.estimatedTokens}${optimizedContent.summary ? ', with summary' : ''}`);
     
     try {
       responseStream = await model({

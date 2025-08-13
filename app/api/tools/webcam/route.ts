@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { WebcamCaptureSchema } from '@/lib/services/tool-service'
+import { isMockEnabled } from '@/lib/mock-control'
 import { recordCapabilityUsed } from '@/lib/context/capabilities'
 
 export async function POST(req: NextRequest) {
@@ -15,10 +16,11 @@ export async function POST(req: NextRequest) {
       hasData: image.length > 0
     }
 
-    const response = { ok: true, output: { image, analysis, processedAt: new Date().toISOString() } }
+    // For now webcam endpoint remains a simple echo analyzer; mock flag doesn’t change output
+    const response = { ok: true, output: { image, analysis, processedAt: new Date().toISOString(), mock: isMockEnabled() } }
 
     if (sessionId) {
-      try { await recordCapabilityUsed(String(sessionId), 'webcam', { analysis, imageSize: image.length, format: analysis.format }) } catch {}
+      try { await recordCapabilityUsed(String(sessionId), 'image', { analysis, imageSize: image.length, format: analysis.format }) } catch {}
     }
 
     return NextResponse.json(response, { status: 200 })

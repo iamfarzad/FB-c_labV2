@@ -6,7 +6,7 @@
  */
 
 async function testIntelligencePipeline() {
-  console.log('🧪 Testing Conversational Intelligence Pipeline\n')
+  console.info('🧪 Testing Conversational Intelligence Pipeline\n')
 
   const baseUrl = 'http://localhost:3000'
   const testSessionId = `test-session-${Date.now()}`
@@ -16,7 +16,7 @@ async function testIntelligencePipeline() {
 
   try {
     // Test 1: Session Init
-    console.log('📋 Test 1: Session Initialization')
+    console.info('📋 Test 1: Session Initialization')
     const sessionInitResponse = await fetch(`${baseUrl}/api/intelligence/session-init`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -33,10 +33,10 @@ async function testIntelligencePipeline() {
     }
 
     const sessionInitData = await sessionInitResponse.json()
-    console.log('✅ Session init response:', sessionInitData)
+    console.info('✅ Session init response:', sessionInitData)
 
     // Test 2: Context Retrieval
-    console.log('\n📋 Test 2: Context Retrieval')
+    console.info('\n📋 Test 2: Context Retrieval')
     const contextResponse = await fetch(`${baseUrl}/api/intelligence/context?sessionId=${testSessionId}`)
     
     if (!contextResponse.ok) {
@@ -44,10 +44,10 @@ async function testIntelligencePipeline() {
     }
 
     const contextData = await contextResponse.json()
-    console.log('✅ Context data:', contextData)
+    console.info('✅ Context data:', contextData)
 
     // Test 3: Lead Research
-    console.log('\n📋 Test 3: Lead Research')
+    console.info('\n📋 Test 3: Lead Research')
     const leadResearchResponse = await fetch(`${baseUrl}/api/intelligence/lead-research`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -65,10 +65,10 @@ async function testIntelligencePipeline() {
     }
 
     const leadResearchData = await leadResearchResponse.json()
-    console.log('✅ Lead research data:', leadResearchData)
+    console.info('✅ Lead research data:', leadResearchData)
 
     // Test 4: Updated Context
-    console.log('\n📋 Test 4: Updated Context After Research')
+    console.info('\n📋 Test 4: Updated Context After Research')
     const updatedContextResponse = await fetch(`${baseUrl}/api/intelligence/context?sessionId=${testSessionId}`)
     
     if (!updatedContextResponse.ok) {
@@ -76,17 +76,17 @@ async function testIntelligencePipeline() {
     }
 
     const updatedContextData = await updatedContextResponse.json()
-    console.log('✅ Updated context data:', updatedContextData)
+    console.info('✅ Updated context data:', updatedContextData)
 
-    console.log('\n🎉 All tests passed! Intelligence pipeline is working correctly.')
+    console.info('\n🎉 All tests passed! Intelligence pipeline is working correctly.')
     
     // Summary
-    console.log('\n📊 Test Summary:')
-    console.log(`- Session ID: ${testSessionId}`)
-    console.log(`- Email: ${testEmail}`)
-    console.log(`- Company: ${updatedContextData.company?.name || 'Unknown'}`)
-    console.log(`- Role: ${updatedContextData.role || 'Unknown'}`)
-    console.log(`- Confidence: ${updatedContextData.roleConfidence || 0}`)
+    console.info('\n📊 Test Summary:')
+    console.info(`- Session ID: ${testSessionId}`)
+    console.info(`- Email: ${testEmail}`)
+    console.info(`- Company: ${updatedContextData.company?.name || 'Unknown'}`)
+    console.info(`- Role: ${updatedContextData.role || 'Unknown'}`)
+    console.info(`- Confidence: ${updatedContextData.roleConfidence || 0}`)
 
   } catch (error) {
     console.error('❌ Test failed:', error)

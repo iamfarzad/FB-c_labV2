@@ -3,7 +3,7 @@
 import { LeadManager, CompanySize } from '../lib/lead-manager';
 
 async function testBasicLeadSystem() {
-  console.log('🚀 Testing Basic Lead Generation System\n');
+  console.info('🚀 Testing Basic Lead Generation System\n');
 
   const leadManager = new LeadManager();
   
@@ -11,7 +11,7 @@ async function testBasicLeadSystem() {
     // ============================================================================
     // TEST 1: EMAIL DOMAIN ANALYSIS
     // ============================================================================
-    console.log('📋 Test 1: Email Domain Analysis');
+    console.info('📋 Test 1: Email Domain Analysis');
     
     const testEmails = [
       'john@techstartup.com',
@@ -22,7 +22,7 @@ async function testBasicLeadSystem() {
 
     for (const email of testEmails) {
       const analysis = await leadManager.analyzeEmailDomain(email);
-      console.log(`✅ ${email}:`, {
+      console.info(`✅ ${email}:`, {
         domain: analysis.domain,
         companySize: analysis.companySize,
         industry: analysis.industry,
@@ -34,7 +34,7 @@ async function testBasicLeadSystem() {
     // ============================================================================
     // TEST 2: PAIN POINT EXTRACTION
     // ============================================================================
-    console.log('\n📋 Test 2: Pain Point Extraction');
+    console.info('\n📋 Test 2: Pain Point Extraction');
     
     const testMessages = [
       'We\'re struggling with manual data processing and customer onboarding delays',
@@ -45,13 +45,13 @@ async function testBasicLeadSystem() {
 
     for (const message of testMessages) {
       const painPoints = leadManager['extractPainPoints'](message);
-      console.log(`✅ "${message.substring(0, 50)}...":`, painPoints);
+      console.info(`✅ "${message.substring(0, 50)}...":`, painPoints);
     }
 
     // ============================================================================
     // TEST 3: NAME EXTRACTION
     // ============================================================================
-    console.log('\n📋 Test 3: Name Extraction');
+    console.info('\n📋 Test 3: Name Extraction');
     
     const nameMessages = [
       'My name is John Smith',
@@ -62,13 +62,13 @@ async function testBasicLeadSystem() {
 
     for (const message of nameMessages) {
       const name = leadManager['extractName'](message);
-      console.log(`✅ "${message}":`, name);
+      console.info(`✅ "${message}":`, name);
     }
 
     // ============================================================================
     // TEST 4: EMAIL EXTRACTION
     // ============================================================================
-    console.log('\n📋 Test 4: Email Extraction');
+    console.info('\n📋 Test 4: Email Extraction');
     
     const emailMessages = [
       'My email is john@company.com',
@@ -79,13 +79,13 @@ async function testBasicLeadSystem() {
 
     for (const message of emailMessages) {
       const email = leadManager['extractEmail'](message);
-      console.log(`✅ "${message}":`, email);
+      console.info(`✅ "${message}":`, email);
     }
 
     // ============================================================================
     // TEST 5: AI READINESS CALCULATION
     // ============================================================================
-    console.log('\n📋 Test 5: AI Readiness Calculation');
+    console.info('\n📋 Test 5: AI Readiness Calculation');
     
     const mockIndustryAnalysis = {
       techAdoption: 0.8,
@@ -106,12 +106,12 @@ async function testBasicLeadSystem() {
     }
     score = Math.min(100, score);
     
-    console.log('✅ AI Readiness Score:', score);
+    console.info('✅ AI Readiness Score:', score);
 
     // ============================================================================
     // TEST 6: DECISION MAKER DETECTION
     // ============================================================================
-    console.log('\n📋 Test 6: Decision Maker Detection');
+    console.info('\n📋 Test 6: Decision Maker Detection');
     
     const testEmails2 = [
       'ceo@company.com',
@@ -123,17 +123,17 @@ async function testBasicLeadSystem() {
 
     for (const email of testEmails2) {
       const isDecisionMaker = leadManager['isDecisionMaker'](email, { companySize: CompanySize.MEDIUM });
-      console.log(`✅ ${email}:`, isDecisionMaker);
+      console.info(`✅ ${email}:`, isDecisionMaker);
     }
 
-    console.log('\n🎉 All basic tests completed successfully!');
-    console.log('\n📊 Summary:');
-    console.log('- ✅ Email domain analysis working');
-    console.log('- ✅ Pain point extraction functional');
-    console.log('- ✅ Name extraction operational');
-    console.log('- ✅ Email extraction working');
-    console.log('- ✅ AI readiness calculation active');
-    console.log('- ✅ Decision maker detection functional');
+    console.info('\n🎉 All basic tests completed successfully!');
+    console.info('\n📊 Summary:');
+    console.info('- ✅ Email domain analysis working');
+    console.info('- ✅ Pain point extraction functional');
+    console.info('- ✅ Name extraction operational');
+    console.info('- ✅ Email extraction working');
+    console.info('- ✅ AI readiness calculation active');
+    console.info('- ✅ Decision maker detection functional');
 
   } catch (error) {
     console.error('❌ Test failed:', error);

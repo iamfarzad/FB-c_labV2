@@ -1,0 +1,30 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    "hooks/**/*.ts",
+    "hooks/**/*.tsx",
+    "lib/**/*.ts",
+    "server/**/*.ts",
+    "types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "archive",
+    "scripts",
+    "tests",
+    "__tests__",
+    "playwright-tests",
+    "industry-ai-education.",
+    "video2app",
+    "live-audio (5)"
+  ]
+}
+
+

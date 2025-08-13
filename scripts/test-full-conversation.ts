@@ -18,7 +18,7 @@ interface TestStep {
 }
 
 async function testFullConversation() {
-  console.log('🧪 Testing Full Conversation Flow with Lead Generation\n');
+  console.info('🧪 Testing Full Conversation Flow with Lead Generation\n');
   
   const sessionId = `test-full-${Date.now()}`;
   const messages: any[] = [];
@@ -54,8 +54,8 @@ async function testFullConversation() {
   ];
   
   for (const step of testSteps) {
-    console.log(`\n📍 ${step.description}`);
-    console.log(`   User: "${step.userMessage}"`);
+    console.info(`\n📍 ${step.description}`);
+    console.info(`   User: "${step.userMessage}"`);
     
     // Add user message to conversation history
     messages.push({ role: "user", content: step.userMessage });
@@ -123,15 +123,15 @@ async function testFullConversation() {
       messages.push({ role: "assistant", content: assistantMessage });
       
       // Display results
-      console.log(`   Assistant: "${assistantMessage.substring(0, 100)}..."`);
-      console.log(`   Stage: ${conversationStage || 'Not provided'}`);
-      console.log(`   Lead Data: ${JSON.stringify(leadData || {})}`);
+      console.info(`   Assistant: "${assistantMessage.substring(0, 100)}..."`);
+      console.info(`   Stage: ${conversationStage || 'Not provided'}`);
+      console.info(`   Lead Data: ${JSON.stringify(leadData || {})}`);
       
       // Validate expectations
       if (step.expectedStage && conversationStage !== step.expectedStage) {
-        console.log(`   ❌ Expected stage: ${step.expectedStage}, got: ${conversationStage}`);
+        console.info(`   ❌ Expected stage: ${step.expectedStage}, got: ${conversationStage}`);
       } else if (step.expectedStage) {
-        console.log(`   ✅ Stage transition correct`);
+        console.info(`   ✅ Stage transition correct`);
       }
       
       if (step.expectedLeadData) {
@@ -139,9 +139,9 @@ async function testFullConversation() {
           leadData && leadData[key] === value
         );
         if (dataMatches) {
-          console.log(`   ✅ Lead data correct`);
+          console.info(`   ✅ Lead data correct`);
         } else {
-          console.log(`   ❌ Lead data mismatch`);
+          console.info(`   ❌ Lead data mismatch`);
         }
       }
       
@@ -150,7 +150,7 @@ async function testFullConversation() {
     }
   }
   
-  console.log('\n✅ Test completed!');
+  console.info('\n✅ Test completed!');
 }
 
 // Run the test

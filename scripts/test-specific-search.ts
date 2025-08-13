@@ -7,7 +7,7 @@
 import { GoogleGenAI } from '@google/genai'
 
 async function testSpecificSearch() {
-  console.log('🔍 Testing specific LinkedIn search for Farzad\n')
+  console.info('🔍 Testing specific LinkedIn search for Farzad\n')
 
   const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
@@ -19,7 +19,7 @@ async function testSpecificSearch() {
   ]
 
   for (const query of searchQueries) {
-    console.log(`📋 Testing query: "${query}"`)
+    console.info(`📋 Testing query: "${query}"`)
     
     try {
       const prompt = `
@@ -57,16 +57,16 @@ If no profile is found, return:
       const jsonMatch = text.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         const searchResult = JSON.parse(jsonMatch[0])
-        console.log('✅ Result:', searchResult)
+        console.info('✅ Result:', searchResult)
       } else {
-        console.log('❌ No JSON found in response')
+        console.info('❌ No JSON found in response')
       }
       
     } catch (error) {
       console.error('❌ Search failed:', error)
     }
     
-    console.log('---\n')
+    console.info('---\n')
   }
 }
 

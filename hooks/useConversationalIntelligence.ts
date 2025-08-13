@@ -77,7 +77,8 @@ export function useConversationalIntelligence() {
           // Always avoid browser cache for correctness; TTL handles throttling
           const response = await fetch(`/api/intelligence/context?sessionId=${sessionId}`, { cache: 'no-store' })
           if (!response.ok) throw new Error('Failed to fetch context')
-          const data = (await response.json()) as IntelligenceContext
+          const raw = await response.json()
+          const data = (raw?.output || raw) as IntelligenceContext
 
           // Skip state update if content is unchanged to avoid extra rerenders
           const h = jsonHash(data)

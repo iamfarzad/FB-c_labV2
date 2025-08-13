@@ -52,7 +52,7 @@ export function PermissionManager() {
         try {
           const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
           micStream.getTracks().forEach(track => track.stop());
-          console.log('Microphone permission granted');
+          console.info('Microphone permission granted');
         } catch (error) {
           console.warn('Microphone permission denied:', error);
         }
@@ -63,7 +63,7 @@ export function PermissionManager() {
         try {
           const camStream = await navigator.mediaDevices.getUserMedia({ video: true });
           camStream.getTracks().forEach(track => track.stop());
-          console.log('Camera permission granted');
+          console.info('Camera permission granted');
         } catch (error) {
           console.warn('Camera permission denied:', error);
         }

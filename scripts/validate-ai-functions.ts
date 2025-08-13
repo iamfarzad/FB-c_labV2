@@ -30,7 +30,7 @@ class AIFunctionValidator {
   private devServerProcess: any = null;
 
   async startDevServer(): Promise<void> {
-    console.log('🚀 Starting Next.js dev server...');
+    console.info('🚀 Starting Next.js dev server...');
     
     return new Promise((resolve, reject) => {
       this.devServerProcess = spawn('pnpm', ['dev'], {
@@ -42,7 +42,7 @@ class AIFunctionValidator {
       
       this.devServerProcess.stdout?.on('data', (data: Buffer) => {
         const output = data.toString();
-        console.log(`[DEV] ${output}`);
+        console.info(`[DEV] ${output}`);
         
         if (output.includes('Ready in') || output.includes('Local:')) {
           if (!serverReady) {
@@ -70,7 +70,7 @@ class AIFunctionValidator {
 
   async stopDevServer(): Promise<void> {
     if (this.devServerProcess) {
-      console.log('🛑 Stopping dev server...');
+      console.info('🛑 Stopping dev server...');
       this.devServerProcess.kill('SIGTERM');
       
       // Wait for graceful shutdown
@@ -80,7 +80,7 @@ class AIFunctionValidator {
 
   private async makeRequest(path: string, options: RequestInit = {}): Promise<Response> {
     const url = `${API_BASE}${path}`;
-    console.log(`📡 Making request to: ${url}`);
+    console.info(`📡 Making request to: ${url}`);
     
     return await fetch(url, {
       ...options,
@@ -93,7 +93,7 @@ class AIFunctionValidator {
 
   // Test 1: Core Conversational AI Engine
   async testCoreConversationalAI(): Promise<TestResult> {
-    console.log('\n🧠 Testing Core Conversational AI Engine...');
+    console.info('\n🧠 Testing Core Conversational AI Engine...');
     
     try {
       const testMessages = [
@@ -152,7 +152,7 @@ class AIFunctionValidator {
 
   // Test 2: Check if streaming is implemented
   async testStreamingResponse(): Promise<TestResult> {
-    console.log('\n🌊 Testing Streaming Response...');
+    console.info('\n🌊 Testing Streaming Response...');
     
     try {
       const testMessages = [
@@ -195,11 +195,11 @@ class AIFunctionValidator {
 
   // Test 3: Video-to-App Generator
   async testVideoToApp(): Promise<TestResult> {
-    console.log('\n🎥 Testing Video-to-App Generator...');
+    console.info('\n🎥 Testing Video-to-App Generator...');
     
     try {
       // Test Step 1: Generate Spec
-      console.log('  - Testing spec generation...');
+      console.info('  - Testing spec generation...');
       const specResponse = await this.makeRequest('/api/video-to-app', {
         method: 'POST',
         body: JSON.stringify({
@@ -218,7 +218,7 @@ class AIFunctionValidator {
       }
 
       // Test Step 2: Generate Code
-      console.log('  - Testing code generation...');
+      console.info('  - Testing code generation...');
       const codeResponse = await this.makeRequest('/api/video-to-app', {
         method: 'POST',
         body: JSON.stringify({
@@ -263,7 +263,7 @@ class AIFunctionValidator {
 
   // Test 4: Token Usage Logging
   async testTokenUsageLogging(): Promise<TestResult> {
-    console.log('\n💰 Testing Token Usage Logging...');
+    console.info('\n💰 Testing Token Usage Logging...');
     
     try {
       // Make a chat request first to generate token usage
@@ -301,7 +301,7 @@ class AIFunctionValidator {
 
   // Test 5: Real-time Activities System
   async testRealTimeActivities(): Promise<TestResult> {
-    console.log('\n📊 Testing Real-time Activities System...');
+    console.info('\n📊 Testing Real-time Activities System...');
     
     try {
       // Test if useRealTimeActivities can be imported
@@ -335,7 +335,7 @@ class AIFunctionValidator {
 
   // Test 6: Multimodal Input Endpoints
   async testMultimodalInputs(): Promise<TestResult> {
-    console.log('\n🎨 Testing Multimodal Input Support...');
+    console.info('\n🎨 Testing Multimodal Input Support...');
     
     try {
       // Test if upload endpoint exists
@@ -391,7 +391,7 @@ class AIFunctionValidator {
   }
 
   async runAllTests(): Promise<void> {
-    console.log('🔍 Starting AI Functions Validation...\n');
+    console.info('🔍 Starting AI Functions Validation...\n');
     
     try {
       await this.startDevServer();
@@ -417,37 +417,37 @@ class AIFunctionValidator {
   }
 
   printResults(): void {
-    console.log('\n📋 Test Results Summary:');
-    console.log('='.repeat(50));
+    console.info('\n📋 Test Results Summary:');
+    console.info('='.repeat(50));
     
     let passed = 0;
     let failed = 0;
     
     this.results.forEach(result => {
       const status = result.passed ? '✅ PASS' : '❌ FAIL';
-      console.log(`${status} ${result.name}`);
+      console.info(`${status} ${result.name}`);
       
       if (result.error) {
-        console.log(`     Error: ${result.error}`);
+        console.info(`     Error: ${result.error}`);
       }
       
       if (result.details) {
-        console.log(`     Details: ${JSON.stringify(result.details, null, 2)}`);
+        console.info(`     Details: ${JSON.stringify(result.details, null, 2)}`);
       }
       
       if (result.passed) passed++;
       else failed++;
     });
     
-    console.log('='.repeat(50));
-    console.log(`Total: ${this.results.length} tests`);
-    console.log(`Passed: ${passed}`);
-    console.log(`Failed: ${failed}`);
+    console.info('='.repeat(50));
+    console.info(`Total: ${this.results.length} tests`);
+    console.info(`Passed: ${passed}`);
+    console.info(`Failed: ${failed}`);
     
     if (failed > 0) {
-      console.log('\n🔧 Issues Found:');
+      console.info('\n🔧 Issues Found:');
       this.results.filter(r => !r.passed).forEach(result => {
-        console.log(`- ${result.name}: ${result.error}`);
+        console.info(`- ${result.name}: ${result.error}`);
       });
     }
   }
@@ -467,10 +467,10 @@ async function main() {
     
     const failedTests = validator.getFailedTests();
     if (failedTests.length > 0) {
-      console.log('\n⚠️  Some tests failed. Please review the issues above.');
+      console.info('\n⚠️  Some tests failed. Please review the issues above.');
       process.exit(1);
     } else {
-      console.log('\n🎉 All AI functions are working correctly!');
+      console.info('\n🎉 All AI functions are working correctly!');
       process.exit(0);
     }
   } catch (error) {

@@ -68,13 +68,12 @@ export default function TestDashboard() {
     updateTestResult('Document Analysis', 'running')
     try {
       const testContent = 'This is a test document for analysis.'
-      const response = await fetch('/api/analyze-document', {
+      const response = await fetch('/api/tools/screen', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          data: btoa(testContent),
-          mimeType: 'text/plain',
-          fileName: 'test.txt'
+          image: `data:image/png;base64,${btoa(testContent)}`,
+          type: 'document'
         })
       })
       
@@ -105,11 +104,11 @@ export default function TestDashboard() {
         ctx.fillRect(0, 0, 1, 1)
         const testImage = canvas.toDataURL('image/png').split(',')[1]
         
-        const response = await fetch('/api/analyze-image', {
+        const response = await fetch('/api/tools/webcam', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            image: testImage,
+            image: `data:image/png;base64,${testImage}`,
             type: 'test'
           })
         })

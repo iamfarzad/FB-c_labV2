@@ -15,9 +15,8 @@ const ALLOWED_FILES = [
   'app/api/ai-stream/route.ts',
   'app/api/admin/chat/route.ts',
   'app/api/gemini-live/route.ts',
-  'app/api/analyze-image/route.ts',
-  'app/api/analyze-document/route.ts',
-  'app/api/analyze-screenshot/route.ts',
+  'app/api/tools/webcam/route.ts',
+  'app/api/tools/screen/route.ts',
   'app/api/video-to-app/route.ts',
   'lib/educational-gemini-service.ts',
   'lib/gemini-live-api.ts',
@@ -34,13 +33,13 @@ function findGeminiUsage(): string[] {
     
     return output.trim().split('\n').filter(line => line.length > 0);
   } catch (error) {
-    console.log('No GEMINI_API_KEY usage found');
+    console.info('No GEMINI_API_KEY usage found');
     return [];
   }
 }
 
 function main() {
-  console.log('🔍 Monitoring Gemini API usage...');
+  console.info('🔍 Monitoring Gemini API usage...');
   
   const foundFiles = findGeminiUsage();
   const unauthorizedFiles = foundFiles.filter(file => 
@@ -59,7 +58,7 @@ function main() {
     console.error('✅ Ensure they use internal API endpoints instead of direct GoogleGenAI calls');
     process.exit(1);
   } else {
-    console.log('✅ All Gemini API usage is properly controlled');
+    console.info('✅ All Gemini API usage is properly controlled');
   }
 }
 

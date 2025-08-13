@@ -7,7 +7,7 @@ import dotenv from 'dotenv'
 dotenv.config({ path: '.env.local' })
 
 async function testGeminiLiveConnection() {
-  console.log("🧪 Testing Gemini Live Connection...\n")
+  console.info("🧪 Testing Gemini Live Connection...\n")
 
   try {
     // Check environment variables
@@ -16,33 +16,33 @@ async function testGeminiLiveConnection() {
       throw new Error("GEMINI_API_KEY not found in environment variables")
     }
 
-    console.log("✅ API Key found")
-    console.log("🔧 Initializing Gemini Live client...\n")
+    console.info("✅ API Key found")
+    console.info("🔧 Initializing Gemini Live client...\n")
 
     // Initialize client
     const genAI = new GoogleGenAI({ apiKey })
 
-    console.log("✅ Client initialized")
+    console.info("✅ Client initialized")
 
     // Test live connection
     const modelName = 'gemini-live-2.5-flash-preview-native-audio'
     
-    console.log(`🎤 Attempting to connect to ${modelName}...`)
+    console.info(`🎤 Attempting to connect to ${modelName}...`)
 
     const session = await genAI.live.connect({
       model: modelName,
       callbacks: {
         onopen: () => {
-          console.log("✅ Live session opened successfully")
+          console.info("✅ Live session opened successfully")
         },
         onmessage: (event) => {
-          console.log("📨 Received message:", event.data)
+          console.info("📨 Received message:", event.data)
         },
         onerror: (error) => {
           console.error("❌ Live session error:", error)
         },
         onclose: () => {
-          console.log("🔒 Live session closed")
+          console.info("🔒 Live session closed")
         }
       },
       config: {
@@ -57,26 +57,26 @@ async function testGeminiLiveConnection() {
       }
     })
 
-    console.log("✅ Live session created successfully")
-    console.log("🎯 Session object:", typeof session)
+    console.info("✅ Live session created successfully")
+    console.info("🎯 Session object:", typeof session)
 
     // Test sending a simple text message
-    console.log("\n📤 Testing text message sending...")
+    console.info("\n📤 Testing text message sending...")
     
     try {
       session.sendRealtimeInput({ text: "Hello, this is a test message" })
-      console.log("✅ Text message sent successfully")
+      console.info("✅ Text message sent successfully")
     } catch (error) {
-      console.log("⚠️ Text message sending failed (this might be expected for audio-only models):", error)
+      console.info("⚠️ Text message sending failed (this might be expected for audio-only models):", error)
     }
 
     // Close the session
-    console.log("\n🔒 Closing session...")
+    console.info("\n🔒 Closing session...")
     session.close()
-    console.log("✅ Session closed successfully")
+    console.info("✅ Session closed successfully")
 
-    console.log("\n🎉 Gemini Live connection test completed successfully!")
-    console.log("✅ The hook should work properly with this configuration")
+    console.info("\n🎉 Gemini Live connection test completed successfully!")
+    console.info("✅ The hook should work properly with this configuration")
 
   } catch (error) {
     console.error("❌ Gemini Live connection test failed:", error)
@@ -86,11 +86,11 @@ async function testGeminiLiveConnection() {
       
       // Provide helpful debugging information
       if (error.message.includes('API key')) {
-        console.log("\n💡 Make sure GEMINI_API_KEY is set in your .env.local file")
+        console.info("\n💡 Make sure GEMINI_API_KEY is set in your .env.local file")
       } else if (error.message.includes('model')) {
-        console.log("\n💡 The model name might not be available. Try using a different model.")
+        console.info("\n💡 The model name might not be available. Try using a different model.")
       } else if (error.message.includes('live')) {
-        console.log("\n💡 Live API might not be available in your region or with your API key")
+        console.info("\n💡 Live API might not be available in your region or with your API key")
       }
     }
   }
@@ -99,7 +99,7 @@ async function testGeminiLiveConnection() {
 // Run the test
 testGeminiLiveConnection()
   .then(() => {
-    console.log("\n🏁 Test completed")
+    console.info("\n🏁 Test completed")
     process.exit(0)
   })
   .catch((error) => {

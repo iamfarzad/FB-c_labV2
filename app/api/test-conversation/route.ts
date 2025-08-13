@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const { message, sessionId } = await request.json()
     
-    console.log('Test conversation endpoint called:', { message, sessionId })
+    console.info('Test conversation endpoint called:', { message, sessionId })
     
     const manager = ConversationStateManager.getInstance()
     
@@ -13,13 +13,13 @@ export async function POST(request: NextRequest) {
     let state = manager.getConversationState(sessionId)
     if (!state) {
       state = await manager.initializeConversation(sessionId)
-      console.log('Initialized new conversation:', state)
+      console.info('Initialized new conversation:', state)
     }
     
     // Process message
     const result = await manager.processMessage(sessionId, message)
     
-    console.log('Conversation result:', {
+    console.info('Conversation result:', {
       newStage: result.newStage,
       leadData: result.updatedState.context.leadData,
       response: result.response.substring(0, 100) + '...'

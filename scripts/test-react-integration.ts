@@ -22,11 +22,11 @@ function useConversationalIntelligence() {
     
     // Prevent duplicate calls for the same sessionId
     if (lastFetchedSessionId === sessionId && context) {
-      console.log('🚫 DUPLICATE CALL PREVENTED:', sessionId)
+      console.info('🚫 DUPLICATE CALL PREVENTED:', sessionId)
       return
     }
 
-    console.log('📡 FETCHING CONTEXT:', sessionId)
+    console.info('📡 FETCHING CONTEXT:', sessionId)
     setIsLoading(true)
     setError(null)
 
@@ -36,7 +36,7 @@ function useConversationalIntelligence() {
         const data = await response.json()
         setContext(data)
         setLastFetchedSessionId(sessionId)
-        console.log('✅ CONTEXT FETCHED:', sessionId)
+        console.info('✅ CONTEXT FETCHED:', sessionId)
       } else {
         setError('Failed to fetch context')
       }
@@ -80,13 +80,13 @@ function simulateAIEChatComponent() {
 }
 
 async function testReactIntegration() {
-  console.log('🧪 Testing React Integration (Infinite Loop Detection)\n')
+  console.info('🧪 Testing React Integration (Infinite Loop Detection)\n')
 
   // Set up test session
   const testSessionId = `test-session-${Date.now()}`
   mockLocalStorage.set('intelligence-session-id', testSessionId)
 
-  console.log('📋 Test 1: Simulating React component behavior')
+  console.info('📋 Test 1: Simulating React component behavior')
   
   // Simulate multiple renders (like React does)
   const renderCounts = []
@@ -94,7 +94,7 @@ async function testReactIntegration() {
   
   for (let i = 0; i < 10; i++) {
     callCount++
-    console.log(`\n🔄 Render ${i + 1}:`)
+    console.info(`\n🔄 Render ${i + 1}:`)
     
     // Simulate the component logic
     const { consentAllowed, setConsentAllowed } = simulateAIEChatComponent()
@@ -102,7 +102,7 @@ async function testReactIntegration() {
     if (i === 0) {
       // Trigger consent (like user clicking "Allow")
       setConsentAllowed(true)
-      console.log('✅ Consent allowed - should trigger context fetch')
+      console.info('✅ Consent allowed - should trigger context fetch')
     }
     
     renderCounts.push(callCount)
@@ -111,15 +111,15 @@ async function testReactIntegration() {
     await new Promise(resolve => setTimeout(resolve, 100))
   }
 
-  console.log('\n📊 Results:')
-  console.log(`- Total renders: ${renderCounts.length}`)
-  console.log(`- Expected API calls: 1 (after consent)`)
-  console.log(`- If you see multiple "FETCHING CONTEXT" logs, there's an infinite loop!`)
+  console.info('\n📊 Results:')
+  console.info(`- Total renders: ${renderCounts.length}`)
+  console.info(`- Expected API calls: 1 (after consent)`)
+  console.info(`- If you see multiple "FETCHING CONTEXT" logs, there's an infinite loop!`)
 
   // Clean up
   mockLocalStorage.delete('intelligence-session-id')
   
-  console.log('\n🎯 Test completed!')
+  console.info('\n🎯 Test completed!')
 }
 
 // Run the test

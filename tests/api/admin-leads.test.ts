@@ -30,10 +30,10 @@ jest.mock('@/lib/supabase/client', () => {
           order() { return api },
           or() { return api },
           eq(col: string, val: any) { state.filters[col] = val; return api },
-          async then() { /* allow await if misused */ },
+          async then(onFulfilled?: any, onRejected?: any) { try { const r = await api.exec(); return onFulfilled ? onFulfilled(r) : r } catch (e) { return onRejected ? onRejected(e) : Promise.reject(e) } },
           async finally() {},
         }
-        Object.defineProperty(api, 'then', { value: undefined })
+        // thenable so that awaiting the query yields { data, error }
         api.exec = async () => {
           let data = leads
           if (state.filters.intent_type) data = data.filter(l => l.intent_type === state.filters.intent_type)
@@ -58,7 +58,7 @@ import { GET } from '@/app/api/admin/leads/route'
 
 describe('admin leads API', () => {
   it('filters by intent=consulting', async () => {
-    const req: any = { url: 'http://localhost/api/admin/leads?intent=consulting&period=7d' }
+    const req: any = { url: 'http://localhost/api/admin/leads?intent=consulting&period=90d', headers: { get: (k: string) => (k === 'x-user-role' ? 'admin' : undefined) } }
     const res: any = await GET(req)
     expect(res.ok).toBe(true)
     const body = await res.json()

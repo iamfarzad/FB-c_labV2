@@ -7,13 +7,13 @@ const wss = new WebSocketServer({ port: Number(PORT) })
 // Simple session management: maps session ID to a set of WebSockets in that session
 const sessions = new Map<string, Set<WebSocket>>()
 
-console.log(`🚀 WebRTC Signaling Server started on port ${PORT}`)
+console.info(`🚀 WebRTC Signaling Server started on port ${PORT}`)
 
 wss.on("connection", (ws: WebSocket) => {
   const connectionId = uuidv4()
   let currentSessionId: string | null = null
 
-  console.log(`[${connectionId}] Client connected.`)
+  console.info(`[${connectionId}] Client connected.`)
 
   ws.on("message", (message: Buffer) => {
     try {
@@ -57,7 +57,7 @@ wss.on("connection", (ws: WebSocket) => {
     }
     const sessionPeers = sessions.get(sessionId)!
     sessionPeers.add(ws)
-    console.log(`[${connectionId}] Client joined session: ${sessionId}. Total clients in session: ${sessionPeers.size}`)
+    console.info(`[${connectionId}] Client joined session: ${sessionId}. Total clients in session: ${sessionPeers.size}`)
 
     // For a client-server model, we might not need to notify other peers.
     // But if it were peer-to-peer chat, this is where you'd notify others.
@@ -75,7 +75,7 @@ wss.on("connection", (ws: WebSocket) => {
     const sessionPeers = sessions.get(currentSessionId)
     if (!sessionPeers) return
 
-    console.log(`[${connectionId}] Broadcasting '${type}' to peers in session ${currentSessionId}`)
+    console.info(`[${connectionId}] Broadcasting '${type}' to peers in session ${currentSessionId}`)
 
     sessionPeers.forEach((peerWs) => {
       // Broadcast to all peers except the sender
@@ -86,18 +86,18 @@ wss.on("connection", (ws: WebSocket) => {
   }
 
   function handleClose() {
-    console.log(`[${connectionId}] Client disconnected.`)
+    console.info(`[${connectionId}] Client disconnected.`)
     if (currentSessionId) {
       const sessionPeers = sessions.get(currentSessionId)
       if (sessionPeers) {
         sessionPeers.delete(ws)
-        console.log(
+        console.info(
           `[${connectionId}] Removed from session ${currentSessionId}. Remaining clients: ${sessionPeers.size}`,
         )
 
         if (sessionPeers.size === 0) {
           sessions.delete(currentSessionId)
-          console.log(`Session ${currentSessionId} is empty and has been removed.`)
+          console.info(`Session ${currentSessionId} is empty and has been removed.`)
         } else {
           broadcastToPeers(ws, "peer-left", { peerId: connectionId })
         }

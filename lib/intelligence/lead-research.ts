@@ -49,18 +49,18 @@ export class LeadResearchService {
     // Check cache first
     const cached = this.cache.get(cacheKey)
     if (cached) {
-      console.log('Using cached research result for:', email)
+      console.info('Using cached research result for:', email)
       return cached
     }
 
     try {
-      console.log('Starting lead research for:', email)
+      console.info('Starting lead research for:', email)
 
       const domain = email.split('@')[1]
 
       // Known profile fallback for Farzad Bayat
       if (email === 'farzad@talktoeve.com' && (name?.toLowerCase().includes('farzad') || !name)) {
-        console.log('🎯 Using known profile for Farzad Bayat')
+        console.info('🎯 Using known profile for Farzad Bayat')
         
         // Record capability usage for search
         if (sessionId) {
@@ -107,7 +107,7 @@ export class LeadResearchService {
       // Cache the result
       this.cache.set(cacheKey, researchResult)
 
-      console.log('Lead research completed:', researchResult)
+      console.info('Lead research completed:', researchResult)
       return researchResult
 
     } catch (error) {

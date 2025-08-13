@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log the waitlist signup
-    console.log('Workshop waitlist signup:', {
+    console.info('Workshop waitlist signup:', {
       name,
       email,
       company,

@@ -294,7 +294,8 @@ export function AIEChat() {
         })
         if (res.ok) {
           const j = await res.json()
-          addLog(`intent: ${j.type} (${Math.round((j.confidence || 0) * 100)}%)`)
+          const out = j?.output || j
+          addLog(`intent: ${out.type} (${Math.round((out.confidence || 0) * 100)}%)`)
         }
       } catch {}
       intentPostedRef.current = true

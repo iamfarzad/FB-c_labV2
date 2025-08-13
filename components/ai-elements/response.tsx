@@ -267,7 +267,7 @@ const components: Options['components'] = {
         language={language}
       >
         <CodeBlockCopyButton
-          onCopy={() => console.log('Copied code to clipboard')}
+          onCopy={() => console.info('Copied code to clipboard')}
           onError={() => console.error('Failed to copy code to clipboard')}
         />
       </CodeBlock>
@@ -318,3 +318,5 @@ export const Response = memo(
   },
   (prevProps, nextProps) => prevProps.children === nextProps.children,
 );
+
+Response.displayName = 'Response'

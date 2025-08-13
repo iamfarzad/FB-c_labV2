@@ -50,7 +50,7 @@ export function RealTimeActivity() {
     const channel = supabase
       .channel("admin-activity-feed")
       .on("postgres_changes", { event: "*", schema: "public", table: "lead_summaries" }, (payload) => {
-        console.log("New lead activity:", payload)
+        console.info("New lead activity:", payload)
         // Add new activity to the feed
         const newActivity: RealTimeActivityItem = {
           id: payload.new?.id || Date.now().toString(),

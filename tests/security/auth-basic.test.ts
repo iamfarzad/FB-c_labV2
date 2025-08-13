@@ -24,7 +24,7 @@ describe('Basic Authentication Tests', () => {
         
         // Should not return 200 (success) without authentication
         expect(response.status).not.toBe(200);
-        console.log(`Endpoint ${endpoint}: ${response.status}`);
+        console.info(`Endpoint ${endpoint}: ${response.status}`);
       }
     });
   });
@@ -46,7 +46,7 @@ describe('Basic Authentication Tests', () => {
 
         // Should not crash (500 error)
         expect(response.status).not.toBe(500);
-        console.log(`Malicious input ${input.field}: ${response.status}`);
+        console.info(`Malicious input ${input.field}: ${response.status}`);
       }
     });
 
@@ -67,7 +67,7 @@ describe('Basic Authentication Tests', () => {
 
         // Should not crash (500 error)
         expect(response.status).not.toBe(500);
-        console.log(`Invalid email ${email}: ${response.status}`);
+        console.info(`Invalid email ${email}: ${response.status}`);
       }
     });
   });
@@ -86,7 +86,7 @@ describe('Basic Authentication Tests', () => {
 
       // Should not crash (500 error)
       expect(response.status).not.toBe(500);
-      console.log(`Large request: ${response.status}`);
+      console.info(`Large request: ${response.status}`);
     });
   });
 });

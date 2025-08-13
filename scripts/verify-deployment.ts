@@ -55,9 +55,9 @@ async function testEndpoint(path: string, method: 'GET' | 'POST' = 'GET', body?:
 }
 
 async function runDeploymentTests() {
-  console.log('🚀 Vercel Deployment Verification');
-  console.log(`📍 Testing: ${PRODUCTION_URL}`);
-  console.log('=' * 50);
+  console.info('🚀 Vercel Deployment Verification');
+  console.info(`📍 Testing: ${PRODUCTION_URL}`);
+  console.info('=' * 50);
   
   const tests: Array<() => Promise<TestResult>> = [
     // Test main chat endpoint with token limit
@@ -79,7 +79,7 @@ async function runDeploymentTests() {
     }),
     
     // Test image analysis (should be rate limited)
-    () => testEndpoint('/api/analyze-image', 'POST', {
+    () => testEndpoint('/api/tools/webcam', 'POST', {
       imageData: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD//2Q==',
       type: 'webcam'
     }),
@@ -96,39 +96,39 @@ async function runDeploymentTests() {
     
     const statusIcon = result.status === 'pass' ? '✅' : result.status === 'warning' ? '⚠️' : '❌';
     const timeInfo = result.responseTime ? ` (${result.responseTime}ms)` : '';
-    console.log(`${statusIcon} ${result.endpoint}: ${result.message}${timeInfo}`);
+    console.info(`${statusIcon} ${result.endpoint}: ${result.message}${timeInfo}`);
   }
   
-  console.log('=' * 50);
+  console.info('=' * 50);
   
   const passCount = results.filter(r => r.status === 'pass').length;
   const warnCount = results.filter(r => r.status === 'warning').length;
   const failCount = results.filter(r => r.status === 'fail').length;
   
-  console.log(`📊 Results: ${passCount} passed, ${warnCount} warnings, ${failCount} failed`);
+  console.info(`📊 Results: ${passCount} passed, ${warnCount} warnings, ${failCount} failed`);
   
   if (failCount > 0) {
-    console.log('🚨 Some endpoints are not responding. Check your deployment.');
+    console.info('🚨 Some endpoints are not responding. Check your deployment.');
     process.exit(1);
   } else if (warnCount > 0) {
-    console.log('⚠️ Some endpoints returned warnings. Review the responses.');
+    console.info('⚠️ Some endpoints returned warnings. Review the responses.');
   } else {
-    console.log('🎉 All endpoints are responding correctly!');
+    console.info('🎉 All endpoints are responding correctly!');
   }
   
   // Additional checks
-  console.log('\n🔍 Additional Vercel Checks:');
-  console.log('1. ✅ Function timeout set to 30s (60s for video processing)');
-  console.log('2. ✅ Memory limit set to 1024MB');
-  console.log('3. ✅ Regional deployment (iad1)');
-  console.log('4. ✅ Security headers configured');
-  console.log('5. ✅ Cache headers optimized');
+  console.info('\n🔍 Additional Vercel Checks:');
+  console.info('1. ✅ Function timeout set to 30s (60s for video processing)');
+  console.info('2. ✅ Memory limit set to 1024MB');
+  console.info('3. ✅ Regional deployment (iad1)');
+  console.info('4. ✅ Security headers configured');
+  console.info('5. ✅ Cache headers optimized');
   
-  console.log('\n📋 Manual Vercel Dashboard Checks:');
-  console.log('- Environment variables: GEMINI_API_KEY, SUPABASE_URL, SUPABASE_ANON_KEY');
-  console.log('- Function logs: Check for any errors or excessive token usage');
-  console.log('- Analytics: Monitor function invocation counts');
-  console.log('- Usage: Check if you\'re approaching any limits');
+  console.info('\n📋 Manual Vercel Dashboard Checks:');
+  console.info('- Environment variables: GEMINI_API_KEY, SUPABASE_URL, SUPABASE_ANON_KEY');
+  console.info('- Function logs: Check for any errors or excessive token usage');
+  console.info('- Analytics: Monitor function invocation counts');
+  console.info('- Usage: Check if you\'re approaching any limits');
 }
 
 if (require.main === module) {

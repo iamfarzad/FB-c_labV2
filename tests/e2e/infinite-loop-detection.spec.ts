@@ -18,7 +18,7 @@ test.describe('Infinite Loop Detection', () => {
     page.on('request', (request) => {
       if (request.url().includes('/api/intelligence/context')) {
         contextRequests.push(request.url())
-        console.log(`🔍 Context API called: ${request.url()}`)
+        console.info(`🔍 Context API called: ${request.url()}`)
       }
     })
     
@@ -32,7 +32,7 @@ test.describe('Infinite Loop Detection', () => {
     await page.waitForTimeout(5000)
     
     // Check that we don't have excessive API calls
-    console.log(`📊 Total context API calls: ${contextRequests.length}`)
+    console.info(`📊 Total context API calls: ${contextRequests.length}`)
     
     // Should have at most 2-3 calls (initial + maybe one retry)
     expect(contextRequests.length).toBeLessThanOrEqual(3)

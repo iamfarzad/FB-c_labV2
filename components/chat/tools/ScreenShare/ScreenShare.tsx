@@ -44,7 +44,7 @@ export function ScreenShare({
     try {
       setIsAnalyzing(true)
       onLog?.({ level: 'log', message: 'Analyzing screen frame…', timestamp: new Date() })
-      const response = await fetch('/api/analyze-image', { // Fixed API endpoint
+      const response = await fetch('/api/tools/screen', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -54,10 +54,11 @@ export function ScreenShare({
       })
       if (!response.ok) throw new Error('Failed to analyze screen frame')
       const result = await response.json()
-      onLog?.({ level: 'log', message: `Screen analysis: ${result.analysis || 'No analysis'}`, timestamp: new Date() })
+      const analysisText = result?.output?.analysis || result?.analysis || 'No analysis'
+      onLog?.({ level: 'log', message: `Screen analysis: ${analysisText}`, timestamp: new Date() })
       const analysis: AnalysisResult = {
         id: Date.now().toString(),
-        text: result.analysis || 'No analysis available', // Fixed to match analyze-image response
+        text: analysisText,
         timestamp: Date.now(),
       }
       setAnalysisHistory(prev => [analysis, ...prev])
@@ -96,7 +97,7 @@ export function ScreenShare({
             ctx.drawImage(video, 0, 0)
             const imageData = canvas.toDataURL('image/jpeg', 0.8)
             analysisCount++;
-            console.log(`📊 Auto-analysis ${analysisCount}/${maxAnalysisPerSession}`);
+            console.info(`📊 Auto-analysis ${analysisCount}/${maxAnalysisPerSession}`);
             await sendScreenFrame(imageData)
           }
         }

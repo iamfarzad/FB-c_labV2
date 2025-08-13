@@ -7,7 +7,7 @@
 const API_BASE = 'http://localhost:3001';
 
 async function testAPIDebug() {
-  console.log('🔍 Testing API with debug output\n');
+  console.info('🔍 Testing API with debug output\n');
   
   const response = await fetch(`${API_BASE}/api/chat`, {
     method: 'POST',
@@ -22,12 +22,12 @@ async function testAPIDebug() {
     })
   });
   
-  console.log('Response status:', response.status);
-  console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+  console.info('Response status:', response.status);
+  console.info('Response headers:', Object.fromEntries(response.headers.entries()));
   
   if (!response.ok) {
     const text = await response.text();
-    console.log('Error response:', text);
+    console.info('Error response:', text);
     return;
   }
   
@@ -47,12 +47,12 @@ async function testAPIDebug() {
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           eventCount++;
-          console.log(`Event ${eventCount}:`, line);
+          console.info(`Event ${eventCount}:`, line);
           
           try {
             const data = JSON.parse(line.slice(6));
             if (data.conversationStage || data.leadData) {
-              console.log('🎯 Found conversation data:', data);
+              console.info('🎯 Found conversation data:', data);
             }
           } catch (e) {
             // Ignore
@@ -61,7 +61,7 @@ async function testAPIDebug() {
       }
     }
     
-    console.log(`\nTotal events received: ${eventCount}`);
+    console.info(`\nTotal events received: ${eventCount}`);
   }
 }
 

@@ -7,6 +7,8 @@ import { MotionCard } from "@/components/ui/motion-card"
 import { FadeIn } from "@/components/ui/fade-in"
 import { ROICalculator } from "@/components/chat/tools/ROICalculator/ROICalculator"
 import { ProgressTracker } from "@/components/experience/progress-tracker"
+import { CourseProgressChip } from "@/components/workshop/CourseProgressChip"
+import { CourseOutline } from "@/components/workshop/CourseOutline"
 import { CitationsDemo } from "@/components/experience/citations-demo"
 import dynamic from "next/dynamic"
 import { WORKSHOP_MODULES } from "@/components/workshop/education-modules"
@@ -16,12 +18,12 @@ const GamifiedSection = dynamic(() => import('@/components/workshop/GamifiedSect
 const VideoToAppLauncher = dynamic(() => import('@/components/workshop/VideoToAppLauncher').then(m => m.VideoToAppLauncher))
 
 export const metadata = {
-  title: "AI Training Workshops & Team Programs | Farzad Bayat",
-  description: "Hands-on AI training workshops for your team. Learn AI automation, chatbot development, and AI implementation skills from real-world experience.",
+  title: "AI Fundamentals Workshop | Farzad Bayat",
+  description: "Mini‑workshop on how AI works: foundations, prompting, grounding (RAG), safety, and a hands‑on lab.",
   keywords: ["AI training", "AI workshops", "AI team training", "AI automation training", "AI implementation workshops"],
   openGraph: {
-    title: "AI Training Workshops & Team Programs | Farzad Bayat",
-    description: "Hands-on AI training workshops for your team. Learn AI automation, chatbot development, and AI implementation skills.",
+    title: "AI Fundamentals Workshop | Farzad Bayat",
+    description: "How AI works: foundations, prompting, grounding (RAG), safety, and a hands‑on lab.",
   }
 }
 
@@ -35,27 +37,21 @@ const workshopFeatures = [
 export default function WorkshopPage() {
   return (
     <>
-      <PageShell className="min-h-screen">
+      <PageShell>
         <PageHeader
-          title="Interactive AI Education"
-          subtitle="Learn by doing. Explore modules, earn XP, and ask the AI as you go."
+          title="AI Fundamentals Workshop"
+          subtitle="Learn how AI works: foundations, prompting, grounding, safety, then apply it in a hands‑on lab."
         />
         <div className="mt-6 flex items-center justify-center gap-x-3">
-          <ProgressTracker />
-          <Button asChild variant="outline">
-            <Link href="/chat?preset=bot">Build a chatbot</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/chat?preset=automation">Automate a task</Link>
+          <CourseProgressChip />
+          <Button asChild>
+            <Link href="/workshop/modules">Start Workshop</Link>
           </Button>
         </div>
       </PageShell>
 
-      <PageShell className="min-h-screen">
-        <div className="mb-6 flex justify-center">
-          <ProgressTracker />
-        </div>
-        <div className="grid md:grid-cols-2 gap-10 items-center">
+      <PageShell>
+        <div className="grid md:grid-cols-2 gap-10 items-start">
           <FadeIn>
           <MotionCard className="h-full neu-card transition-all">
             <CardHeader>
@@ -81,50 +77,7 @@ export default function WorkshopPage() {
           </MotionCard>
           </FadeIn>
           <FadeIn delay={0.08}>
-          <MotionCard className="h-full bg-secondary neu-card transition-all">
-            <CardHeader>
-              <CardTitle className="text-2xl">AI Training Workshop Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold">AI Workshop Format</h3>
-                <p className="text-muted-foreground">
-                  <strong className="text-primary">3 hours AI theory:</strong> What AI LLMs are, how they work, AI risks, and
-                  AI limitations.
-                </p>
-                <p className="text-muted-foreground">
-                  <strong className="text-primary">3 hours hands-on AI:</strong> Build an AI chatbot, automate tasks with AI, or
-                  create an AI assistant.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">AI Training Delivery Options</h3>
-                <p className="text-muted-foreground">On-site AI training (Norway + Europe) or Remote AI workshops (Global).</p>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">Preview the Hands-on Exercise</h3>
-                <div className="grid sm:grid-cols-2 gap-3 mt-3">
-                  <Button asChild variant="outline">
-                    <Link href="/chat?preset=bot">Build your first chatbot</Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link href="/chat?preset=automation">Automate a task</Link>
-                  </Button>
-                </div>
-                 <div className="mt-4">
-                   <ROICalculator mode="card" />
-                 </div>
-                 <div className="mt-4">
-                   <VideoToAppLauncher />
-                 </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button asChild variant="outline" className="w-full bg-transparent">
-                <Link href="/contact">Book AI Consultation Instead</Link>
-              </Button>
-            </CardFooter>
-          </MotionCard>
+          <CourseOutline />
           </FadeIn>
         </div>
       </PageShell>
@@ -136,7 +89,9 @@ export default function WorkshopPage() {
       <PageShell>
         <div className="grid gap-8 md:grid-cols-2">
           {WORKSHOP_MODULES.map((m) => (
-            <GamifiedSection key={m.id} module={m} />
+            <div id={`m-${m.id}`} key={m.id}>
+              <GamifiedSection module={m} />
+            </div>
           ))}
         </div>
       </PageShell>

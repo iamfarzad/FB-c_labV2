@@ -1,3 +1,25 @@
+export interface RoleDetectionResult {
+  role: string | null
+  confidence: number
+}
+
+const rolePatterns: Array<{ re: RegExp; role: string; weight: number }> = [
+  { re: /\b(cto|chief technology officer)\b/i, role: 'CTO', weight: 0.95 },
+  { re: /\b(ceo|founder|co[- ]founder|owner|principal|partner)\b/i, role: 'Founder', weight: 0.9 },
+  { re: /\b(vp|vice president)\b/i, role: 'VP', weight: 0.8 },
+  { re: /\b(engineering manager|eng manager|head of engineering)\b/i, role: 'Engineering Manager', weight: 0.75 },
+  { re: /\b(product manager|pm)\b/i, role: 'Product Manager', weight: 0.7 },
+  { re: /\b(lead developer|tech lead|team lead)\b/i, role: 'Tech Lead', weight: 0.7 },
+]
+
+export function detectRoleFromText(text: string): RoleDetectionResult {
+  if (!text || typeof text !== 'string') return { role: null, confidence: 0 }
+  for (const { re, role, weight } of rolePatterns) {
+    if (re.test(text)) return { role, confidence: weight }
+  }
+  return { role: null, confidence: 0 }
+}
+
 export interface ResearchResultLike {
   company?: { summary?: string; industry?: string }
   person?: { fullName?: string; role?: string; seniority?: string }

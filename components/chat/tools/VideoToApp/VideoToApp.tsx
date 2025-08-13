@@ -71,6 +71,8 @@ export function VideoToApp({
       }
 
       const specResult = await specResponse.json()
+      if (specResult?.error) throw new Error(specResult.error)
+      if (!specResult?.spec) throw new Error('Invalid spec response')
       setProgress("spec")
       
       // Step 2: Generate code from specification
@@ -94,6 +96,8 @@ export function VideoToApp({
       }
 
       const codeResult = await codeResponse.json()
+      if (codeResult?.error) throw new Error(codeResult.error)
+      if (!codeResult?.code) throw new Error('Invalid code response')
       setProgress("code")
       
       // Create blob URL for the generated app

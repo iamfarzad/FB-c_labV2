@@ -5,7 +5,7 @@
  */
 
 async function testGenericSearchTool() {
-  console.log('🧪 Testing Generic Search Tool (Phase 4)...\n')
+  console.info('🧪 Testing Generic Search Tool (Phase 4)...\n')
 
   const testQueries = [
     'What is the latest news about AI in healthcare?',
@@ -14,7 +14,7 @@ async function testGenericSearchTool() {
   ]
 
   for (const query of testQueries) {
-    console.log(`🔍 Testing query: "${query}"`)
+    console.info(`🔍 Testing query: "${query}"`)
     
     try {
       const response = await fetch('http://localhost:3000/api/tools/search', {
@@ -28,28 +28,28 @@ async function testGenericSearchTool() {
 
       if (response.ok) {
         const data = await response.json()
-        console.log('✅ Search successful:')
-        console.log(`   Answer length: ${data.answer?.length || 0} characters`)
-        console.log(`   Citations: ${data.citations?.length || 0}`)
+        console.info('✅ Search successful:')
+        console.info(`   Answer length: ${data.answer?.length || 0} characters`)
+        console.info(`   Citations: ${data.citations?.length || 0}`)
         
         if (data.citations?.length > 0) {
-          console.log('   Sample citation:', data.citations[0])
+          console.info('   Sample citation:', data.citations[0])
         }
       } else {
         const error = await response.text()
-        console.log('❌ Search failed:', response.status, error)
+        console.info('❌ Search failed:', response.status, error)
       }
     } catch (error) {
-      console.log('❌ Request failed:', error)
+      console.info('❌ Request failed:', error)
     }
     
-    console.log('') // Empty line between tests
+    console.info('') // Empty line between tests
   }
 
-  console.log('🎯 Phase 4 Search Tool Test Complete!')
-  console.log('✅ Generic search endpoint working')
-  console.log('✅ Citations extraction working')
-  console.log('✅ Capability tracking working')
+  console.info('🎯 Phase 4 Search Tool Test Complete!')
+  console.info('✅ Generic search endpoint working')
+  console.info('✅ Citations extraction working')
+  console.info('✅ Capability tracking working')
 }
 
 // Run the test

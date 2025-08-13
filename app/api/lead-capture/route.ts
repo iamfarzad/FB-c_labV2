@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     let data
     try {
       data = await leadManagementService.createLeadSummary(leadRecord)
-      console.log('Lead saved successfully:', data.id)
+      console.info('Lead saved successfully:', data.id)
     } catch (error) {
       console.error('Failed to save lead to database:', error)
       // Log the error but don't fail the entire request
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
         leadId: data.id
       })
 
-      console.log(`Found ${searchResults.length} search results for ${leadData.name}`)
+      console.info(`Found ${searchResults.length} search results for ${leadData.name}`)
 
     } catch (searchError) {
       console.error('Grounded search failed:', searchError)
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
             researchActivityId: researchActivityId, // Pass the activity ID
           }),
         }).catch(error => {
-          console.log("Background research fetch failed:", error.message)
+          console.info("Background research fetch failed:", error.message)
           // Log research failure
           logServerActivity({
             type: "error",
@@ -190,7 +190,7 @@ export async function POST(req: NextRequest) {
         })
       }
     } catch (error) {
-      console.log("Background research fetch skipped:", error)
+      console.info("Background research fetch skipped:", error)
       // Mark research as completed if background fetch fails
       await logServerActivity({
         type: "search",
