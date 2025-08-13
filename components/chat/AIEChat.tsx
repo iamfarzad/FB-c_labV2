@@ -533,8 +533,8 @@ export function AIEChat() {
                     {/* Brand icon near assistant message while streaming */}
                     {/* Removed brand chip under assistant output while streaming */}
 
-                    {/* Citations from grounded search */}
-                    <CitationDisplay citations={m.citations} />
+                    {/* Citations from grounded search (prefer explicit citations, fallback to sources) */}
+                    <CitationDisplay citations={m.citations ?? (m.sources?.map((s: any) => ({ uri: s.url, title: s.title })) || [])} />
 
                     {!!m.sources?.length && (
                       <div className="mt-2">
