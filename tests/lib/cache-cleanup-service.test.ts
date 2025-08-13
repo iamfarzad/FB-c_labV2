@@ -47,7 +47,7 @@ describe('CacheCleanupService', () => {
 
   describe('startCleanup', () => {
     it('should start cleanup interval', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
       
       service.startCleanup(30);
       
@@ -57,7 +57,7 @@ describe('CacheCleanupService', () => {
     });
 
     it('should not start multiple intervals', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
       
       service.startCleanup(30);
       service.startCleanup(30);
@@ -91,7 +91,7 @@ describe('CacheCleanupService', () => {
 
   describe('stopCleanup', () => {
     it('should stop cleanup interval', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
       
       service.startCleanup(30);
       service.stopCleanup();
@@ -102,7 +102,7 @@ describe('CacheCleanupService', () => {
     });
 
     it('should handle stopping when not started', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
       
       service.stopCleanup();
       
@@ -115,7 +115,7 @@ describe('CacheCleanupService', () => {
   describe('performCleanup', () => {
     it('should call clearExpiredCache on GeminiConfigEnhanced', async () => {
       const clearExpiredCacheSpy = jest.spyOn(geminiConfig, 'clearExpiredCache');
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
       
       // Add some test data to cache
       await geminiConfig.optimizeConversation(
