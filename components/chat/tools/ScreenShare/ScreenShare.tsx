@@ -96,7 +96,7 @@ export function ScreenShare({
             ctx.drawImage(video, 0, 0)
             const imageData = canvas.toDataURL('image/jpeg', 0.8)
             analysisCount++;
-            console.log(`📊 Auto-analysis ${analysisCount}/${maxAnalysisPerSession}`);
+            console.info(`📊 Auto-analysis ${analysisCount}/${maxAnalysisPerSession}`);
             await sendScreenFrame(imageData)
           }
         }

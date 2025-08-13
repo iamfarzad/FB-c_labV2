@@ -94,8 +94,8 @@ Focus on identifying business process improvements and automation opportunities.
 
     const model = genAI.models.generateContentStream
 
-    let actualInputTokens = 0
-    let actualOutputTokens = 0
+    const actualInputTokens = 0
+    const actualOutputTokens = 0
     let analysisResult = ''
 
     try {

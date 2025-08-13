@@ -476,7 +476,7 @@ export const ChatArea = memo(function ChatArea({
                   status="pending"
                   sessionId={messageId}
                   onCancel={handleCancel}
-                  onAppGenerated={(url: string) => { console.log('App generated:', url) }}
+                  onAppGenerated={(url: string) => { console.info('App generated:', url) }}
                 />}
                 errorText={undefined}
               />
@@ -643,7 +643,7 @@ export const ChatArea = memo(function ChatArea({
                             error={message.videoToAppCard.error}
                             sessionId={message.videoToAppCard.sessionId}
                             onAppGenerated={(url: string) => {
-                              console.log('App generated:', url)
+                              console.info('App generated:', url)
                             }}
                           />
                         </div>
@@ -927,7 +927,7 @@ export const ChatArea = memo(function ChatArea({
                                   onClick={() => {
                                     const newContent = prompt('Edit message:', message.content)
                                     if (newContent && newContent.trim() !== message.content) {
-                                      console.log('Edit message:', message.id, 'New content:', newContent)
+                                      console.info('Edit message:', message.id, 'New content:', newContent)
                                     }
                                   }}
                                 >

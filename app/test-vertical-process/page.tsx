@@ -90,7 +90,7 @@ export default function TestVerticalProcessPage() {
   }, [])
 
   const handleActivityClick = (activity: ActivityItem) => {
-    console.log('Activity clicked:', activity)
+    console.info('Activity clicked:', activity)
   }
 
   return (

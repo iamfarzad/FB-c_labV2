@@ -24,8 +24,8 @@ class ProductionFixer {
   }
 
   async fixAll(): Promise<FixResult[]> {
-    console.log('🔧 Fixing production issues...')
-    console.log('=' .repeat(50))
+    console.info('🔧 Fixing production issues...')
+    console.info('=' .repeat(50))
 
     // Apply all fixes
     await this.fixVercelConfig()
@@ -39,12 +39,12 @@ class ProductionFixer {
   }
 
   private async fixVercelConfig() {
-    console.log('\n📝 Checking vercel.json configuration...')
+    console.info('\n📝 Checking vercel.json configuration...')
     
     const vercelConfigPath = join(this.projectRoot, 'vercel.json')
     
     if (!existsSync(vercelConfigPath)) {
-      console.log('  ❌ vercel.json not found')
+      console.info('  ❌ vercel.json not found')
       return
     }
 
@@ -70,7 +70,7 @@ class ProductionFixer {
             config.functions[route].maxDuration < settings.maxDuration) {
           config.functions[route] = settings
           modified = true
-          console.log(`  ✅ Updated ${route} timeout to ${settings.maxDuration}s`)
+          console.info(`  ✅ Updated ${route} timeout to ${settings.maxDuration}s`)
         }
       }
 
@@ -96,7 +96,7 @@ class ProductionFixer {
       if (!hasAIHeaders) {
         config.headers.push(aiHeaders)
         modified = true
-        console.log('  ✅ Added CORS headers for AI endpoints')
+        console.info('  ✅ Added CORS headers for AI endpoints')
       }
 
       if (modified) {
@@ -108,7 +108,7 @@ class ProductionFixer {
           applied: true
         })
       } else {
-        console.log('  ✅ vercel.json already properly configured')
+        console.info('  ✅ vercel.json already properly configured')
       }
 
     } catch (error) {
@@ -122,7 +122,7 @@ class ProductionFixer {
   }
 
   private async fixEnvironmentHandling() {
-    console.log('\n🔐 Fixing environment variable handling...')
+    console.info('\n🔐 Fixing environment variable handling...')
 
     // Check each AI API route for proper error handling
     const apiRoutes = [
@@ -136,7 +136,7 @@ class ProductionFixer {
       const filePath = join(this.projectRoot, route)
       
       if (!existsSync(filePath)) {
-        console.log(`  ⚠️ ${route} not found`)
+        console.info(`  ⚠️ ${route} not found`)
         continue
       }
 
@@ -184,7 +184,7 @@ if (!process.env.GEMINI_API_KEY) {
 
         if (modified) {
           writeFileSync(filePath, content)
-          console.log(`  ✅ Fixed environment handling in ${route}`)
+          console.info(`  ✅ Fixed environment handling in ${route}`)
           this.fixes.push({
             file: route,
             issue: 'Missing environment variable validation',
@@ -194,7 +194,7 @@ if (!process.env.GEMINI_API_KEY) {
         }
 
       } catch (error) {
-        console.log(`  ❌ Failed to fix ${route}: ${error}`)
+        console.info(`  ❌ Failed to fix ${route}: ${error}`)
         this.fixes.push({
           file: route,
           issue: 'Failed to update environment handling',
@@ -206,7 +206,7 @@ if (!process.env.GEMINI_API_KEY) {
   }
 
   private async fixAPIRouteHeaders() {
-    console.log('\n📡 Fixing API route headers...')
+    console.info('\n📡 Fixing API route headers...')
 
     const routesToFix = [
       'app/api/gemini-live/route.ts',
@@ -244,7 +244,7 @@ export async function OPTIONS() {
 
         if (modified) {
           writeFileSync(filePath, content)
-          console.log(`  ✅ Added OPTIONS handler to ${route}`)
+          console.info(`  ✅ Added OPTIONS handler to ${route}`)
           this.fixes.push({
             file: route,
             issue: 'Missing CORS OPTIONS handler',
@@ -254,13 +254,13 @@ export async function OPTIONS() {
         }
 
       } catch (error) {
-        console.log(`  ❌ Failed to fix headers in ${route}: ${error}`)
+        console.info(`  ❌ Failed to fix headers in ${route}: ${error}`)
       }
     }
   }
 
   private async fixTimeoutHandling() {
-    console.log('\n⏱️ Adding timeout handling...')
+    console.info('\n⏱️ Adding timeout handling...')
 
     // Add timeout wrapper to long-running operations
     const timeoutWrapper = `
@@ -294,7 +294,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
           content = content.replace(importEndRegex, `$&${timeoutWrapper}`)
           
           writeFileSync(filePath, content)
-          console.log(`  ✅ Added timeout handling to ${route}`)
+          console.info(`  ✅ Added timeout handling to ${route}`)
           this.fixes.push({
             file: route,
             issue: 'Missing timeout handling',
@@ -304,13 +304,13 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
         }
 
       } catch (error) {
-        console.log(`  ❌ Failed to add timeout handling to ${route}: ${error}`)
+        console.info(`  ❌ Failed to add timeout handling to ${route}: ${error}`)
       }
     }
   }
 
   private async createProductionReadme() {
-    console.log('\n📚 Creating production troubleshooting guide...')
+    console.info('\n📚 Creating production troubleshooting guide...')
 
     const readmePath = join(this.projectRoot, 'PRODUCTION_TROUBLESHOOTING.md')
     
@@ -415,7 +415,7 @@ If issues persist after following this guide:
 `
 
     writeFileSync(readmePath, readmeContent)
-    console.log('  ✅ Created PRODUCTION_TROUBLESHOOTING.md')
+    console.info('  ✅ Created PRODUCTION_TROUBLESHOOTING.md')
     
     this.fixes.push({
       file: 'PRODUCTION_TROUBLESHOOTING.md',
@@ -426,35 +426,35 @@ If issues persist after following this guide:
   }
 
   private printSummary() {
-    console.log('\n' + '='.repeat(50))
-    console.log('📊 FIXES APPLIED')
-    console.log('='.repeat(50))
+    console.info('\n' + '='.repeat(50))
+    console.info('📊 FIXES APPLIED')
+    console.info('='.repeat(50))
 
     const successful = this.fixes.filter(f => f.applied)
     const failed = this.fixes.filter(f => !f.applied)
 
-    console.log(`✅ Successfully applied: ${successful.length}`)
-    console.log(`❌ Failed to apply: ${failed.length}`)
+    console.info(`✅ Successfully applied: ${successful.length}`)
+    console.info(`❌ Failed to apply: ${failed.length}`)
 
     if (successful.length > 0) {
-      console.log('\n✅ SUCCESSFUL FIXES:')
+      console.info('\n✅ SUCCESSFUL FIXES:')
       successful.forEach(fix => {
-        console.log(`  • ${fix.file}: ${fix.fix}`)
+        console.info(`  • ${fix.file}: ${fix.fix}`)
       })
     }
 
     if (failed.length > 0) {
-      console.log('\n❌ FAILED FIXES:')
+      console.info('\n❌ FAILED FIXES:')
       failed.forEach(fix => {
-        console.log(`  • ${fix.file}: ${fix.fix}`)
+        console.info(`  • ${fix.file}: ${fix.fix}`)
       })
     }
 
-    console.log('\n🚀 NEXT STEPS:')
-    console.log('  1. Commit and push these fixes')
-    console.log('  2. Redeploy to Vercel')
-    console.log('  3. Run diagnostic script to verify fixes')
-    console.log('  4. Check PRODUCTION_TROUBLESHOOTING.md for detailed guidance')
+    console.info('\n🚀 NEXT STEPS:')
+    console.info('  1. Commit and push these fixes')
+    console.info('  2. Redeploy to Vercel')
+    console.info('  3. Run diagnostic script to verify fixes')
+    console.info('  4. Check PRODUCTION_TROUBLESHOOTING.md for detailed guidance')
   }
 }
 

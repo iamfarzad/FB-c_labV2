@@ -22,8 +22,8 @@ class ProductionDiagnostic {
   }
 
   async diagnoseAll(): Promise<DiagnosticResult[]> {
-    console.log(`🔍 Diagnosing production issues for: ${this.baseUrl}`)
-    console.log('=' .repeat(60))
+    console.info(`🔍 Diagnosing production issues for: ${this.baseUrl}`)
+    console.info('=' .repeat(60))
 
     // Test each failing AI function
     await this.testGeminiLive()
@@ -38,7 +38,7 @@ class ProductionDiagnostic {
   }
 
   private async testGeminiLive() {
-    console.log('\n🎤 Testing Gemini Live (Voice/TTS)...')
+    console.info('\n🎤 Testing Gemini Live (Voice/TTS)...')
     
     try {
       const response = await fetch(`${this.baseUrl}/api/gemini-live`, {
@@ -57,9 +57,9 @@ class ProductionDiagnostic {
       const result = await this.handleResponse('gemini-live', response)
       
       if (result.status === 'success') {
-        console.log('  ✅ Gemini Live API responding')
+        console.info('  ✅ Gemini Live API responding')
       } else {
-        console.log(`  ❌ Gemini Live failed: ${result.error}`)
+        console.info(`  ❌ Gemini Live failed: ${result.error}`)
       }
     } catch (error) {
       this.results.push({
@@ -67,12 +67,12 @@ class ProductionDiagnostic {
         status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error'
       })
-      console.log(`  ❌ Gemini Live network error: ${error}`)
+      console.info(`  ❌ Gemini Live network error: ${error}`)
     }
   }
 
   private async testWebcamAnalysis() {
-    console.log('\n📷 Testing Webcam Image Analysis...')
+    console.info('\n📷 Testing Webcam Image Analysis...')
     
     // Create a simple test image (1x1 pixel base64)
     const testImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
@@ -92,9 +92,9 @@ class ProductionDiagnostic {
       const result = await this.handleResponse('analyze-image', response)
       
       if (result.status === 'success') {
-        console.log('  ✅ Image Analysis API responding')
+        console.info('  ✅ Image Analysis API responding')
       } else {
-        console.log(`  ❌ Image Analysis failed: ${result.error}`)
+        console.info(`  ❌ Image Analysis failed: ${result.error}`)
       }
     } catch (error) {
       this.results.push({
@@ -102,12 +102,12 @@ class ProductionDiagnostic {
         status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error'
       })
-      console.log(`  ❌ Image Analysis network error: ${error}`)
+      console.info(`  ❌ Image Analysis network error: ${error}`)
     }
   }
 
   private async testScreenShareAnalysis() {
-    console.log('\n🖥️ Testing Screen Share Analysis...')
+    console.info('\n🖥️ Testing Screen Share Analysis...')
     
     // Same test image for screen share
     const testImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
@@ -126,9 +126,9 @@ class ProductionDiagnostic {
       const result = await this.handleResponse('analyze-screenshot', response)
       
       if (result.status === 'success') {
-        console.log('  ✅ Screenshot Analysis API responding')
+        console.info('  ✅ Screenshot Analysis API responding')
       } else {
-        console.log(`  ❌ Screenshot Analysis failed: ${result.error}`)
+        console.info(`  ❌ Screenshot Analysis failed: ${result.error}`)
       }
     } catch (error) {
       this.results.push({
@@ -136,12 +136,12 @@ class ProductionDiagnostic {
         status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error'
       })
-      console.log(`  ❌ Screenshot Analysis network error: ${error}`)
+      console.info(`  ❌ Screenshot Analysis network error: ${error}`)
     }
   }
 
   private async testVideoToApp() {
-    console.log('\n🎥 Testing Video-to-App Generator...')
+    console.info('\n🎥 Testing Video-to-App Generator...')
     
     try {
       const response = await fetch(`${this.baseUrl}/api/video-to-app`, {
@@ -158,9 +158,9 @@ class ProductionDiagnostic {
       const result = await this.handleResponse('video-to-app', response)
       
       if (result.status === 'success') {
-        console.log('  ✅ Video-to-App API responding')
+        console.info('  ✅ Video-to-App API responding')
       } else {
-        console.log(`  ❌ Video-to-App failed: ${result.error}`)
+        console.info(`  ❌ Video-to-App failed: ${result.error}`)
       }
     } catch (error) {
       this.results.push({
@@ -168,12 +168,12 @@ class ProductionDiagnostic {
         status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error'
       })
-      console.log(`  ❌ Video-to-App network error: ${error}`)
+      console.info(`  ❌ Video-to-App network error: ${error}`)
     }
   }
 
   private async testEnvironmentVariables() {
-    console.log('\n🔐 Testing Environment Variables...')
+    console.info('\n🔐 Testing Environment Variables...')
     
     try {
       // Test a simple endpoint that should reveal env var issues
@@ -190,16 +190,16 @@ class ProductionDiagnostic {
       const result = await this.handleResponse('environment-test', response)
       
       if (result.status === 'success') {
-        console.log('  ✅ Environment variables appear to be configured')
+        console.info('  ✅ Environment variables appear to be configured')
       } else {
-        console.log(`  ❌ Environment issues detected: ${result.error}`)
+        console.info(`  ❌ Environment issues detected: ${result.error}`)
         
         // Check for specific error patterns
         if (result.error?.includes('GEMINI_API_KEY')) {
-          console.log('  🚨 GEMINI_API_KEY is missing or invalid in production')
+          console.info('  🚨 GEMINI_API_KEY is missing or invalid in production')
         }
         if (result.error?.includes('Service configuration error')) {
-          console.log('  🚨 Service configuration error - check Vercel environment variables')
+          console.info('  🚨 Service configuration error - check Vercel environment variables')
         }
       }
     } catch (error) {
@@ -208,12 +208,12 @@ class ProductionDiagnostic {
         status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error'
       })
-      console.log(`  ❌ Environment test network error: ${error}`)
+      console.info(`  ❌ Environment test network error: ${error}`)
     }
   }
 
   private async testAPIRouting() {
-    console.log('\n🛣️ Testing API Routing...')
+    console.info('\n🛣️ Testing API Routing...')
     
     try {
       // Test if mock endpoints are accidentally being used in production
@@ -223,8 +223,8 @@ class ProductionDiagnostic {
 
       if (response.ok) {
         const data = await response.json()
-        console.log('  ⚠️ Mock endpoints are accessible in production')
-        console.log(`  📊 Mock status: ${JSON.stringify(data, null, 2)}`)
+        console.info('  ⚠️ Mock endpoints are accessible in production')
+        console.info(`  📊 Mock status: ${JSON.stringify(data, null, 2)}`)
         
         this.results.push({
           endpoint: 'mock-routing',
@@ -232,10 +232,10 @@ class ProductionDiagnostic {
           error: 'Mock endpoints should not be accessible in production'
         })
       } else {
-        console.log('  ✅ Mock endpoints properly blocked in production')
+        console.info('  ✅ Mock endpoints properly blocked in production')
       }
     } catch (error) {
-      console.log('  ✅ Mock endpoints not accessible (expected in production)')
+      console.info('  ✅ Mock endpoints not accessible (expected in production)')
     }
   }
 
@@ -280,23 +280,23 @@ class ProductionDiagnostic {
   }
 
   private printSummary() {
-    console.log('\n' + '='.repeat(60))
-    console.log('📊 DIAGNOSTIC SUMMARY')
-    console.log('='.repeat(60))
+    console.info('\n' + '='.repeat(60))
+    console.info('📊 DIAGNOSTIC SUMMARY')
+    console.info('='.repeat(60))
 
     const successful = this.results.filter(r => r.status === 'success')
     const failed = this.results.filter(r => r.status === 'error')
 
-    console.log(`✅ Successful: ${successful.length}`)
-    console.log(`❌ Failed: ${failed.length}`)
+    console.info(`✅ Successful: ${successful.length}`)
+    console.info(`❌ Failed: ${failed.length}`)
 
     if (failed.length > 0) {
-      console.log('\n🚨 FAILED ENDPOINTS:')
+      console.info('\n🚨 FAILED ENDPOINTS:')
       failed.forEach(result => {
-        console.log(`  • ${result.endpoint}: ${result.error}`)
+        console.info(`  • ${result.endpoint}: ${result.error}`)
       })
 
-      console.log('\n💡 RECOMMENDED FIXES:')
+      console.info('\n💡 RECOMMENDED FIXES:')
       
       // Check for common issues
       const hasEnvErrors = failed.some(r => r.error?.includes('GEMINI_API_KEY') || r.error?.includes('configuration'))
@@ -304,34 +304,34 @@ class ProductionDiagnostic {
       const hasMockIssues = failed.some(r => r.endpoint === 'mock-routing')
 
       if (hasEnvErrors) {
-        console.log('  1. ✅ Check Vercel environment variables:')
-        console.log('     - Go to Vercel Dashboard → Project → Settings → Environment Variables')
-        console.log('     - Ensure GEMINI_API_KEY is set for Production, Preview, and Development')
-        console.log('     - Redeploy after adding environment variables')
+        console.info('  1. ✅ Check Vercel environment variables:')
+        console.info('     - Go to Vercel Dashboard → Project → Settings → Environment Variables')
+        console.info('     - Ensure GEMINI_API_KEY is set for Production, Preview, and Development')
+        console.info('     - Redeploy after adding environment variables')
       }
 
       if (hasTimeouts) {
-        console.log('  2. ✅ Check Vercel function timeouts:')
-        console.log('     - Review vercel.json function configuration')
-        console.log('     - Consider increasing maxDuration for complex operations')
+        console.info('  2. ✅ Check Vercel function timeouts:')
+        console.info('     - Review vercel.json function configuration')
+        console.info('     - Consider increasing maxDuration for complex operations')
       }
 
       if (hasMockIssues) {
-        console.log('  3. ✅ Fix API routing:')
-        console.log('     - Ensure mock endpoints are properly blocked in production')
-        console.log('     - Check middleware.ts configuration')
+        console.info('  3. ✅ Fix API routing:')
+        console.info('     - Ensure mock endpoints are properly blocked in production')
+        console.info('     - Check middleware.ts configuration')
       }
 
-      console.log('\n  4. ✅ General troubleshooting:')
-      console.log('     - Check Vercel function logs for detailed error messages')
-      console.log('     - Verify all imports and dependencies are properly bundled')
-      console.log('     - Test with curl commands to isolate frontend vs backend issues')
+      console.info('\n  4. ✅ General troubleshooting:')
+      console.info('     - Check Vercel function logs for detailed error messages')
+      console.info('     - Verify all imports and dependencies are properly bundled')
+      console.info('     - Test with curl commands to isolate frontend vs backend issues')
     }
 
-    console.log('\n🔗 Useful Commands:')
-    console.log(`  vercel logs --app=your-app-name`)
-    console.log(`  vercel env ls`)
-    console.log(`  curl -X POST ${this.baseUrl}/api/chat -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"test"}]}'`)
+    console.info('\n🔗 Useful Commands:')
+    console.info(`  vercel logs --app=your-app-name`)
+    console.info(`  vercel env ls`)
+    console.info(`  curl -X POST ${this.baseUrl}/api/chat -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"test"}]}'`)
   }
 }
 

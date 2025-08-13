@@ -5,7 +5,7 @@
  */
 
 async function testChatAPI() {
-  console.log('🧪 Testing Chat API Conversation Flow\n');
+  console.info('🧪 Testing Chat API Conversation Flow\n');
   
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const sessionId = `test-session-${Date.now()}`;
@@ -21,7 +21,7 @@ async function testChatAPI() {
   let messages: any[] = [];
   
   for (const test of testMessages) {
-    console.log(`\n📋 Testing: "${test.content}"`);
+    console.info(`\n📋 Testing: "${test.content}"`);
     messages.push({ role: "user", content: test.content });
     
     try {
@@ -39,7 +39,7 @@ async function testChatAPI() {
       });
       
       if (!response.ok) {
-        console.log(`   ❌ Failed: ${response.status} ${response.statusText}`);
+        console.info(`   ❌ Failed: ${response.status} ${response.statusText}`);
         continue;
       }
       
@@ -79,24 +79,24 @@ async function testChatAPI() {
         }
       }
       
-      console.log(`   ✅ Response received`);
-      console.log(`   📊 Conversation Stage: ${conversationStage || 'Not provided'}`);
-      console.log(`   👤 Lead Data: ${JSON.stringify(leadData)}`);
-      console.log(`   💬 Response preview: ${responseContent.slice(0, 100)}...`);
+      console.info(`   ✅ Response received`);
+      console.info(`   📊 Conversation Stage: ${conversationStage || 'Not provided'}`);
+      console.info(`   👤 Lead Data: ${JSON.stringify(leadData)}`);
+      console.info(`   💬 Response preview: ${responseContent.slice(0, 100)}...`);
       
       // Add assistant response to messages
       messages.push({ role: "assistant", content: responseContent });
       
     } catch (error: any) {
-      console.log(`   ❌ Error: ${error.message}`);
+      console.info(`   ❌ Error: ${error.message}`);
     }
   }
   
-  console.log('\n\n📊 Test Summary:');
-  console.log('- Chat API is responding to requests');
-  console.log('- Streaming responses are working');
-  console.log('- Conversation state tracking needs to be verified in actual chat UI');
-  console.log('\n✅ Basic Chat API functionality confirmed!');
+  console.info('\n\n📊 Test Summary:');
+  console.info('- Chat API is responding to requests');
+  console.info('- Streaming responses are working');
+  console.info('- Conversation state tracking needs to be verified in actual chat UI');
+  console.info('\n✅ Basic Chat API functionality confirmed!');
 }
 
 // Run the test

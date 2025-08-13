@@ -19,7 +19,7 @@ interface SearchResult {
 export class GroundedSearchService {
   async searchLead(params: SearchLeadParams): Promise<SearchResult[]> {
     try {
-      console.log(`🔍 Starting grounded search for ${params.name} (${params.email})`)
+      console.info(`🔍 Starting grounded search for ${params.name} (${params.email})`)
       
       // For now, return mock search results
       // In a real implementation, this would integrate with search APIs
@@ -43,7 +43,7 @@ export class GroundedSearchService {
         await this.saveSearchResults(params.leadId, mockResults)
       }
 
-      console.log(`✅ Found ${mockResults.length} search results for ${params.name}`)
+      console.info(`✅ Found ${mockResults.length} search results for ${params.name}`)
       return mockResults
 
     } catch (error) {
@@ -71,7 +71,7 @@ export class GroundedSearchService {
       if (error) {
         console.error('Failed to save search results:', error)
       } else {
-        console.log(`💾 Saved ${results.length} search results to database`)
+        console.info(`💾 Saved ${results.length} search results to database`)
       }
 
     } catch (error) {

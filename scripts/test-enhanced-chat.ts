@@ -3,7 +3,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 async function testEnhancedChat() {
-  console.log("🧪 Testing Enhanced Chat API with Google Search...\n");
+  console.info("🧪 Testing Enhanced Chat API with Google Search...\n");
 
   try {
     // Check environment variables
@@ -12,15 +12,15 @@ async function testEnhancedChat() {
       throw new Error("GEMINI_API_KEY not found in environment variables");
     }
 
-    console.log("✅ API Key found");
-    console.log("🔧 Initializing enhanced Gemini client...\n");
+    console.info("✅ API Key found");
+    console.info("🔧 Initializing enhanced Gemini client...\n");
 
     // Initialize client
     const client = new GoogleGenAI({
       apiKey: apiKey,
     });
 
-    console.log("✅ Client initialized");
+    console.info("✅ Client initialized");
 
     // Test system instruction
     const systemInstruction = `
@@ -40,7 +40,7 @@ You are F.B/c, a lead-generation assistant for Farzad Bayat's website. You speak
 8. Respect privacy: no storing personal data beyond session, and always follow GDPR rules.
 `;
 
-    console.log("🔧 Starting chat session with Google Search...\n");
+    console.info("🔧 Starting chat session with Google Search...\n");
 
     // Test queries
     const testQueries = [
@@ -50,8 +50,8 @@ You are F.B/c, a lead-generation assistant for Farzad Bayat's website. You speak
     ];
 
     for (const query of testQueries) {
-      console.log(`\n🔍 Testing query: "${query}"`);
-      console.log("⏳ Sending message...");
+      console.info(`\n🔍 Testing query: "${query}"`);
+      console.info("⏳ Sending message...");
 
       const startTime = Date.now();
       
@@ -68,14 +68,14 @@ You are F.B/c, a lead-generation assistant for Farzad Bayat's website. You speak
       
       const responseTime = Date.now() - startTime;
 
-      console.log(`✅ Response received in ${responseTime}ms`);
-      console.log(`📝 Response length: ${result.response.text().length} characters`);
+      console.info(`✅ Response received in ${responseTime}ms`);
+      console.info(`📝 Response length: ${result.response.text().length} characters`);
 
-      console.log(`\n📄 Response preview: ${result.response.text().substring(0, 200)}...`);
+      console.info(`\n📄 Response preview: ${result.response.text().substring(0, 200)}...`);
     }
 
-    console.log("\n🎉 All tests completed successfully!");
-    console.log("✅ Enhanced chat API with Google Search is working correctly");
+    console.info("\n🎉 All tests completed successfully!");
+    console.info("✅ Enhanced chat API with Google Search is working correctly");
 
   } catch (error) {
     console.error("❌ Test failed:", error);

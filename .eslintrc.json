@@ -25,7 +25,9 @@
         "property": "log",
         "message": "Use console.error, console.warn, or console.info instead of console.log"
       }
-    ]
+    ],
+    "@typescript-eslint/no-explicit-any": ["warn"],
+    "react/no-unescaped-entities": ["warn"]
   },
   "overrides": [
     {

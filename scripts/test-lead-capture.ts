@@ -9,7 +9,7 @@
 const API_BASE = 'http://localhost:3000'
 
 async function testLeadCapture(): Promise<void> {
-  console.log('🧪 Testing Lead Capture Flow...\n')
+  console.info('🧪 Testing Lead Capture Flow...\n')
 
   try {
     const testData = {
@@ -25,7 +25,7 @@ async function testLeadCapture(): Promise<void> {
       }
     }
 
-    console.log('📤 Sending test lead data...')
+    console.info('📤 Sending test lead data...')
     const response = await fetch(`${API_BASE}/api/lead-capture`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -37,20 +37,20 @@ async function testLeadCapture(): Promise<void> {
     if (response.ok) {
       try {
         const result = JSON.parse(responseText)
-        console.log('✅ Lead capture successful!')
-        console.log('Response:', result)
+        console.info('✅ Lead capture successful!')
+        console.info('Response:', result)
       } catch (e) {
-        console.log('✅ Lead capture responded OK but with non-JSON response')
-        console.log('Response:', responseText)
+        console.info('✅ Lead capture responded OK but with non-JSON response')
+        console.info('Response:', responseText)
       }
     } else {
-      console.log('❌ Lead capture failed')
-      console.log('Status:', response.status, response.statusText)
-      console.log('Response:', responseText)
+      console.info('❌ Lead capture failed')
+      console.info('Status:', response.status, response.statusText)
+      console.info('Response:', responseText)
     }
 
     // Test API endpoints
-    console.log('\n📡 Testing related API endpoints...')
+    console.info('\n📡 Testing related API endpoints...')
     
     const endpoints = [
       '/api/intelligence/lead-research',
@@ -61,9 +61,9 @@ async function testLeadCapture(): Promise<void> {
     for (const endpoint of endpoints) {
       try {
         const testResponse = await fetch(`${API_BASE}${endpoint}`)
-        console.log(`${endpoint}: ${testResponse.status} ${testResponse.statusText}`)
+        console.info(`${endpoint}: ${testResponse.status} ${testResponse.statusText}`)
       } catch (error) {
-        console.log(`${endpoint}: Connection error`)
+        console.info(`${endpoint}: Connection error`)
       }
     }
 

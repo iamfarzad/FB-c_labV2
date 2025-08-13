@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         }, { onConflict: 'session_id' })
     } catch {}
 
-    console.log('🎯 Session init started:', { sessionId, email, name, companyUrl })
+    console.info('🎯 Session init started:', { sessionId, email, name, companyUrl })
 
     // Check for existing context for idempotency
     const existing = await contextStorage.get(sessionId)
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
           snapshot,
         }
 
-        console.log('✅ Session init idempotent: returning existing context', response)
+        console.info('✅ Session init idempotent: returning existing context', response)
         return NextResponse.json(response, { headers: { 'X-Session-Id': sessionId, 'Cache-Control': 'no-store' } })
       }
     }
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
 
     try {
       if (!hasResearch(existing)) {
-        console.log('🔍 Starting lead research for:', email)
+        console.info('🔍 Starting lead research for:', email)
         if (!researchInFlight.has(sessionId)) {
           const p = leadResearchService
             .researchLead(email, name, companyUrl, sessionId)
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
       }
 
       contextReady = researchResult != null || hasResearch(existing)
-      console.log('✅ Lead research completed, context ready')
+      console.info('✅ Lead research completed, context ready')
       
     } catch (error) {
       console.error('❌ Lead research failed:', error)
@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
         : null,
     }
 
-    console.log('✅ Session init completed:', response)
+    console.info('✅ Session init completed:', response)
     return NextResponse.json(response, { headers: { 'X-Session-Id': sessionId, 'Cache-Control': 'no-store' } })
 
   } catch (error) {

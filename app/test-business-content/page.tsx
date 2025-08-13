@@ -25,7 +25,7 @@ export default function TestBusinessContentPage() {
   })
 
   const handleBusinessInteraction = (data: BusinessInteractionData) => {
-    console.log('Business Interaction:', data)
+    console.info('Business Interaction:', data)
     setInteractionLog(prev => [...prev, data])
     
     // Mock responses based on interaction type
@@ -206,7 +206,7 @@ export default function TestBusinessContentPage() {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => console.log('All interactions:', interactionLog)}
+                      onClick={() => console.info('All interactions:', interactionLog)}
                     >
                       View All in Console
                     </Button>

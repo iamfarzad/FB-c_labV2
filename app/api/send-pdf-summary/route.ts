@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     // Prepare minimal data for summary – reuse export-summary query path (lightweight inline)
     const supabase = getSupabase()
-    let leadInfo: any = { name: leadName, email: toEmail }
+    const leadInfo: any = { name: leadName, email: toEmail }
     let leadResearch: any = null
 
     try {

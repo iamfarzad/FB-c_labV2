@@ -18,7 +18,7 @@ export async function recordCapabilityUsed(sessionId: string, capabilityName: st
     if (!rpcError) {
       // Optionally attach context to first-use row if your function/table supports it
       // Skipped here since RPC already logs; keep network minimal.
-      console.log(`✅ Capability tracked via RPC: ${capabilityName} (${sessionId})`)
+      console.info(`✅ Capability tracked via RPC: ${capabilityName} (${sessionId})`)
       return
     }
     console.warn('RPC append_capability_if_missing failed, falling back:', rpcError?.message)
@@ -45,7 +45,7 @@ export async function recordCapabilityUsed(sessionId: string, capabilityName: st
         .update({ ai_capabilities_shown: updated, updated_at: new Date().toISOString() })
         .eq('session_id', sessionId)
     }
-    console.log(`✅ Capability tracked via fallback: ${capabilityName} (${sessionId})`)
+    console.info(`✅ Capability tracked via fallback: ${capabilityName} (${sessionId})`)
   } catch (error) {
     console.error(`❌ Failed to record capability usage (fallback): ${capabilityName}`, error)
   }

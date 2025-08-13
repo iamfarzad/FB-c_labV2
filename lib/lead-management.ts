@@ -100,7 +100,7 @@ export class LeadManagementService {
   async storeSearchResults(leadId: string, results: Array<{ url: string; title?: string; snippet?: string; source: string }>): Promise<void> {
     try {
       if (results.length === 0) {
-        console.log('No search results to store')
+        console.info('No search results to store')
         return
       }
 

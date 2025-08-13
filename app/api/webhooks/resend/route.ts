@@ -10,7 +10,7 @@ function verifyWebhookSignature(payload: string, signature: string, secret: stri
   }
 
   try {
-    const crypto = require("crypto")
+    const crypto = await import("crypto")
     const expectedSignature = crypto.createHmac("sha256", secret).update(payload, "utf8").digest("hex")
 
     return signature === `sha256=${expectedSignature}`
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     const event = JSON.parse(payload)
-    console.log("Resend webhook event:", event.type, event.data)
+    console.info("Resend webhook event:", event.type, event.data)
 
     const supabase = getSupabase()
 
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
         await handleEmailClicked(supabase, event.data)
         break
       default:
-        console.log(`Unhandled webhook event type: ${event.type}`)
+        console.info(`Unhandled webhook event type: ${event.type}`)
     }
 
     // Log the webhook event

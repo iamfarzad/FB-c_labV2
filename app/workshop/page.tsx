@@ -7,6 +7,7 @@ import { MotionCard } from "@/components/ui/motion-card"
 import { FadeIn } from "@/components/ui/fade-in"
 import { ROICalculator } from "@/components/chat/tools/ROICalculator/ROICalculator"
 import { ProgressTracker } from "@/components/experience/progress-tracker"
+import { CourseProgressChip } from "@/components/workshop/CourseProgressChip"
 import { CitationsDemo } from "@/components/experience/citations-demo"
 import dynamic from "next/dynamic"
 import { WORKSHOP_MODULES } from "@/components/workshop/education-modules"
@@ -35,13 +36,13 @@ const workshopFeatures = [
 export default function WorkshopPage() {
   return (
     <>
-      <PageShell className="min-h-screen">
+      <PageShell>
         <PageHeader
           title="Interactive AI Education"
           subtitle="Learn by doing. Explore modules, earn XP, and ask the AI as you go."
         />
         <div className="mt-6 flex items-center justify-center gap-x-3">
-          <ProgressTracker />
+          <CourseProgressChip />
           <Button asChild variant="outline">
             <Link href="/chat?preset=bot">Build a chatbot</Link>
           </Button>
@@ -51,10 +52,8 @@ export default function WorkshopPage() {
         </div>
       </PageShell>
 
-      <PageShell className="min-h-screen">
-        <div className="mb-6 flex justify-center">
-          <ProgressTracker />
-        </div>
+      <PageShell>
+        <div className="mb-2 text-center text-sm text-muted-foreground">Course outline</div>
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <FadeIn>
           <MotionCard className="h-full neu-card transition-all">
@@ -83,7 +82,7 @@ export default function WorkshopPage() {
           <FadeIn delay={0.08}>
           <MotionCard className="h-full bg-secondary neu-card transition-all">
             <CardHeader>
-              <CardTitle className="text-2xl">AI Training Workshop Details</CardTitle>
+              <CardTitle className="text-2xl">Hands-on tools</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>

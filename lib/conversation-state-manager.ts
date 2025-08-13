@@ -109,7 +109,7 @@ export class ConversationStateManager {
     shouldSendFollowUp: boolean
     updatedState: ConversationState
   }> {
-    console.log('📊 ConversationStateManager.processMessage called:', {
+    console.info('📊 ConversationStateManager.processMessage called:', {
       sessionId,
       userMessage: userMessage.substring(0, 50) + '...',
       leadId

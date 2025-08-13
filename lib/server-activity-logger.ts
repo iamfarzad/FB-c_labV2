@@ -33,7 +33,7 @@ export async function logServerActivity(activityData: ServerActivityData): Promi
       // Check if it's a missing table error
       if (error.message && error.message.includes('relation "public.activities" does not exist')) {
         console.warn("⚠️ Activities table missing - logging to console only")
-        console.log("[Server Activity Logged]:", {
+        console.info("[Server Activity Logged]:", {
           type: activityData.type,
           title: activityData.title,
           description: activityData.description,
@@ -48,7 +48,7 @@ export async function logServerActivity(activityData: ServerActivityData): Promi
       return `fallback_${Date.now()}`
     }
 
-    console.log(`✅ Server activity logged: ${activityData.title} (ID: ${data.id})`)
+    console.info(`✅ Server activity logged: ${activityData.title} (ID: ${data.id})`)
     return data.id
   } catch (error) {
     console.error("Server activity logging error:", error)

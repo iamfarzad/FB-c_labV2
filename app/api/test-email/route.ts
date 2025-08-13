@@ -3,8 +3,8 @@ import { NextResponse } from "next/server"
 
 export async function POST() {
   try {
-    console.log("🧪 Testing email functionality...")
-    console.log("📧 RESEND_API_KEY configured:", !!process.env.RESEND_API_KEY)
+    console.info("🧪 Testing email functionality...")
+    console.info("📧 RESEND_API_KEY configured:", !!process.env.RESEND_API_KEY)
 
     if (!process.env.RESEND_API_KEY) {
       return NextResponse.json(
@@ -50,7 +50,7 @@ export async function POST() {
         "Based on our conversation, I see great potential for AI automation in your sales process. Your interest in video analysis and lead research suggests you could benefit from our comprehensive AI toolkit that could increase your team's efficiency by 40-60%.",
     }
 
-    console.log("📤 Sending lead follow-up email...")
+    console.info("📤 Sending lead follow-up email...")
     const leadEmailSent = await EmailService.sendLeadWelcomeEmail(testLeadData)
 
     // Test meeting confirmation email
@@ -63,11 +63,11 @@ export async function POST() {
       timeZone: "EST",
     }
 
-    console.log("📅 Sending meeting confirmation email...")
+    console.info("📅 Sending meeting confirmation email...")
     const meetingEmailSent = await EmailService.sendMeetingConfirmation(testMeetingData)
 
-    console.log("✅ Email test completed!")
-    console.log("📊 Results:", { leadEmailSent, meetingEmailSent })
+    console.info("✅ Email test completed!")
+    console.info("📊 Results:", { leadEmailSent, meetingEmailSent })
 
     return NextResponse.json({
       success: true,

@@ -6,10 +6,10 @@
  */
 
 async function testPhase2() {
-  console.log('🧪 Testing Phase 2: TC Card → Intelligence Pipeline\n')
+  console.info('🧪 Testing Phase 2: TC Card → Intelligence Pipeline\n')
 
   // Test 1: Consent API
-  console.log('📋 Test 1: Consent API')
+  console.info('📋 Test 1: Consent API')
   try {
     const consentRes = await fetch('http://localhost:3000/api/consent', {
       method: 'POST',
@@ -22,18 +22,18 @@ async function testPhase2() {
     })
     
     if (consentRes.ok) {
-      console.log('✅ Consent recorded successfully')
+      console.info('✅ Consent recorded successfully')
     } else {
-      console.log('❌ Consent failed:', await consentRes.text())
+      console.info('❌ Consent failed:', await consentRes.text())
     }
   } catch (error) {
     console.error('❌ Consent test failed:', error)
   }
 
-  console.log('\n---\n')
+  console.info('\n---\n')
 
   // Test 2: Session Init API
-  console.log('📋 Test 2: Session Init API')
+  console.info('📋 Test 2: Session Init API')
   try {
     const sessionInitRes = await fetch('http://localhost:3000/api/intelligence/session-init', {
       method: 'POST',
@@ -47,7 +47,7 @@ async function testPhase2() {
     
     if (sessionInitRes.ok) {
       const sessionData = await sessionInitRes.json()
-      console.log('✅ Session init successful:', {
+      console.info('✅ Session init successful:', {
         sessionId: sessionData.sessionId,
         contextReady: sessionData.contextReady,
         hasSnapshot: !!sessionData.snapshot
@@ -57,12 +57,12 @@ async function testPhase2() {
       const sessionId = sessionData.sessionId
       
       // Test 3: Context Fetch
-      console.log('\n📋 Test 3: Context Fetch')
+      console.info('\n📋 Test 3: Context Fetch')
       const contextRes = await fetch(`http://localhost:3000/api/intelligence/context?sessionId=${sessionId}`)
       
       if (contextRes.ok) {
         const contextData = await contextRes.json()
-        console.log('✅ Context fetched successfully:', {
+        console.info('✅ Context fetched successfully:', {
           hasCompany: !!contextData.company,
           hasPerson: !!contextData.person,
           role: contextData.role,
@@ -70,22 +70,22 @@ async function testPhase2() {
         })
         
         // Test 4: Personalized Greeting Generation
-        console.log('\n📋 Test 4: Personalized Greeting')
+        console.info('\n📋 Test 4: Personalized Greeting')
         const greeting = generatePersonalizedGreeting(contextData)
-        console.log('✅ Generated greeting:', greeting)
+        console.info('✅ Generated greeting:', greeting)
         
       } else {
-        console.log('❌ Context fetch failed:', await contextRes.text())
+        console.info('❌ Context fetch failed:', await contextRes.text())
       }
       
     } else {
-      console.log('❌ Session init failed:', await sessionInitRes.text())
+      console.info('❌ Session init failed:', await sessionInitRes.text())
     }
   } catch (error) {
     console.error('❌ Session init test failed:', error)
   }
 
-  console.log('\n🎉 Phase 2 test completed!')
+  console.info('\n🎉 Phase 2 test completed!')
 }
 
 function generatePersonalizedGreeting(context: any): string {

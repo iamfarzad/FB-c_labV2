@@ -28,7 +28,7 @@ let PCM: Buffer | null = null
 try {
   const wav = readFileSync(wavPath)
   PCM = pcmFromWav(wav)
-  console.log(`Loaded PCM fixture from ${wavPath} (${PCM.length} bytes)`) 
+  console.info(`Loaded PCM fixture from ${wavPath} (${PCM.length} bytes)`) 
 } catch (e) {
   console.warn(`⚠️ Mock PCM fixture missing at ${wavPath}. Audio streaming will be skipped.`)
 }
@@ -92,6 +92,6 @@ wss.on('connection', (ws, req) => {
 })
 
 const PORT = Number(process.env.MOCK_LIVE_PORT || 8787)
-http.listen(PORT, () => console.log(`Mock Live WS on :${PORT}`))
+http.listen(PORT, () => console.info(`Mock Live WS on :${PORT}`))
 
 

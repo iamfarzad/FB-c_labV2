@@ -34,13 +34,13 @@ function findGeminiUsage(): string[] {
     
     return output.trim().split('\n').filter(line => line.length > 0);
   } catch (error) {
-    console.log('No GEMINI_API_KEY usage found');
+    console.info('No GEMINI_API_KEY usage found');
     return [];
   }
 }
 
 function main() {
-  console.log('🔍 Monitoring Gemini API usage...');
+  console.info('🔍 Monitoring Gemini API usage...');
   
   const foundFiles = findGeminiUsage();
   const unauthorizedFiles = foundFiles.filter(file => 
@@ -59,7 +59,7 @@ function main() {
     console.error('✅ Ensure they use internal API endpoints instead of direct GoogleGenAI calls');
     process.exit(1);
   } else {
-    console.log('✅ All Gemini API usage is properly controlled');
+    console.info('✅ All Gemini API usage is properly controlled');
   }
 }
 

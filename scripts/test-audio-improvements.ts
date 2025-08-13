@@ -9,17 +9,17 @@ import { AudioQualityEnhancer } from '../lib/audio-quality-enhancer'
 import { WebRTCAudioProcessor } from '../lib/webrtc-audio-processor'
 
 async function testAudioQualityEnhancement() {
-  console.log('🎵 Testing Audio Quality Enhancement...')
+  console.info('🎵 Testing Audio Quality Enhancement...')
   
   try {
     // Test different use cases
     const useCases = ['conversation', 'presentation', 'narration'] as const
     
     for (const useCase of useCases) {
-      console.log(`\n📊 Testing ${useCase} configuration:`)
+      console.info(`\n📊 Testing ${useCase} configuration:`)
       
       const config = AudioQualityEnhancer.getOptimalConfig(useCase)
-      console.log('  Config:', {
+      console.info('  Config:', {
         sampleRate: config.sampleRate,
         bitDepth: config.bitDepth,
         normalize: config.normalize,
@@ -40,16 +40,16 @@ async function testAudioQualityEnhancement() {
       
       for (const text of testTexts) {
         const voiceStyle = enhancer.getVoiceStyleForContent(text)
-        console.log(`  Text: "${text.substring(0, 30)}..."`)
-        console.log(`  Voice Style: ${voiceStyle.voiceStyle}`)
-        console.log(`  Speaking Rate: ${voiceStyle.speakingRate}`)
-        console.log(`  Pitch: ${voiceStyle.pitch}`)
-        console.log(`  Volume Gain: ${voiceStyle.volumeGainDb}dB`)
-        console.log(`  Clarity: ${voiceStyle.clarity}`)
+        console.info(`  Text: "${text.substring(0, 30)}..."`)
+        console.info(`  Voice Style: ${voiceStyle.voiceStyle}`)
+        console.info(`  Speaking Rate: ${voiceStyle.speakingRate}`)
+        console.info(`  Pitch: ${voiceStyle.pitch}`)
+        console.info(`  Volume Gain: ${voiceStyle.volumeGainDb}dB`)
+        console.info(`  Clarity: ${voiceStyle.clarity}`)
       }
     }
     
-    console.log('\n✅ Audio Quality Enhancement tests completed successfully!')
+    console.info('\n✅ Audio Quality Enhancement tests completed successfully!')
     
   } catch (error) {
     console.error('❌ Audio Quality Enhancement test failed:', error)
@@ -57,15 +57,15 @@ async function testAudioQualityEnhancement() {
 }
 
 async function testWebRTCAudioProcessor() {
-  console.log('\n🔗 Testing WebRTC Audio Processor...')
+  console.info('\n🔗 Testing WebRTC Audio Processor...')
   
   try {
     // Test WebRTC support
     const isSupported = WebRTCAudioProcessor.isSupported()
-    console.log(`  WebRTC Support: ${isSupported ? '✅ Supported' : '❌ Not Supported'}`)
+    console.info(`  WebRTC Support: ${isSupported ? '✅ Supported' : '❌ Not Supported'}`)
     
     if (!isSupported) {
-      console.log('  Skipping WebRTC tests - not supported in this environment')
+      console.info('  Skipping WebRTC tests - not supported in this environment')
       return
     }
     
@@ -73,10 +73,10 @@ async function testWebRTCAudioProcessor() {
     const useCases = ['conversation', 'presentation', 'broadcast'] as const
     
     for (const useCase of useCases) {
-      console.log(`\n📊 Testing ${useCase} WebRTC configuration:`)
+      console.info(`\n📊 Testing ${useCase} WebRTC configuration:`)
       
       const config = WebRTCAudioProcessor.getOptimalConfig(useCase)
-      console.log('  Config:', {
+      console.info('  Config:', {
         sampleRate: config.sampleRate,
         channels: config.channels,
         bitDepth: config.bitDepth,
@@ -88,23 +88,23 @@ async function testWebRTCAudioProcessor() {
       
       // Test processor creation (without actual initialization)
       const processor = new WebRTCAudioProcessor(config)
-      console.log('  ✅ Processor created successfully')
+      console.info('  ✅ Processor created successfully')
       
       // Test event handler setup
       let connectionState = 'unknown'
       processor.onConnectionStateChanged((state) => {
         connectionState = state
-        console.log(`  Connection state changed: ${state}`)
+        console.info(`  Connection state changed: ${state}`)
       })
       
       processor.onAudioDataReceived((data) => {
-        console.log(`  Audio data received: ${data.byteLength} bytes`)
+        console.info(`  Audio data received: ${data.byteLength} bytes`)
       })
       
-      console.log('  ✅ Event handlers set up successfully')
+      console.info('  ✅ Event handlers set up successfully')
     }
     
-    console.log('\n✅ WebRTC Audio Processor tests completed successfully!')
+    console.info('\n✅ WebRTC Audio Processor tests completed successfully!')
     
   } catch (error) {
     console.error('❌ WebRTC Audio Processor test failed:', error)
@@ -112,28 +112,28 @@ async function testWebRTCAudioProcessor() {
 }
 
 async function testAPIEndpoints() {
-  console.log('\n🌐 Testing API Endpoints...')
+  console.info('\n🌐 Testing API Endpoints...')
   
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     
     // Test WebRTC connection endpoint
-    console.log('  Testing WebRTC connection endpoint...')
+    console.info('  Testing WebRTC connection endpoint...')
     const webrtcResponse = await fetch(`${baseUrl}/api/webrtc-connection`, {
       method: 'GET'
     })
     
     if (webrtcResponse.ok) {
       const webrtcData = await webrtcResponse.json()
-      console.log('  ✅ WebRTC endpoint:', webrtcData.message)
-      console.log('  Features:', webrtcData.features)
-      console.log('  Active sessions:', webrtcData.activeSessions)
+      console.info('  ✅ WebRTC endpoint:', webrtcData.message)
+      console.info('  Features:', webrtcData.features)
+      console.info('  Active sessions:', webrtcData.activeSessions)
     } else {
-      console.log('  ❌ WebRTC endpoint failed:', webrtcResponse.status)
+      console.info('  ❌ WebRTC endpoint failed:', webrtcResponse.status)
     }
     
     // Test enhanced Gemini Live endpoint
-    console.log('  Testing enhanced Gemini Live endpoint...')
+    console.info('  Testing enhanced Gemini Live endpoint...')
     const geminiResponse = await fetch(`${baseUrl}/api/gemini-live`, {
       method: 'POST',
       headers: {
@@ -153,12 +153,12 @@ async function testAPIEndpoints() {
     
     if (geminiResponse.ok) {
       const geminiData = await geminiResponse.json()
-      console.log('  ✅ Gemini Live endpoint:', geminiData.success ? 'Success' : 'Failed')
+      console.info('  ✅ Gemini Live endpoint:', geminiData.success ? 'Success' : 'Failed')
     } else {
-      console.log('  ❌ Gemini Live endpoint failed:', geminiResponse.status)
+      console.info('  ❌ Gemini Live endpoint failed:', geminiResponse.status)
     }
     
-    console.log('\n✅ API Endpoint tests completed!')
+    console.info('\n✅ API Endpoint tests completed!')
     
   } catch (error) {
     console.error('❌ API Endpoint test failed:', error)
@@ -166,7 +166,7 @@ async function testAPIEndpoints() {
 }
 
 async function testAudioProcessing() {
-  console.log('\n🎤 Testing Audio Processing...')
+  console.info('\n🎤 Testing Audio Processing...')
   
   try {
     // Create test audio data (simulated)
@@ -175,18 +175,18 @@ async function testAudioProcessing() {
     const enhancer = new AudioQualityEnhancer()
     
     // Test audio enhancement
-    console.log('  Testing audio enhancement...')
+    console.info('  Testing audio enhancement...')
     const enhancedAudio = await enhancer.enhanceAudioData(testAudioData)
     
     if (enhancedAudio && enhancedAudio !== testAudioData) {
-      console.log('  ✅ Audio enhancement applied successfully')
-      console.log(`  Original size: ${testAudioData.length} bytes`)
-      console.log(`  Enhanced size: ${enhancedAudio.length} bytes`)
+      console.info('  ✅ Audio enhancement applied successfully')
+      console.info(`  Original size: ${testAudioData.length} bytes`)
+      console.info(`  Enhanced size: ${enhancedAudio.length} bytes`)
     } else {
-      console.log('  ⚠️ Audio enhancement returned original data (fallback)')
+      console.info('  ⚠️ Audio enhancement returned original data (fallback)')
     }
     
-    console.log('\n✅ Audio Processing tests completed!')
+    console.info('\n✅ Audio Processing tests completed!')
     
   } catch (error) {
     console.error('❌ Audio Processing test failed:', error)
@@ -194,7 +194,7 @@ async function testAudioProcessing() {
 }
 
 async function runAllTests() {
-  console.log('🚀 Starting Audio Improvements Test Suite...\n')
+  console.info('🚀 Starting Audio Improvements Test Suite...\n')
   
   const startTime = Date.now()
   
@@ -205,15 +205,15 @@ async function runAllTests() {
     await testAudioProcessing()
     
     const totalTime = Date.now() - startTime
-    console.log(`\n🎉 All tests completed successfully in ${totalTime}ms!`)
+    console.info(`\n🎉 All tests completed successfully in ${totalTime}ms!`)
     
-    console.log('\n📋 Summary of Improvements:')
-    console.log('  ✅ Enhanced audio quality with normalization, noise reduction, and compression')
-    console.log('  ✅ Adaptive voice styles based on content type')
-    console.log('  ✅ WebRTC support for ultra-low latency audio')
-    console.log('  ✅ Real-time audio processing with optimized configurations')
-    console.log('  ✅ API endpoints for WebRTC connection management')
-    console.log('  ✅ Comprehensive error handling and fallbacks')
+    console.info('\n📋 Summary of Improvements:')
+    console.info('  ✅ Enhanced audio quality with normalization, noise reduction, and compression')
+    console.info('  ✅ Adaptive voice styles based on content type')
+    console.info('  ✅ WebRTC support for ultra-low latency audio')
+    console.info('  ✅ Real-time audio processing with optimized configurations')
+    console.info('  ✅ API endpoints for WebRTC connection management')
+    console.info('  ✅ Comprehensive error handling and fallbacks')
     
   } catch (error) {
     console.error('\n💥 Test suite failed:', error)

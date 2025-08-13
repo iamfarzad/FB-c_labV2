@@ -59,7 +59,7 @@ export function getApiEndpoint(routeName: keyof typeof API_ROUTES): string {
   const shouldUseMock = isMockingEnabled();
   
   if (shouldUseMock) {
-    console.log(`🔧 Using mock endpoint for ${routeName}: ${route.mockEndpoint}`);
+    console.info(`🔧 Using mock endpoint for ${routeName}: ${route.mockEndpoint}`);
     return route.mockEndpoint;
   }
 
@@ -83,7 +83,7 @@ export async function callApi(
   const baseUrl = typeof window !== 'undefined' ? '' : process.env.BASE_URL || 'http://localhost:3000';
   const fullUrl = `${baseUrl}${endpoint}`;
 
-  console.log(`📡 API call: ${routeName} -> ${endpoint}`);
+  console.info(`📡 API call: ${routeName} -> ${endpoint}`);
 
   return fetch(fullUrl, {
     ...options,
@@ -149,7 +149,7 @@ export function createMockRedirectResponse(request: Request): Response | null {
   const [routeName, config] = routeEntry;
   const mockUrl = new URL(config.mockEndpoint, url.origin);
   
-  console.log(`🔄 Redirecting ${pathname} to ${config.mockEndpoint}`);
+  console.info(`🔄 Redirecting ${pathname} to ${config.mockEndpoint}`);
 
   // Create a new request to the mock endpoint
   return Response.redirect(mockUrl.toString(), 307); // Temporary redirect
@@ -160,14 +160,14 @@ export function createMockRedirectResponse(request: Request): Response | null {
  */
 export function logApiRouting() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('🔧 API Routing Configuration:');
-    console.log(`   ENABLE_GEMINI_MOCKING: ${process.env.ENABLE_GEMINI_MOCKING}`);
-    console.log(`   GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? 'Set' : 'Missing'}`);
-    console.log(`   Mocking enabled: ${isMockingEnabled()}`);
+    console.info('🔧 API Routing Configuration:');
+    console.info(`   ENABLE_GEMINI_MOCKING: ${process.env.ENABLE_GEMINI_MOCKING}`);
+    console.info(`   GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? 'Set' : 'Missing'}`);
+    console.info(`   Mocking enabled: ${isMockingEnabled()}`);
     
     Object.entries(API_ROUTES).forEach(([routeName, config]) => {
       const endpoint = isMockingEnabled() ? config.mockEndpoint : config.realEndpoint;
-      console.log(`   ${routeName}: ${endpoint}`);
+      console.info(`   ${routeName}: ${endpoint}`);
     });
   }
 }

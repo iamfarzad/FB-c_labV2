@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('🔍 Lead research started:', {
+    console.info('🔍 Lead research started:', {
       sessionId,
       email,
       name,
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       if (vectors.length) await upsertEmbeddings(sessionId, 'lead_research', texts, vectors)
     }
 
-    console.log('✅ Lead research completed:', {
+    console.info('✅ Lead research completed:', {
       company: researchResult.company,
       person: researchResult.person,
       role: researchResult.role,

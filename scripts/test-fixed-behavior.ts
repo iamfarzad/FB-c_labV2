@@ -5,19 +5,19 @@
  */
 
 async function testFixedBehavior() {
-  console.log('🧪 Testing Fixed Behavior (No Infinite Loop)\n')
+  console.info('🧪 Testing Fixed Behavior (No Infinite Loop)\n')
 
   // Use a real session ID
   const sessionId = 'session-1754842878975-vnj2atcwt'
   
-  console.log('📋 Test: Multiple context fetches with same sessionId')
+  console.info('📋 Test: Multiple context fetches with same sessionId')
   
   const apiCalls: Array<{ timestamp: number; success: boolean }> = []
   
   // Simulate multiple attempts to fetch the same context
   for (let i = 0; i < 5; i++) {
     const timestamp = Date.now()
-    console.log(`\n📡 Attempt ${i + 1}: Fetching context for ${sessionId}`)
+    console.info(`\n📡 Attempt ${i + 1}: Fetching context for ${sessionId}`)
     
     try {
       const response = await fetch(`http://localhost:3000/api/intelligence/context?sessionId=${sessionId}`)
@@ -27,15 +27,15 @@ async function testFixedBehavior() {
       
       if (success) {
         const data = await response.json()
-        console.log(`✅ Attempt ${i + 1} successful`)
-        console.log(`   Company: ${data.company?.name}`)
-        console.log(`   Person: ${data.person?.fullName}`)
-        console.log(`   Role: ${data.role}`)
+        console.info(`✅ Attempt ${i + 1} successful`)
+        console.info(`   Company: ${data.company?.name}`)
+        console.info(`   Person: ${data.person?.fullName}`)
+        console.info(`   Role: ${data.role}`)
       } else {
-        console.log(`❌ Attempt ${i + 1} failed: ${response.status}`)
+        console.info(`❌ Attempt ${i + 1} failed: ${response.status}`)
       }
     } catch (error) {
-      console.log(`❌ Attempt ${i + 1} error: ${error}`)
+      console.info(`❌ Attempt ${i + 1} error: ${error}`)
       apiCalls.push({ timestamp, success: false })
     }
     
@@ -43,22 +43,22 @@ async function testFixedBehavior() {
     await new Promise(resolve => setTimeout(resolve, 200))
   }
   
-  console.log('\n📊 Results:')
-  console.log(`- Total attempts: ${apiCalls.length}`)
-  console.log(`- Successful calls: ${apiCalls.filter(call => call.success).length}`)
-  console.log(`- Failed calls: ${apiCalls.filter(call => !call.success).length}`)
+  console.info('\n📊 Results:')
+  console.info(`- Total attempts: ${apiCalls.length}`)
+  console.info(`- Successful calls: ${apiCalls.filter(call => call.success).length}`)
+  console.info(`- Failed calls: ${apiCalls.filter(call => !call.success).length}`)
   
   // All calls should succeed since we're using a valid sessionId
   const allSuccessful = apiCalls.every(call => call.success)
   
   if (allSuccessful) {
-    console.log('✅ All API calls successful - no infinite loop detected')
-    console.log('✅ Our fix is working correctly')
+    console.info('✅ All API calls successful - no infinite loop detected')
+    console.info('✅ Our fix is working correctly')
   } else {
-    console.log('❌ Some API calls failed - there may still be issues')
+    console.info('❌ Some API calls failed - there may still be issues')
   }
   
-  console.log('\n🎯 Test completed!')
+  console.info('\n🎯 Test completed!')
 }
 
 // Run the test

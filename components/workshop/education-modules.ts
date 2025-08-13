@@ -28,63 +28,67 @@ export interface WorkshopModule {
 
 export const WORKSHOP_MODULES: WorkshopModule[] = [
   {
-    id: 'industrial-evolution',
-    title: 'Industrial Evolution',
-    summary: 'From mechanization to human-centered intelligence and collaboration with AI.',
+    id: 'ai-foundations',
+    title: 'Foundations: How LLMs work',
+    summary: 'What LLMs are, tokens and context, strengths and limitations.',
     steps: [
-      { id: 'timeline', title: 'Explore the timeline', xp: 20, kind: 'interact', description: 'Scroll and explore eras 1.0 → 5.0' },
-      { id: 'compare', title: 'Compare eras', xp: 10, kind: 'read', description: 'Key features across each industrial era' },
-      { id: 'quiz', title: 'Quick check: eras', xp: 15, kind: 'quiz', quiz: [
-        { id: 'q1', prompt: 'Industry 4.0 is primarily about…', options: ['Steam power', 'Mass production', 'Connectivity & Intelligence', 'Human-centered collaboration'], correctIndex: 2, feedbackCorrect: 'Yes—cyber-physical systems and smart connectivity.', feedbackIncorrect: 'Industry 4.0 focuses on connectivity and intelligence.' },
-        { id: 'q2', prompt: 'Industry 5.0 emphasizes…', options: ['Maximizing automation', 'Human-centered collaboration with AI', 'Just-in-time manufacturing', 'Coal power'], correctIndex: 1, feedbackCorrect: 'Correct—human + machine collaboration.', feedbackIncorrect: 'Industry 5.0 is about human-centered collaboration.' },
+      { id: 'what-is-llm', title: 'What is an LLM? (concepts)', xp: 15, kind: 'read' },
+      { id: 'tokens-context', title: 'Tokens, context window, costs', xp: 15, kind: 'read' },
+      { id: 'limits', title: 'Limitations: hallucinations, recency, privacy', xp: 15, kind: 'read' },
+      { id: 'quiz', title: 'Quick check: foundations', xp: 15, kind: 'quiz', quiz: [
+        { id: 'q1', prompt: 'Context window refers to…', options: ['File size', 'Max tokens the model can consider', 'RAM usage', 'GPU type'], correctIndex: 1 },
+        { id: 'q2', prompt: 'Hallucination is…', options: ['Model speed', 'Fabricated but fluent output', 'Ethical policy', 'Prompt length'], correctIndex: 1 },
       ]},
     ],
-    badge: 'evolution',
+    badge: 'foundations',
   },
   {
-    id: 'future-skills',
-    title: 'Future Skills',
-    summary: 'Core business competencies and analytical skills for modern teams.',
+    id: 'prompting-basics',
+    title: 'Prompting Basics',
+    summary: 'Instructions, roles, format examples, constraints, step-by-step.',
     steps: [
-      { id: 'competencies', title: 'Review competencies', xp: 15, kind: 'read' },
-      { id: 'apply', title: 'Identify your gaps', xp: 15, kind: 'interact' },
-    ],
-    badge: 'skills',
-  },
-  {
-    id: 'roles-evolving',
-    title: 'Evolving Roles',
-    summary: 'How team and leadership responsibilities are transforming.',
-    steps: [
-      { id: 'team-roles', title: 'Team member transitions', xp: 10, kind: 'read' },
-      { id: 'leadership', title: 'Leadership transitions', xp: 10, kind: 'read' },
-    ],
-    badge: 'roles',
-  },
-  {
-    id: 'ai-integration',
-    title: 'AI Integration',
-    summary: 'Practical patterns for applying AI with business value.',
-    steps: [
-      { id: 'examples', title: 'Explore business examples', xp: 15, kind: 'read' },
-      { id: 'roi', title: 'Estimate ROI', xp: 25, kind: 'interact', description: 'Use the ROI calculator with a real scenario' },
-      { id: 'quiz', title: 'Quick check: value', xp: 15, kind: 'quiz', quiz: [
-        { id: 'q1', prompt: 'Best first step for AI adoption?', options: ['Full platform migration', 'Pilot on a narrow workflow', 'Buy every tool', 'Skip data quality'], correctIndex: 1, feedbackCorrect: 'Right—pilot to validate value and risk.', feedbackIncorrect: 'Start with a small pilot to validate value.' },
-        { id: 'q2', prompt: 'ROI is improved by…', options: ['Higher compute only', 'Better prompts only', 'Reducing hours/costs or increasing revenue', 'Larger models only'], correctIndex: 2, feedbackCorrect: 'Exactly—time/cost savings or revenue lift.', feedbackIncorrect: 'ROI relates to time/cost savings or revenue lift.' },
-        { id: 'q3', prompt: 'A practical metric to track is…', options: ['Lines of code', 'Model parameter count', 'Hours saved per week', 'Number of dashboards'], correctIndex: 2, feedbackCorrect: 'Yes—business-outcome metrics like hours saved.', feedbackIncorrect: 'Focus on business outcomes like hours saved.' },
+      { id: 'instructions', title: 'Write clear instructions + constraints', xp: 15, kind: 'interact' },
+      { id: 'format', title: 'Add examples and output format', xp: 15, kind: 'read' },
+      { id: 'quiz', title: 'Quick check: prompting', xp: 15, kind: 'quiz', quiz: [
+        { id: 'q1', prompt: 'Best prompt includes…', options: ['Vague goals', 'Specific task, constraints, examples', 'Only emojis', 'Only system role'], correctIndex: 1 },
+        { id: 'q2', prompt: 'To control output structure…', options: ['Ask politely', 'Specify schema/format', 'Use larger model', 'Use shorter prompt'], correctIndex: 1 },
       ]},
     ],
-    badge: 'ai',
+    badge: 'prompting',
   },
   {
-    id: 'local-llm',
-    title: 'Local LLM Platforms',
-    summary: 'Run models locally: pros, cons, and when to use them.',
+    id: 'grounding-retrieval',
+    title: 'Grounding & Retrieval (RAG)',
+    summary: 'Embeddings, retrieval, citations, and when to ground model outputs.',
     steps: [
-      { id: 'platforms', title: 'Review platforms', xp: 10, kind: 'read' },
-      { id: 'pick', title: 'Pick a platform to try', xp: 15, kind: 'interact' },
+      { id: 'embeddings', title: 'What embeddings are used for', xp: 15, kind: 'read' },
+      { id: 'rag', title: 'RAG basics and citations', xp: 15, kind: 'read' },
+      { id: 'quiz', title: 'Quick check: RAG', xp: 15, kind: 'quiz', quiz: [
+        { id: 'q1', prompt: 'RAG helps to…', options: ['Speed up GPUs', 'Ground answers in your data', 'Compress prompts', 'Change model weights'], correctIndex: 1 },
+      ]},
     ],
-    badge: 'llm',
+    badge: 'grounding',
+  },
+  {
+    id: 'safety-ethics',
+    title: 'Safety & Responsible AI',
+    summary: 'Guardrails, privacy, basic policy awareness for production use.',
+    steps: [
+      { id: 'guardrails', title: 'Guardrails and policy basics', xp: 10, kind: 'read' },
+      { id: 'privacy', title: 'Data handling & privacy considerations', xp: 10, kind: 'read' },
+    ],
+    badge: 'safety',
+  },
+  {
+    id: 'hands-on-lab',
+    title: 'Hands-on Lab',
+    summary: 'Try tools to apply what you learned.',
+    steps: [
+      { id: 'chatbot', title: 'Build your first chatbot (open Chat preset)', xp: 20, kind: 'interact', description: 'Use the Chat preset to scaffold a simple bot' },
+      { id: 'roi', title: 'Estimate ROI (use the ROI card)', xp: 20, kind: 'interact', description: 'Use the ROI calculator with a real scenario' },
+      { id: 'video2app', title: 'Video → App (use launcher)', xp: 20, kind: 'interact', description: 'Paste a YouTube link and generate an app blueprint' },
+    ],
+    badge: 'lab',
   },
 ]
 

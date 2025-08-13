@@ -85,7 +85,7 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
       if (hasStartedRef.current) return;
       hasStartedRef.current = true;
 
-      console.log('[VoiceInput] Requesting microphone permission...');
+      console.info('[VoiceInput] Requesting microphone permission...');
       const permissionGranted = await requestPermission();
       if (!permissionGranted) {
         toast({ 
@@ -96,10 +96,10 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
         return;
       }
 
-      console.log('[VoiceInput] Initializing WebSocket connection...');
+      console.info('[VoiceInput] Initializing WebSocket connection...');
       try {
         await startSession();
-        console.log('[VoiceInput] WebSocket session started');
+        console.info('[VoiceInput] WebSocket session started');
         setIsInitialized(true);
       } catch (error) {
         console.error('[VoiceInput] Failed to start WebSocket session:', error);
@@ -154,11 +154,11 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
     }
 
     setConnectionAttempts(prev => prev + 1);
-    console.log(`[VoiceInput] Retrying WebSocket connection (attempt ${connectionAttempts + 1}/3)...`);
+    console.info(`[VoiceInput] Retrying WebSocket connection (attempt ${connectionAttempts + 1}/3)...`);
     
     try {
       await startSession();
-      console.log('[VoiceInput] WebSocket session started on retry');
+      console.info('[VoiceInput] WebSocket session started on retry');
       setIsInitialized(true);
       setConnectionAttempts(0); // Reset on success
     } catch (error) {
@@ -172,7 +172,7 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
   }, [connectionAttempts, startSession, toast]);
 
   const handleMicClick = useCallback(async () => {
-    console.log('[VoiceInput] Mic button clicked. Recording:', isRecording, 'Connected:', isConnected, 'Permission:', hasPermission);
+    console.info('[VoiceInput] Mic button clicked. Recording:', isRecording, 'Connected:', isConnected, 'Permission:', hasPermission);
     
     if (hasPermission === false) {
       toast({ 
@@ -184,7 +184,7 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
     }
 
     if (isRecording) {
-      console.log('[VoiceInput] Stopping recording...');
+      console.info('[VoiceInput] Stopping recording...');
       stopRecording();
       // Always flush buffered audio on manual stop
       onTurnComplete();
@@ -192,7 +192,7 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
     } else {
       // If not connected yet, attempt to connect now
       if (!isConnected) {
-        console.log('[VoiceInput] Not connected, attempting to start session before recording');
+        console.info('[VoiceInput] Not connected, attempting to start session before recording');
         try {
           await startSession();
         } catch (e) {
@@ -213,10 +213,10 @@ export function VoiceInput({ onClose, mode = 'modal', onTranscript }: VoiceInput
             return
           }
         }
-        console.log('[VoiceInput] Starting recording...');
+        console.info('[VoiceInput] Starting recording...');
         const success = await startRecording();
         if (success) {
-          console.log('[VoiceInput] Recording started successfully');
+          console.info('[VoiceInput] Recording started successfully');
           setIsExpanded(true);
         } else {
           console.error('[VoiceInput] Failed to start recording');

@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       if (cached && cached.expires > Date.now()) return NextResponse.json(cached.body)
     }
 
-    console.log('🔍 Generic search request:', { query, sessionId })
+    console.info('🔍 Generic search request:', { query, sessionId })
 
     // Perform grounded search
     const result = await groundingProvider.groundedAnswer(query)
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
           queryLength: String(query).length,
           citations: Array.isArray(result.citations) ? result.citations.length : 0,
         })
-        console.log('✅ Recorded search capability for session:', effectiveSessionId)
+        console.info('✅ Recorded search capability for session:', effectiveSessionId)
       } catch {}
     }
 

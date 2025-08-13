@@ -9,7 +9,7 @@ class MultilingualTTSTester {
   private baseUrl = 'http://localhost:3000'
 
   async testLanguageWithVoice(languageCode: string, text: string, voiceName: string) {
-    console.log(`🌍 Testing ${languageCode} with ${voiceName} voice...`)
+    console.info(`🌍 Testing ${languageCode} with ${voiceName} voice...`)
     
     const response = await fetch(`${this.baseUrl}/api/gemini-live`, {
       method: 'POST',
@@ -40,7 +40,7 @@ class MultilingualTTSTester {
   }
 
   async runMultilingualTests() {
-    console.log('🌍 Starting Multilingual TTS Tests...\n')
+    console.info('🌍 Starting Multilingual TTS Tests...\n')
     
     const testCases = [
       { code: 'en-US', text: 'Hello! This is English.', voice: 'Puck' },
@@ -65,9 +65,9 @@ class MultilingualTTSTester {
           testCase.voice
         )
         results.push(result)
-        console.log(`✅ ${testCase.code} with ${testCase.voice}: ${result.audioDataLength} bytes`)
+        console.info(`✅ ${testCase.code} with ${testCase.voice}: ${result.audioDataLength} bytes`)
       } catch (error: any) {
-        console.log(`❌ ${testCase.code} failed: ${error.message}`)
+        console.info(`❌ ${testCase.code} failed: ${error.message}`)
         results.push({
           language: testCase.code,
           voice: testCase.voice,
@@ -82,7 +82,7 @@ class MultilingualTTSTester {
   }
 
   async testLanguageDetection() {
-    console.log('\n🔍 Testing Language Auto-Detection...')
+    console.info('\n🔍 Testing Language Auto-Detection...')
     
     // Test with different languages without specifying languageCode
     const testCases = [
@@ -118,12 +118,12 @@ class MultilingualTTSTester {
             audioDataLength: audioData.length,
             autoDetected: true
           })
-          console.log(`✅ Auto-detected ${testCase.expected}: ${audioData.length} bytes`)
+          console.info(`✅ Auto-detected ${testCase.expected}: ${audioData.length} bytes`)
         } else {
           throw new Error(`HTTP ${response.status}`)
         }
       } catch (error: any) {
-        console.log(`❌ Auto-detection failed for ${testCase.expected}: ${error.message}`)
+        console.info(`❌ Auto-detection failed for ${testCase.expected}: ${error.message}`)
         results.push({
           text: testCase.text,
           expectedLanguage: testCase.expected,
@@ -137,22 +137,22 @@ class MultilingualTTSTester {
   }
 
   printResults(multilingualResults: any[], autoDetectionResults: any[]) {
-    console.log('\n🌍 Multilingual TTS Test Results:')
-    console.log('==================================================')
+    console.info('\n🌍 Multilingual TTS Test Results:')
+    console.info('==================================================')
     
     // Multilingual Results
     const successfulLanguages = multilingualResults.filter(r => r.success)
     const failedLanguages = multilingualResults.filter(r => !r.success)
     
-    console.log(`✅ PASS Multilingual Support (${successfulLanguages.length}/${multilingualResults.length})`)
+    console.info(`✅ PASS Multilingual Support (${successfulLanguages.length}/${multilingualResults.length})`)
     successfulLanguages.forEach(result => {
-      console.log(`   ${result.language} (${result.voice}): ${result.audioDataLength} bytes`)
+      console.info(`   ${result.language} (${result.voice}): ${result.audioDataLength} bytes`)
     })
     
     if (failedLanguages.length > 0) {
-      console.log(`❌ FAIL Languages:`)
+      console.info(`❌ FAIL Languages:`)
       failedLanguages.forEach(result => {
-        console.log(`   ${result.language}: ${result.error}`)
+        console.info(`   ${result.language}: ${result.error}`)
       })
     }
 
@@ -160,29 +160,29 @@ class MultilingualTTSTester {
     const successfulAutoDetection = autoDetectionResults.filter(r => r.success)
     const failedAutoDetection = autoDetectionResults.filter(r => !r.success)
     
-    console.log(`\n🔍 Auto-Detection Results (${successfulAutoDetection.length}/${autoDetectionResults.length})`)
+    console.info(`\n🔍 Auto-Detection Results (${successfulAutoDetection.length}/${autoDetectionResults.length})`)
     successfulAutoDetection.forEach(result => {
-      console.log(`   ${result.expectedLanguage}: ${result.audioDataLength} bytes`)
+      console.info(`   ${result.expectedLanguage}: ${result.audioDataLength} bytes`)
     })
     
     if (failedAutoDetection.length > 0) {
-      console.log(`❌ Auto-Detection Failures:`)
+      console.info(`❌ Auto-Detection Failures:`)
       failedAutoDetection.forEach(result => {
-        console.log(`   ${result.expectedLanguage}: ${result.error}`)
+        console.info(`   ${result.expectedLanguage}: ${result.error}`)
       })
     }
 
-    console.log('==================================================')
+    console.info('==================================================')
     
     const totalTests = multilingualResults.length + autoDetectionResults.length
     const passedTests = successfulLanguages.length + successfulAutoDetection.length
     
-    console.log(`📊 Summary: ${passedTests}/${totalTests} language tests passed`)
+    console.info(`📊 Summary: ${passedTests}/${totalTests} language tests passed`)
     
     if (passedTests === totalTests) {
-      console.log('🎉 All multilingual features working correctly!')
+      console.info('🎉 All multilingual features working correctly!')
     } else {
-      console.log('⚠️  Some language features need attention.')
+      console.info('⚠️  Some language features need attention.')
     }
   }
 }

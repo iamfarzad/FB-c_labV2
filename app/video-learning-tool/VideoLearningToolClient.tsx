@@ -28,7 +28,7 @@ export function VideoLearningToolClient({
       const savedState = sessionStorage.getItem(`video2app_${sessionId}`)
       if (savedState) {
         // Handle saved state restoration
-        console.log('Restoring state from chat:', savedState)
+        console.info('Restoring state from chat:', savedState)
       }
     }
   }, [fromChat, sessionId])
@@ -80,13 +80,13 @@ export function VideoLearningToolClient({
               mode="card"
               videoUrl={initialVideoUrl}
               onAnalysisComplete={(data) => {
-                console.log('Analysis completed:', data)
+                console.info('Analysis completed:', data)
                 // Save state to session storage for chat integration
                 if (sessionId) {
                   sessionStorage.setItem(`video2app_${sessionId}`, JSON.stringify(data))
                 }
               }}
-              onAppGenerated={(url) => console.log('App generated:', url)}
+              onAppGenerated={(url) => console.info('App generated:', url)}
               className="h-full"
             />
           </div>
@@ -138,13 +138,13 @@ export function VideoLearningToolClient({
               mode="card"
               videoUrl={initialVideoUrl}
               onAnalysisComplete={(data) => {
-                console.log('Analysis completed:', data)
+                console.info('Analysis completed:', data)
                 // Save state to session storage for chat integration
                 if (sessionId) {
                   sessionStorage.setItem(`video2app_${sessionId}`, JSON.stringify(data))
                 }
               }}
-              onAppGenerated={(url) => console.log('App generated:', url)}
+              onAppGenerated={(url) => console.info('App generated:', url)}
               className="min-h-[600px]"
             />
           </CardContent>

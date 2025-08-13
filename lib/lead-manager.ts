@@ -226,7 +226,7 @@ export class LeadManager {
       }
     }
     
-    console.log('🎯 processConversationStage:', {
+    console.info('🎯 processConversationStage:', {
       leadIdOrData: typeof leadIdOrData === 'object' ? 'LeadData object' : leadIdOrData,
       stage,
       currentMessage: currentMessage.substring(0, 50) + '...',
@@ -274,11 +274,11 @@ I'd love to learn more about your company and how we can help you leverage AI. C
   }
 
   private async handleNameCollectionStage(lead: LeadData, message: string) {
-    console.log('🔍 handleNameCollectionStage called with:', { lead, message })
+    console.info('🔍 handleNameCollectionStage called with:', { lead, message })
     
     // Extract name from message with enhanced NLP
     const name = this.extractName(message)
-    console.log('🔍 Extracted name:', name)
+    console.info('🔍 Extracted name:', name)
     
     if (name) {
       // Update lead with extracted name
@@ -294,7 +294,7 @@ I'd love to learn more about your company and how we can help you leverage AI. C
         lead
       )
       
-      console.log('🔍 Validation result:', validation)
+      console.info('🔍 Validation result:', validation)
       
       if (validation.valid) {
         const response = `Great to meet you, ${name}! 

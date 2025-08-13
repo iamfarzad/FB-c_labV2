@@ -74,7 +74,7 @@ export class GeminiLiveAPI {
 
   private async performRealWebSearch(leadContext: LeadContext) {
     try {
-      console.log(`🔍 Starting real web search for ${leadContext.name}...`)
+      console.info(`🔍 Starting real web search for ${leadContext.name}...`)
       
       // Generate a proper UUID for the lead ID
       const tempLeadId = crypto.randomUUID()
@@ -87,7 +87,7 @@ export class GeminiLiveAPI {
         leadId: tempLeadId
       })
 
-      console.log(`🔍 Real web search completed for ${leadContext.name}: ${searchResults.length} results`)
+      console.info(`🔍 Real web search completed for ${leadContext.name}: ${searchResults.length} results`)
       return searchResults
     } catch (error) {
       console.error('Real web search failed, using fallback:', error)

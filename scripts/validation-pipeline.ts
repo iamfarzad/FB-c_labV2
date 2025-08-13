@@ -58,8 +58,8 @@ export class ValidationPipeline {
   private results: ValidationResult[] = []
 
   async validateFunction(functionName: string, criteria: ValidationCriteria): Promise<ValidationResult> {
-    console.log(`\n🔍 Validating ${functionName}...`)
-    console.log('='.repeat(50))
+    console.info(`\n🔍 Validating ${functionName}...`)
+    console.info('='.repeat(50))
 
     const result: ValidationResult = {
       function: functionName,
@@ -73,7 +73,7 @@ export class ValidationPipeline {
     }
 
     // Backend Validation
-    console.log('🔧 Backend Validation...')
+    console.info('🔧 Backend Validation...')
     try {
       result.backend = await this.validateBackend(criteria.backend)
     } catch (error) {
@@ -81,7 +81,7 @@ export class ValidationPipeline {
     }
 
     // Frontend Validation
-    console.log('🎨 Frontend Validation...')
+    console.info('🎨 Frontend Validation...')
     try {
       result.frontend = await this.validateFrontend(criteria.frontend)
     } catch (error) {
@@ -89,7 +89,7 @@ export class ValidationPipeline {
     }
 
     // Database Validation
-    console.log('🗄️ Database Validation...')
+    console.info('🗄️ Database Validation...')
     try {
       result.database = await this.validateDatabase(criteria.database)
     } catch (error) {
@@ -97,7 +97,7 @@ export class ValidationPipeline {
     }
 
     // API Validation
-    console.log('🌐 API Validation...')
+    console.info('🌐 API Validation...')
     try {
       result.api = await this.validateAPI(criteria.api, criteria.backend.apiEndpoint)
     } catch (error) {
@@ -105,7 +105,7 @@ export class ValidationPipeline {
     }
 
     // Best Practices Validation
-    console.log('✅ Best Practices Validation...')
+    console.info('✅ Best Practices Validation...')
     try {
       result.bestPractices = await this.validateBestPractices(criteria.bestPractices)
     } catch (error) {
@@ -235,8 +235,8 @@ export class ValidationPipeline {
   }
 
   printResults(): void {
-    console.log('\n📊 VALIDATION RESULTS')
-    console.log('=====================')
+    console.info('\n📊 VALIDATION RESULTS')
+    console.info('=====================')
 
     this.results.forEach(result => {
       const totalChecks = 5
@@ -244,17 +244,17 @@ export class ValidationPipeline {
         .filter(Boolean).length
       const percentage = Math.round((passedChecks / totalChecks) * 100)
 
-      console.log(`\n🎯 ${result.function}: ${percentage}% (${passedChecks}/${totalChecks})`)
+      console.info(`\n🎯 ${result.function}: ${percentage}% (${passedChecks}/${totalChecks})`)
       
-      console.log(`  🔧 Backend: ${result.backend ? '✅' : '❌'}`)
-      console.log(`  🎨 Frontend: ${result.frontend ? '✅' : '❌'}`)
-      console.log(`  🗄️ Database: ${result.database ? '✅' : '❌'}`)
-      console.log(`  🌐 API: ${result.api ? '✅' : '❌'}`)
-      console.log(`  ✅ Best Practices: ${result.bestPractices ? '✅' : '❌'}`)
+      console.info(`  🔧 Backend: ${result.backend ? '✅' : '❌'}`)
+      console.info(`  🎨 Frontend: ${result.frontend ? '✅' : '❌'}`)
+      console.info(`  🗄️ Database: ${result.database ? '✅' : '❌'}`)
+      console.info(`  🌐 API: ${result.api ? '✅' : '❌'}`)
+      console.info(`  ✅ Best Practices: ${result.bestPractices ? '✅' : '❌'}`)
 
       if (result.errors.length > 0) {
-        console.log('  ❌ Errors:')
-        result.errors.forEach(error => console.log(`    - ${error}`))
+        console.info('  ❌ Errors:')
+        result.errors.forEach(error => console.info(`    - ${error}`))
       }
     })
 
@@ -263,6 +263,6 @@ export class ValidationPipeline {
       r.backend && r.frontend && r.database && r.api && r.bestPractices
     ).length
 
-    console.log(`\n🎯 SUMMARY: ${fullyValidated}/${totalFunctions} functions fully validated`)
+    console.info(`\n🎯 SUMMARY: ${fullyValidated}/${totalFunctions} functions fully validated`)
   }
 }

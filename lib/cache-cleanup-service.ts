@@ -21,11 +21,11 @@ export class CacheCleanupService {
    */
   startCleanup(intervalMinutes: number = 30): void {
     if (this.cleanupInterval) {
-      console.log('🧹 Cache cleanup already running');
+      console.info('🧹 Cache cleanup already running');
       return;
     }
 
-    console.log(`🧹 Starting cache cleanup service (every ${intervalMinutes} minutes)`);
+    console.info(`🧹 Starting cache cleanup service (every ${intervalMinutes} minutes)`);
     
     this.cleanupInterval = setInterval(() => {
       this.performCleanup();
@@ -42,7 +42,7 @@ export class CacheCleanupService {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
       this.cleanupInterval = null;
-      console.log('🧹 Cache cleanup service stopped');
+      console.info('🧹 Cache cleanup service stopped');
     }
   }
 
@@ -55,7 +55,7 @@ export class CacheCleanupService {
       geminiConfig.clearExpiredCache();
       const statsAfter = geminiConfig.getCacheStats();
       
-      console.log('🧹 Cache cleanup completed:', {
+      console.info('🧹 Cache cleanup completed:', {
         before: statsBefore,
         after: statsAfter,
         freed: {
@@ -79,7 +79,7 @@ export class CacheCleanupService {
    * Force clear all cache
    */
   clearAllCache(): void {
-    console.log('🧹 Force clearing all cache entries');
+    console.info('🧹 Force clearing all cache entries');
     geminiConfig.clearAllCache(); // Clear all cache entries
   }
 }

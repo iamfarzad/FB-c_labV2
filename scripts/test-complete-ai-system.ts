@@ -29,7 +29,7 @@ class CompleteAISystemTester {
   private results: TestResult[] = []
 
   async runAllTests(): Promise<void> {
-    console.log('🤖 Starting Complete AI System Integration Tests...\n')
+    console.info('🤖 Starting Complete AI System Integration Tests...\n')
 
     // Test 1: Voice System
     await this.testVoiceSystem()
@@ -54,7 +54,7 @@ class CompleteAISystemTester {
   }
 
   private async testVoiceSystem(): Promise<void> {
-    console.log('🎤 Testing Voice System...')
+    console.info('🎤 Testing Voice System...')
     
     const startTime = Date.now()
     try {
@@ -119,7 +119,7 @@ class CompleteAISystemTester {
             audioConfig: data.audioConfig
           }
         })
-        console.log('✅ Voice System working')
+        console.info('✅ Voice System working')
       } else {
         throw new Error('Invalid response format or missing audio data')
       }
@@ -130,12 +130,12 @@ class CompleteAISystemTester {
         timing: Date.now() - startTime,
         error: error instanceof Error ? error.message : 'Unknown error'
       })
-      console.log('❌ Voice System failed:', error)
+      console.info('❌ Voice System failed:', error)
     }
   }
 
   private async testVisionSystem(): Promise<void> {
-    console.log('👁️ Testing Vision System...')
+    console.info('👁️ Testing Vision System...')
     
     const startTime = Date.now()
     try {
@@ -184,7 +184,7 @@ class CompleteAISystemTester {
             screenAnalysisLength: screenData.analysis.length
           }
         })
-        console.log('✅ Vision System working')
+        console.info('✅ Vision System working')
       } else {
         throw new Error('Missing analysis data')
       }
@@ -195,12 +195,12 @@ class CompleteAISystemTester {
         timing: Date.now() - startTime,
         error: error instanceof Error ? error.message : 'Unknown error'
       })
-      console.log('❌ Vision System failed:', error)
+      console.info('❌ Vision System failed:', error)
     }
   }
 
   private async testChatSystem(): Promise<void> {
-    console.log('💬 Testing Chat System...')
+    console.info('💬 Testing Chat System...')
     
     const startTime = Date.now()
     try {
@@ -268,7 +268,7 @@ class CompleteAISystemTester {
             response: streamedContent.slice(0, 200) + '...'
           }
         })
-        console.log('✅ Chat System working')
+        console.info('✅ Chat System working')
       } else {
         throw new Error('No streaming response received')
       }
@@ -279,12 +279,12 @@ class CompleteAISystemTester {
         timing: Date.now() - startTime,
         error: error instanceof Error ? error.message : 'Unknown error'
       })
-      console.log('❌ Chat System failed:', error)
+      console.info('❌ Chat System failed:', error)
     }
   }
 
   private async testActivityLogging(): Promise<void> {
-    console.log('📊 Testing Activity Logging...')
+    console.info('📊 Testing Activity Logging...')
     
     const startTime = Date.now()
     try {
@@ -318,7 +318,7 @@ class CompleteAISystemTester {
             foundFiles: files.slice(0, filesExist)
           }
         })
-        console.log('✅ Activity Logging working')
+        console.info('✅ Activity Logging working')
       } else {
         throw new Error(`Only ${filesExist}/${files.length} activity logging files found`)
       }
@@ -329,12 +329,12 @@ class CompleteAISystemTester {
         timing: Date.now() - startTime,
         error: error instanceof Error ? error.message : 'Unknown error'
       })
-      console.log('❌ Activity Logging failed:', error)
+      console.info('❌ Activity Logging failed:', error)
     }
   }
 
   private async testVideoToApp(): Promise<void> {
-    console.log('🎥 Testing Video-to-App Generator...')
+    console.info('🎥 Testing Video-to-App Generator...')
     
     const startTime = Date.now()
     try {
@@ -361,7 +361,7 @@ class CompleteAISystemTester {
             hasAnalysis: !!data.analysis
           }
         })
-        console.log('✅ Video-to-App Generator working')
+        console.info('✅ Video-to-App Generator working')
       } else {
         // API might not be fully implemented, but endpoint exists
         this.results.push({
@@ -373,7 +373,7 @@ class CompleteAISystemTester {
             statusText: response.statusText
           }
         })
-        console.log('⚠️ Video-to-App Generator endpoint exists but may need implementation')
+        console.info('⚠️ Video-to-App Generator endpoint exists but may need implementation')
       }
     } catch (error) {
       this.results.push({
@@ -382,12 +382,12 @@ class CompleteAISystemTester {
         timing: Date.now() - startTime,
         error: error instanceof Error ? error.message : 'Unknown error'
       })
-      console.log('❌ Video-to-App Generator failed:', error)
+      console.info('❌ Video-to-App Generator failed:', error)
     }
   }
 
   private async testMultimodalIntegration(): Promise<void> {
-    console.log('🎭 Testing Complete Multimodal Integration...')
+    console.info('🎭 Testing Complete Multimodal Integration...')
     
     const startTime = Date.now()
     try {
@@ -466,7 +466,7 @@ class CompleteAISystemTester {
             capabilities: ['Text', 'Image', 'Voice', 'Streaming']
           }
         })
-        console.log('✅ Complete Multimodal Integration working')
+        console.info('✅ Complete Multimodal Integration working')
       } else {
         throw new Error('Multimodal integration incomplete')
       }
@@ -477,13 +477,13 @@ class CompleteAISystemTester {
         timing: Date.now() - startTime,
         error: error instanceof Error ? error.message : 'Unknown error'
       })
-      console.log('❌ Complete Multimodal Integration failed:', error)
+      console.info('❌ Complete Multimodal Integration failed:', error)
     }
   }
 
   private displayResults(): void {
-    console.log('\n🤖 Complete AI System Test Results:')
-    console.log('=' .repeat(60))
+    console.info('\n🤖 Complete AI System Test Results:')
+    console.info('=' .repeat(60))
     
     const passed = this.results.filter(r => r.passed).length
     const total = this.results.length
@@ -492,37 +492,37 @@ class CompleteAISystemTester {
     this.results.forEach(result => {
       const status = result.passed ? '✅ PASS' : '❌ FAIL'
       const timing = result.timing ? ` (${result.timing}ms)` : ''
-      console.log(`${status} ${result.name}${timing}`)
+      console.info(`${status} ${result.name}${timing}`)
       
       if (result.error) {
-        console.log(`   Error: ${result.error}`)
+        console.info(`   Error: ${result.error}`)
       }
       
       if (result.details && result.passed) {
-        console.log(`   Details: ${JSON.stringify(result.details, null, 2).slice(0, 200)}...`)
+        console.info(`   Details: ${JSON.stringify(result.details, null, 2).slice(0, 200)}...`)
       }
     })
     
-    console.log('=' .repeat(60))
-    console.log(`📊 Summary: ${passed}/${total} tests passed`)
-    console.log(`⏱️ Total Time: ${totalTime}ms`)
+    console.info('=' .repeat(60))
+    console.info(`📊 Summary: ${passed}/${total} tests passed`)
+    console.info(`⏱️ Total Time: ${totalTime}ms`)
     
     if (passed === total) {
-      console.log('🎉 ALL AI SYSTEMS INTEGRATED AND WORKING!')
-      console.log('🚀 Complete Multimodal AI Platform Ready!')
+      console.info('🎉 ALL AI SYSTEMS INTEGRATED AND WORKING!')
+      console.info('🚀 Complete Multimodal AI Platform Ready!')
     } else {
-      console.log('⚠️ Some systems need attention. Please review and fix the issues.')
+      console.info('⚠️ Some systems need attention. Please review and fix the issues.')
     }
 
     // System Capabilities Summary
-    console.log('\n🎯 Integrated AI Capabilities:')
-    console.log('   🎤 Voice Input (STT) - Browser speech recognition')
-    console.log('   🔊 Voice Output (TTS) - Gemini 2.5 Flash native TTS')
-    console.log('   👁️ Vision Analysis - Gemini image understanding')
-    console.log('   💬 Streaming Chat - Real-time conversation')
-    console.log('   📊 Activity Logging - Supabase realtime tracking')
-    console.log('   🎥 Video-to-App - YouTube to interactive app')
-    console.log('   🎭 Multimodal Integration - Voice + Vision + Text')
+    console.info('\n🎯 Integrated AI Capabilities:')
+    console.info('   🎤 Voice Input (STT) - Browser speech recognition')
+    console.info('   🔊 Voice Output (TTS) - Gemini 2.5 Flash native TTS')
+    console.info('   👁️ Vision Analysis - Gemini image understanding')
+    console.info('   💬 Streaming Chat - Real-time conversation')
+    console.info('   📊 Activity Logging - Supabase realtime tracking')
+    console.info('   🎥 Video-to-App - YouTube to interactive app')
+    console.info('   🎭 Multimodal Integration - Voice + Vision + Text')
   }
 }
 

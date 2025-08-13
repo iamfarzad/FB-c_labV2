@@ -113,7 +113,7 @@ export async function createLeadSummary(
   }
 
   if (!user) {
-    console.log('No authenticated user found, using service role for lead creation')
+    console.info('No authenticated user found, using service role for lead creation')
   }
 
   // Automatically set user_id if not provided
@@ -170,7 +170,7 @@ export async function createSearchResults(
   results: Array<{ url: string; title?: string; snippet?: string; source: string }>
 ) {
   if (results.length === 0) {
-    console.log('No search results to store')
+    console.info('No search results to store')
     return []
   }
 
@@ -193,7 +193,7 @@ export async function createSearchResults(
     throw error
   }
 
-  console.log(`Stored ${results.length} search results for lead ${leadId}`)
+  console.info(`Stored ${results.length} search results for lead ${leadId}`)
   return data || []
 }
 
