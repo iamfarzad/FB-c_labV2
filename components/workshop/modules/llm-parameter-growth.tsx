@@ -81,9 +81,9 @@ export default function LLMParameterGrowth() {
   const maxParameters = Math.max(...modelData.map((m) => (typeof m.parameters === 'number' ? m.parameters : 0)))
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
-        <motion.div className="max-w-4xl w-full text-center mb-8" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+    <div className="container mx-auto px-4 py-10">
+      <div className="flex flex-col items-center justify-center">
+        <motion.div className="max-w-3xl w-full text-center mb-8" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <h2 className="text-3xl font-bold mb-4">LLM Parameter Growth</h2>
           <p className="text-xl text-muted-foreground">Explore how language models have grown in size and capability over time</p>
         </motion.div>
