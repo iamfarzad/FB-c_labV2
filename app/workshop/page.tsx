@@ -9,8 +9,7 @@ import { ROICalculator } from "@/components/chat/tools/ROICalculator/ROICalculat
 import { ProgressTracker } from "@/components/experience/progress-tracker"
 import { CourseProgressChip } from "@/components/workshop/CourseProgressChip"
 import { CourseOutline } from "@/components/workshop/CourseOutline"
-import dynamic from "next/dynamic"
-const WorkshopPanel = dynamic(() => import('@/components/workshop/WorkshopPanel').then(m => m.WorkshopPanel), { ssr: false })
+import { WorkshopPanel } from "@/components/workshop/WorkshopPanel"
 import { CitationsDemo } from "@/components/experience/citations-demo"
 import dynamic from "next/dynamic"
 import { WORKSHOP_MODULES } from "@/components/workshop/education-modules"
