@@ -95,3 +95,8 @@ Thumbs.db
 localhost.pem
 localhost-key.pem
 .env*.local
+
+# Local dev/sample and long-form notes (do not commit)
+/live-audio (5)/
+/Documents_progress_overtime/
+/evidence/
