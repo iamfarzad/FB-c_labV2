@@ -509,7 +509,7 @@ export function AIEChat() {
                           <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <p>Thinking…</p>
                   {(process.env.NEXT_PUBLIC_PERSONA === 'farzad' || process.env.NEXT_PUBLIC_LEAD_MODE === 'aggressive') && (
-                    <p className="text-xs text-muted-foreground">Lead mode: concise, actionable ⚡</p>
+                    <p className="text-xs text-muted-foreground">F.B/c AI — Farzad Bayat, Consulting</p>
                   )}
                           </div>
                         </ReasoningTrigger>
