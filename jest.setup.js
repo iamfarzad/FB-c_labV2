@@ -1,22 +1,4 @@
-import '@testing-library/jest-dom'
-
-// Polyfill fetch if needed
-if (!global.fetch) {
-  const { Response, Request, Headers, fetch } = require('undici')
-  // @ts-ignore
-  global.fetch = fetch
-  // @ts-ignore
-  global.Headers = Headers
-  // @ts-ignore
-  global.Request = Request
-  // @ts-ignore
-  global.Response = Response
-}
-
-// Next/server Request polyfill guard for tests referencing it
-try {
-  // no-op
-} catch {}
+require('@testing-library/jest-dom')
 
 // Optional: configure or set up a testing framework before each test
 // if you delete this file, remove `setupFilesAfterEnv` from `jest.config.mjs`
