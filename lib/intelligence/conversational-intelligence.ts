@@ -1,3 +1,37 @@
+import type { GroundedAnswer } from '@/lib/intelligence/providers/search/google-grounding'
+
+export interface CIProviders { search: { groundedAnswer: (q: string) => Promise<GroundedAnswer> } }
+
+export class ConversationalIntelligence {
+  constructor(private deps: { providers: CIProviders }) {}
+
+  async initSession(input: { sessionId: string; email: string; name?: string; companyUrl?: string }) {
+    return input
+  }
+
+  async researchLead(input: { email: string; name?: string; companyUrl?: string }) {
+    const query = `Summarize company: ${input.companyUrl || input.email}`
+    const ans = await this.deps.providers.search.groundedAnswer(query)
+    return { text: ans.text, citations: ans.citations }
+  }
+
+  async detectIntent(text: string, context?: any) {
+    const m = text.toLowerCase()
+    if (m.includes('workshop')) return { type: 'workshop', confidence: 0.8, slots: {} }
+    if (/(roi|cost|savings|automation)/.test(m)) return { type: 'consulting', confidence: 0.7, slots: {} }
+    return { type: 'other', confidence: 0.5, slots: {} }
+  }
+
+  async suggestTools(context: any, intent: { type: string }, stage?: string) {
+    const base = [
+      { id: 'roi', label: 'Estimate ROI', action: 'run_tool', capability: 'roi' },
+      { id: 'exportPdf', label: 'Export summary PDF', action: 'run_tool', capability: 'exportPdf' },
+    ]
+    if (intent.type === 'workshop') base.unshift({ id: 'screen', label: 'Share screen', action: 'run_tool', capability: 'screenShare' })
+    return base.slice(0, 3)
+  }
+}
+
 import { GoogleGroundingProvider } from './providers/search/google-grounding'
 import { LeadResearchService } from './lead-research'
 import { detectRole } from './role-detector'

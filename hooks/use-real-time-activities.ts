@@ -158,7 +158,7 @@ export function useRealTimeActivities() {
             table: 'activities'
           },
           (payload: any) => {
-            console.log('Received real-time activity:', payload)
+            console.info('Received real-time activity:', payload)
             const activity = {
               id: payload.new.id,
               type: payload.new.type,
@@ -201,7 +201,7 @@ export function useRealTimeActivities() {
             table: 'activities'
           },
           (payload: any) => {
-            console.log('Activity updated:', payload)
+            console.info('Activity updated:', payload)
             const activity = {
               id: payload.new.id,
               type: payload.new.type,
@@ -218,7 +218,7 @@ export function useRealTimeActivities() {
           }
         )
         .subscribe((status: any) => {
-          console.log('Real-time subscription status:', status)
+          console.info('Real-time subscription status:', status)
           setIsConnected(status === "SUBSCRIBED")
         })
 

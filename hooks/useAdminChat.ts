@@ -71,7 +71,7 @@ export function useAdminChat({
     // 🚫 RATE LIMITING: Prevent rapid successive calls
     const now = Date.now()
     if (now - lastCallTimeRef.current < DEBOUNCE_DELAY) {
-      console.log('🚫 Rate limited: Skipping rapid admin chat call', {
+      console.info('🚫 Rate limited: Skipping rapid admin chat call', {
         timeSinceLastCall: now - lastCallTimeRef.current,
         content: content.substring(0, 50)
       })
@@ -104,7 +104,7 @@ export function useAdminChat({
       // Create new abort controller
       abortControllerRef.current = new AbortController()
 
-      console.log('📤 Sending admin chat message:', {
+      console.info('📤 Sending admin chat message:', {
         contentLength: content.length,
         timestamp: new Date().toISOString()
       })
@@ -164,7 +164,7 @@ export function useAdminChat({
                   timestamp: new Date()
                 }
                 
-                console.log('✅ Admin chat message completed:', {
+                console.info('✅ Admin chat message completed:', {
                   responseLength: assistantContent.length,
                   timestamp: new Date().toISOString()
                 })

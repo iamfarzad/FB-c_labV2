@@ -223,7 +223,7 @@ function showKeyboardShortcuts() {
     .join("\n\n")
 
   // For now, just log to console - in a real app you'd show a modal
-  console.log("Keyboard Shortcuts:\n\n" + shortcutText)
+  console.info("Keyboard Shortcuts:\n\n" + shortcutText)
 
   // You could also show a toast notification
   if (typeof window !== "undefined" && "Notification" in window) {

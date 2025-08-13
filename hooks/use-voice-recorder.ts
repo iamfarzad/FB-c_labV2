@@ -172,11 +172,11 @@ export function useVoiceRecorder({
       lastSpeechTimeRef.current = currentTime;
       silenceStartRef.current = null;
       isProcessingTurnCompleteRef.current = false; // Reset turn complete flag
-      console.log(`🎤 Voice detected (volume: ${volume.toFixed(4)})`);
+      console.info(`🎤 Voice detected (volume: ${volume.toFixed(4)})`);
     } else {
       if (silenceStartRef.current === null) {
         silenceStartRef.current = currentTime;
-        console.log(`🔇 Silence started (volume: ${volume.toFixed(4)})`);
+        console.info(`🔇 Silence started (volume: ${volume.toFixed(4)})`);
       }
     }
 
@@ -187,7 +187,7 @@ export function useVoiceRecorder({
       lastSpeechTimeRef.current > 0 && // Ensure we had some speech before
       (currentTime - silenceStartRef.current >= vadSilenceThreshold)
     ) {
-      console.log(`🔇 Silence detected for ${vadSilenceThreshold}ms, sending TURN_COMPLETE`);
+      console.info(`🔇 Silence detected for ${vadSilenceThreshold}ms, sending TURN_COMPLETE`);
       isProcessingTurnCompleteRef.current = true;
       silenceStartRef.current = null;
       
@@ -222,7 +222,7 @@ export function useVoiceRecorder({
       isProcessingTurnCompleteRef.current = false;
       
       setState(prev => ({ ...prev, isRecording: true, error: null }));
-      console.log('🎤 Recording started');
+      console.info('🎤 Recording started');
       return true;
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Failed to start recording';
@@ -243,7 +243,7 @@ export function useVoiceRecorder({
       
       isRecordingRef.current = false;
       setState(prev => ({ ...prev, isRecording: false, volume: 0 }));
-      console.log('🛑 Recording stopped');
+      console.info('🛑 Recording stopped');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Error stopping recording';
       setState(prev => ({ ...prev, error: errorMsg }));

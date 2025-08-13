@@ -16,27 +16,27 @@ export function useSlashCommands() {
     {
       command: "/help",
       description: "Show available commands",
-      action: () => console.log("Help command"),
+      action: () => console.info("Help command"),
     },
     {
       command: "/clear",
       description: "Clear chat history",
-      action: () => console.log("Clear command"),
+      action: () => console.info("Clear command"),
     },
     {
       command: "/voice",
       description: "Open voice input",
-      action: () => console.log("Voice command"),
+      action: () => console.info("Voice command"),
     },
     {
       command: "/camera",
       description: "Open camera",
-      action: () => console.log("Camera command"),
+      action: () => console.info("Camera command"),
     },
     {
       command: "/screen",
       description: "Start screen share",
-      action: () => console.log("Screen command"),
+      action: () => console.info("Screen command"),
     },
   ]
 

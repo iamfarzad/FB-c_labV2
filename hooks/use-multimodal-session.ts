@@ -46,7 +46,7 @@ export function useMultimodalSession() {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({
         sampleRate: 24000 // Gemini TTS sample rate
       })
-      console.log('🎵 Web Audio API context initialized')
+      console.info('🎵 Web Audio API context initialized')
     }
     
     return () => {
@@ -92,7 +92,7 @@ export function useMultimodalSession() {
   // Play audio from base64 data using Web Audio API
   const playAudio = useCallback(async (audioData: string) => {
     try {
-      console.log('🎵 Playing audio data with Web Audio API...')
+      console.info('🎵 Playing audio data with Web Audio API...')
       
       if (!audioContextRef.current) {
         throw new Error('AudioContext not initialized')
@@ -115,7 +115,7 @@ export function useMultimodalSession() {
       source.connect(audioContextRef.current.destination)
       source.start(0)
       
-      console.log('🎵 Audio playback started')
+      console.info('🎵 Audio playback started')
     } catch (error) {
       console.error('❌ Audio playback error:', error)
     }
@@ -135,7 +135,7 @@ export function useMultimodalSession() {
   // Stop session
   const stopSession = useCallback(async () => {
     try {
-      console.log('🛑 Stopping multimodal session...')
+      console.info('🛑 Stopping multimodal session...')
       
       if (liveSessionRef.current) {
         await liveSessionRef.current.close()
@@ -144,7 +144,7 @@ export function useMultimodalSession() {
 
       setSession(prev => prev ? { ...prev, isActive: false } : null)
       setIsConnected(false)
-      console.log('✅ Session stopped successfully')
+      console.info('✅ Session stopped successfully')
 
     } catch (error) {
       console.error('❌ Error stopping session:', error)

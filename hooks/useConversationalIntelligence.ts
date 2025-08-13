@@ -1,3 +1,5 @@
+// NOTE: This file defines a single export below. Do not duplicate the hook.
+
 import { useState, useCallback, useRef } from 'react'
 
 export interface IntelligenceContext {

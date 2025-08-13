@@ -78,9 +78,9 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
 
   // Log mount/unmount once (avoid logging on every render)
   useEffect(() => {
-    console.log('--- useWebSocketVoice HOOK MOUNTED ---')
+    console.info('--- useWebSocketVoice HOOK MOUNTED ---')
     return () => {
-      console.log('--- useWebSocketVoice HOOK UNMOUNTING (Cleanup) ---')
+      console.info('--- useWebSocketVoice HOOK UNMOUNTING (Cleanup) ---')
     }
   }, [])
 
@@ -178,13 +178,13 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
   // If NEXT_PUBLIC_GEMINI_DIRECT === '1', use direct Live API with ephemeral token instead of proxy WS
   const connectWebSocket = useCallback(() => {
     if (reconnectingRef.current) {
-      console.log('[useWebSocketVoice] Reconnect already in progress, skipping...')
+      console.info('[useWebSocketVoice] Reconnect already in progress, skipping...')
       return
     }
     reconnectingRef.current = true
 
     if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
-      console.log('[useWebSocketVoice] WebSocket already connecting or open.')
+      console.info('[useWebSocketVoice] WebSocket already connecting or open.')
       reconnectingRef.current = false
       return
     }
@@ -234,16 +234,16 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
         const params = new URLSearchParams(window.location.search)
         if (params.get('voiceMock') === '1') {
           wsUrl = 'ws://localhost:8787/v1/live'
-          console.log('[useWebSocketVoice] voiceMock=1 detected, overriding WS URL to', wsUrl)
+          console.info('[useWebSocketVoice] voiceMock=1 detected, overriding WS URL to', wsUrl)
         }
       }
     } catch (e) {
       // window not available (SSR safeguard)
       wsUrl = wsUrl || 'ws://localhost:3001'
     }
-    console.log(`🔌 [useWebSocketVoice] Attempting to connect to WebSocket: ${wsUrl}`)
-    console.log('🌐 [useWebSocketVoice] Current page URL:', window.location.href)
-    console.log('🔒 [useWebSocketVoice] Page protocol:', window.location.protocol)
+    console.info(`🔌 [useWebSocketVoice] Attempting to connect to WebSocket: ${wsUrl}`)
+    console.info('🌐 [useWebSocketVoice] Current page URL:', window.location.href)
+    console.info('🔒 [useWebSocketVoice] Page protocol:', window.location.protocol)
     
     // Set initial state to connecting
     setIsConnected(false)
@@ -254,7 +254,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     try {
       ws = new WebSocket(wsUrl)
       wsRef.current = ws
-      console.log('[useWebSocketVoice] WebSocket object created successfully.')
+      console.info('[useWebSocketVoice] WebSocket object created successfully.')
       // Reset start flag for this fresh socket
       sentStartRef.current = false
       sessionActiveRef.current = false
@@ -266,7 +266,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     }
 
     ws.onopen = () => {
-      console.log('✅ [useWebSocketVoice] WebSocket connected. State:', ws.readyState)
+      console.info('✅ [useWebSocketVoice] WebSocket connected. State:', ws.readyState)
       setIsConnected(true)
       setError(null)
       reconnectingRef.current = false
@@ -284,12 +284,12 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
               remaining.push(queuedMessage)
             } else {
               ws.send(queuedMessage)
-              console.log('📤 [useWebSocketVoice] Sent queued message')
+              console.info('📤 [useWebSocketVoice] Sent queued message')
             }
           } catch {
             // If parsing fails, send as-is
             ws.send(queuedMessage)
-            console.log('📤 [useWebSocketVoice] Sent queued (unparsed) message')
+            console.info('📤 [useWebSocketVoice] Sent queued (unparsed) message')
           }
         }
         // Put back deferred audio frames
@@ -300,15 +300,15 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data)
-        console.log('📨 [useWebSocketVoice] Received message type:', message.type)
-        console.log('[useWebSocketVoice] Received message from server:', message)
+        console.info('📨 [useWebSocketVoice] Received message type:', message.type)
+        console.info('[useWebSocketVoice] Received message from server:', message)
 
         switch (message.type) {
           case 'connected':
-            console.log('[useWebSocketVoice] Server acknowledged connection:', message.payload)
+            console.info('[useWebSocketVoice] Server acknowledged connection:', message.payload)
             break
           case 'session_started':
-            console.log('[useWebSocketVoice] Gemini session started.', message.payload)
+            console.info('[useWebSocketVoice] Gemini session started.', message.payload)
             setSession({
               connectionId: message.payload.connectionId,
               isActive: true,
@@ -338,17 +338,17 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
             }
             break
           case 'session_ended':
-            console.log('[useWebSocketVoice] Gemini session ended:', message.payload)
+            console.info('[useWebSocketVoice] Gemini session ended:', message.payload)
             setSession(prev => prev ? { ...prev, isActive: false } : null)
             sessionActiveRef.current = false
             break
           case 'transcript':
-            console.log('[useWebSocketVoice] Received transcript:', message.payload)
+            console.info('[useWebSocketVoice] Received transcript:', message.payload)
             setTranscript(message.payload.text || '')
             break
           case 'session_closed':
             // Server notifies that the upstream Gemini session ended. Stop treating session as active.
-            console.log('[useWebSocketVoice] Upstream session closed by server:', message.payload)
+            console.info('[useWebSocketVoice] Upstream session closed by server:', message.payload)
             sessionActiveRef.current = false
             setSession(prev => prev ? { ...prev, isActive: false } : null)
             // Do not flush queued audio until a new explicit start
@@ -358,7 +358,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
             setError(message.payload.message || 'Unknown server error')
             break
           default:
-            console.log('[useWebSocketVoice] Unknown message type:', message.type)
+            console.info('[useWebSocketVoice] Unknown message type:', message.type)
         }
       } catch (error) {
         console.error('[useWebSocketVoice] Failed to parse message:', error)
@@ -372,7 +372,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     }
 
     ws.onclose = (event) => {
-      console.log('🔌 [useWebSocketVoice] WebSocket closed:', event.code, event.reason)
+      console.info('🔌 [useWebSocketVoice] WebSocket closed:', event.code, event.reason)
       setIsConnected(false)
       setSession(null)
       reconnectingRef.current = false
@@ -380,7 +380,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
       
       // Auto-reconnect on unexpected close (not user-initiated)
       if (event.code !== 1000 && event.code !== 1001) {
-        console.log('[useWebSocketVoice] Attempting auto-reconnect...')
+        console.info('[useWebSocketVoice] Attempting auto-reconnect...')
         setTimeout(() => {
           if (!reconnectingRef.current) {
             connectWebSocket()
@@ -453,12 +453,12 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
 
       // Proxy WS path
       if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
-        console.log('[useWebSocketVoice] Initiating WebSocket connection via connectWebSocket()...')
+        console.info('[useWebSocketVoice] Initiating WebSocket connection via connectWebSocket()...')
         connectWebSocket()
       } else if (wsRef.current.readyState === WebSocket.CONNECTING) {
-        console.log('[useWebSocketVoice] WebSocket is already connecting, waiting for open state.')
+        console.info('[useWebSocketVoice] WebSocket is already connecting, waiting for open state.')
       } else if (wsRef.current.readyState === WebSocket.OPEN) {
-        console.log('[useWebSocketVoice] WebSocket is already open.')
+        console.info('[useWebSocketVoice] WebSocket is already open.')
       }
 
       // Wait for connection to open with better error handling
@@ -475,7 +475,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
             const stateText = currentState !== undefined
               ? ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][currentState]
               : 'UNKNOWN';
-            console.log(
+            console.info(
               `[useWebSocketVoice] WebSocket state changed: ${lastState} -> ${currentState} (${stateText})`
             );
             lastState = currentState;
@@ -484,14 +484,14 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
           if (currentState === WebSocket.OPEN) {
             // If an immediate start was already sent on open, skip duplicate
             if (!sentStartRef.current) {
-              console.log('[useWebSocketVoice] WebSocket is OPEN, sending start message.')
+              console.info('[useWebSocketVoice] WebSocket is OPEN, sending start message.')
               const message = { type: 'start', payload: { leadContext, languageCode: preferredLanguageRef.current } }
               wsRef.current!.send(JSON.stringify(message))
               sentStartRef.current = true
               setIsProcessing(true)
-              console.log('📤 [useWebSocketVoice] Sent start message to WebSocket server', leadContext)
+              console.info('📤 [useWebSocketVoice] Sent start message to WebSocket server', leadContext)
             } else {
-              console.log('[useWebSocketVoice] Start already sent on open; skipping duplicate start')
+              console.info('[useWebSocketVoice] Start already sent on open; skipping duplicate start')
             }
             resolve()
             return
@@ -538,7 +538,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
 
   const stopSession = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) {
-      console.log('🔌 [useWebSocketVoice] Closing WebSocket connection...')
+      console.info('🔌 [useWebSocketVoice] Closing WebSocket connection...')
       wsRef.current.close(1000, "User initiated close") // Explicitly send normal closure code
       setSession(null)
       setIsConnected(false)
@@ -552,7 +552,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
   const sendMessage = useCallback(async (message: string) => {
     const payload = JSON.stringify({ type: 'user_message', payload: { message } })
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      console.log('📤 Sending text message via WebSocket:', message)
+      console.info('📤 Sending text message via WebSocket:', message)
       wsRef.current.send(payload)
     } else {
       console.warn('WebSocket not open, queueing message')
@@ -599,7 +599,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     const isOpen = wsRef.current?.readyState === WebSocket.OPEN
     const isReady = sessionActiveRef.current === true
     if (isOpen && isReady) {
-      console.log(`[useWebSocketVoice] Sending audio chunk: ${audioData.byteLength} bytes`)
+      console.info(`[useWebSocketVoice] Sending audio chunk: ${audioData.byteLength} bytes`)
       wsRef.current!.send(payload)
     } else {
       const why = !isOpen ? 'WebSocket not open' : 'Session not ready (awaiting session_started)'
@@ -629,7 +629,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     })
     
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      console.log('[useWebSocketVoice] 🎯 Sending TURN_COMPLETE signal after VAD delay')
+      console.info('[useWebSocketVoice] 🎯 Sending TURN_COMPLETE signal after VAD delay')
       wsRef.current.send(payload)
     } else {
       console.warn('WebSocket not open, queueing turn complete')
@@ -641,7 +641,7 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
   // Cleanup marker (do not auto-close socket to avoid StrictMode/FastRefresh loops)
   useEffect(() => {
     return () => {
-      console.log('--- useWebSocketVoice HOOK UNMOUNTING (Cleanup) ---')
+      console.info('--- useWebSocketVoice HOOK UNMOUNTING (Cleanup) ---')
     }
   }, [])
 
