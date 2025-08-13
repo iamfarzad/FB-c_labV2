@@ -141,15 +141,18 @@ async function processUrlContext(message: string, correlationId: string): Promis
   }
 }
 
-async function processGoogleSearch(message: string, leadContext: any, correlationId: string): Promise<string> {
+type SourceLink = { url: string; title?: string }
+
+async function processGoogleSearch(message: string, leadContext: any, correlationId: string): Promise<{ text: string, sources: SourceLink[] }> {
   try {
     if (!GoogleSearchService.isConfigured()) {
       console.info('Google Search API not configured, skipping search');
-      return '';
+      return { text: '', sources: [] };
     }
 
     // Determine search strategy based on message content and lead context
     let searchResults = '';
+    const sources: SourceLink[] = []
     
     // Check if message contains specific search intent
     const searchIntentKeywords = ['search', 'find', 'look up', 'research', 'what is', 'who is', 'tell me about'];
@@ -180,6 +183,9 @@ async function processGoogleSearch(message: string, leadContext: any, correlatio
         if (response.items && response.items.length > 0) {
           searchResults += '\n\n**Google Search Results:**\n';
           searchResults += GoogleSearchService.formatResultsForAI(response);
+          try {
+            for (const it of response.items.slice(0, 5)) sources.push({ url: it.link, title: it.title })
+          } catch {}
         }
       }
     }
@@ -202,6 +208,7 @@ async function processGoogleSearch(message: string, leadContext: any, correlatio
           searchResults += `${index + 1}. **${item.title}**\n`;
           searchResults += `   ${item.snippet}\n`;
           searchResults += `   Source: ${item.link}\n\n`;
+          try { sources.push({ url: item.link, title: item.title }) } catch {}
         });
       }
       
@@ -222,15 +229,16 @@ async function processGoogleSearch(message: string, leadContext: any, correlatio
             searchResults += `${index + 1}. **${item.title}**\n`;
             searchResults += `   ${item.snippet}\n`;
             searchResults += `   Source: ${item.link}\n\n`;
+            try { sources.push({ url: item.link, title: item.title }) } catch {}
           });
         }
       }
     }
 
-    return searchResults;
+    return { text: searchResults, sources };
   } catch (error: any) {
     console.error('Google Search Processing Error:', error);
-    return `\n\n**Google Search Error:** ${error.message}`;
+    return { text: `\n\n**Google Search Error:** ${error.message}` , sources: [] };
   }
 }
 
@@ -553,9 +561,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Process Google Search if enabled
-    let searchResults = '';
+    let searchResultsText = ''
+    let searchSources: Array<{ url: string; title?: string }> = []
     if (enableGoogleSearch) {
-      searchResults = await processGoogleSearch(currentMessage, leadContext, correlationId);
+      const r = await processGoogleSearch(currentMessage, leadContext, correlationId)
+      searchResultsText = r.text
+      searchSources = r.sources
     }
 
     // Estimate tokens and select model
@@ -643,13 +654,8 @@ ${getStageInstructions(conversationResult.newStage)}
     }
     
     // Append URL context and search results to system prompt
-    if (urlContext) {
-      systemPrompt += urlContext;
-    }
-    
-    if (searchResults) {
-      systemPrompt += searchResults;
-    }
+    if (urlContext) systemPrompt += urlContext
+    if (searchResultsText) systemPrompt += searchResultsText
 
     const provider = (process.env.PROVIDER || 'gemini').toLowerCase()
     const usePerplexity = provider === 'perplexity'
@@ -833,13 +839,13 @@ ${getStageInstructions(conversationResult.newStage)}
 
           // Send coach suggestion if we can infer one from the latest user message and context
           try {
-            const nb = computeNextBestCapability(currentMessage, { hasUrlContext: !!urlContext, hasSearch: !!searchResults, lead: leadData, stage: conversationResult?.newStage })
+    const nb = computeNextBestCapability(currentMessage, { hasUrlContext: !!urlContext, hasSearch: !!searchResultsText, lead: leadData, stage: conversationResult?.newStage })
             if (nb.nextBest) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ nextBest: nb.nextBest, suggestions: nb.suggestions })}\n\n`))
             }
             // Emit capabilityUsed for context processors
             if (urlContext) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ capabilityUsed: 'webpreview' })}\n\n`))
-            if (searchResults) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ capabilityUsed: 'googleSearch' })}\n\n`))
+            if (searchResultsText) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ capabilityUsed: 'googleSearch' })}\n\n`))
           } catch (e) {
             console.warn('coach suggestion failed', e)
           }
@@ -859,6 +865,8 @@ ${getStageInstructions(conversationResult.newStage)}
               const text = chunk.text || ''
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: text })}\n\n`))
             }
+            // Emit sources gathered from GoogleSearchService alongside Gemini output
+            if (searchSources.length) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ sources: searchSources })}\n\n`))
           }
           controller.close();
         } catch (error: any) {

@@ -70,8 +70,19 @@ export function AIEChat() {
     generatePersonalizedGreeting 
   } = useConversationalIntelligence()
 
+  const leadContextData = useMemo(() => {
+    if (!context) return undefined as undefined | any
+    return {
+      name: context?.person?.fullName || context?.lead?.name,
+      email: context?.lead?.email,
+      company: context?.company?.name,
+      role: context?.role,
+      industry: context?.company?.industry,
+    }
+  }, [context])
+
   const { messages, input, setInput, isLoading, error: chatError, sendMessage, handleSubmit, handleInputChange, clearMessages, addMessage } = useChat({
-    data: { sessionId: sessionId ?? undefined },
+    data: { sessionId: sessionId ?? undefined, enableLeadGeneration: false, leadContext: leadContextData },
     onError: (e) => setError(e),
   })
 
