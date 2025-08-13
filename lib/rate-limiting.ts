@@ -13,7 +13,7 @@ export function createRateLimit(config: RateLimitConfig) {
   return function rateLimitMiddleware(request: NextRequest): NextResponse | null {
     const key = config.keyGenerator 
       ? config.keyGenerator(request)
-      : request.ip || 'unknown';
+      : getClientIp(request);
     
     const now = Date.now();
     const windowStart = now - config.windowMs;
@@ -57,14 +57,34 @@ export function createRateLimit(config: RateLimitConfig) {
   };
 }
 
+function getClientIp(request: NextRequest): string {
+  const xff = request.headers.get('x-forwarded-for')
+  if (xff && xff.trim().length > 0) {
+    const first = xff.split(',')[0]?.trim()
+    if (first) return first
+  }
+  const realIp = request.headers.get('x-real-ip')
+  if (realIp && realIp.trim().length > 0) return realIp
+  try {
+    const url = new URL(request.url)
+    return url.hostname || 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
+
 // Admin-specific rate limiting (stricter limits)
 export const adminRateLimit = createRateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 100, // 100 requests per 15 minutes
   keyGenerator: (request) => {
     // Use user ID if available, otherwise IP
-    const userId = request.headers.get('x-user-id');
-    return userId || request.ip || 'unknown';
+    try {
+      const userId = (request as any)?.headers?.get ? (request as any).headers.get('x-user-id') : undefined
+      return userId || getClientIp(request)
+    } catch {
+      return 'unknown'
+    }
   }
 });
 
@@ -72,7 +92,7 @@ export const adminRateLimit = createRateLimit({
 export const apiRateLimit = createRateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 1000, // 1000 requests per 15 minutes
-  keyGenerator: (request) => request.ip || 'unknown'
+  keyGenerator: (request) => getClientIp(request)
 });
 
 // Clean up expired entries periodically

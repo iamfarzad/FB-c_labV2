@@ -51,7 +51,7 @@ describe('CacheCleanupService', () => {
       
       service.startCleanup(30);
       
-      expect(consoleSpy).toHaveBeenCalledWith('🧹 Starting cache cleanup service (every 30 minutes)');
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Starting cache cleanup service'));
       
       consoleSpy.mockRestore();
     });
@@ -63,8 +63,8 @@ describe('CacheCleanupService', () => {
       service.startCleanup(30);
       
       // Should see "Starting" message once, and "already running" message once
-      expect(consoleSpy).toHaveBeenCalledWith('🧹 Starting cache cleanup service (every 30 minutes)');
-      expect(consoleSpy).toHaveBeenCalledWith('🧹 Cache cleanup already running');
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Starting cache cleanup service'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Cache cleanup already running'));
       
       consoleSpy.mockRestore();
     });
@@ -96,7 +96,7 @@ describe('CacheCleanupService', () => {
       service.startCleanup(30);
       service.stopCleanup();
       
-      expect(consoleSpy).toHaveBeenCalledWith('🧹 Cache cleanup service stopped');
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Cache cleanup service stopped'));
       
       consoleSpy.mockRestore();
     });

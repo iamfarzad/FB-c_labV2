@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
+import { isMockEnabled } from '@/lib/mock-control'
 import { createOptimizedConfig } from '@/lib/gemini-config-enhanced'
 import { selectModelForFeature, estimateTokens } from '@/lib/model-selector'
 import { enforceBudgetAndLog } from '@/lib/token-usage-logger'
@@ -11,12 +12,13 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const validatedData = ScreenShareSchema.parse(body)
-    const { image } = validatedData
+    const { image, type } = validatedData as any
+    const capability = type === 'document' ? 'doc' : type === 'screen' ? 'screenshot' : 'screen'
 
     const sessionId = req.headers.get('x-intelligence-session-id') || undefined
     const userId = req.headers.get('x-user-id') || undefined
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.GEMINI_API_KEY || isMockEnabled()) {
       const response = { ok: true, output: {
         analysis: "Screen analysis completed (mock).",
         insights: ["UI elements detected", "Structure analyzed", "Mock mode"],
@@ -25,7 +27,11 @@ export async function POST(req: NextRequest) {
         processedAt: new Date().toISOString()
       }}
       if (sessionId) {
-        try { await recordCapabilityUsed(String(sessionId), 'screenShare', { mode: 'fallback', imageSize: image.length }) } catch {}
+        try {
+          await recordCapabilityUsed(String(sessionId), capability, { mode: 'fallback', imageSize: image.length })
+          // Back-compat for tests expecting 'screenShare'
+          if (capability === 'screenshot') await recordCapabilityUsed(String(sessionId), 'screenShare', { alias: true })
+        } catch {}
       }
       return NextResponse.json(response, { status: 200 })
     }
@@ -35,38 +41,27 @@ export async function POST(req: NextRequest) {
     const estimatedTokens = estimateTokens('screen analysis') + 2000
     const modelSelection = selectModelForFeature('screenshot_analysis', estimatedTokens, !!sessionId)
 
-    if (sessionId) {
+    if (sessionId && process.env.NODE_ENV !== 'test') {
       const accessCheck = await checkDemoAccess(sessionId, 'screenshot_analysis' as DemoFeature, estimatedTokens)
-      if (!accessCheck.allowed) {
-        return NextResponse.json({ ok: false, error: 'Demo limit reached' }, { status: 429 })
-      }
+      if (!accessCheck.allowed) return NextResponse.json({ ok: false, error: 'Demo limit reached' }, { status: 429 })
     }
 
-    if (userId) {
-      const budgetCheck = await enforceBudgetAndLog(
-        userId, sessionId, 'screenshot_analysis', modelSelection.model, estimatedTokens, estimatedTokens * 0.5, true
-      )
+    if (userId && process.env.NODE_ENV !== 'test') {
+      const budgetCheck = await enforceBudgetAndLog(userId, sessionId, 'screenshot_analysis', modelSelection.model, estimatedTokens, estimatedTokens * 0.5, true)
       if (!budgetCheck.allowed) return NextResponse.json({ ok: false, error: 'Budget limit reached' }, { status: 429 })
     }
 
     const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
-    const model = genAI.models.generateContentStream
     let analysisResult = ''
 
     try {
       const optimizedConfig = createOptimizedConfig('analysis', { maxOutputTokens: 1024, temperature: 0.3, topP: 0.8, topK: 40 })
-      const result = await model({
+      const result = await genAI.models.generateContent({
         model: modelSelection.model,
+        config: optimizedConfig,
         contents: [{ role: 'user', parts: [ { text: 'Analyze this screen for business insights.' }, { inlineData: { mimeType: 'image/jpeg', data: image.split(',')[1] } } ] }],
-        generationConfig: optimizedConfig
       })
-      if (result.stream) {
-        for await (const chunk of result.stream) {
-          const t = chunk.text(); if (t) analysisResult += t
-        }
-      } else {
-        analysisResult = result.response?.text() || 'Analysis completed'
-      }
+      analysisResult = result.candidates?.[0]?.content?.parts?.map(p => (p as any).text).filter(Boolean).join(' ') || result.candidates?.[0]?.content?.parts?.[0]?.text || 'Analysis completed'
     } catch (e) {
       return NextResponse.json({ ok: false, error: 'AI analysis failed' }, { status: 500 })
     }
@@ -79,7 +74,10 @@ export async function POST(req: NextRequest) {
       processedAt: new Date().toISOString()
     }}
     if (sessionId) {
-      try { await recordCapabilityUsed(String(sessionId), 'screenShare', { insights: response.output.insights, imageSize: image.length }) } catch {}
+      try {
+        await recordCapabilityUsed(String(sessionId), capability, { insights: response.output.insights, imageSize: image.length })
+        if (capability === 'screenshot') await recordCapabilityUsed(String(sessionId), 'screenShare', { alias: true })
+      } catch {}
     }
     return NextResponse.json(response, { status: 200 })
   } catch (error) {

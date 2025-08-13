@@ -112,7 +112,9 @@ jest.mock('next/server', () => {
 // Minimal global fetch for Node env tests
 if (typeof fetch === 'undefined') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  global.fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args))
+  const fetchImpl = require('node-fetch')
+  // @ts-ignore
+  global.fetch = fetchImpl.default || fetchImpl
 }
 
 // Ensure keys used by providers exist during tests
