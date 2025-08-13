@@ -4,7 +4,7 @@ require('@testing-library/jest-dom')
 // if you delete this file, remove `setupFilesAfterEnv` from `jest.config.mjs`
 
 // Used for things like setting up mock servers or global mocks.
-import '@testing-library/jest-dom'
+// CJS only for Jest setup
 
 // Provide test env vars and mock external email service to reduce noisy warnings during API tests
 if (process.env.NODE_ENV === 'test') {
