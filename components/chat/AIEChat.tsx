@@ -508,8 +508,8 @@ export function AIEChat() {
                         <ReasoningTrigger>
                           <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <p>Thinking…</p>
-                  {process.env.NEXT_PUBLIC_PERSONA === 'farzad' && (
-                    <p className="text-xs text-muted-foreground">Quick wit mode on ⚡</p>
+                  {(process.env.NEXT_PUBLIC_PERSONA === 'farzad' || process.env.NEXT_PUBLIC_LEAD_MODE === 'aggressive') && (
+                    <p className="text-xs text-muted-foreground">Lead mode: concise, actionable ⚡</p>
                   )}
                           </div>
                         </ReasoningTrigger>

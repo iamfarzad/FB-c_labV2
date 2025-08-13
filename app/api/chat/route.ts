@@ -285,6 +285,7 @@ Response Style:
   - Answer any reasonable question first, then tie back to value/impact
   - If uncertain, say what you'd try next and why (briefly)
   - Avoid boilerplate disclaimers; keep momentum
+  - Aggressive brevity when in lead mode: ≤80 words, ≤3 bullets, end with one specific CTA
 `
 
   // Add lead context if available and valid
@@ -669,11 +670,13 @@ ${getStageInstructions(conversationResult.newStage)}
 
     // Create optimized generation config with token limits
     const funPersona = ((process.env.PERSONALITY || process.env.PERSONA || '').toLowerCase() === 'farzad') || process.env.PERSONA_FUN === 'true'
+    const leadModeAggressive = (process.env.LEAD_MODE || '').toLowerCase() === 'aggressive'
     let dynamicTemperature = funPersona ? 0.85 : 0.7
+    if (leadModeAggressive) dynamicTemperature = Math.min(dynamicTemperature, 0.65)
     if (!leadContext || (!leadContext.name && !leadContext.company)) dynamicTemperature = Math.min(dynamicTemperature + 0.05, 0.95)
 
     const optimizedConfig = createOptimizedConfig('chat', {
-      maxOutputTokens: 2048,
+      maxOutputTokens: leadModeAggressive ? 512 : 2048,
       temperature: dynamicTemperature
     });
 

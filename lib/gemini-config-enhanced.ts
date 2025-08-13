@@ -322,10 +322,17 @@ export const createOptimizedConfig = (
 ) => {
   const personaFun = (process.env.PERSONALITY || process.env.PERSONA || '').toLowerCase() === 'farzad' || process.env.PERSONA_FUN === 'true'
   const limits = { ...customLimits }
-  if (personaFun) {
+  const leadAggressive = (process.env.LEAD_MODE || '').toLowerCase() === 'aggressive'
+  if (personaFun && !leadAggressive) {
     // Slightly increase temperature for a more human, lively tone, but keep within 0.95
     const baseTemp = limits.temperature ?? 0.7
     limits.temperature = Math.min(0.95, baseTemp + 0.15)
+  }
+  if (leadAggressive) {
+    // Tighter, crisper output for lead-gen—lower temp and cap tokens if not set
+    const baseTemp = limits.temperature ?? 0.7
+    limits.temperature = Math.max(0.5, Math.min(baseTemp, 0.65))
+    limits.maxOutputTokens = Math.min(1024, limits.maxOutputTokens ?? 1024)
   }
   return geminiConfig.createGenerationConfig(feature, limits);
 };
