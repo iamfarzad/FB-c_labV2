@@ -184,7 +184,7 @@ describe('CacheCleanupService', () => {
 
   describe('clearAllCache', () => {
     it('should clear all cache entries', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
       
       // Add some test data - need more than 5 messages to trigger caching
       const messages = [];
