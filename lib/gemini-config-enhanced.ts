@@ -45,7 +45,7 @@ export class GeminiConfigEnhanced {
    * Create optimized generation config with token limits
    */
   createGenerationConfig(
-    feature: 'chat' | 'analysis' | 'document' | 'live' | 'research',
+    feature: 'chat' | 'analysis' | 'document' | 'live' | 'research' | 'text_generation' | 'document_analysis',
     customLimits?: Partial<EnhancedGenerationConfig>
   ): EnhancedGenerationConfig {
     const baseConfigs = {
@@ -83,8 +83,19 @@ export class GeminiConfigEnhanced {
         topP: 0.9,
         responseMimeType: 'text/plain',
         cacheConfig: { ttl: 3600, enabled: true } // 1 hour cache
-      }
+      },
+      // Aliases for unified feature naming
+      text_generation: undefined as unknown as EnhancedGenerationConfig,
+      document_analysis: undefined as unknown as EnhancedGenerationConfig
     };
+
+    // Map aliases to their canonical configs
+    if (feature === 'text_generation') {
+      return { ...baseConfigs.chat, ...customLimits };
+    }
+    if (feature === 'document_analysis') {
+      return { ...baseConfigs.document, ...customLimits };
+    }
 
     return { ...baseConfigs[feature], ...customLimits };
   }
@@ -305,7 +316,10 @@ export class GeminiConfigEnhanced {
 // Convenience functions
 export const geminiConfig = GeminiConfigEnhanced.getInstance();
 
-export const createOptimizedConfig = (feature: 'chat' | 'analysis' | 'document' | 'live' | 'research', customLimits?: Partial<EnhancedGenerationConfig>) => {
+export const createOptimizedConfig = (
+  feature: 'chat' | 'analysis' | 'document' | 'live' | 'research' | 'text_generation' | 'document_analysis',
+  customLimits?: Partial<EnhancedGenerationConfig>
+) => {
   return geminiConfig.createGenerationConfig(feature, customLimits);
 };
 

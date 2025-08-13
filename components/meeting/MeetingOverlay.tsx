@@ -49,7 +49,7 @@ export function MeetingOverlay({
           {/* Cal.com inline embed */}
           {/* data-ui enables Cal.com default styles if available */}
           {/* @ts-ignore - custom element */}
-          <cal-inline data-ui="true" cal-link={`${username}/${event}`} style={{ width: '100%', height: '560px' }} />
+          <cal-inline data-ui="true" username={username} event={event} style={{ width: '100%', height: '560px' }} />
           {/* Fallback link in case the embed script hasn't loaded yet */}
           <noscript>
             <a href={calUrl} target="_blank" rel="noreferrer">Open scheduler</a>

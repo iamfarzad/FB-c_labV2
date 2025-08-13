@@ -47,6 +47,10 @@ export function suggestTools(context: ContextSnapshot, intent: IntentResult): Su
   const base = CAPABILITY_BY_INTENT[intent.type]
   const ranked = rankByContext(base, context)
   const suggestions: Suggestion[] = []
+  // Education-aware nudge: if workshop intent and ROI not used, bias ROI first
+  if (intent.type === 'workshop' && !used.has('roi')) {
+    suggestions.push({ id: 'roi', label: 'Estimate ROI', action: 'run_tool', capability: 'roi' })
+  }
   for (const item of ranked) {
     if (used.has(item.capability)) continue
     suggestions.push({ id: item.id, label: item.label, action: 'run_tool', capability: item.capability })

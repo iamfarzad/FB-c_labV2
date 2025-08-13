@@ -8,6 +8,12 @@ import { FadeIn } from "@/components/ui/fade-in"
 import { ROICalculator } from "@/components/chat/tools/ROICalculator/ROICalculator"
 import { ProgressTracker } from "@/components/experience/progress-tracker"
 import { CitationsDemo } from "@/components/experience/citations-demo"
+import dynamic from "next/dynamic"
+import { WORKSHOP_MODULES } from "@/components/workshop/education-modules"
+import Script from "next/script"
+// Move client-only components into a small client wrapper instead of ssr:false on a Server Component
+const GamifiedSection = dynamic(() => import('@/components/workshop/GamifiedSection').then(mod => mod.GamifiedSection))
+const VideoToAppLauncher = dynamic(() => import('@/components/workshop/VideoToAppLauncher').then(m => m.VideoToAppLauncher))
 
 export const metadata = {
   title: "AI Training Workshops & Team Programs | Farzad Bayat",
@@ -31,12 +37,16 @@ export default function WorkshopPage() {
     <>
       <PageShell className="min-h-screen">
         <PageHeader
-          title="Hands-On AI Training Workshops for Your Team"
-          subtitle="Coming Soon – Get notified when the full AI workshop schedule is live. Learn AI automation and implementation skills."
+          title="Interactive AI Education"
+          subtitle="Learn by doing. Explore modules, earn XP, and ask the AI as you go."
         />
-        <div className="mt-10 flex items-center justify-center gap-x-6">
-          <Button asChild size="lg">
-            <Link href="/workshop-waitlist">Join the AI Training Waitlist</Link>
+        <div className="mt-6 flex items-center justify-center gap-x-3">
+          <ProgressTracker />
+          <Button asChild variant="outline">
+            <Link href="/chat?preset=bot">Build a chatbot</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/chat?preset=automation">Automate a task</Link>
           </Button>
         </div>
       </PageShell>
@@ -50,7 +60,7 @@ export default function WorkshopPage() {
           <MotionCard className="h-full neu-card transition-all">
             <CardHeader>
               <div className="p-3 bg-primary/10 rounded-md">
-                <Book className="h-6 w-6 text-primary" />
+                <Book className="h-6 w-6 text-primary" aria-hidden="true" />
               </div>
               <CardTitle className="text-2xl">What to Expect from AI Training</CardTitle>
               <CardDescription>
@@ -62,7 +72,7 @@ export default function WorkshopPage() {
               <ul className="space-y-4">
                 {workshopFeatures.map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 flex-shrink-0 transition-transform group-hover:scale-110" />
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 flex-shrink-0 transition-transform group-hover:scale-110" aria-hidden="true" />
                     <span>{feature}</span>
                   </li>
                 ))}
@@ -101,9 +111,12 @@ export default function WorkshopPage() {
                     <Link href="/chat?preset=automation">Automate a task</Link>
                   </Button>
                 </div>
-                <div className="mt-4">
-                  <ROICalculator mode="card" />
-                </div>
+                 <div className="mt-4">
+                   <ROICalculator mode="card" />
+                 </div>
+                 <div className="mt-4">
+                   <VideoToAppLauncher />
+                 </div>
               </div>
             </CardContent>
             <CardFooter>
@@ -119,6 +132,42 @@ export default function WorkshopPage() {
       <PageShell>
         <CitationsDemo />
       </PageShell>
+
+      <PageShell>
+        <div className="grid gap-8 md:grid-cols-2">
+          {WORKSHOP_MODULES.map((m) => (
+            <GamifiedSection key={m.id} module={m} />
+          ))}
+        </div>
+      </PageShell>
+
+      {/* SEO: JSON-LD Course schema */}
+      <Script id="workshop-jsonld" type="application/ld+json" strategy="afterInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Course",
+          "name": "Interactive AI Education",
+          "description": "Hands-on modules to learn AI concepts, ROI, and practical integration.",
+          "provider": {
+            "@type": "Organization",
+            "name": "F.B/c Lab",
+            "sameAs": "https://farzadbayat.com"
+          },
+          "hasCourseInstance": [
+            {
+              "@type": "CourseInstance",
+              "name": "Industrial Evolution",
+              "courseMode": "self-paced",
+              "description": "Explore eras 1.0 – 5.0 and the shift to human-centered AI."
+            },
+            {
+              "@type": "CourseInstance",
+              "name": "AI Integration",
+              "courseMode": "self-paced",
+              "description": "Apply AI to real workflows and estimate ROI."
+            }
+          ]
+        }) }} />
     </>
   )
 }

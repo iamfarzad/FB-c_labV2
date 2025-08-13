@@ -1,20 +1,38 @@
 # Docs Reference Audit
 
-- Docs scanned: 111
-- References found: 381
-- Missing references: 85
+- Docs scanned: 122
+- References found: 438
+- Missing references: 102
 
-> Generated: 2025-08-09T18:53:53.754Z
+> Generated: 2025-08-13T14:39:11.559Z
 
-## API_FIXES_AND_VALIDATION_COMPLETE.md
+## CHANGELOG.md
 
+- [ ] lib/video2app/textGeneration.ts
+- [ ] app/api/calculate-roi/route.ts
+- [ ] app/api/lead-research/route.ts
+- [ ] app/api/translate/route.ts
+- [ ] hooks/useLiveSession.ts
+- [ ] app/test/ai-elements/page.tsx
+- [ ] app/test/ai-chat/page.tsx
+
+## Conversational_intelligent.md
+
+- [ ] lib/summary-generator.ts
+- [ ] app/api/generate-summary/route.ts
+- [ ] app/api/send-summary-email/route.ts
+- [ ] supabase/migrations/2025XXXX_conversational_intelligence.sql
+
+## Documents_progress_overtime/API_FIXES_AND_VALIDATION_COMPLETE.md
+
+- [ ] app/api/lead-research/route.ts
 - [ ] components/chat/tools/*
 
-## AUDIO_IMPROVEMENTS_SUMMARY.md
+## Documents_progress_overtime/AUDIO_IMPROVEMENTS_SUMMARY.md
 
 - [ ] app/api/gemini-live/route.ts
 
-## COMPONENT_CONSOLIDATION_COMPLETE.md
+## Documents_progress_overtime/COMPONENT_CONSOLIDATION_COMPLETE.md
 
 - [ ] components/chat/cards/VoiceInputCard.tsx
 - [ ] components/chat/cards/WebcamCaptureCard.tsx
@@ -27,7 +45,7 @@
 - [ ] components/chat/modals/ROICalculatorModal.tsx
 - [ ] components/chat/modals/Video2AppModal.tsx
 
-## DUPLICATE_FILES_AUDIT.md
+## Documents_progress_overtime/DUPLICATE_FILES_AUDIT.md
 
 - [ ] components/chat/voice/CleanVoiceUI.tsx
 - [ ] components/chat/webcam/Webcam.tsx
@@ -51,7 +69,7 @@
 - [ ] components/chat/modals/webcam/WebcamHeader.tsx
 - [ ] components/chat/modals/VoiceOutputModal.tsx
 
-## FINAL_CLEANUP_REPORT.md
+## Documents_progress_overtime/FINAL_CLEANUP_REPORT.md
 
 - [ ] components/chat/screen/EnhancedScreenShare.tsx
 - [ ] components/chat/voice/EnhancedVoiceUI.tsx
@@ -64,33 +82,37 @@
 - [ ] components/chat/modals/voice-output/
 - [ ] components/chat/modals/VoiceOutputModal.tsx
 
-## PRODUCTION_DEPLOYMENT_FIXES.md
+## Documents_progress_overtime/FIXES_IMPLEMENTATION_SUMMARY.md
+
+- [ ] app/api/tools/roi-calculation/route.ts
+
+## Documents_progress_overtime/PRODUCTION_DEPLOYMENT_FIXES.md
 
 - [ ] lib/activity-logger.ts
 
-## REPOSITORY_SECURITY_AND_CLEANUP_COMPLETE.md
+## Documents_progress_overtime/REPOSITORY_SECURITY_AND_CLEANUP_COMPLETE.md
 
 - [ ] supabase/migrations/20250804180000_performance_optimization.sql
 - [ ] supabase/migrations/20250804190000_rls_policy_optimization.sql
 - [ ] supabase/migrations/20250804200000_monitoring_setup.sql
 
-## SEO_OPTIMIZATION_REPORT.md
+## Documents_progress_overtime/SEO_OPTIMIZATION_REPORT.md
 
 - [ ] components/chat/ChatMain.tsx
 
-## SUPABASE_DATABASE_OPTIMIZATION_AUDIT.md
+## Documents_progress_overtime/SUPABASE_DATABASE_OPTIMIZATION_AUDIT.md
 
 - [ ] supabase/migrations/20250804180000_performance_optimization.sql
 - [ ] supabase/migrations/20250804190000_rls_policy_optimization.sql
 - [ ] supabase/migrations/20250804200000_monitoring_setup.sql
 
-## SUPABASE_OPTIMIZATION_IMPLEMENTATION_COMPLETE.md
+## Documents_progress_overtime/SUPABASE_OPTIMIZATION_IMPLEMENTATION_COMPLETE.md
 
 - [ ] supabase/migrations/20250804180000_performance_optimization.sql
 - [ ] supabase/migrations/20250804190000_rls_policy_optimization.sql
 - [ ] supabase/migrations/20250804200000_monitoring_setup.sql
 
-## TESTING_SUMMARY.md
+## Documents_progress_overtime/TESTING_SUMMARY.md
 
 - [ ] tests/playwright/chat.spec.ts
 - [ ] tests/components/ChatInput.test.tsx
@@ -98,32 +120,57 @@
 - [ ] tests/playwright/chat-visual.spec.ts
 - [ ] tests/setup.ts
 
-## THEVISIONFOR_FBC.md
+## Documents_progress_overtime/THEVISIONFOR_FBC.md
 
+- [ ] app/api/chat-enhanced/route.ts
 - [ ] lib/ai/gemini-live-client.ts
+- [ ] app/api/lead-research/route.ts
 - [ ] components/chat/*
 - [ ] components/chat/tools/*
 - [ ] lib/cache.ts
 
-## TODO_FIXES_PRIORITIZED.md
+## Documents_progress_overtime/TODO_FIXES_PRIORITIZED.md
 
 - [ ] components/chat/modals/ROICalculatorModal.tsx
 - [ ] app/chat/page.tsx
 - [ ] components/chat/modals/ScreenShareModal.tsx
 - [ ] app/api/demo-session/route.ts
 - [ ] app/api/gemini-live/route.ts
+- [ ] app/api/lead-research/route.ts
 
-## VERTICAL_PROCESS_CHAIN_IMPLEMENTATION.md
+## Documents_progress_overtime/VERTICAL_PROCESS_CHAIN_IMPLEMENTATION.md
 
 - [ ] components/chat/activity/TimelineActivityLog.tsx
 
-## VIDEOTOAPP_CONSOLIDATION_COMPLETE.md
+## Documents_progress_overtime/VIDEOTOAPP_CONSOLIDATION_COMPLETE.md
 
 - [ ] app/(chat)/chat/components/VideoToAppGenerator.tsx
 
-## admin-migration.md
+## Documents_progress_overtime/admin-migration.md
 
 - [ ] components/admin/ → app/admin/components/
+
+## Documents_progress_overtime/frontend_design.md
+
+- [ ] app/chat/context/ChatProvider.tsx
+- [ ] scripts/test-unified-voice.ts
+
+## Documents_progress_overtime/global-audit.md
+
+- [ ] components/ui/ (shadcn/ui)
+- [ ] components/demo-session-manager.tsx (if chat-specific)
+- [ ] components/test-status-indicator.tsx (if admin-specific)
+- [ ] components/ui-test-dashboard.tsx (if admin-specific)
+
+## Documents_progress_overtime/migration-plan.md
+
+- [ ] components/video-to-app-generator.tsx
+- [ ] components/lead-research-modal.tsx
+- [ ] components/educational-content.tsx
+
+## LEAD_GENERATION_SYSTEM_IMPLEMENTATION_COMPLETE.md
+
+- [ ] app/api/lead-research/route.ts
 
 ## docs/ACTIVITY_SYSTEM.md
 
@@ -131,24 +178,6 @@
 - [ ] app/chat/types/chat.ts
 - [ ] lib/activity-logger.ts
 - [ ] hooks/chat/useActivities.ts
-
-## frontend_design.md
-
-- [ ] app/chat/context/ChatProvider.tsx
-- [ ] scripts/test-unified-voice.ts
-
-## global-audit.md
-
-- [ ] components/ui/ (shadcn/ui)
-- [ ] components/demo-session-manager.tsx (if chat-specific)
-- [ ] components/test-status-indicator.tsx (if admin-specific)
-- [ ] components/ui-test-dashboard.tsx (if admin-specific)
-
-## migration-plan.md
-
-- [ ] components/video-to-app-generator.tsx
-- [ ] components/lead-research-modal.tsx
-- [ ] components/educational-content.tsx
 
 ## tests/README.md
 

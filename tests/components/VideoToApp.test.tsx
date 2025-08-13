@@ -66,10 +66,16 @@ describe('VideoToApp Component', () => {
     
     const urlInput = screen.getByPlaceholderText('Enter video URL (e.g., YouTube)')
     const promptInput = screen.getByPlaceholderText('Describe the learning app you want to create')
-    const generateButton = screen.getByText('Generate App')
+    let generateButton = screen.getByText('Generate App')
     
     fireEvent.change(urlInput, { target: { value: 'https://youtube.com/watch?v=test' } })
     fireEvent.change(promptInput, { target: { value: 'Create a quiz app' } })
+    
+    // Re-query the button after state updates to ensure it's enabled
+    await waitFor(() => {
+      generateButton = screen.getByText('Generate App')
+      expect(generateButton).not.toBeDisabled()
+    })
     
     // Mock API error
     ;(fetch as jest.Mock).mockResolvedValueOnce({

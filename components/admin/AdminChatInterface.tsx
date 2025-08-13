@@ -102,7 +102,10 @@ export function AdminChatInterface({ className }: AdminChatInterfaceProps) {
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    // Check if scrollIntoView is available (not in test environment)
+    if (messagesEndRef.current && typeof messagesEndRef.current.scrollIntoView === 'function') {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+    }
   }, [messages])
 
   const handleQuickAction = async (prompt: string) => {

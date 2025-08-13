@@ -1,3 +1,24 @@
+## Chat Endpoints Overview
+
+This project exposes separate chat endpoints for public and admin use:
+
+- Public chat UI → `/api/chat`
+  - Used by: `hooks/use-chat-state.ts`
+  - Features: lead generation stages, optional URL context, optional Google Search, consent gate
+
+- Admin chat UI → `/api/admin/chat`
+  - Used by: `components/admin/AdminChatInterface.tsx` via `hooks/useAdminChat.ts`
+  - Features: builds rich admin dashboard context via `lib/admin-context-builder.ts`, admin auth + rate limiting
+
+- Mock chat (development only) → `/api/mock/chat`
+  - Returns 404 outside development
+  - Useful for UI testing without incurring AI costs
+
+All AI generation uses the centralized config in `lib/gemini-config-enhanced.ts`. Aliases are supported so callers may use either canonical keys or aliases:
+
+- Canonical: `chat`, `analysis`, `document`, `live`, `research`
+- Aliases: `text_generation` → `chat`, `document_analysis` → `document`
+
 # F.B/c AI
 
 **Design System:** See [DESIGN.md](./DESIGN.md) for the canonical style guide and design token rules. All UI work must follow this guide.

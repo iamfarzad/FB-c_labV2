@@ -44,7 +44,7 @@ export const FUNCTION_VALIDATION_CRITERIA: Record<string, ValidationCriteria> = 
 
   'Webcam Capture & Processing': {
     backend: {
-      apiEndpoint: '/api/tools/webcam-capture',
+      apiEndpoint: '/api/tools/webcam',
       requestSchema: {
         image: 'data:image/jpeg;base64,test',
         type: 'image/jpeg'
@@ -83,7 +83,7 @@ export const FUNCTION_VALIDATION_CRITERIA: Record<string, ValidationCriteria> = 
 
   'Screen Share & Analysis': {
     backend: {
-      apiEndpoint: '/api/tools/screen-share',
+      apiEndpoint: '/api/tools/screen',
       requestSchema: {
         image: 'data:image/jpeg;base64,test',
         type: 'image/jpeg'
@@ -122,7 +122,7 @@ export const FUNCTION_VALIDATION_CRITERIA: Record<string, ValidationCriteria> = 
 
   'ROI Calculator & Business Tools': {
     backend: {
-      apiEndpoint: '/api/tools/roi-calculation',
+      apiEndpoint: '/api/tools/roi',
       requestSchema: {
         currentCosts: 5000,
         projectedSavings: 3500,

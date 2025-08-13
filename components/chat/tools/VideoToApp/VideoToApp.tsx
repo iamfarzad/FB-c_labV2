@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { ToolCardWrapper } from "@/components/chat/ToolCardWrapper"
 import type { VideoToAppProps } from "./VideoToApp.types"
@@ -24,19 +24,29 @@ export function VideoToApp({
   const [userPrompt, setUserPrompt] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedAppUrl, setGeneratedAppUrl] = useState<string | null>(null)
+  const [generatedCode, setGeneratedCode] = useState<string | null>(null)
+  const [progress, setProgress] = useState<"idle" | "analyze" | "spec" | "code" | "ready">("idle")
+  const [emailGateOpen, setEmailGateOpen] = useState(false)
+  const [emailGateOk, setEmailGateOk] = useState(false)
+  const [gateEmail, setGateEmail] = useState("")
+  const [gateCompany, setGateCompany] = useState("")
+  const [isSubmittingGate, setIsSubmittingGate] = useState(false)
+  const [leadId, setLeadId] = useState<string | null>(null)
 
   const handleGenerate = async () => {
-    if (!videoUrl || !userPrompt) {
+    if (!videoUrl) {
       toast({
         title: "Missing Information",
-        description: "Please provide both a video URL and a prompt.",
+        description: "Please provide a video URL.",
         variant: "destructive",
       })
       return
     }
     
     setIsGenerating(true)
+    setProgress("analyze")
     setGeneratedAppUrl(null)
+    setGeneratedCode(null)
     
     try {
       // Step 1: Generate specification from video
@@ -50,7 +60,8 @@ export function VideoToApp({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           action: "generateSpec", 
-          videoUrl 
+          videoUrl,
+          userPrompt
         }),
       })
 
@@ -60,6 +71,7 @@ export function VideoToApp({
       }
 
       const specResult = await specResponse.json()
+      setProgress("spec")
       
       // Step 2: Generate code from specification
       toast({
@@ -82,18 +94,49 @@ export function VideoToApp({
       }
 
       const codeResult = await codeResponse.json()
+      setProgress("code")
       
       // Create blob URL for the generated app
       const blob = new Blob([codeResult.code], { type: 'text/html' })
       const appUrl = URL.createObjectURL(blob)
       
       setGeneratedAppUrl(appUrl)
+      setGeneratedCode(codeResult.code)
       onAppGenerated?.(appUrl)
       
       toast({
         title: "App Generated Successfully!",
         description: "Your interactive learning app is ready to use.",
       })
+      setProgress("ready")
+      // If user has already provided email via gate, send link automatically
+      try {
+        if (emailGateOk && gateEmail && codeResult.artifactId) {
+          // Link artifact to lead if available
+          if (leadId) {
+            try {
+              await fetch(`/api/artifacts/${codeResult.artifactId}/link-lead`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ leadId })
+              })
+              // Increment engagement score (best-effort)
+              try {
+                await fetch(`/api/leads/${leadId}/engagement`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ interactionType: 'artifact_generated' })
+                })
+              } catch {}
+            } catch {}
+          }
+          await fetch('/api/send-artifact-link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: gateEmail, artifactId: codeResult.artifactId })
+          })
+        }
+      } catch {}
 
     } catch (error) {
       const err = error as Error;
@@ -121,7 +164,20 @@ export function VideoToApp({
         onChange={(e) => setUserPrompt(e.target.value)}
         disabled={isGenerating}
       />
-      <Button onClick={handleGenerate} disabled={isGenerating || !videoUrl || !userPrompt} className="w-full">
+      {/* Simple progress tracker */}
+      <div className="text-xs text-muted-foreground">
+        {isGenerating || progress !== 'idle' ? (
+          <div className="flex items-center gap-2">
+            <span className={cn('h-2 w-2 rounded-full', progress === 'analyze' ? 'bg-blue-500 animate-pulse' : 'bg-muted')}></span>
+            <span>Analyze video</span>
+            <span className={cn('h-2 w-2 rounded-full ml-4', progress === 'spec' ? 'bg-blue-500 animate-pulse' : progress !== 'idle' ? 'bg-muted' : 'bg-muted')}></span>
+            <span>Generate spec</span>
+            <span className={cn('h-2 w-2 rounded-full ml-4', progress === 'code' ? 'bg-blue-500 animate-pulse' : progress !== 'idle' ? 'bg-muted' : 'bg-muted')}></span>
+            <span>Generate code</span>
+          </div>
+        ) : null}
+      </div>
+      <Button onClick={handleGenerate} disabled={isGenerating || !videoUrl} className="w-full">
         {isGenerating ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -138,9 +194,44 @@ export function VideoToApp({
         <div className={cn('space-y-3', mode === 'canvas' && 'flex min-h-0 flex-1 flex-col') }>
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">Your Interactive Learning App</p>
-            <Button variant="outline" size="sm" onClick={() => window.open(generatedAppUrl, '_blank')}>
-              <Link className="w-4 h-4 mr-2" /> Open in New Tab
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => window.open(generatedAppUrl, '_blank')}>
+                <Link className="w-4 h-4 mr-2" /> Open in New Tab
+              </Button>
+              {generatedCode && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      if (!emailGateOk) { setEmailGateOpen(true); return }
+                      try {
+                        await navigator.clipboard.writeText(generatedCode)
+                        toast({ title: 'Copied', description: 'HTML copied to clipboard' })
+                      } catch {}
+                    }}
+                  >
+                    Copy HTML
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (!emailGateOk) { setEmailGateOpen(true); return }
+                      const file = new Blob([generatedCode], { type: 'text/html' })
+                      const url = URL.createObjectURL(file)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = 'video-app.html'
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    }}
+                  >
+                    Download
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
           <div className={cn('border rounded-lg overflow-hidden h-64 bg-muted/10', mode === 'canvas' && 'flex-1 h-auto') }>
             <iframe
@@ -189,7 +280,7 @@ export function VideoToApp({
             <span>Video → App</span>
           </div>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="ghost" onClick={handleGenerate} disabled={isGenerating || !videoUrl || !userPrompt}>
+            <Button size="sm" variant="ghost" onClick={handleGenerate} disabled={isGenerating || !videoUrl}>
               Generate
             </Button>
             <Button size="sm" variant="ghost" onClick={onClose}>Close</Button>
@@ -198,6 +289,61 @@ export function VideoToApp({
         <div className="flex min-h-0 flex-1 flex-col p-2">
           <VideoToAppUI />
         </div>
+        {/* Email Gate Modal */}
+        <Dialog open={emailGateOpen} onOpenChange={setEmailGateOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Send the app to your email</DialogTitle>
+              <DialogDescription>We’ll send you a link to the generated app and keep you updated with relevant materials.</DialogDescription>
+            </DialogHeader>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                const email = gateEmail.trim()
+                if (!email) return
+                setIsSubmittingGate(true)
+                try {
+                  await fetch('/api/consent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, companyUrl: gateCompany || undefined, policyVersion: 'v1' })
+                  })
+                  // Upsert lead for analytics
+                  try {
+                    const res = await fetch('/api/lead-upsert', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email, name: email.split('@')[0], companyUrl: gateCompany || undefined })
+                    })
+                    if (res.ok) {
+                      const j = await res.json()
+                      if (j.leadId) setLeadId(j.leadId)
+                    }
+                  } catch {}
+                  setEmailGateOk(true)
+                  setEmailGateOpen(false)
+                } catch {}
+                setIsSubmittingGate(false)
+              }}
+              className="space-y-3"
+            >
+              <div>
+                <label className="block text-sm mb-1">Work email</label>
+                <Input type="email" value={gateEmail} onChange={(e) => setGateEmail(e.target.value)} placeholder="name@company.com" required />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Company website (optional)</label>
+                <Input value={gateCompany} onChange={(e) => setGateCompany(e.target.value)} placeholder="https://yourcompany.com" />
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <button type="button" className="h-9 rounded-md border px-3 text-sm border-border/50 bg-card/60 text-muted-foreground hover:text-foreground" onClick={() => setEmailGateOpen(false)} disabled={isSubmittingGate}>Cancel</button>
+                <button type="submit" className={`h-9 rounded-md bg-primary px-3 text-sm text-primary-foreground ${isSubmittingGate ? 'opacity-70' : ''}`} disabled={isSubmittingGate}>
+                  {isSubmittingGate ? 'Saving…' : 'Send Link'}
+                </button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     )
   }
@@ -213,3 +359,6 @@ export function VideoToApp({
     </ToolCardWrapper>
   )
 }
+
+// Email gate modal at root to enable export actions
+// Rendered within component above when emailGateOpen is true

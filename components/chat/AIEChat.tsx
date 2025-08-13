@@ -146,6 +146,35 @@ export function AIEChat() {
     }
   }, [consentAllowed, fetchContextFromLocalSession])
 
+  // If user arrived from education, prefill a context card once
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('education') === '1') {
+        const text = window.localStorage.getItem('fbc:education:last')
+        if (text && text.trim()) {
+          setInput(text)
+          addLog('education → context card prefilled')
+          window.localStorage.removeItem('fbc:education:last')
+        }
+      }
+      const videoUrl = params.get('video') || window.localStorage.getItem('fbc:video:last')
+      if (videoUrl) {
+        setCanvas({ type: 'video', url: videoUrl })
+        addLog(`video param → open video2app: ${videoUrl}`)
+        window.localStorage.removeItem('fbc:video:last')
+      }
+      if (params.get('news') === '1') {
+        const text = window.localStorage.getItem('fbc:news:last')
+        if (text && text.trim()) {
+          setInput(text)
+          addLog('news → context card prefilled')
+          window.localStorage.removeItem('fbc:news:last')
+        }
+      }
+    } catch {}
+  }, [])
+
   async function handleAllowConsent() {
     try {
       // Step 1: Record consent
@@ -274,37 +303,15 @@ export function AIEChat() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length, consentAllowed, sessionId])
 
+  const [finishOpenSig, setFinishOpenSig] = useState(0)
+
   async function handleSuggestionRun(s: { id?: string; capability?: string; label: string }) {
     const cap = s.capability
     if (!cap) return
     // Fast-lane: Finish & Email (generate + email, no canvas)
     if (s.id === 'finish' && cap === 'exportPdf') {
-      try {
-        addLog('finish: generating pdf')
-        const gen = await fetch('/api/export-summary', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId })
-        })
-        if (!gen.ok) throw new Error(`export failed: ${gen.status}`)
-        addLog('finish: pdf generated')
-        const toEmail = (lead?.email || '').trim() || prompt('Send to email:') || ''
-        if (!toEmail) {
-          addLog('finish: email skipped (no address)', 'warn' as any)
-          return
-        }
-        addLog(`finish: emailing → ${toEmail}`)
-        const res = await fetch('/api/send-pdf-summary', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, toEmail })
-        })
-        if (!res.ok) throw new Error(`send failed: ${res.status}`)
-        addLog('finish: email sent')
-        emitUsed('exportPdf')
-      } catch (e: any) {
-        addLog(`finish: error → ${e?.message || 'unknown'}`, 'error')
-      }
+      // Open the Send Summary dialog instead of prompt
+      try { window.dispatchEvent(new CustomEvent('open-finish-email')) } catch {}
       return
     }
     switch (cap) {
@@ -851,21 +858,7 @@ export function AIEChat() {
                     addLog(`pdf: error → ${e?.message || 'unknown'}`, 'error')
                   }
                 }}>Download PDF</Button>
-                <Button size="sm" onClick={async () => {
-                  const toEmail = prompt('Send to email address:')
-                  if (!toEmail) return
-                  addLog(`pdf: generating + email send → ${toEmail}`)
-                  try {
-                    // Ensure export is generated before emailing
-                    const gen = await fetch('/api/export-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId }) })
-                    if (!gen.ok) throw new Error(`export failed: ${gen.status}`)
-                    const res = await fetch('/api/send-pdf-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, toEmail }) })
-                    if (!res.ok) throw new Error(`send failed: ${res.status}`)
-                    addLog('pdf: email sent')
-                  } catch (e: any) {
-                    addLog(`pdf: email error → ${e?.message || 'unknown'}`, 'error')
-                  }
-                }}>Send via Email</Button>
+                <FinishAndEmailButton sessionId={sessionId} addLog={addLog} />
                 <Button size="sm" onClick={() => setCanvas(null)}>Close</Button>
               </div>
               <iframe className="h-full w-full rounded border" src={`/api/export-summary?sessionId=${encodeURIComponent(sessionId || '')}`} />

@@ -10,6 +10,7 @@ export interface ConversationContext {
   role?: string
   role_confidence?: number
   intent_data?: any
+  last_user_message?: string
   ai_capabilities_shown?: string[]
   tool_outputs?: Record<string, any>
   created_at?: string

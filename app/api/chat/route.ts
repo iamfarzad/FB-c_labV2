@@ -467,6 +467,14 @@ export async function POST(req: NextRequest) {
     }));
 
     const currentMessage = sanitizedMessages[sanitizedMessages.length - 1]?.content || '';
+    // Persist last_user_message to conversation_contexts for server-side suggestions
+    try {
+      const sid = (req.headers.get('x-intelligence-session-id') || req.cookies.get('demo-session-id')?.value || '').trim()
+      if (sid && currentMessage.trim()) {
+        const supabase = getSupabase()
+        await supabase.from('conversation_contexts').update({ last_user_message: currentMessage }).eq('session_id', sid)
+      }
+    } catch {}
 
     // Initialize conversation state management if lead generation is enabled
     let conversationResult = null;

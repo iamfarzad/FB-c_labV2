@@ -159,7 +159,7 @@ export const ChatArea = memo(function ChatArea({
     if (!text || !messageId) return
     setTranslating(prev => ({ ...prev, [messageId]: true }))
     try {
-      const res = await fetch('/api/translate', {
+      const res = await fetch('/api/tools/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, targetLang })

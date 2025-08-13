@@ -33,7 +33,7 @@ export const API_ROUTES: Record<string, ApiRouteConfig> = {
     requiresApiKey: true
   },
   translate: {
-    realEndpoint: '/api/translate',
+    realEndpoint: '/api/tools/translate',
     mockEndpoint: '/api/mock/translate',
     requiresApiKey: true
   }

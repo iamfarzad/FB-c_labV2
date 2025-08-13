@@ -18,7 +18,7 @@
     "lint:all": "pnpm lint && pnpm lint:style",
     "pre-commit": "pnpm rules:check && pnpm lint && pnpm test",
     "rules:check": "pnpm rules:validate && echo '✅ Rule compliance verified'",
-    "rules:validate": "node scripts/validate-rules.js",
+    "rules:validate": "tsx scripts/validate-rules.js",
     "start": "next start",
     "test": "jest",
     "test:unit": "jest",
@@ -45,7 +45,8 @@
     "diagnose-production": "tsx scripts/diagnose-production-issues.ts",
     "fix-production": "tsx scripts/fix-production-issues.ts",
     "flags": "tsx scripts/print-flags.ts",
-    "repo:health": "node -e \"console.log('--- Flags ---')\" && pnpm flags && node -e \"console.log('\\n--- Doc refs ---')\" && tsx scripts/validate-docs.ts"
+    "repo:health": "node -e \"console.log('--- Flags ---')\" && pnpm flags && node -e \"console.log('\\n--- Doc refs ---')\" && tsx scripts/validate-docs.ts",
+    "verify:all": "pnpm rules:check && tsx scripts/validate-docs.ts --report docs/DOCS_REFERENCE_AUDIT.md || true && pnpm lint:all && tsc -p tsconfig.json --noEmit && jscpd --reporters console --min-lines 20 --min-tokens 100 --pattern \"**/*.{ts,tsx}\" && madge --ts-config ./tsconfig.json --extensions ts,tsx --circular ./app ./components ./lib ./hooks && ts-prune --ignore \"**/*.test.ts,**/*.spec.ts,tests/**,playwright-tests/**\" && depcheck --ignores=\"next,react,react-dom,@types/*,tailwindcss,postcss,autoprefixer\" && pnpm build && pnpm test:unit"
   },
   "dependencies": {
     "@ai-sdk/react": "^2.0.8",
@@ -171,10 +172,15 @@
     "@types/ws": "^8.18.1",
     "concurrently": "^9.2.0",
     "critters": "^0.0.25",
+    "depcheck": "^1.4.7",
     "dotenv": "^17.2.0",
+    "eslint": "^9.33.0",
+    "eslint-config-next": "^15.4.6",
     "jest": "^30.0.4",
     "jest-environment-jsdom": "^30.0.5",
+    "jscpd": "^4.0.5",
     "jsonwebtoken": "^9.0.2",
+    "madge": "^8.0.0",
     "next": "15.4.4",
     "postcss": "^8.5",
     "stylelint": "^16.2.1",
@@ -183,6 +189,7 @@
     "tailwindcss": "^3.4.17",
     "ts-jest": "^29.4.0",
     "ts-node": "11.0.0-beta.1",
+    "ts-prune": "^0.10.3",
     "tsx": "^4.20.3",
     "typescript": "^5",
     "vercel": "^44.5.5"

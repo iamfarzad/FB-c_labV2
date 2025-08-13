@@ -44,7 +44,7 @@ export const handleROICalculation = async (result: ROICalculationResult) => {
     const validatedResult = ROICalculationSchema.parse(result)
     
     // Business logic for ROI calculation
-    const response = await fetch('/api/calculate-roi', {
+    const response = await fetch('/api/tools/roi', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(validatedResult)
@@ -107,7 +107,7 @@ export const handleScreenShare = async (result: ScreenShareResult) => {
   try {
     const validatedResult = ScreenShareSchema.parse(result)
     
-    const response = await fetch('/api/tools/screen-share', {
+    const response = await fetch('/api/tools/screen', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(validatedResult)
@@ -128,7 +128,7 @@ export const handleWebcamCapture = async (result: WebcamCaptureResult) => {
   try {
     const validatedResult = WebcamCaptureSchema.parse(result)
     
-    const response = await fetch('/api/tools/webcam-capture', {
+    const response = await fetch('/api/tools/webcam', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(validatedResult)

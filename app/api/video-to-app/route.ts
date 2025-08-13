@@ -1,12 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { GoogleGenAI } from "@google/genai"
+import { createHash } from "crypto"
 import { createOptimizedConfig } from "@/lib/gemini-config-enhanced"
 import { parseJSON, parseHTML } from "@/lib/parse-utils"
 import { SPEC_FROM_VIDEO_PROMPT, CODE_REGION_OPENER, CODE_REGION_CLOSER, SPEC_ADDENDUM } from "@/lib/ai-prompts"
 import { getYouTubeVideoId } from "@/lib/youtube"
 import { getYouTubeTranscript, summarizeTranscript, extractKeyTopics } from "@/lib/youtube-transcript"
 import { selectModelForFeature, estimateTokens } from "@/lib/model-selector"
+import { getSupabase } from "@/lib/supabase/server"
 import { enforceBudgetAndLog } from "@/lib/token-usage-logger"
+import { withFullSecurity } from "@/lib/api-security"
 
 
 // Timeout wrapper for production stability
@@ -143,7 +146,7 @@ Based on this video content, create a comprehensive spec for an interactive lear
   }
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withFullSecurity(async function POST(request: NextRequest) {
   const startTime = Date.now()
   const correlationId = Math.random().toString(36).substring(7)
   
@@ -152,7 +155,7 @@ export async function POST(request: NextRequest) {
     const sessionId = request.headers.get('x-intelligence-session-id') || undefined
     const userId = request.headers.get('authorization')?.replace('Bearer ', '') || undefined
     
-    const { action, videoUrl, spec } = await request.json()
+  const { action, videoUrl, spec, userPrompt } = await request.json()
 
     console.log(`🎬 Video-to-App API called:`, {
       action,
@@ -164,6 +167,28 @@ export async function POST(request: NextRequest) {
     if (action === "generateSpec") {
       if (!videoUrl) throw new Error('Video URL required for spec')
       
+      // Cache key based on videoId + userPrompt
+      const videoIdForHash = getYouTubeVideoId(videoUrl) || videoUrl
+      const hash = createHash('sha256').update(`${videoIdForHash}|${(userPrompt || '').trim()}`).digest('hex')
+      try {
+        const supabase = getSupabase()
+        const { data: cached } = await supabase
+          .from('artifacts')
+          .select('*')
+          .eq('type', 'video_app_spec')
+          .eq('metadata->>hash', hash)
+          .limit(1)
+          .maybeSingle()
+        if (cached?.content) {
+          return NextResponse.json({ 
+            spec: cached.content,
+            model: 'cache',
+            estimatedCost: 0,
+            cache: true
+          })
+        }
+      } catch {}
+
       // Estimate tokens and select model
       const estimatedTokens = estimateTokens(SPEC_FROM_VIDEO_PROMPT + videoUrl)
       const modelSelection = selectModelForFeature('video_to_app', estimatedTokens, !!sessionId)
@@ -201,9 +226,13 @@ export async function POST(request: NextRequest) {
       console.log(`🚀 Starting spec generation:`, { correlationId })
       
       // Use selected model for video analysis
+      const userIntent = (userPrompt && typeof userPrompt === 'string' && userPrompt.trim().length)
+        ? `\n\nUSER INTENT:\n${userPrompt.trim()}\n\nIncorporate the user's intent and preferences above when designing the app.`
+        : ''
+
       const specResponse = await generateText({
         modelName: modelSelection.model,
-        prompt: SPEC_FROM_VIDEO_PROMPT,
+        prompt: SPEC_FROM_VIDEO_PROMPT + userIntent,
         videoUrl: videoUrl,
         correlationId,
       })
@@ -227,6 +256,14 @@ export async function POST(request: NextRequest) {
       
       parsedSpec += SPEC_ADDENDUM
 
+      // Store spec in cache
+      try {
+        const supabase = getSupabase()
+        await supabase
+          .from('artifacts')
+          .insert([{ type: 'video_app_spec', content: parsedSpec, metadata: { hash, videoId: videoIdForHash, intent: (userPrompt || '').trim() } }])
+      } catch {}
+
       console.log(`📋 Spec processing completed:`, { 
         finalLength: parsedSpec.length,
         responseTime: Date.now() - startTime,
@@ -241,6 +278,37 @@ export async function POST(request: NextRequest) {
     } else if (action === "generateCode") {
       if (!spec) throw new Error('Spec required for code generation')
       
+      // Compute cache key if spec includes our addendum and possibly include a hash fallback
+      let videoIdForHash = ''
+      let intentForHash = ''
+      try {
+        // Attempt to extract from previous metadata if provided in body later
+        const maybeVideoMatch = spec.match(/Video URL:\s*(.*)/i)
+        if (maybeVideoMatch && maybeVideoMatch[1]) {
+          videoIdForHash = getYouTubeVideoId(maybeVideoMatch[1].trim()) || maybeVideoMatch[1].trim()
+        }
+      } catch {}
+      const hash = createHash('sha256').update(`${videoIdForHash}|${intentForHash}`).digest('hex')
+      try {
+        const supabase = getSupabase()
+        const { data: cached } = await supabase
+          .from('artifacts')
+          .select('*')
+          .eq('type', 'video_app_code')
+          .eq('metadata->>hash', hash)
+          .limit(1)
+          .maybeSingle()
+        if (cached?.content && cached?.id) {
+          return NextResponse.json({ 
+            code: cached.content,
+            model: 'cache',
+            estimatedCost: 0,
+            cache: true,
+            artifactId: cached.id
+          })
+        }
+      } catch {}
+
       // Estimate tokens and select model
       const estimatedTokens = estimateTokens(spec)
       const modelSelection = selectModelForFeature('video_to_app', estimatedTokens, !!sessionId)
@@ -299,6 +367,23 @@ export async function POST(request: NextRequest) {
         code = codeResponse
       }
       
+      // Persist artifact (HTML) for return link reuse
+      let artifactId: string | undefined
+      try {
+        const supabase = getSupabase()
+        const { data, error } = await supabase
+          .from('artifacts')
+          .insert([{ type: 'video_app_code', content: code, metadata: { model: modelSelection.model, hash } }])
+          .select()
+          .single()
+        if (!error && data?.id) {
+          console.log('📝 Stored artifact', data.id)
+          artifactId = data.id
+        }
+      } catch (e) {
+        console.warn('Artifact storage failed or unavailable')
+      }
+
       console.log(`💻 Code processing completed:`, { 
         finalLength: code.length,
         responseTime: Date.now() - startTime,
@@ -308,7 +393,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         code,
         model: modelSelection.model,
-        estimatedCost: modelSelection.estimatedCost
+        estimatedCost: modelSelection.estimatedCost,
+        artifactId
       })
     }
 
@@ -320,4 +406,4 @@ export async function POST(request: NextRequest) {
       details: error instanceof Error ? error.message : "Unknown error"
     }, { status: 500 })
   }
-}
+})

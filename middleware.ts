@@ -50,7 +50,6 @@ export function middleware(req: NextRequest) {
     '/api/analyze-document',
     '/api/analyze-screenshot',
     '/api/video-to-app',
-    '/api/lead-research',
     '/api/intelligence/lead-research',
     '/api/educational-content',
     '/api/ai-stream',
@@ -70,8 +69,6 @@ export function middleware(req: NextRequest) {
       mockUrl.pathname = '/api/mock/chat'
     } else if (req.nextUrl.pathname.startsWith('/api/export-summary')) {
       mockUrl.pathname = '/api/mock/export-summary'
-    } else if (req.nextUrl.pathname.startsWith('/api/lead-research')) {
-      mockUrl.pathname = '/api/mock/lead-research'
     } else if (req.nextUrl.pathname.startsWith('/api/intelligence/lead-research')) {
       mockUrl.pathname = '/api/mock/lead-research'
     } else {

@@ -1,26 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { detectIntent } from '@/lib/intelligence/intent-detector'
 import { ContextStorage } from '@/lib/context/context-storage'
+import { withApiGuard } from '@/lib/api/withApiGuard'
 
 const contextStorage = new ContextStorage()
 
-export async function POST(req: NextRequest) {
-  try {
-    const { sessionId, userMessage } = await req.json()
-    if (!sessionId || !userMessage) {
-      return NextResponse.json({ error: 'Missing sessionId or userMessage' }, { status: 400 })
+const Body = z.object({ sessionId: z.string().min(1), userMessage: z.string().min(1) })
+
+export const POST = withApiGuard({
+  schema: Body,
+  requireSession: false,
+  rateLimit: { windowMs: 5000, max: 5 },
+  handler: async ({ body }) => {
+    try {
+      const message = String(body.userMessage)
+      const intent = detectIntent(message)
+      await contextStorage.update(body.sessionId, { intent_data: intent as any, last_user_message: message })
+      return NextResponse.json({ ok: true, ...intent })
+    } catch (e: any) {
+      return NextResponse.json({ ok: false, error: 'server_error', message: e?.message || 'unknown' }, { status: 500 })
     }
-
-    const intent = detectIntent(String(userMessage))
-
-    // Persist intent into conversation_contexts.intent_data
-    await contextStorage.update(sessionId, { intent_data: intent as any })
-
-    return NextResponse.json(intent)
-  } catch (error) {
-    console.error('❌ Intent classification failed:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
 

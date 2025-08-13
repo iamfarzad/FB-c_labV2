@@ -19,16 +19,13 @@ export async function POST(req: NextRequest) {
     
     // For testing without AI model, provide a fallback analysis
     if (!process.env.GEMINI_API_KEY) {
-      const response = {
-        status: 'success',
-        data: {
-          analysis: "Screen share analysis completed successfully. This is a test response without AI model integration. The screen capture functionality is working correctly.",
-          insights: ["UI elements detected", "Content structure analyzed", "Screen capture working"],
-          imageSize: image.length,
-          isBase64: image.startsWith('data:image'),
-          processedAt: new Date().toISOString()
-        }
-      }
+      const response = { ok: true, output: {
+        analysis: "Screen share analysis completed successfully. This is a test response without AI model integration. The screen capture functionality is working correctly.",
+        insights: ["UI elements detected", "Content structure analyzed", "Screen capture working"],
+        imageSize: image.length,
+        isBase64: image.startsWith('data:image'),
+        processedAt: new Date().toISOString()
+      }}
       if (sessionId) {
         try { await recordCapabilityUsed(String(sessionId), 'screenShare', { mode: 'fallback', imageSize: image.length }) } catch {}
       }
@@ -140,56 +137,31 @@ Focus on identifying business process improvements and automation opportunities.
         await recordDemoUsage(sessionId, 'screenshot_analysis' as DemoFeature, actualInputTokens, actualOutputTokens)
       }
 
-      const response = {
-        status: 'success',
-        data: {
-          analysis: analysisResult,
-          insights: ["UI elements detected", "Content structure analyzed"],
-          imageSize: image.length,
-          isBase64: image.startsWith('data:image'),
-          processedAt: new Date().toISOString()
-        }
-      }
+    const response = { ok: true, output: {
+      analysis: analysisResult,
+      insights: ["UI elements detected", "Content structure analyzed"],
+      imageSize: image.length,
+      isBase64: image.startsWith('data:image'),
+      processedAt: new Date().toISOString()
+    }}
 
       if (sessionId) {
-        try { await recordCapabilityUsed(String(sessionId), 'screenShare', { insights: response.data.insights, imageSize: image.length }) } catch {}
+        try { await recordCapabilityUsed(String(sessionId), 'screenShare', { insights: response.output.insights, imageSize: image.length }) } catch {}
       }
 
       return NextResponse.json(response, { status: 200 })
       
     } catch (modelError) {
       console.error('AI model error:', modelError)
-      return NextResponse.json(
-        { 
-          status: 'error',
-          error: 'AI analysis failed',
-          details: 'Failed to process screen share with AI model'
-        },
-        { status: 500 }
-      )
+      return NextResponse.json({ ok: false, error: 'AI analysis failed' }, { status: 500 })
     }
     
   } catch (error) {
     console.error('Screen share API error:', error)
     
     if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json(
-        { 
-          status: 'error',
-          error: 'Invalid input data',
-          details: error.message 
-        },
-        { status: 400 }
-      )
+      return NextResponse.json({ ok: false, error: 'Invalid input data' }, { status: 400 })
     }
-    
-    return NextResponse.json(
-      { 
-        status: 'error',
-        error: 'Internal server error',
-        details: 'Failed to process screen share analysis'
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ ok: false, error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -63,7 +63,7 @@ export function ROICalculator({
 
   const handleCalculate = async () => {
     try {
-      const response = await fetch('/api/tools/roi-calculation', {
+      const response = await fetch('/api/tools/roi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
