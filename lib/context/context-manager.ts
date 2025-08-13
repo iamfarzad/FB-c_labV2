@@ -1,3 +1,22 @@
+import { ContextStorage } from '@/lib/context/context-storage'
+
+export async function getMergedContext(sessionId: string) {
+  const storage = new ContextStorage()
+  const raw = await storage.get(sessionId)
+  if (!raw) return null
+  const snapshot = {
+    sessionId,
+    lead: raw.lead,
+    company: raw.company_context,
+    person: raw.person_context,
+    role: raw.role,
+    roleConfidence: raw.role_confidence,
+    intent: raw.intent_data,
+    ai_capabilities_shown: raw.ai_capabilities_shown || []
+  }
+  return snapshot
+}
+
 import { getSupabase } from '@/lib/supabase/server'
 import { ContextSnapshotSchema, type ContextSnapshot } from './context-schema'
 
