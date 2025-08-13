@@ -2,9 +2,9 @@
 
 - Docs scanned: 122
 - References found: 438
-- Missing references: 102
+- Missing references: 107
 
-> Generated: 2025-08-13T16:17:56.200Z
+> Generated: 2025-08-13T16:33:48.491Z
 
 ## CHANGELOG.md
 
@@ -29,6 +29,7 @@
 
 ## archive/Documents_progress_overtime/API_FIXES_AND_VALIDATION_COMPLETE.md
 
+- [ ] app/api/analyze-document/route.ts
 - [ ] app/api/lead-research/route.ts
 - [ ] components/chat/tools/*
 
@@ -48,6 +49,10 @@
 - [ ] components/chat/modals/ScreenShareModal.tsx
 - [ ] components/chat/modals/ROICalculatorModal.tsx
 - [ ] components/chat/modals/Video2AppModal.tsx
+
+## archive/Documents_progress_overtime/DEPLOYMENT_FIXES_SUMMARY.md
+
+- [ ] app/api/analyze-document/route.ts
 
 ## archive/Documents_progress_overtime/DUPLICATE_FILES_AUDIT.md
 
@@ -93,6 +98,7 @@
 ## archive/Documents_progress_overtime/PRODUCTION_DEPLOYMENT_FIXES.md
 
 - [ ] lib/activity-logger.ts
+- [ ] app/api/analyze-image/route.ts
 
 ## archive/Documents_progress_overtime/REPOSITORY_SECURITY_AND_CLEANUP_COMPLETE.md
 
@@ -139,6 +145,8 @@
 - [ ] app/chat/page.tsx
 - [ ] components/chat/modals/ScreenShareModal.tsx
 - [ ] app/api/demo-session/route.ts
+- [ ] app/api/analyze-document/route.ts
+- [ ] app/api/analyze-screenshot/route.ts
 - [ ] app/api/gemini-live/route.ts
 - [ ] app/api/lead-research/route.ts
 

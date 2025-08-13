@@ -3,15 +3,15 @@ import { getSupabase } from "@/lib/supabase/server"
 import { logServerActivity } from "@/lib/server-activity-logger"
 
 // Webhook signature verification
-function verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
+async function verifyWebhookSignature(payload: string, signature: string, secret: string): Promise<boolean> {
   if (!secret) {
     console.warn("RESEND_WEBHOOK_SECRET not configured")
     return true // Allow in development
   }
 
   try {
-    const crypto = await import("crypto")
-    const expectedSignature = crypto.createHmac("sha256", secret).update(payload, "utf8").digest("hex")
+    const { createHmac } = await import("crypto")
+    const expectedSignature = createHmac("sha256", secret).update(payload, "utf8").digest("hex")
 
     return signature === `sha256=${expectedSignature}`
   } catch (error) {
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     // Verify webhook signature
     const webhookSecret = process.env.RESEND_WEBHOOK_SECRET || "test-secret"
-    if (!verifyWebhookSignature(payload, signature, webhookSecret)) {
+    if (!(await verifyWebhookSignature(payload, signature, webhookSecret))) {
       console.error("Invalid webhook signature")
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
     }
