@@ -43,6 +43,31 @@ All notable changes to this project will be documented in this file.
 - Removed deprecated `hooks/useLiveSession.ts`; unified on WebSocket pipeline with VAD and TURN handling
 - Ensures 16kHz PCM chunking, 500ms VAD silence threshold, and TURN_COMPLETE routing server-side
 
+### Realtime Voice WS Handshake Stabilization - 2025-08-12
+- Client: send `{ type: "start" }` immediately on WebSocket `onopen` to satisfy server handshake expectations; avoid duplicates via `sentStartRef`
+- Client: keep `startSession` as fallback; skip duplicate start if already sent on open; improved state logs
+- Server: attach `WebSocketServer` directly to HTTP(S) server instead of manual `handleUpgrade`
+- Server: emit `{ type: 'connected' }` ack on connect, add keepalive pings and process-level error handlers
+- Result: fixes immediate 1005/no-status closes and stabilizes session start → `session_started` → audio flow
+
+### Voice Hook de-duplication + session gating - 2025-08-12
+- Client hook `useWebSocketVoice`:
+  - Log mount/unmount only once via `useEffect` (removed render-time spam)
+  - Added `sessionActiveRef` to gate audio sending until after `'session_started'`
+  - Queue audio frames while WS is open but session not yet ready; flush on `'session_started'`
+  - Reset `sessionActiveRef` on socket recreate/close and on `session_ended`
+  - Prevents repeated `session_started` cascades from early audio frames
+
+### Unified “Book a Call” UX - 2025-08-12
+- Added `MeetingOverlay` (`components/meeting/MeetingOverlay.tsx`) using a modal with Cal.com inline widget and lazy-loaded script
+- Added `MeetingProvider` + `useMeeting()` (`components/providers/meeting-provider.tsx`), wrapped app in provider (`app/layout.tsx`)
+- Wired CTAs to open the overlay:
+  - Home (`app/page.tsx`): hero and “Schedule Free Consultation”
+  - Consulting (`app/consulting/page.tsx`): primary buttons
+  - Contact (`app/contact/page.tsx`): replaced inline embed with a clean button to open overlay
+  - Chat (`components/chat/AIEChat.tsx`): SuggestedActions `meeting` opens overlay
+  - Chat tool card (`components/chat/ChatArea.tsx`): meeting tool shows button to open overlay (no iframe inline)
+
 - Conversational Intelligence Phase 1: session persistence hardened, idempotent `session-init`, stable `context` with ETag/304 and rate limits, unified `intelligence-session-id`.
 - Conversational Intelligence Phase 2: added `POST /api/intelligence/intent` and `POST /api/intelligence/suggestions`, UI `SuggestedActions` and wiring in `AIEChat` (first user message → intent; suggestions rendered and actionable).
 - Capability tracking: server-side recording for `translate` and `exportPdf`; progress chip and suggestions now reflect server snapshot.

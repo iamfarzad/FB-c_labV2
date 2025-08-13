@@ -45,12 +45,10 @@
       return typeof s === 'string' && /^[A-Za-z]{2,3}(-[A-Za-z]{2}|\-[A-Za-z]{4})?(-[A-Za-z]{2}|\-[0-9]{3})?$/.test(s);
     }
 
-    // --- Server Setup ---
-    const wss = new WebSocketServer({
-      noServer: true,
-      perMessageDeflate: false,
-      maxPayload: 10 * 1024 * 1024,
-    });
+// --- Server Setup ---
+// Attach the WebSocket server directly to the HTTP/HTTPS server to avoid manual upgrade edge cases
+// (manual handleUpgrade can lead to premature closes if not fully detached)
+let wss: WebSocketServer
     // SSL Certificate paths - only use in development
     let sslOptions = {};
     const isLocalDev = process.env.NODE_ENV !== 'production' && !process.env.FLY_APP_NAME;
@@ -94,11 +92,12 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
     console.log(`🔐 Using ${protocol} protocol`);
     });
 
-    server.on('upgrade', (request, socket, head) => {
-    wss.handleUpgrade(request, socket, head, (ws) => {
-        wss.emit('connection', ws, request);
-    });
-    });
+// Initialize WebSocket server bound to the HTTP(S) server
+wss = new WebSocketServer({
+  server,
+  perMessageDeflate: false,
+  maxPayload: 10 * 1024 * 1024,
+})
 
     // --- Stability: ping clients to keep connections alive ---
     const pingInterval = setInterval(() => {
@@ -110,8 +109,25 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
     }, 25_000)
     server.on('close', () => clearInterval(pingInterval))
 
-    // --- In-Memory Stores ---
+// Global process error handlers to prevent hard crashes that manifest as 1005/1006 client closes
+const nodeProcess = (globalThis as any).process as NodeJS.Process | undefined
+nodeProcess?.on('uncaughtException', (err: unknown) => {
+  console.error('UNCAUGHT_EXCEPTION:', err)
+})
+nodeProcess?.on('unhandledRejection', (reason: unknown) => {
+  console.error('UNHANDLED_REJECTION:', reason)
+})
+
+// --- In-Memory Stores ---
     const activeSessions = new Map<string, { ws: WebSocket; session: Session }>();
+    // Throttle duplicate start requests per connection
+    const lastStartAt = new Map<string, number>();
+    // Track last time we received audio from the client per connection
+    const lastClientAudioAt = new Map<string, number>();
+    // Per-connection timer to ensure some audio reaches Gemini shortly after start
+    const firstAudioTimers = new Map<string, NodeJS.Timeout>();
+    // Prevent concurrent session starts for the same connection
+    const sessionStarting = new Set<string>()
     const sessionBudgets = new Map<string, SessionBudget>();
     // Store Node Buffers for simpler concat usage (legacy batching)
     const bufferedAudioChunks = new Map<string, Buffer[]>();
@@ -163,10 +179,26 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
     }
 
     async function handleStart(connectionId: string, ws: WebSocket, payload: any) {
+  // Simple idempotency window to avoid rapid restarts
+  const now = Date.now()
+  const prev = lastStartAt.get(connectionId) || 0
+  if (now - prev < 1000) {
+    console.log(`[${connectionId}] start() ignored due to 1s cooldown window`)
+    return
+  }
+  lastStartAt.set(connectionId, now)
+
   if (activeSessions.has(connectionId)) {
     console.log(`[${connectionId}] Session already exists. Closing old one.`);
     try { activeSessions.get(connectionId)?.session?.close?.(); } catch {}
   }
+
+  // Deduplicate concurrent starts
+  if (sessionStarting.has(connectionId)) {
+    console.log(`[${connectionId}] start() already in progress; skipping duplicate call.`)
+    return
+  }
+  sessionStarting.add(connectionId)
 
   if (!process.env.GEMINI_API_KEY) {
     console.error(`[${connectionId}] FATAL: GEMINI_API_KEY not configured.`);
@@ -182,8 +214,9 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+    const liveModel = process.env.GEMINI_LIVE_MODEL || process.env.NEXT_PUBLIC_GEMINI_MODEL || 'gemini-2.0-flash-exp'
     const session = await ai.live.connect({
-      model: 'gemini-live-2.5-flash-preview-native-audio',
+      model: liveModel,
       config: {
         responseModalities: [Modality.AUDIO, Modality.TEXT],
         speechConfig: {
@@ -191,7 +224,8 @@ const protocol = useTls ? 'HTTPS/WSS' : 'HTTP/WS';
           languageCode: lang,
         },
         inputAudioTranscription: { },
-        generationConfig: { maxOutputTokens: DEFAULT_PER_REQUEST_LIMIT },
+        // Set fields directly to avoid deprecation path
+        maxOutputTokens: DEFAULT_PER_REQUEST_LIMIT,
         // Note: audioConfig is not part of LiveConnectConfig types; input/output rates are inferred from payloads
         systemInstruction: {
           parts: [{
@@ -217,6 +251,25 @@ Guidelines:
         onopen: () => {
           console.log(`[${connectionId}] Gemini session opened.`);
           ws.send(JSON.stringify({ type: 'session_started', payload: { connectionId, languageCode: lang, voiceName } }));
+          // Guard: if no client audio arrives quickly, nudge the session with a brief silence to keep it open
+          try { clearTimeout(firstAudioTimers.get(connectionId) as any) } catch {}
+          const timer = setTimeout(async () => {
+            try {
+              const lastAt = lastClientAudioAt.get(connectionId) || 0
+              // Only send a silence frame if truly nothing arrived since open
+              if (Date.now() - lastAt > 300) {
+                const silencePcm16 = Buffer.alloc(1600 * 2) // 100ms @16k mono PCM16
+                const b64 = (Buffer as any).from(silencePcm16).toString('base64')
+                await (session as any).sendRealtimeInput({
+                  audio: { data: b64, mimeType: 'audio/pcm;rate=16000' },
+                })
+                console.log(`[${connectionId}] 🫧 Injected 100ms silence to keep Gemini session warm`)
+              }
+            } catch (e) {
+              console.warn(`[${connectionId}] Silence keepalive failed:`, e)
+            }
+          }, 350)
+          firstAudioTimers.set(connectionId, timer)
         },
         onmessage: (message: LiveServerMessage) => {
           try { handleGeminiMessage(connectionId, ws, message); }
@@ -224,13 +277,24 @@ Guidelines:
             console.error(`[${connectionId}] handleGeminiMessage error`, e?.message || e)
           }
         },
-        onerror: (e: ErrorEvent) => {
-          console.error(`[${connectionId}] Gemini session error:`, e.message);
-          ws.send(JSON.stringify({ type: 'error', payload: { message: `Gemini Error: ${e.message}` } }));
+        onerror: (e: any) => {
+          // Provide richer diagnostics and forward to client for UI display
+          const detail = {
+            message: e?.message || 'unknown',
+            code: e?.code,
+            name: e?.name,
+          }
+          console.error(`[${connectionId}] Gemini session error:`, detail)
+          safeSend(ws as any, JSON.stringify({ type: 'error', payload: { message: `Gemini Error: ${detail.message}`, detail } }));
         },
         onclose: () => {
           console.log(`[${connectionId}] Gemini session closed.`);
-          handleClose(connectionId);
+          // Do not tear down browser WS; just clear active session so next turn can start lazily
+          activeSessions.delete(connectionId)
+          try { clearTimeout(firstAudioTimers.get(connectionId) as any) } catch {}
+          firstAudioTimers.delete(connectionId)
+          // Inform client so it can pause sending audio until re-start
+          safeSend(ws as any, JSON.stringify({ type: 'session_closed', payload: { reason: 'gemini_closed' } }))
         },
       },
     });
@@ -246,6 +310,8 @@ Guidelines:
           await (session as any).sendRealtimeInput({
             audio: { data: chunk.data, mimeType: chunk.mimeType },
           })
+          // Mark that audio reached Gemini successfully
+          lastClientAudioAt.set(connectionId, Date.now())
         } catch (e) {
           console.error(`[${connectionId}] ❌ Failed to send queued chunk:`, e)
         }
@@ -266,6 +332,8 @@ Guidelines:
   } catch (error) {
     console.error(`[${connectionId}] Failed to start Gemini session:`, error);
     ws.send(JSON.stringify({ type: 'error', payload: { message: error instanceof Error ? error.message : 'Failed to start session' } }));
+  } finally {
+    sessionStarting.delete(connectionId)
   }
 }
 
@@ -349,8 +417,9 @@ Guidelines:
 
     async function handleUserMessage(connectionId: string, ws: WebSocket, payload: any) {
         if (payload.audioData && payload.mimeType) {
-            // Strictly enforce expected audio payload format to avoid silent failures
-            if (payload.mimeType !== 'audio/pcm;rate=16000') {
+            // Accept common PCM rates used in the app; forward as-is to Gemini
+            const allowed = payload.mimeType === 'audio/pcm;rate=16000' || payload.mimeType === 'audio/pcm;rate=24000'
+            if (!allowed) {
                 console.warn(`[${connectionId}] ⚠️  Rejected audio chunk due to unexpected mimeType: ${payload.mimeType}`)
                 return
             }
@@ -361,26 +430,20 @@ Guidelines:
             let client = activeSessions.get(connectionId)
             const audioDataBuffer = Buffer.from(payload.audioData, 'base64');
             console.log(`[${connectionId}] Buffered audio chunk (${audioDataBuffer.length} bytes).`);
-            // Try streaming directly if session is ready; otherwise queue
+            lastClientAudioAt.set(connectionId, Date.now())
+            // Never auto-start on raw chunk; require explicit client 'start' to avoid restart loops
             if (!client) {
-                console.log(`[${connectionId}] ⚙️  No active Gemini session; starting now before forwarding chunk...`)
-                try {
-                  await handleStart(connectionId, ws, {})
-                  client = activeSessions.get(connectionId)
-                } catch (e) {
-                  console.error(`[${connectionId}] ❌ Failed to auto-start session:`, e)
-                }
-                if (!client) {
-                  const q = pendingAudioChunks.get(connectionId) || []
-                  q.push({ data: payload.audioData, mimeType: payload.mimeType })
-                  pendingAudioChunks.set(connectionId, q)
-                  return
-                }
+              const q = pendingAudioChunks.get(connectionId) || []
+              q.push({ data: payload.audioData, mimeType: payload.mimeType })
+              pendingAudioChunks.set(connectionId, q)
+              console.log(`[${connectionId}] ⏸️ Queued audio (no active session). Waiting for explicit start.`)
+              return
             }
             try {
                 await (client.session as any).sendRealtimeInput({
                   audio: { data: payload.audioData, mimeType: payload.mimeType },
                 })
+              lastClientAudioAt.set(connectionId, Date.now())
             } catch (e) {
                 console.error(`[${connectionId}] ❌ Failed to forward audio chunk to Gemini:`, e)
                 // Fallback: buffer for batch send (legacy)
@@ -441,8 +504,9 @@ Guidelines:
     function handleClose(connectionId: string) {
         const client = activeSessions.get(connectionId);
         if (client) {
-            client.session.close();
-            if (client.ws.readyState === WebSocket.OPEN) client.ws.close();
+            try { client.session.close(); } catch {}
+            // Do NOT force-close the browser WebSocket; keep it open to allow restart
+            // if (client.ws.readyState === WebSocket.OPEN) client.ws.close();
             activeSessions.delete(connectionId);
         }
         sessionBudgets.delete(connectionId);
@@ -451,7 +515,7 @@ Guidelines:
         console.log(`[${connectionId}] Session removed.`);
     }
 
-    wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
+wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
         const connectionId = uuidv4();
         // Set TCP no-delay to reduce latency for small frames
         try { (req.socket as any)?.setNoDelay?.(true) } catch {}
@@ -459,6 +523,9 @@ Guidelines:
         try { (ws as any).binaryType = 'arraybuffer' } catch {}
         initializeSessionBudget(connectionId);
         console.log(`[${connectionId}] Client connected. Budget initialized.`);
+
+  // Immediately acknowledge connection so client can distinguish WS liveness from Gemini readiness
+  safeSend(ws, JSON.stringify({ type: 'connected', payload: { connectionId } }))
 
         ws.on('message', async (message: WebSocket.RawData) => {
             try {
@@ -473,17 +540,8 @@ Guidelines:
                     case 'TURN_COMPLETE': {
                         let client = activeSessions.get(connectionId)
                         if (!client) {
-                            console.log(`[${connectionId}] 🕒 TURN_COMPLETE received with no session; starting session now.`)
-                            try {
-                              await handleStart(connectionId, ws, {})
-                              client = activeSessions.get(connectionId)
-                            } catch (e) {
-                              console.error(`[${connectionId}] ❌ Failed to auto-start session on TURN_COMPLETE:`, e)
-                            }
-                        }
-                        if (!client) {
                           pendingTurnComplete.set(connectionId, true)
-                          console.log(`[${connectionId}] 🕒 TURN_COMPLETE queued (session not ready).`)
+                          console.log(`[${connectionId}] 🕒 TURN_COMPLETE queued (session not ready). Waiting for explicit start.`)
                           break
                         }
                         if (turnInflight.get(connectionId)) {
@@ -509,11 +567,15 @@ Guidelines:
             }
         });
 
-        ws.on('close', () => {
+  ws.on('close', (code: number, reason: Buffer) => {
+    console.log(`[${connectionId}] Browser WS closed. Code: ${code}, Reason: ${reason?.toString?.() || 'N/A'}`)
           try { activeSessions.get(connectionId)?.session?.close?.() } catch {}
           handleClose(connectionId)
         });
-        ws.on('error', () => handleClose(connectionId));
+        ws.on('error', (err) => {
+    console.error(`[${connectionId}] Browser WS error:`, err)
+          handleClose(connectionId)
+        });
     });
 
     console.log('Server setup complete.');

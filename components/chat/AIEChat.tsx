@@ -29,11 +29,13 @@ import { isFlagEnabled } from '@/lib/flags'
 import CitationDisplay from '@/components/chat/CitationDisplay'
 import SuggestedActions from '@/components/intelligence/SuggestedActions'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { useMeeting } from '@/components/providers/meeting-provider'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 
 export function AIEChat() {
+  const meeting = useMeeting()
   const [sessionId, setSessionId] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null
     const sid = window.localStorage.getItem('intelligence-session-id')
@@ -326,6 +328,7 @@ export function AIEChat() {
         break
       case 'meeting':
         addLog('suggestion → schedule meeting')
+        try { meeting.open() } catch {}
         emitUsed('meeting')
         break
       case 'doc':

@@ -1,6 +1,7 @@
 import { PageHeader, PageShell } from "@/components/page-shell"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { BookCallButton } from '@/components/meeting/BookCallButton'
 import { Check, Zap, Cpu } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
@@ -51,9 +52,7 @@ export default function ConsultingPage() {
             subtitle="Whether you need AI automation, custom chatbot development, or internal AI copilot implementation, I help you build AI solutions that actually work—no fluff, no theory."
           />
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button asChild size="lg">
-              <Link href="/contact">Book Your Free AI Consultation</Link>
-            </Button>
+            <BookCallButton size="lg">Book Your Free AI Consultation</BookCallButton>
           </div>
         </div>
       </PageShell>
@@ -86,9 +85,7 @@ export default function ConsultingPage() {
               <div className="mt-6">
                 <ROICalculator mode="card" />
               </div>
-              <Button asChild className="mt-6 w-full">
-                <Link href="/contact">Request Your Custom AI Consulting Quote</Link>
-              </Button>
+              <BookCallButton className="mt-6 w-full" title="Request a Consulting Call">Request Your Custom AI Consulting Quote</BookCallButton>
             </CardContent>
           </MotionCard>
           </FadeIn>

@@ -6,8 +6,8 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "server": "LIVE_SERVER_PORT=3001 ts-node server/live-server.ts",
-    "dev:all": "concurrently \"pnpm dev\" \"pnpm server\"",
+    "server": "LIVE_SERVER_PORT=3001 tsx --env-file=.env.local server/live-server.ts",
+    "dev:all": "concurrently --names \"next,ws\" --kill-others-on-fail \"pnpm dev\" \"pnpm server\"",
     "dev:check": "node scripts/check-dev-processes.js",
     "dev:live": "concurrently \"pnpm dev\" \"pnpm dev:local-ws\"",
     "dev:local-ws": "LIVE_SERVER_PORT=3001 tsx --env-file=.env.local server/live-server.ts",
@@ -51,6 +51,7 @@
     "@ai-sdk/react": "^2.0.8",
     "@emotion/is-prop-valid": "latest",
     "@google/genai": "latest",
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.9.1",
     "@icons-pack/react-simple-icons": "^13.7.0",
     "@jest/globals": "latest",

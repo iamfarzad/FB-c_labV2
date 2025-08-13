@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { EmailTestPanel } from "@/components/admin/EmailTestPanel"
 import { Users, Calendar, Mail, DollarSign, Activity, TrendingUp, Zap, Plus } from "lucide-react"
+import { BookCallButton } from '@/components/meeting/BookCallButton'
 
 const metrics = [
   {
@@ -48,12 +49,7 @@ const quickActions = [
     icon: Plus,
     action: () => console.log("Add lead"),
   },
-  {
-    title: "Schedule Meeting",
-    description: "Book a consultation",
-    icon: Calendar,
-    action: () => console.log("Schedule meeting"),
-  },
+  // Button will be swapped at render to open MeetingOverlay
   {
     title: "Send Email",
     description: "Create email campaign",
@@ -114,23 +110,57 @@ export function OverviewSection() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action) => {
-              const Icon = action.icon
-              return (
-                <Button
-                  key={action.title}
-                  variant="outline"
-                  className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-accent/5 bg-transparent border border-border/30 hover:border-accent/30"
-                  onClick={action.action}
-                >
-                  <Icon className="w-6 h-6 text-muted-foreground" />
-                  <div className="text-center">
-                    <div className="font-medium text-foreground">{action.title}</div>
-                    <div className="text-xs text-muted-foreground">{action.description}</div>
-                  </div>
-                </Button>
-              )
-            })}
+            {/* Add New Lead */}
+            <Button
+              variant="outline"
+              className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-accent/5 bg-transparent border border-border/30 hover:border-accent/30"
+              onClick={() => console.log('Add lead')}
+            >
+              <Plus className="w-6 h-6 text-muted-foreground" />
+              <div className="text-center">
+                <div className="font-medium text-foreground">Add New Lead</div>
+                <div className="text-xs text-muted-foreground">Capture a new lead</div>
+              </div>
+            </Button>
+
+            {/* Schedule Meeting */}
+            <BookCallButton
+              variant="outline"
+              className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-accent/5 bg-transparent border border-border/30 hover:border-accent/30"
+              title="Book a Consultation"
+            >
+              <Calendar className="w-6 h-6 text-muted-foreground" />
+              <div className="text-center">
+                <div className="font-medium text-foreground">Schedule Meeting</div>
+                <div className="text-xs text-muted-foreground">Book a consultation</div>
+              </div>
+            </BookCallButton>
+
+            {/* Send Email */}
+            <Button
+              variant="outline"
+              className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-accent/5 bg-transparent border border-border/30 hover:border-accent/30"
+              onClick={() => console.log('Send email')}
+            >
+              <Mail className="w-6 h-6 text-muted-foreground" />
+              <div className="text-center">
+                <div className="font-medium text-foreground">Send Email</div>
+                <div className="text-xs text-muted-foreground">Create email campaign</div>
+              </div>
+            </Button>
+
+            {/* View Analytics */}
+            <Button
+              variant="outline"
+              className="h-auto p-4 flex flex-col items-center gap-3 hover:bg-accent/5 bg-transparent border border-border/30 hover:border-accent/30"
+              onClick={() => console.log('View analytics')}
+            >
+              <TrendingUp className="w-6 h-6 text-muted-foreground" />
+              <div className="text-center">
+                <div className="font-medium text-foreground">View Analytics</div>
+                <div className="text-xs text-muted-foreground">Check performance</div>
+              </div>
+            </Button>
           </div>
         </CardContent>
       </Card>
