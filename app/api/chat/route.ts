@@ -30,8 +30,8 @@ interface EnhancedChatData {
   enableGoogleSearch?: boolean;
   thinkingBudget?: number;
   tools?: Array<{
-    urlContext?: {};
-    googleSearch?: {};
+    urlContext?: Record<string, never>;
+    googleSearch?: Record<string, never>;
   }>;
   conversationSessionId?: string;
   enableLeadGeneration?: boolean;
@@ -90,7 +90,7 @@ function logConsoleActivity(level: 'info' | 'warn' | 'error', message: string, m
     ...metadata
   };
   
-  console.log(JSON.stringify(logEntry));
+  console.info(JSON.stringify(logEntry));
   return correlationId;
 }
 
@@ -103,7 +103,7 @@ async function processUrlContext(message: string, correlationId: string): Promis
       return '';
     }
 
-    console.log(`🔗 Found ${urls.length} URLs to analyze:`, urls);
+    console.info(`🔗 Found ${urls.length} URLs to analyze:`, urls);
 
     // Analyze URLs (limit to first 3 for performance)
     const urlsToAnalyze = urls.slice(0, 3);
@@ -144,7 +144,7 @@ async function processUrlContext(message: string, correlationId: string): Promis
 async function processGoogleSearch(message: string, leadContext: any, correlationId: string): Promise<string> {
   try {
     if (!GoogleSearchService.isConfigured()) {
-      console.log('Google Search API not configured, skipping search');
+      console.info('Google Search API not configured, skipping search');
       return '';
     }
 
@@ -170,7 +170,7 @@ async function processGoogleSearch(message: string, leadContext: any, correlatio
       searchQuery = searchQuery.replace(/^(what|who|when|where|why|how)\s+/gi, '').trim();
       
       if (searchQuery.length > 0) {
-        console.log(`🔍 Performing Google search for: "${searchQuery}"`);
+        console.info(`🔍 Performing Google search for: "${searchQuery}"`);
         
         const response = await GoogleSearchService.search(searchQuery, {
           num: 5,
@@ -186,7 +186,7 @@ async function processGoogleSearch(message: string, leadContext: any, correlatio
 
     // If we have lead context, search for additional information about the person/company
     if (leadContext && leadContext.name && leadContext.name.trim() !== '') {
-      console.log(`🔍 Searching for lead information: ${leadContext.name}`);
+      console.info(`🔍 Searching for lead information: ${leadContext.name}`);
       
       const personSearch = await GoogleSearchService.searchPerson(
         leadContext.name,
@@ -207,7 +207,7 @@ async function processGoogleSearch(message: string, leadContext: any, correlatio
       
       // Also search for company information if available
       if (leadContext.company && leadContext.company.trim() !== '') {
-        console.log(`🔍 Searching for company information: ${leadContext.company}`);
+        console.info(`🔍 Searching for company information: ${leadContext.company}`);
         
         const companySearch = await GoogleSearchService.searchCompany(
           leadContext.company,
@@ -280,7 +280,7 @@ Response Style:
 `
 
   // Add lead context if available and valid
-  console.log('🔍 Lead context received:', { leadContext, sessionId });
+  console.info('🔍 Lead context received:', { leadContext, sessionId });
   
   if (leadContext && leadContext.name && leadContext.name.trim() !== '') {
     let enhancedContext = `${basePrompt}
@@ -316,9 +316,9 @@ Current Client Context:
           
           if (!error && leads && leads.length > 0) {
             lead = leads[0];
-            console.log('✅ Found lead in database:', { leadId: lead.id, email: lead.email });
+            console.info('✅ Found lead in database:', { leadId: lead.id, email: lead.email });
           } else {
-            console.log('❌ No lead found for email:', leadContext.email);
+            console.info('❌ No lead found for email:', leadContext.email);
           }
         } catch (dbError) {
           console.error('Failed to fetch lead from database:', dbError);
@@ -330,10 +330,10 @@ Current Client Context:
       }
       
       if (lead) {
-        console.log('🔍 Fetching search results for lead:', lead.id);
+        console.info('🔍 Fetching search results for lead:', lead.id);
         const searchResults = await leadManager.getLeadSearchResults(lead.id);
         
-        console.log('📊 Search results found:', searchResults?.length || 0);
+        console.info('📊 Search results found:', searchResults?.length || 0);
         
         if (searchResults && searchResults.length > 0) {
           enhancedContext += `
@@ -415,7 +415,7 @@ export async function POST(req: NextRequest) {
 
     // Parse and validate request
     const rawData = await req.json();
-    console.log('📥 Chat API Request:', {
+    console.info('📥 Chat API Request:', {
       messageCount: rawData.messages?.length,
       sessionId: rawData.sessionId,
       conversationSessionId: rawData.conversationSessionId,
@@ -442,7 +442,8 @@ export async function POST(req: NextRequest) {
       thinkingBudget = -1,
       tools = [{ urlContext: {} }, { googleSearch: {} }],
       conversationSessionId,
-      enableLeadGeneration = true
+      // Default OFF for legacy lead stages; use env flag LEAD_STAGES_ENABLED to turn on explicitly
+      enableLeadGeneration = false
     } = enhancedData;
 
     // Enforce consent hard-gate: require cookie fbc-consent.allow === true
@@ -480,19 +481,20 @@ export async function POST(req: NextRequest) {
     let conversationResult = null;
     let leadData = leadContext;
     
-    console.log('🔍 Lead generation check:', {
+    console.info('🔍 Lead generation check:', {
       enableLeadGeneration,
       conversationSessionId,
       sessionId,
       condition: enableLeadGeneration && (conversationSessionId || sessionId)
     });
     
-    if (enableLeadGeneration && (conversationSessionId || sessionId)) {
+    const leadStagesEnabled = process.env.LEAD_STAGES_ENABLED === 'true'
+    if (enableLeadGeneration && leadStagesEnabled && (conversationSessionId || sessionId)) {
       try {
         const conversationManager = ConversationStateManager.getInstance();
         const effectiveSessionId = conversationSessionId || sessionId || `session-${Date.now()}`;
         
-        console.log('🎯 Initializing conversation manager with session:', effectiveSessionId);
+        console.info('🎯 Initializing conversation manager with session:', effectiveSessionId);
         
         // Initialize conversation state if it doesn't exist
         let conversationState = conversationManager.getConversationState(effectiveSessionId);
@@ -512,7 +514,7 @@ export async function POST(req: NextRequest) {
           leadData = { ...leadData, ...conversationResult.updatedState.context.leadData };
         }
         
-        console.log('🎯 Conversation state processed:', {
+        console.info('🎯 Conversation state processed:', {
           sessionId: effectiveSessionId,
           currentStage: conversationResult.newStage,
           shouldTriggerResearch: conversationResult.shouldTriggerResearch,
@@ -521,7 +523,7 @@ export async function POST(req: NextRequest) {
         
         // Trigger company research if needed
         if (conversationResult.shouldTriggerResearch && leadData?.email) {
-          console.log('🔍 Triggering company research for:', leadData.email);
+          console.info('🔍 Triggering company research for:', leadData.email);
           // This will be handled by the Google Search processing below
         }
         
@@ -625,9 +627,7 @@ export async function POST(req: NextRequest) {
 
 **Stage-Specific Instructions:**
 ${getStageInstructions(conversationResult.newStage)}
-
-**Important:** Use the conversation stage response provided by the system. The response has already been crafted for this stage.
-Response to use: "${conversationResult.response}"`;
+`;
     }
     
     // Append URL context and search results to system prompt
@@ -720,7 +720,7 @@ Response to use: "${conversationResult.response}"`;
         thinkingConfig: { thinkingBudget: thinkingBudget },
         tools,
       }
-      console.log(`💡 Chat optimization: ${optimizedContent.usedCache ? 'Used cache' : 'Created new'}, estimated tokens: ${optimizedContent.estimatedTokens}${optimizedContent.summary ? ', with summary' : ''}`)
+      console.info(`💡 Chat optimization: ${optimizedContent.usedCache ? 'Used cache' : 'Created new'}, estimated tokens: ${optimizedContent.estimatedTokens}${optimizedContent.summary ? ', with summary' : ''}`)
       try {
         responseStream = await model({ model: modelSelection.model, config, contents })
         actualOutputTokens = Math.min(optimizedConfig.maxOutputTokens, actualInputTokens * 0.6)
@@ -795,7 +795,7 @@ Response to use: "${conversationResult.response}"`;
         const encoder = new TextEncoder();
         try {
           // Send conversation state as first event if available
-          console.log('🎯 Stream start - conversationResult:', conversationResult ? {
+          console.info('🎯 Stream start - conversationResult:', conversationResult ? {
             newStage: conversationResult.newStage,
             hasLeadData: !!leadData
           } : 'null');
@@ -809,7 +809,7 @@ Response to use: "${conversationResult.response}"`;
                 company: leadData.company || leadData.emailDomain
               } : undefined
             };
-            console.log('🎯 Sending conversation state:', stateData);
+            console.info('🎯 Sending conversation state:', stateData);
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(stateData)}\n\n`));
           }
 
