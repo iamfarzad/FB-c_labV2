@@ -129,7 +129,7 @@ export function AIEChat() {
             // If consent was already given, check for existing session ID
             const existingSessionId = window.localStorage.getItem('intelligence-session-id')
             if (existingSessionId) {
-              console.log('🔄 Restoring existing session:', existingSessionId)
+              console.info('🔄 Restoring existing session:', existingSessionId)
               setSessionId(existingSessionId)
             }
           }
@@ -399,7 +399,7 @@ export function AIEChat() {
       const ce = e as CustomEvent<any>
       if (ce.detail?.name) {
         // Capability usage is now tracked server-side via context
-        console.log(`Capability used: ${ce.detail.name}`)
+        console.info(`Capability used: ${ce.detail.name}`)
       }
     }
     window.addEventListener('chat-server-event', onServerEvent as EventListener)
@@ -507,7 +507,10 @@ export function AIEChat() {
                       <Reasoning defaultOpen={false} isStreaming={isLoading} duration={3}>
                         <ReasoningTrigger>
                           <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                            <p>Thinking…</p>
+                  <p>Thinking…</p>
+                  {process.env.NEXT_PUBLIC_PERSONA === 'farzad' && (
+                    <p className="text-xs text-muted-foreground">Quick wit mode on ⚡</p>
+                  )}
                           </div>
                         </ReasoningTrigger>
                         <ReasoningContent>Model is processing your last input.</ReasoningContent>
@@ -569,7 +572,7 @@ export function AIEChat() {
               {false && (
                 <Message from="assistant">
                   <MessageContent>
-                    <CodeBlock code={`console.log('hello')`} language="ts">
+                    <CodeBlock code={`console.info('hello')`} language="ts">
                       <CodeBlockCopyButton />
                     </CodeBlock>
                   </MessageContent>

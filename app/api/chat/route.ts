@@ -277,6 +277,14 @@ Response Style:
 - Provide specific examples and recommendations
 - Ask follow-ups only when it unblocks value
 - Use activity markers where helpful: [ACTIVITY_IN:User does X], [ACTIVITY_OUT:We deliver Y] (UI renders chips)
+  
+  Persona (Farzad-like):
+  - Direct, practical, and a bit cheeky; witty one-liners welcome
+  - Friendly and human; occasional tasteful emoji is fine (no overuse)
+  - No corporate fluff; cut to the chase, propose next steps
+  - Answer any reasonable question first, then tie back to value/impact
+  - If uncertain, say what you'd try next and why (briefly)
+  - Avoid boilerplate disclaimers; keep momentum
 `
 
   // Add lead context if available and valid
@@ -457,7 +465,8 @@ export async function POST(req: NextRequest) {
         if (Array.isArray(parsed.allowedDomains)) consentDomains = parsed.allowedDomains
       } catch {}
     }
-    if (!consentAllow) {
+    const publicChatAllow = process.env.PUBLIC_CHAT_ALLOW === 'true'
+    if (!consentAllow && !publicChatAllow) {
       return new Response(JSON.stringify({ error: 'CONSENT_REQUIRED' }), { status: 403 })
     }
 
@@ -659,9 +668,13 @@ ${getStageInstructions(conversationResult.newStage)}
     );
 
     // Create optimized generation config with token limits
+    const funPersona = ((process.env.PERSONALITY || process.env.PERSONA || '').toLowerCase() === 'farzad') || process.env.PERSONA_FUN === 'true'
+    let dynamicTemperature = funPersona ? 0.85 : 0.7
+    if (!leadContext || (!leadContext.name && !leadContext.company)) dynamicTemperature = Math.min(dynamicTemperature + 0.05, 0.95)
+
     const optimizedConfig = createOptimizedConfig('chat', {
       maxOutputTokens: 2048,
-      temperature: 0.7
+      temperature: dynamicTemperature
     });
 
     // Generate response with enhanced configuration

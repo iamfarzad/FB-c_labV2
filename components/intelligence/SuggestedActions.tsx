@@ -52,6 +52,8 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun }: Props) 
   if (isLoading && suggestions.length === 0) return null
 
   // Only surface PDF-related CTAs as chips; all other tools (search, video2app, etc.)
+  // Persona hint: show a playful nudge when persona is farzad
+  const personaHint = process.env.NEXT_PUBLIC_PERSONA === 'farzad'
   // should render inline when the AI actually uses them.
   // Ensure we always surface a booking CTA alongside PDF
   const hasMeeting = suggestions.some(s => s?.capability === 'meeting')

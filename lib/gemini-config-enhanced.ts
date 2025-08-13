@@ -286,7 +286,7 @@ export class GeminiConfigEnhanced {
       this.conversationCache.delete(key);
     });
 
-    console.log(`🧹 Cleared ${expiredKeys.length} expired cache entries`);
+    console.info(`🧹 Cleared ${expiredKeys.length} expired cache entries`);
   }
 
   /**
@@ -309,7 +309,7 @@ export class GeminiConfigEnhanced {
   clearAllCache(): void {
     this.conversationCache.clear();
     this.systemPromptCache.clear();
-    console.log('🧹 All cache entries cleared');
+    console.info('🧹 All cache entries cleared');
   }
 }
 
@@ -320,7 +320,14 @@ export const createOptimizedConfig = (
   feature: 'chat' | 'analysis' | 'document' | 'live' | 'research' | 'text_generation' | 'document_analysis',
   customLimits?: Partial<EnhancedGenerationConfig>
 ) => {
-  return geminiConfig.createGenerationConfig(feature, customLimits);
+  const personaFun = (process.env.PERSONALITY || process.env.PERSONA || '').toLowerCase() === 'farzad' || process.env.PERSONA_FUN === 'true'
+  const limits = { ...customLimits }
+  if (personaFun) {
+    // Slightly increase temperature for a more human, lively tone, but keep within 0.95
+    const baseTemp = limits.temperature ?? 0.7
+    limits.temperature = Math.min(0.95, baseTemp + 0.15)
+  }
+  return geminiConfig.createGenerationConfig(feature, limits);
 };
 
 export const optimizeConversation = (messages: ConversationMessage[], systemPrompt: string, sessionId: string, maxHistoryTokens?: number) => {
