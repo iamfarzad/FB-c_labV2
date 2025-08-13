@@ -66,8 +66,8 @@ export async function POST(req: NextRequest) {
     const emailSent = await EmailService.sendMeetingConfirmationEmail({
       attendeeName: bookingData.name,
       attendeeEmail: bookingData.email,
-      date: MeetingScheduler.formatMeetingDate(bookingData.preferredDate),
-      time: MeetingScheduler.formatMeetingTime(bookingData.preferredTime, bookingData.timeZone),
+      date: bookingData.preferredDate,
+      time: bookingData.preferredTime,
       duration: 30,
       meetingLink,
     })

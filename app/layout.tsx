@@ -2,6 +2,7 @@ import type React from "react"
 import { Inter, Rajdhani, Space_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { MeetingProvider } from "@/components/providers/meeting-provider"
 import { DemoSessionProvider } from "@/components/demo-session-manager"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
@@ -40,13 +41,15 @@ export default function RootLayout({
       <body className={cn("font-sans antialiased", fontSans.variable, fontDisplay.variable, fontMono.variable)}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <DemoSessionProvider>
-            <Header />
-            <main className="min-h-screen">
-              {children}
-            </main>
-            <Footer />
-            <Toaster />
-            <PermissionManager />
+            <MeetingProvider>
+              <Header />
+              <main className="min-h-screen">
+                {children}
+              </main>
+              <Footer />
+              <Toaster />
+              <PermissionManager />
+            </MeetingProvider>
           </DemoSessionProvider>
         </ThemeProvider>
       </body>

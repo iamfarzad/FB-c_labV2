@@ -55,7 +55,8 @@ export async function POST(req: NextRequest) {
         httpOptions: { apiVersion: 'v1alpha' },
       },
     })
-    const token = minted.name
+    // SDKs have returned different field names across versions; prefer explicit value fields
+    const token = (minted as any)?.token || (minted as any)?.clientToken || (minted as any)?.value || (minted as any)?.name
     const expiresAt = Date.now() + 30 * 60_000
     if (sessionId) tokens.set(sessionId, { token, expiresAt })
 

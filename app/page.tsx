@@ -1,6 +1,7 @@
 import { PageHeader, PageShell } from "@/components/page-shell"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { BookCallButton } from '@/components/meeting/BookCallButton'
 import Link from "next/link"
 import { ArrowRight, Lightbulb, Star, Users } from "lucide-react"
 import { FbcIcon } from "@/components/ui/fbc-icon"
@@ -103,12 +104,10 @@ export default function HomePage() {
             I build practical AI automation solutions that deliver real business results—not just hype.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Button asChild size="lg" className="bg-accent hover:bg-accent/90">
-              <Link href="/contact">
-                Start Your AI Project
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            <BookCallButton size="lg" className="bg-accent hover:bg-accent/90" title="Book Your Free AI Consultation">
+              Start Your AI Project
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </BookCallButton>
             <Button asChild variant="outline" size="lg" className="border-primary hover:bg-primary/10">
               <Link href="/chat" className="flex items-center">
                 <FbcIcon className="mr-2 h-4 w-4" />
@@ -224,9 +223,7 @@ export default function HomePage() {
             <p className="text-muted-foreground mb-6">
               Let's discuss how AI automation can streamline your workflows and boost productivity.
             </p>
-            <Button asChild className="w-full bg-accent hover:bg-accent/90">
-              <Link href="/contact">Schedule Free Consultation</Link>
-            </Button>
+            <BookCallButton className="w-full bg-accent hover:bg-accent/90" title="Schedule Free Consultation" />
           </div>
         </div>
       </PageShell>

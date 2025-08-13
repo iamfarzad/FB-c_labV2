@@ -1,4 +1,5 @@
 import { PageHeader, PageShell } from "@/components/page-shell"
+import { BookCallButton } from '@/components/meeting/BookCallButton'
 import { Button } from "@/components/ui/button"
 import { Calendar, Mail } from "lucide-react"
 import { Card } from "@/components/ui/card"
@@ -37,11 +38,9 @@ export default function ContactPage() {
           </div>
           <h3 className="text-xl font-bold">Schedule Your AI Consultation</h3>
           <p className="mt-2 text-muted-foreground">Book a free 30‑minute call. Picks a time from my live availability.</p>
-          {/* Cal.com inline embed */}
-          <div className="mt-6 w-full rounded-xl border bg-background/60 p-2 md:p-4">
-            <script src="https://app.cal.com/embed/embed.js" defer />
-            {/* username/event can be changed here */}
-            <cal-inline data-ui="true" username="farzad-bayat" event="30min" style={{ width: '100%', height: '650px' }} />
+          <div className="mt-6 w-full rounded-xl border bg-background/60 p-6 text-center">
+            <p className="text-muted-foreground mb-4">Prefer a popup? Use the button below.</p>
+            <BookCallButton title="Book Your Free AI Consultation">Open Scheduler</BookCallButton>
           </div>
         </MotionCard>
         </FadeIn>

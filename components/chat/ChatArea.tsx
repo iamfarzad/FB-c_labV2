@@ -40,13 +40,6 @@ import {
   InlineCitationCard,
   InlineCitationCardTrigger,
   InlineCitationCardBody,
-  InlineCitationCarousel,
-  InlineCitationCarouselContent,
-  InlineCitationCarouselItem,
-  InlineCitationCarouselHeader,
-  InlineCitationCarouselIndex,
-  InlineCitationCarouselPrev,
-  InlineCitationCarouselNext,
   InlineCitationSource,
 } from "@/components/ai-elements/inline-citation"
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ai-elements/reasoning"
@@ -55,6 +48,7 @@ import { Response } from "@/components/ai-elements/response"
 import { Actions, Action } from "@/components/ai-elements/actions"
 import { Loader } from "@/components/ai-elements/loader"
 import { WebPreview, WebPreviewNavigation, WebPreviewNavigationButton, WebPreviewUrl, WebPreviewBody, WebPreviewConsole } from "@/components/ai-elements/web-preview"
+import { useMeeting } from '@/components/providers/meeting-provider'
 import { Suggestions, Suggestion } from "@/components/ai-elements/suggestion"
 import { ActivityChip } from "@/components/chat/activity/ActivityChip"
 import type { 
@@ -105,6 +99,7 @@ export const ChatArea = memo(function ChatArea({
   onOpenVoice,
   voiceDraft
 }: ChatAreaProps) {
+  const meeting = useMeeting()
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   // Auto-scroll to bottom when new messages arrive
@@ -267,26 +262,14 @@ export const ChatArea = memo(function ChatArea({
                   {children}
                 </a>
               </InlineCitationText>
-              <InlineCitationCard>
-                <InlineCitationCardTrigger sources={[url]} />
-                <InlineCitationCardBody>
-                  <InlineCitationCarousel>
-                    <InlineCitationCarouselContent>
-                      <InlineCitationCarouselItem>
-                        <InlineCitationCarouselHeader>
-                          <span className="text-xs font-medium truncate">
-                            {src.title || (src.url ? new URL(src.url).hostname : 'Source')}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            <InlineCitationCarouselIndex>1/1</InlineCitationCarouselIndex>
-                          </div>
-                        </InlineCitationCarouselHeader>
-                        <InlineCitationSource title={src.title} url={src.url} description={src.description} />
-                      </InlineCitationCarouselItem>
-                    </InlineCitationCarouselContent>
-                  </InlineCitationCarousel>
-                </InlineCitationCardBody>
-              </InlineCitationCard>
+                <InlineCitationCard>
+                  <InlineCitationCardTrigger sources={[url]} />
+                  <InlineCitationCardBody>
+                    <div className="p-3">
+                      <InlineCitationSource title={src.title} url={src.url} description={src.description} />
+                    </div>
+                  </InlineCitationCardBody>
+                </InlineCitationCard>
             </InlineCitation>
           )
         }
@@ -461,7 +444,8 @@ export const ChatArea = memo(function ChatArea({
 
     switch (toolType) {
       case 'voice_input':
-        return <VoiceInput mode="card" onClose={handleCancel} onTranscript={(transcript: string) => onVoiceTranscript(transcript)} />
+        // Deprecated inline card to avoid double-mounting the voice hook; use the global VoiceOverlay instead
+        return null
       case 'webcam_capture':
         return (
           <Tool className="rounded-2xl border-border/30">
@@ -513,10 +497,13 @@ export const ChatArea = memo(function ChatArea({
           <Tool className="rounded-2xl border-border/30">
             <ToolHeader type={`tool-meeting`} state={"input-available"} />
             <ToolContent>
-              <div className="w-full">
-                {/* Cal.com inline embed */}
-                <script src="https://app.cal.com/embed/embed.js" defer />
-                <cal-inline username="farzad-bayat" event="30min" style={{ width: '100%', height: '540px' }} />
+              <div className="w-full text-center">
+                <button
+                  className="inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm hover:bg-muted"
+                  onClick={() => meeting.open({ title: 'Book a Call' })}
+                >
+                  Open Scheduler
+                </button>
               </div>
             </ToolContent>
           </Tool>

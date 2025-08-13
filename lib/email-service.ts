@@ -8,6 +8,7 @@ export interface EmailTemplate {
   subject: string
   html: string
   tags?: Record<string, string>
+  attachments?: Array<{ filename: string; content: string | Uint8Array; contentType?: string }>
 }
 
 export class EmailService {
@@ -24,6 +25,7 @@ export class EmailService {
         subject: template.subject,
         html: template.html,
         tags: template.tags ? Object.entries(template.tags).map(([key, value]) => ({ name: key, value })) : undefined,
+        attachments: template.attachments?.map(a => ({ filename: a.filename, content: a.content as any, contentType: a.contentType }))
       })
 
       if (error) {
@@ -114,6 +116,36 @@ export class EmailService {
     duration: number
     meetingLink?: string
   }) {
+    function toICSDate(d: Date): string {
+      return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z')
+    }
+    // Build naive local datetime; adjust to UTC for ICS
+    const startLocal = new Date(`${meeting.date}T${meeting.time}:00`)
+    const endLocal = new Date(startLocal.getTime() + meeting.duration * 60 * 1000)
+    const dtStart = toICSDate(startLocal)
+    const dtEnd = toICSDate(endLocal)
+    const uid = `${Date.now()}@farzadbayat.com`
+    const organizerEmail = 'contact@farzadbayat.com'
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//F.B/c//Meeting//EN',
+      'METHOD:REQUEST',
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${toICSDate(new Date())}`,
+      `DTSTART:${dtStart}`,
+      `DTEND:${dtEnd}`,
+      'SUMMARY:AI Consultation with F.B/c',
+      `DESCRIPTION:AI consultation with F.B/c. ${meeting.meetingLink ? 'Link: ' + meeting.meetingLink : ''}`,
+      `ORGANIZER;CN=F.B/c:mailto:${organizerEmail}`,
+      `ATTENDEE;CN=${meeting.attendeeName};RSVP=TRUE:mailto:${meeting.attendeeEmail}`,
+      `${meeting.meetingLink ? `LOCATION:${meeting.meetingLink}` : 'LOCATION:Online'}`,
+      'END:VEVENT',
+      'END:VCALENDAR',
+      ''
+    ].join('\r\n')
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -187,6 +219,9 @@ export class EmailService {
       subject: `Meeting Confirmed: AI Consultation with F.B/c - ${meeting.date}`,
       html,
       tags: { type: "meeting_confirmation", attendee_email: meeting.attendeeEmail },
+      attachments: [
+        { filename: 'meeting.ics', content: ics, contentType: 'text/calendar' }
+      ]
     })
   }
 

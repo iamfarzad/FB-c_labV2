@@ -4,6 +4,7 @@ import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Mic, X } from "@/lib/icon-mapping"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { FbcIcon } from "@/components/ui/fbc-icon"
 import { useWebSocketVoice } from '@/hooks/use-websocket-voice'
 import { useVoiceRecorder } from '@/hooks/use-voice-recorder'
@@ -20,6 +21,7 @@ export function VoiceOverlay({ open, onCancel, onAccept }: VoiceOverlayProps) {
   const overlayRef = React.useRef<HTMLDivElement | null>(null)
 
   const {
+    session,
     isConnected,
     isProcessing,
     transcript,
@@ -45,15 +47,24 @@ export function VoiceOverlay({ open, onCancel, onAccept }: VoiceOverlayProps) {
     ;(async () => {
       prevFocusRef.current = (document.activeElement as HTMLElement) || null
       if (!hasPermission) await requestPermission()
-      try { await startSession() } catch {}
+      // Do not auto-start Gemini session here; it can idle-close if no audio arrives.
+      // Session will start on first press-to-talk.
     })()
     return () => {
       try { stopRecording() } catch {}
-      stopSession()
       try { prevFocusRef.current?.focus() } catch {}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
+
+  const waitForSessionReady = async (timeoutMs = 5000) => {
+    const start = Date.now()
+    while (Date.now() - start < timeoutMs) {
+      if (session?.isActive) return true
+      await new Promise(r => setTimeout(r, 100))
+    }
+    return false
+  }
 
   const handleToggle = async () => {
     if (isRecording) {
@@ -62,10 +73,14 @@ export function VoiceOverlay({ open, onCancel, onAccept }: VoiceOverlayProps) {
       if (transcript) onAccept(transcript)
       try { (navigator as any)?.vibrate?.(15) } catch {}
     } else {
-      if (!isConnected) { try { await startSession() } catch {} }
+      // Start mic capture FIRST so early chunks queue and flush as soon as WS opens
       const ok = await requestPermission()
       if (!ok) return
       await startRecording()
+      if (!isConnected || !session?.isActive) {
+        try { await startSession() } catch {}
+        // No hard wait; chunks will queue and flush on open
+      }
       try { (navigator as any)?.vibrate?.(10) } catch {}
     }
   }
@@ -117,29 +132,39 @@ export function VoiceOverlay({ open, onCancel, onAccept }: VoiceOverlayProps) {
             {/* Orb */}
             <div className="relative">
               <div className="absolute inset-0 -z-10 rounded-full opacity-20" style={{background:'radial-gradient(60% 60% at 50% 50%, hsl(var(--accent)), transparent 70%)'}} />
-              <button onClick={handleToggle} className="relative size-44 md:size-56 rounded-full outline-none select-none">
-                <div className="absolute inset-0 rounded-full bg-[hsl(var(--card))] shadow-[0_0_0_1px_hsl(var(--border))_inset]" />
-                <div className="absolute inset-2 rounded-full" style={{background:'radial-gradient(70% 70% at 50% 40%, hsl(var(--accent)), transparent 70%)', opacity:0.18}} />
-                {!isRecording && (<div className="absolute -inset-[6px] rounded-full border border-[hsl(var(--border))]" />)}
-                {isRecording && (<>
-                  <div className="absolute -inset-[10px] rounded-full border border-[hsl(var(--accent))] opacity-60 animate-pulse" />
-                  <div className="absolute -inset-[22px] rounded-full border border-[hsl(var(--accent))] opacity-20 animate-ping" />
-                  <div className="absolute inset-0 rounded-full" style={{maskImage:'radial-gradient(circle at 50% 50%, transparent 45%, black 46%)'}}>
-                    <div className="absolute inset-0 rounded-full animate-[spin_3s_linear_infinite] border border-[hsl(var(--accent))] opacity-30" />
-                  </div>
-                </>)}
-                <div className="absolute inset-0 grid place-items-center">
-                  <FbcIcon className="size-8 opacity-90" />
-                </div>
-              </button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button onClick={handleToggle} className="relative size-44 md:size-56 rounded-full outline-none select-none">
+                      <div className="absolute inset-0 rounded-full bg-[hsl(var(--card))] shadow-[0_0_0_1px_hsl(var(--border))_inset]" />
+                      <div className="absolute inset-2 rounded-full" style={{background:'radial-gradient(70% 70% at 50% 40%, hsl(var(--accent)), transparent 70%)', opacity:0.18}} />
+                      {!isRecording && (<div className="absolute -inset-[6px] rounded-full border border-[hsl(var(--border))]" />)}
+                      {isRecording && (<>
+                        <div className="absolute -inset-[10px] rounded-full border border-[hsl(var(--accent))] opacity-60 animate-pulse" />
+                        <div className="absolute -inset-[22px] rounded-full border border-[hsl(var(--accent))] opacity-20 animate-ping" />
+                        <div className="absolute inset-0 rounded-full" style={{maskImage:'radial-gradient(circle at 50% 50%, transparent 45%, black 46%)'}}>
+                          <div className="absolute inset-0 rounded-full animate-[spin_3s_linear_infinite] border border-[hsl(var(--accent))] opacity-30" />
+                        </div>
+                      </>)}
+                      <div className="absolute inset-0 grid place-items-center">
+                        <FbcIcon className="size-8 opacity-90" />
+                      </div>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Press to talk</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
-            {/* Controls */}
+            {/* Controls (single cancel action – orb acts as press-to-talk) */}
             <div className="flex items-center gap-3">
-              <Button data-test="toggle-voice" size="icon" className="w-12 h-12 rounded-full" onClick={handleToggle} aria-label="Toggle recording">
-                <Mic className="w-5 h-5" />
-              </Button>
-              <Button variant="outline" size="icon" className="w-12 h-12 rounded-full" onClick={onCancel} aria-label="Cancel">
+              <Button
+                variant="outline"
+                size="icon"
+                className="w-12 h-12 rounded-full"
+                onClick={() => { try { stopRecording() } catch {}; stopSession(); onCancel() }}
+                aria-label="Cancel"
+              >
                 <X className="w-5 h-5" />
               </Button>
             </div>
@@ -154,8 +179,13 @@ export function VoiceOverlay({ open, onCancel, onAccept }: VoiceOverlayProps) {
                 />
               </div>
               <div className="h-24 rounded-xl border bg-card/70 p-3 text-sm overflow-auto" aria-live="polite">
-                {transcript || (isRecording ? "Listening… press again to stop" : "Press to talk, then Accept")}
+                {transcript || (isRecording ? "Listening… press again to stop" : "Press the orb to talk, then Accept")}
               </div>
+              {(websocketError || recorderError) && (
+                <div className="mt-2 text-xs text-destructive">
+                  {websocketError || recorderError}
+                </div>
+              )}
               <div className="mt-4 flex justify-center">
                 <Button onClick={handleAccept} disabled={!transcript}>Use transcript</Button>
               </div>
