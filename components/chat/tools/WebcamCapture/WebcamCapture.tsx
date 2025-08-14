@@ -53,6 +53,27 @@ export function WebcamCapture({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const autoAnalysisInterval = useRef<ReturnType<typeof setInterval> | null>(null)
   const sessionIdRef = useRef<string>(`webcam-session-${Date.now()}`)
+  const videoReadyRef = useRef<boolean>(false)
+
+  async function waitForVideoReady(video: HTMLVideoElement): Promise<void> {
+    if (!video) return
+    if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+      videoReadyRef.current = true
+      return
+    }
+    await new Promise<void>((resolve) => {
+      const onMeta = () => {
+        void video.play().catch(() => {})
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+          videoReadyRef.current = true
+          video.removeEventListener('loadedmetadata', onMeta)
+          resolve()
+        }
+      }
+      video.addEventListener('loadedmetadata', onMeta)
+      setTimeout(onMeta, 500)
+    })
+  }
 
   // Send video frame for analysis
   const sendVideoFrame = useCallback(async (imageData: string) => {
@@ -103,7 +124,7 @@ export function WebcamCapture({
 
   // Auto-analysis interval with throttling and cost awareness
   useEffect(() => {
-    if (isAutoAnalyzing && webcamState === "active") {
+    if (isAutoAnalyzing && webcamState === "active" && videoReadyRef.current) {
       let analysisCount = 0;
       const maxAnalysisPerSession = 15; // Limit webcam analysis more strictly
       
@@ -115,7 +136,7 @@ export function WebcamCapture({
           return;
         }
 
-        if (videoRef.current && canvasRef.current && !isAnalyzing) {
+        if (videoRef.current && canvasRef.current && !isAnalyzing && videoRef.current.readyState >= 2 && videoRef.current.videoWidth > 0) {
           const canvas = canvasRef.current
           const video = videoRef.current
           
@@ -188,6 +209,7 @@ export function WebcamCapture({
       setWebcamState("active")
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream
+        await waitForVideoReady(videoRef.current)
       }
       
       toast({
@@ -306,6 +328,10 @@ export function WebcamCapture({
       const canvas = canvasRef.current
       const video = videoRef.current
 
+      if (video.videoWidth === 0 || video.videoHeight === 0 || video.readyState < 2) {
+        setError('Camera is warming up… try again in a moment')
+        return
+      }
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
 

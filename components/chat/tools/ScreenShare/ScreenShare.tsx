@@ -39,6 +39,27 @@ export function ScreenShare({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const autoAnalysisIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const sessionIdRef = useRef<string>(`screen-session-${Date.now()}`)
+  const videoReadyRef = useRef<boolean>(false)
+
+  async function waitForScreenReady(video: HTMLVideoElement): Promise<void> {
+    if (!video) return
+    if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+      videoReadyRef.current = true
+      return
+    }
+    await new Promise<void>((resolve) => {
+      const onMeta = () => {
+        void video.play().catch(() => {})
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+          videoReadyRef.current = true
+          video.removeEventListener('loadedmetadata', onMeta)
+          resolve()
+        }
+      }
+      video.addEventListener('loadedmetadata', onMeta)
+      setTimeout(onMeta, 500)
+    })
+  }
 
   const sendScreenFrame = useCallback(async (imageData: string) => {
     try {
@@ -73,7 +94,7 @@ export function ScreenShare({
 
   // Auto-analysis interval with throttling and cost awareness
   useEffect(() => {
-    if (isAutoAnalyzing && screenState === "sharing") {
+    if (isAutoAnalyzing && screenState === "sharing" && videoReadyRef.current) {
       let analysisCount = 0;
       const maxAnalysisPerSession = 20; // Limit to prevent excessive costs
       
@@ -85,7 +106,7 @@ export function ScreenShare({
           return;
         }
 
-        if (videoRef.current && canvasRef.current && !isAnalyzing) {
+        if (videoRef.current && canvasRef.current && !isAnalyzing && videoRef.current.readyState >= 2 && videoRef.current.videoWidth > 0) {
           const canvas = canvasRef.current
           const video = videoRef.current
           
@@ -145,7 +166,10 @@ export function ScreenShare({
       })
       setStream(mediaStream)
       setScreenState("sharing")
-      if(videoRef.current) videoRef.current.srcObject = mediaStream
+      if(videoRef.current) {
+        videoRef.current.srcObject = mediaStream
+        await waitForScreenReady(videoRef.current)
+      }
       onStream?.(mediaStream)
       mediaStream.getVideoTracks()[0].addEventListener('ended', () => {
         cleanup()
@@ -162,6 +186,10 @@ export function ScreenShare({
     if (!videoRef.current || !canvasRef.current) return;
     const canvas = canvasRef.current
     const video = videoRef.current
+    if (video.videoWidth === 0 || video.videoHeight === 0 || video.readyState < 2) {
+      setError('Screen stream is warming up… try again in a moment')
+      return
+    }
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     const ctx = canvas.getContext('2d')
