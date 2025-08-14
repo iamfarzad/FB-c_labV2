@@ -10,6 +10,8 @@ import { getAllModules, getModuleBySlug } from '@/lib/education/modules'
 import { useModuleProgress } from '@/hooks/workshop/use-module-progress'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Confetti } from '@/components/ui/confetti'
+import { MODULE_QUIZZES, hasQuizFor, type QuizQuestion } from '@/lib/education/quizzes'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function WorkshopModulePage() {
   const params = useParams()
@@ -23,6 +25,8 @@ export default function WorkshopModulePage() {
   const [isCompleted, setIsCompleted] = useState(false)
   const [nextModule, setNextModule] = useState<string | null>(null)
   const [showConfetti, setShowConfetti] = useState(false)
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({})
+  const [quizSubmitted, setQuizSubmitted] = useState(false)
 
   useEffect(() => {
     if (!module) { setRedirect(true); return }
@@ -39,6 +43,15 @@ export default function WorkshopModulePage() {
 
   const handleComplete = () => {
     if (isCompleted) return
+    // Gate behind quiz if present
+    if (hasQuizFor(slug)) {
+      const questions: QuizQuestion[] = MODULE_QUIZZES[slug] || []
+      const allCorrect = questions.every(q => quizAnswers[q.id] === q.correctKey)
+      if (!allCorrect) {
+        setQuizSubmitted(true)
+        return
+      }
+    }
     setShowConfetti(true)
     completeModule(slug, { title: module.title, phase: module.phase })
     setIsCompleted(true)
@@ -78,6 +91,39 @@ export default function WorkshopModulePage() {
       <div className="pt-16">
         <ModuleRenderer module={module} />
       </div>
+
+      {hasQuizFor(slug) && (
+        <div className="container mx-auto px-4 py-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Quick Check</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {(MODULE_QUIZZES[slug] || []).map(q => (
+                  <div key={q.id} className="space-y-3">
+                    <div className="text-sm font-medium">{q.prompt}</div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {q.options.map(opt => (
+                        <Button key={opt.key} variant={quizAnswers[q.id] === opt.key ? 'default' : 'outline'} onClick={() => setQuizAnswers(prev => ({ ...prev, [q.id]: opt.key }))} className="justify-start">
+                          {opt.label}
+                        </Button>
+                      ))}
+                    </div>
+                    {quizSubmitted && quizAnswers[q.id] !== q.correctKey && (
+                      <div className="text-xs text-red-600">Try again.</div>
+                    )}
+                  </div>
+                ))}
+                <div className="flex gap-2">
+                  <Button onClick={() => setQuizSubmitted(true)}>Check Answers</Button>
+                  <Button variant="ghost" onClick={() => { setQuizAnswers({}); setQuizSubmitted(false) }}>Reset</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <Confetti isActive={showConfetti} />
 

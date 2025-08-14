@@ -10,10 +10,14 @@ import { Confetti } from "@/components/ui/confetti"
 import { getAllModules } from "@/lib/education/modules"
 import { useModuleProgress } from "@/hooks/workshop/use-module-progress"
 import { BookOpen, Award, TrendingUp, Brain, ChevronRight } from "lucide-react"
+import { CourseOutline } from "@/components/workshop/CourseOutline"
+import { CitationsDemo } from "@/components/experience/citations-demo"
 
 export function WorkshopPanel() {
   const { completedModules } = useModuleProgress()
-  const [activeSection, setActiveSection] = useState<"dashboard" | "modules" | "achievements" | "stats">("dashboard")
+  const [activeSection, setActiveSection] = useState<
+    "dashboard" | "modules" | "outline" | "lab" | "achievements" | "stats"
+  >("dashboard")
   const [showConfetti, setShowConfetti] = useState(false)
 
   const modules = useMemo(() => getAllModules(), [])
@@ -28,6 +32,9 @@ export function WorkshopPanel() {
   const completedCount = augmented.filter(m => m.completed).length
   const progressPct = modules.length ? Math.round((completedCount / modules.length) * 100) : 0
   const nextModule = augmented.find(m => !m.completed)
+
+  const xpForModule = (phase: number) => (phase <= 1 ? 30 : phase === 2 ? 40 : phase === 3 ? 50 : 60)
+  const totalXp = augmented.reduce((sum, m) => sum + (m.completed ? xpForModule(m.phase) : 0), 0)
 
   function handleCelebrate() {
     setShowConfetti(true)
@@ -65,7 +72,7 @@ export function WorkshopPanel() {
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardContent className="p-4 text-center">
               <TrendingUp className="h-6 w-6 mx-auto mb-1" />
@@ -87,7 +94,23 @@ export function WorkshopPanel() {
               <div className="text-xl font-semibold">{modules.length}</div>
             </CardContent>
           </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <Award className="h-6 w-6 mx-auto mb-1" />
+              <div className="text-sm text-muted-foreground">Total XP</div>
+              <div className="text-xl font-semibold">{totalXp}</div>
+            </CardContent>
+          </Card>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Grounded answers include sources</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CitationsDemo />
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -122,6 +145,77 @@ export function WorkshopPanel() {
             </CardContent>
           </Card>
         ))}
+      </div>
+    )
+  }
+
+  function Outline() {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold">Course Outline</h2>
+        <CourseOutline />
+      </div>
+    )
+  }
+
+  function Lab() {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold">Hands-on Lab</h2>
+        <Card>
+          <CardContent className="p-4 flex items-center justify-between gap-4">
+            <div>
+              <div className="font-medium">Build your first chatbot (open Chat preset)</div>
+              <div className="text-sm text-muted-foreground">Open chat with a learning context</div>
+            </div>
+            <div className="flex gap-2">
+              <Button asChild>
+                <Link href="/chat?education=1">Open Chat</Link>
+              </Button>
+              <Button variant="outline" onClick={() => {
+                fetch('/api/intelligence/education', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ moduleId: 'lab-chat', stepId: 'open-chat', xp: 20, moduleTitle: 'Hands-on Lab' }) }).catch(() => {})
+                setShowConfetti(true)
+                setTimeout(() => setShowConfetti(false), 1200)
+              }}>Mark done</Button>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center justify-between gap-4">
+            <div>
+              <div className="font-medium">Estimate ROI (use the ROI card)</div>
+              <div className="text-sm text-muted-foreground">Try the ROI calculator in chat</div>
+            </div>
+            <div className="flex gap-2">
+              <Button asChild variant="outline">
+                <Link href="/chat?education=1#roi">Open in Chat</Link>
+              </Button>
+              <Button variant="outline" onClick={() => {
+                fetch('/api/intelligence/education', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ moduleId: 'lab-roi', stepId: 'roi-card', xp: 20, moduleTitle: 'Hands-on Lab' }) }).catch(() => {})
+                setShowConfetti(true)
+                setTimeout(() => setShowConfetti(false), 1200)
+              }}>Mark done</Button>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center justify-between gap-4">
+            <div>
+              <div className="font-medium">Video → App (use launcher)</div>
+              <div className="text-sm text-muted-foreground">Paste a YouTube link in chat to generate an app blueprint</div>
+            </div>
+            <div className="flex gap-2">
+              <Button asChild variant="outline">
+                <Link href="/chat?video=">Launch</Link>
+              </Button>
+              <Button variant="outline" onClick={() => {
+                fetch('/api/intelligence/education', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ moduleId: 'lab-video2app', stepId: 'launcher', xp: 20, moduleTitle: 'Hands-on Lab' }) }).catch(() => {})
+                setShowConfetti(true)
+                setTimeout(() => setShowConfetti(false), 1200)
+              }}>Mark done</Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -173,10 +267,11 @@ export function WorkshopPanel() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="h-[100dvh]">
       <Confetti isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
-      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
-        <aside className="lg:sticky lg:top-20 self-start">
+      <div className="h-full container mx-auto px-4 py-4">
+        <div className="h-full grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
+          <aside className="min-h-0 overflow-auto lg:sticky lg:top-4 self-start">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Workshop</CardTitle>
@@ -185,18 +280,23 @@ export function WorkshopPanel() {
               <nav className="grid gap-1">
                 <Button variant={activeSection === "dashboard" ? "default" : "ghost"} onClick={() => setActiveSection("dashboard")} className="justify-start">Dashboard</Button>
                 <Button variant={activeSection === "modules" ? "default" : "ghost"} onClick={() => setActiveSection("modules")} className="justify-start">Modules</Button>
+                  <Button variant={activeSection === "outline" ? "default" : "ghost"} onClick={() => setActiveSection("outline")} className="justify-start">Outline</Button>
+                  <Button variant={activeSection === "lab" ? "default" : "ghost"} onClick={() => setActiveSection("lab")} className="justify-start">Lab</Button>
                 <Button variant={activeSection === "achievements" ? "default" : "ghost"} onClick={() => setActiveSection("achievements")} className="justify-start">Achievements</Button>
                 <Button variant={activeSection === "stats" ? "default" : "ghost"} onClick={() => setActiveSection("stats")} className="justify-start">Stats</Button>
               </nav>
             </CardContent>
           </Card>
-        </aside>
-        <main>
-          {activeSection === "dashboard" && <Dashboard />}
-          {activeSection === "modules" && <Modules />}
-          {activeSection === "achievements" && <Achievements />}
-          {activeSection === "stats" && <Stats />}
-        </main>
+          </aside>
+          <main className="min-h-0 overflow-auto">
+            {activeSection === "dashboard" && <Dashboard />}
+            {activeSection === "modules" && <Modules />}
+            {activeSection === "outline" && <Outline />}
+            {activeSection === "lab" && <Lab />}
+            {activeSection === "achievements" && <Achievements />}
+            {activeSection === "stats" && <Stats />}
+          </main>
+        </div>
       </div>
     </div>
   )

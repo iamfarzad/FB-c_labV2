@@ -13,8 +13,14 @@ import AttentionMechanismDemo from '@/components/workshop/modules/attention-mech
 import EmbeddingExplorer from '@/components/workshop/modules/embedding-explorer'
 import CustomizationModes from '@/components/workshop/modules/customization-modes'
 import HallucinationChecker from '@/components/workshop/modules/hallucination-checker'
+import { MODULE_QUIZZES } from '@/lib/education/quizzes'
+import { useEffect } from 'react'
 
 export default function ModuleRenderer({ module }: { module: ModuleItem }) {
+  useEffect(() => {
+    // Ensure quizzes object is referenced so tree-shaking keeps it
+    void MODULE_QUIZZES[module.slug]
+  }, [module.slug])
   switch (module.slug) {
     case 'ai-hierarchy-visual':
       return <AIHierarchyVisual />

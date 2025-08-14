@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { PermissionManager } from "@/components/permissions/PermissionManager"
 import { cn } from "@/lib/utils"
 import { StructuredData } from "./structured-data"
+import { CanvasProvider } from "@/components/providers/canvas-provider"
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -42,13 +43,15 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <DemoSessionProvider>
             <MeetingProvider>
-              <Header />
-              <main className="min-h-screen">
-                {children}
-              </main>
-              <Footer />
-              <Toaster />
-              <PermissionManager />
+              <CanvasProvider>
+                <Header />
+                <main className="min-h-screen">
+                  {children}
+                </main>
+                <Footer />
+                <Toaster />
+                <PermissionManager />
+              </CanvasProvider>
             </MeetingProvider>
           </DemoSessionProvider>
         </ThemeProvider>

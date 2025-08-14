@@ -98,6 +98,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### UI Unification & Mobile Canvas - 2025-08-14
+- Added global `CanvasProvider` with `useCanvas()` for single-surface tool orchestration
+- Added `CanvasOrchestrator` to render `webcam`, `screen`, `video`, `pdf`, and `code` inside `CanvasWorkspace`
+- Made `CanvasWorkspace` responsive: stacked layout with Details/Console sheets on mobile; preserved resizable panes on desktop
+- Added `ToolLauncher` FAB with bottom sheet for mobile tool entry
+- Wired provider in `app/layout.tsx`; replaced all `setCanvas(...)` calls in `AIEChat.tsx` with `openCanvas(...)`
+- Removed legacy inline canvas body in `AIEChat`; no duplicated tool mounts
+- Introduced `hooks/use-is-mobile.ts`
+- Cleanup: eliminated all remaining direct `setCanvas` usages
+
 ### API Unification - 2025-08-13
 - Canonicalized tool routes under `/api/tools/*` and intelligence under `/api/intelligence/*`
 - Removed legacy/duplicate endpoints:

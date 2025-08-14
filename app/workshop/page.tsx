@@ -1,22 +1,9 @@
-import { PageHeader, PageShell } from "@/components/page-shell"
+import { PageHeader } from "@/components/page-shell"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { CheckCircle, Book } from "lucide-react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { MotionCard } from "@/components/ui/motion-card"
-import { FadeIn } from "@/components/ui/fade-in"
-import { ROICalculator } from "@/components/chat/tools/ROICalculator/ROICalculator"
-import { ProgressTracker } from "@/components/experience/progress-tracker"
 import { CourseProgressChip } from "@/components/workshop/CourseProgressChip"
-import { CourseOutline } from "@/components/workshop/CourseOutline"
 import { WorkshopPanel } from "@/components/workshop/WorkshopPanel"
-import { CitationsDemo } from "@/components/experience/citations-demo"
-import dynamic from "next/dynamic"
-import { WORKSHOP_MODULES } from "@/components/workshop/education-modules"
 import Script from "next/script"
-// Move client-only components into a small client wrapper instead of ssr:false on a Server Component
-const GamifiedSection = dynamic(() => import('@/components/workshop/GamifiedSection').then(mod => mod.GamifiedSection))
-const VideoToAppLauncher = dynamic(() => import('@/components/workshop/VideoToAppLauncher').then(m => m.VideoToAppLauncher))
 
 export const metadata = {
   title: "AI Fundamentals Workshop | Farzad Bayat",
@@ -38,36 +25,23 @@ const workshopFeatures = [
 export default function WorkshopPage() {
   return (
     <>
-      <PageShell>
-        <PageHeader
-          title="AI Fundamentals Workshop"
-          subtitle="Learn how AI works: foundations, prompting, grounding, safety, then apply it in a hands‑on lab."
-        />
-        <div className="mt-6 flex items-center justify-center gap-x-3">
-          <CourseProgressChip />
-          <Button asChild>
-            <Link href="/workshop/modules">Start Workshop</Link>
-          </Button>
+      <section className="min-h-[100dvh] grid grid-rows-[auto,1fr]">
+        <div className="container py-6 md:py-8">
+          <PageHeader
+            title="AI Fundamentals Workshop"
+            subtitle="Learn how AI works: foundations, prompting, grounding, safety, then apply it in a hands‑on lab."
+          />
+          <div className="mt-6 flex items-center justify-center gap-x-3">
+            <CourseProgressChip />
+            <Button asChild>
+              <Link href="/workshop/modules">Start Workshop</Link>
+            </Button>
+          </div>
         </div>
-      </PageShell>
-
-      <PageShell>
-        <WorkshopPanel />
-      </PageShell>
-
-      <PageShell>
-        <CitationsDemo />
-      </PageShell>
-
-      <PageShell>
-        <div className="grid gap-8 md:grid-cols-2">
-          {WORKSHOP_MODULES.map((m) => (
-            <div id={`m-${m.id}`} key={m.id}>
-              <GamifiedSection module={m} />
-            </div>
-          ))}
+        <div className="min-h-0">
+          <WorkshopPanel />
         </div>
-      </PageShell>
+      </section>
 
       {/* SEO: JSON-LD Course schema */}
       <Script id="workshop-jsonld" type="application/ld+json" strategy="afterInteractive"

@@ -4,7 +4,6 @@ module.exports = {
   moduleNameMapper: {
     '^@/lib/ai$': '<rootDir>/__mocks__/lib/ai.ts',
     '^@/(.*)$': '<rootDir>/$1',
-    '^industry-ai-education\\./(.*)$': '<rootDir>/__mocks__/$1',
     '^@/lib/rate-limit$': '<rootDir>/lib/rate-limiting.ts',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
@@ -12,7 +11,7 @@ module.exports = {
     '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json', isolatedModules: true }],
   },
   transformIgnorePatterns: ['/node_modules/'],
-  modulePathIgnorePatterns: ['<rootDir>/industry-ai-education\\./'],
+  modulePathIgnorePatterns: [],
   testPathIgnorePatterns: [
     '<rootDir>/playwright-tests/',
     '<rootDir>/tests/playwright/',

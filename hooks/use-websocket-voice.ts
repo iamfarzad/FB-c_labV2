@@ -32,6 +32,7 @@ interface WebSocketVoiceHook {
   // Callbacks for voice recorder integration
   onAudioChunk: (chunk: ArrayBuffer) => void
   onTurnComplete: () => void
+  sendImageFrame: (dataUrl: string, type?: 'webcam' | 'screen' | 'upload') => void
 }
 
 export function useWebSocketVoice(): WebSocketVoiceHook {
@@ -638,6 +639,37 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     }
   }, []) // Remove connectWebSocket dependency
 
+  // Send an image frame over the same WS/live session (mock-friendly)
+  const sendImageFrame = useCallback((dataUrl: string, type: 'webcam' | 'screen' | 'upload' = 'upload') => {
+    try {
+      if (!dataUrl || typeof dataUrl !== 'string') return
+      const isDirect = process.env.NEXT_PUBLIC_GEMINI_DIRECT === '1'
+      const base64 = dataUrl.startsWith('data:') ? dataUrl.split(',')[1] : dataUrl
+      const mime = dataUrl.startsWith('data:') ? (dataUrl.substring(5, dataUrl.indexOf(';')) || 'image/jpeg') : 'image/jpeg'
+
+      const sessionLike: any = wsRef.current as any
+      if (isDirect && sessionLike && typeof sessionLike.sendRealtimeInput === 'function') {
+        try {
+          sessionLike.sendRealtimeInput({
+            // Some SDKs require turning images into clientContent turns; this direct path is best-effort
+            inlineData: { mimeType: mime, data: base64 }
+          })
+        } catch (e) {
+          console.warn('[useWebSocketVoice] direct image send failed:', e)
+        }
+        return
+      }
+
+      const payload = JSON.stringify({ type: 'user_image', payload: { imageData: base64, mimeType: mime, sourceType: type } })
+      const isOpen = wsRef.current?.readyState === WebSocket.OPEN
+      const isReady = sessionActiveRef.current === true
+      if (isOpen && isReady) wsRef.current!.send(payload)
+      else messageQueueRef.current.push(payload)
+    } catch (e) {
+      console.warn('[useWebSocketVoice] sendImageFrame error:', e)
+    }
+  }, [])
+
   // Cleanup marker (do not auto-close socket to avoid StrictMode/FastRefresh loops)
   useEffect(() => {
     return () => {
@@ -659,5 +691,6 @@ export function useWebSocketVoice(): WebSocketVoiceHook {
     // Callbacks for voice recorder integration
     onAudioChunk,
     onTurnComplete,
+    sendImageFrame,
   }
 }

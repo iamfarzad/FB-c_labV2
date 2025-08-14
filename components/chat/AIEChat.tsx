@@ -10,7 +10,7 @@ import { Message, MessageContent, MessageAvatar } from '@/components/ai-elements
 import { Response } from '@/components/ai-elements/response'
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning'
 import { Sources, SourcesTrigger, SourcesContent, Source } from '@/components/ai-elements/source'
-import { CodeBlock, CodeBlockCopyButton } from '@/components/ai-elements/code-block'
+// Removed inline code block preview; use canvas 'code' when needed
 import { PromptInput, PromptInputToolbar, PromptInputTools, PromptInputTextarea, PromptInputSubmit, PromptInputButton } from '@/components/ai-elements/prompt-input'
 // Suggestions replaced by coach chips
 import { ToolMenu } from '@/components/chat/ToolMenu'
@@ -18,11 +18,11 @@ import VoiceOverlay from '@/components/chat/VoiceOverlay'
 import { ErrorHandler } from '@/components/chat/ErrorHandler'
 import { LeadProgressIndicator } from '@/components/chat/LeadProgressIndicator'
 import { ConversationStage } from '@/lib/lead-manager'
-import { CanvasWorkspace } from '@/components/chat/CanvasWorkspace'
-import { WebPreview, WebPreviewNavigation, WebPreviewNavigationButton, WebPreviewUrl, WebPreviewBody, WebPreviewConsole } from '@/components/ai-elements/web-preview'
-import { ScreenShare } from '@/components/chat/tools/ScreenShare/ScreenShare'
-import { WebcamCapture } from '@/components/chat/tools/WebcamCapture/WebcamCapture'
-import { VideoToApp } from '@/components/chat/tools/VideoToApp/VideoToApp'
+// Canvas rendered globally via orchestrator
+import { CanvasOrchestrator } from '@/components/chat/CanvasOrchestrator'
+import { ToolLauncher } from '@/components/chat/ToolLauncher'
+import { useCanvas } from '@/components/providers/canvas-provider'
+// Tool UIs are rendered via CanvasOrchestrator
 import useChat from '@/hooks/chat/useChat'
 import { useConversationalIntelligence } from '@/hooks/useConversationalIntelligence'
 import { isFlagEnabled } from '@/lib/flags'
@@ -44,7 +44,7 @@ export function AIEChat() {
   const [openVoice, setOpenVoice] = useState(false)
   const liveEnabled = process.env.NEXT_PUBLIC_LIVE_ENABLED !== 'false'
   const [error, setError] = useState<Error | null>(null)
-  const [canvas, setCanvas] = useState<{ type: 'webpreview' | 'screen' | 'webcam' | 'video' | 'pdf'; url?: string } | null>(null)
+  const { openCanvas } = useCanvas()
   const [isVoiceMock, setIsVoiceMock] = useState(false)
   // Consent gate
   const [consentChecked, setConsentChecked] = useState(false)
@@ -89,7 +89,6 @@ export function AIEChat() {
   const [stage, setStage] = useState<ConversationStage>(ConversationStage.GREETING)
   const [lead, setLead] = useState<{ name?: string; email?: string; company?: string } | undefined>()
   const [logs, setLogs] = useState<Array<{ id: string; ts: string; level: 'info' | 'warn' | 'error'; text: string }>>([])
-  const [filterLevels, setFilterLevels] = useState<{ info: boolean; warn: boolean; error: boolean }>({ info: true, warn: true, error: true })
   const STORAGE_KEY = `fbc:chat-logs:${sessionId}`
 
   function addLog(text: string, level: 'info' | 'warn' | 'error' = 'info') {
@@ -169,9 +168,9 @@ export function AIEChat() {
           window.localStorage.removeItem('fbc:education:last')
         }
       }
-      const videoUrl = params.get('video') || window.localStorage.getItem('fbc:video:last')
-      if (videoUrl) {
-        setCanvas({ type: 'video', url: videoUrl })
+        const videoUrl = params.get('video') || window.localStorage.getItem('fbc:video:last')
+        if (videoUrl) {
+          openCanvas('video', { videoUrl })
         addLog(`video param → open video2app: ${videoUrl}`)
         window.localStorage.removeItem('fbc:video:last')
       }
@@ -235,25 +234,9 @@ export function AIEChat() {
     setConsentAllowed(false)
   }
 
-  function downloadLogs() {
-    try {
-      const blob = new Blob([JSON.stringify({ sessionId, logs }, null, 2)], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `fbc-console-${sessionId}-${new Date().toISOString().slice(0,19)}.json`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      addLog('console: downloaded logs')
-    } catch {
-      addLog('console: failed to download', 'error')
-    }
-  }
+  // console download/filters removed with global orchestrator consolidation
 
-  const filteredLogs = useMemo(() => logs.filter(l => (l.level === 'info' && filterLevels.info) || (l.level === 'warn' && filterLevels.warn) || (l.level === 'error' && filterLevels.error)), [logs, filterLevels])
-  const counts = useMemo(() => ({ info: logs.filter(l => l.level === 'info').length, warn: logs.filter(l => l.level === 'warn').length, error: logs.filter(l => l.level === 'error').length }), [logs])
+  // filtered logs and counts no longer needed in component; kept in history if needed
 
   function detectYouTubeURL(text: string): string | null {
     const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/
@@ -261,7 +244,7 @@ export function AIEChat() {
     return match ? match[0] : null
   }
 
-  const [canvasInput, setCanvasInput] = useState('')
+  
   const [coachNext, setCoachNext] = useState<string | null>(null)
   const [coachAll, setCoachAll] = useState<string[]>([])
 
@@ -338,7 +321,7 @@ export function AIEChat() {
         break
       case 'screenShare':
         addLog('suggestion → screen share')
-        setCanvas({ type: 'screen' })
+        openCanvas('screen')
         emitUsed('screenShare')
         break
       case 'translate':
@@ -356,17 +339,17 @@ export function AIEChat() {
         break
       case 'image':
         addLog('suggestion → image analysis')
-        setCanvas({ type: 'webcam' })
+        openCanvas('webcam')
         emitUsed('image')
         break
       case 'video2app':
         addLog('suggestion → video2app')
-        setCanvas({ type: 'video' })
+        openCanvas('video')
         emitUsed('video2app')
         break
       case 'exportPdf':
         addLog('suggestion → export PDF')
-        setCanvas({ type: 'pdf' })
+        openCanvas('pdf')
         emitUsed('exportPdf')
         break
       default:
@@ -581,15 +564,7 @@ export function AIEChat() {
                 </Message>
               ))}
 
-              {false && (
-                <Message from="assistant">
-                  <MessageContent>
-                    <CodeBlock code={`console.info('hello')`} language="ts">
-                      <CodeBlockCopyButton />
-                    </CodeBlock>
-                  </MessageContent>
-                </Message>
-              )}
+              {/* demo code block removed; use Canvas 'code' instead */}
             </ConversationContent>
             <ConversationScrollButton className="bg-background/80 backdrop-blur z-50" />
           </Conversation>
@@ -603,10 +578,10 @@ export function AIEChat() {
                   <ToolMenu
                     onUploadDocument={() => { addLog('tool: upload document'); emitUsed('doc'); }}
                     onUploadImage={() => { addLog('tool: upload image'); emitUsed('image'); }}
-                    onWebcam={() => { setCanvas({ type: 'webcam' }); addLog('canvas: open webcam'); emitUsed('webcam'); }}
-                    onScreenShare={() => { setCanvas({ type: 'screen' }); addLog('canvas: open screen share'); emitUsed('screenShare'); }}
+                    onWebcam={() => { openCanvas('webcam'); addLog('canvas: open webcam'); emitUsed('webcam'); }}
+                    onScreenShare={() => { openCanvas('screen'); addLog('canvas: open screen share'); emitUsed('screenShare'); }}
                     onROI={() => { addLog('tool: ROI calculator'); emitUsed('roi'); }}
-                    onVideoToApp={() => { setCanvas({ type: 'video' }); addLog('canvas: open video2app'); emitUsed('video2app'); }}
+                    onVideoToApp={() => { openCanvas('video'); addLog('canvas: open video2app'); emitUsed('video2app'); }}
                   />
                 </PromptInputTools>
               </PromptInputToolbar>
@@ -618,7 +593,7 @@ export function AIEChat() {
                     handleInputChange(e as any)
                     const url = detectYouTubeURL(e.target.value)
                     if (url) {
-                      setCanvas({ type: 'video', url })
+                      openCanvas('video', { videoUrl: url })
                       addLog(`detected youtube url → open video2app: ${url}`)
                       emitUsed('video2app')
                     }
@@ -630,7 +605,7 @@ export function AIEChat() {
                   {coachNext === 'roi' && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button data-coach-cta onClick={() => { addLog('coach → roi'); setCanvas({ type: 'screen' }); emitUsed('roi'); }} aria-label="Open ROI calculator">
+                        <button data-coach-cta onClick={() => { addLog('coach → roi'); openCanvas('screen'); emitUsed('roi'); }} aria-label="Open ROI calculator">
                           <Calculator className="h-3.5 w-3.5" /> ROI Calculator
                         </button>
                       </TooltipTrigger>
@@ -640,7 +615,7 @@ export function AIEChat() {
                   {coachNext === 'video' && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button data-coach-cta onClick={() => { addLog('coach → video'); setCanvas({ type: 'video' }); emitUsed('video2app'); }} aria-label="Open Video to App">
+                        <button data-coach-cta onClick={() => { addLog('coach → video'); openCanvas('video'); emitUsed('video2app'); }} aria-label="Open Video to App">
                           <Video className="h-3.5 w-3.5" /> Video → App
                         </button>
                       </TooltipTrigger>
@@ -650,7 +625,7 @@ export function AIEChat() {
                   {coachNext === 'screen' && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button data-coach-cta onClick={() => { addLog('coach → screen'); setCanvas({ type: 'screen' }); emitUsed('screenShare'); }} aria-label="Share screen">
+                        <button data-coach-cta onClick={() => { addLog('coach → screen'); openCanvas('screen'); emitUsed('screenShare'); }} aria-label="Share screen">
                           <Monitor className="h-3.5 w-3.5" /> Share Screen
                         </button>
                       </TooltipTrigger>
@@ -660,7 +635,7 @@ export function AIEChat() {
                   {coachNext === 'image' && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button data-coach-cta onClick={() => { addLog('coach → image'); setCanvas({ type: 'webcam' }); emitUsed('image'); }} aria-label="Analyze an image or screenshot">
+                        <button data-coach-cta onClick={() => { addLog('coach → image'); openCanvas('webcam'); emitUsed('image'); }} aria-label="Analyze an image or screenshot">
                           <Camera className="h-3.5 w-3.5" /> Analyze Image
                         </button>
                       </TooltipTrigger>
@@ -670,7 +645,7 @@ export function AIEChat() {
                   {coachNext === 'webpreview' && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button data-coach-cta onClick={() => { addLog('coach → webpreview'); setCanvas({ type: 'webpreview', url: '' }); emitUsed('webpreview'); }} aria-label="Open web preview">
+                        <button data-coach-cta onClick={() => { addLog('coach → webpreview'); openCanvas('webpreview'); emitUsed('webpreview'); }} aria-label="Open web preview">
                           <span className="inline-block h-3.5 w-3.5">🌐</span> Web Preview
                         </button>
                       </TooltipTrigger>
@@ -689,7 +664,7 @@ export function AIEChat() {
                   {null}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button aria-label="Video → App" className="text-muted-foreground hover:text-foreground" onClick={() => { setCanvas({ type: 'video' }); addLog('canvas: open video2app (quick)'); emitUsed('video2app') }}>
+                      <button aria-label="Video → App" className="text-muted-foreground hover:text-foreground" onClick={() => { openCanvas('video'); addLog('canvas: open video2app (quick)'); emitUsed('video2app') }}>
                         <Video className="h-4 w-4" />
                       </button>
                     </TooltipTrigger>
@@ -734,152 +709,12 @@ export function AIEChat() {
           </div>
         </div>
 
-        <CanvasWorkspace
-          open={!!canvas}
-          title={canvas?.type === 'screen' ? 'Screen Share' : canvas?.type === 'webcam' ? 'Webcam' : canvas?.type === 'video' ? 'Video to App' : 'Web Preview'}
-          onClose={() => { setCanvas(null); addLog('canvas: close'); }}
-          left={(
-            <div>
-              <p className="mb-2 text-muted-foreground">Recent messages</p>
-              <ul className="space-y-2">
-                {uiMessages.slice(-5).map((m) => (
-                  <li key={`ctx-${m.id}`} className="rounded-md border bg-card/50 p-2">
-                    <div className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-                      {m.role}
-                    </div>
-                    <div className="text-xs text-foreground/90 line-clamp-3 break-words">
-                      {m.text || ''}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-3">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    const text = canvasInput.trim()
-                    if (!text) return
-                    sendMessage(text)
-                    addLog(`canvas chat → ${text.slice(0, 80)}`)
-                    setCanvasInput('')
-                  }}
-                  className="rounded-md border bg-card p-2"
-                >
-                  <textarea
-                    className="w-full resize-none rounded-md border border-border/40 bg-background p-2 text-xs outline-none focus:ring-2 focus:ring-accent/20"
-                    rows={2}
-                    placeholder="Ask about what's on canvas…"
-                    value={canvasInput}
-                    onChange={(e) => setCanvasInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        const text = canvasInput.trim()
-                        if (!text) return
-                        sendMessage(text)
-                        addLog(`canvas chat → ${text.slice(0, 80)}`)
-                        setCanvasInput('')
-                      }
-                    }}
-                  />
-                  <div className="mt-2 flex justify-end">
-                    <button type="submit" className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground">
-                      <Send className="h-3.5 w-3.5" /> Send
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-          consoleArea={(
-            <div className="flex h-full w-full flex-col">
-              <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Console</span>
-                  <div className="ml-2 flex items-center gap-2">
-                    <button className={`text-xs rounded px-2 py-0.5 border ${filterLevels.info ? 'bg-green-500/10 border-green-500/30 text-green-600' : 'text-muted-foreground border-border'}`} onClick={() => setFilterLevels(f => ({ ...f, info: !f.info }))}>info ({counts.info})</button>
-                    <button className={`text-xs rounded px-2 py-0.5 border ${filterLevels.warn ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-600' : 'text-muted-foreground border-border'}`} onClick={() => setFilterLevels(f => ({ ...f, warn: !f.warn }))}>warn ({counts.warn})</button>
-                    <button className={`text-xs rounded px-2 py-0.5 border ${filterLevels.error ? 'bg-red-500/10 border-red-500/30 text-red-600' : 'text-muted-foreground border-border'}`} onClick={() => setFilterLevels(f => ({ ...f, error: !f.error }))}>error ({counts.error})</button>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setLogs([])}>Clear</button>
-                  <button className="text-xs text-muted-foreground hover:text-foreground" onClick={downloadLogs}>Download</button>
-                </div>
-              </div>
-              <div className="flex-1 overflow-auto rounded border bg-background p-2 font-mono text-[11px] leading-5">
-                {filteredLogs.length === 0 ? (
-                  <div className="text-muted-foreground">No logs yet…</div>
-                ) : (
-                  <ul className="space-y-1">
-                    {filteredLogs.map(l => (
-                      <li key={l.id} className="break-words">
-                        <span className="text-muted-foreground">[{l.ts}]</span>{' '}
-                        <span className={l.level === 'error' ? 'text-red-600' : l.level === 'warn' ? 'text-yellow-600' : 'text-green-600'}>[{l.level}]</span>{' '}
-                        {l.text}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          )}
-        >
-          {canvas?.type === 'webpreview' && (
-            <WebPreview defaultUrl={canvas.url || ''}>
-              <WebPreviewNavigation>
-                <WebPreviewNavigationButton tooltip="Back" aria-label="Back" onClick={() => addLog('webpreview: back')} />
-                <WebPreviewNavigationButton tooltip="Forward" aria-label="Forward" onClick={() => addLog('webpreview: forward')} />
-                <WebPreviewUrl />
-              </WebPreviewNavigation>
-              <WebPreviewBody className="h-full" />
-              <WebPreviewConsole />
-            </WebPreview>
-          )}
-          {canvas?.type === 'screen' && (
-            <div className="h-full p-3">
-              <ScreenShare mode="canvas" onAnalysis={(a) => addLog(`screen: analysis → ${a}`)} onClose={() => { setCanvas(null); addLog('screen: close'); }} />
-            </div>
-          )}
-          {canvas?.type === 'webcam' && (
-            <div className="h-full p-3">
-              <WebcamCapture mode="canvas" onCapture={() => addLog('webcam: capture')} onClose={() => { setCanvas(null); addLog('webcam: close'); }} onAIAnalysis={(a) => addLog(`webcam: analysis → ${a}`)} />
-            </div>
-          )}
-          {canvas?.type === 'video' && (
-            <div className="h-full p-3">
-              <VideoToApp mode="canvas" videoUrl={canvas.url} onClose={() => { setCanvas(null); addLog('video2app: close'); }} onAppGenerated={(url) => addLog(`video2app: app generated → ${url}`)} onAnalysisComplete={() => addLog('video2app: analysis complete')} />
-            </div>
-          )}
-          {canvas?.type === 'pdf' && (
-            <div className="flex h-full flex-col p-3">
-              <div className="mb-2 flex items-center gap-2">
-                <Button size="sm" variant="outline" onClick={async () => {
-                  addLog('pdf: generating')
-                  try {
-                    const res = await fetch('/api/export-summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId }) })
-                    if (!res.ok) throw new Error(`export failed: ${res.status}`)
-                    const blob = await res.blob()
-                    const url = URL.createObjectURL(blob)
-                    const a = document.createElement('a')
-                    a.href = url
-                    a.download = `FB-c_Summary_${new Date().toISOString().slice(0,10)}.pdf`
-                    document.body.appendChild(a)
-                    a.click()
-                    a.remove()
-                    URL.revokeObjectURL(url)
-                    addLog('pdf: downloaded')
-                  } catch (e: any) {
-                    addLog(`pdf: error → ${e?.message || 'unknown'}`, 'error')
-                  }
-                }}>Download PDF</Button>
-                <FinishAndEmailButton sessionId={sessionId} addLog={addLog} />
-                <Button size="sm" onClick={() => setCanvas(null)}>Close</Button>
-              </div>
-              <iframe className="h-full w-full rounded border" src={`/api/export-summary?sessionId=${encodeURIComponent(sessionId || '')}`} />
-            </div>
-          )}
-        </CanvasWorkspace>
+        {/* Global canvas overlay */}
+        <CanvasOrchestrator />
+        {/* Mobile tool launcher */}
+        <div className="md:hidden">
+          <ToolLauncher />
+        </div>
       </div>
     </TooltipProvider>
   )
