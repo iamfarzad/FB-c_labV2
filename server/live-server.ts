@@ -1,4 +1,4 @@
-    import { WebSocketServer, WebSocket } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
     import { GoogleGenAI, LiveServerMessage, Modality, Session } from '@google/genai';
     import { v4 as uuidv4 } from 'uuid';
     import { Buffer } from 'buffer';
@@ -30,6 +30,7 @@
     const MAX_MESSAGES_PER_SESSION = 50;
     // Use PORT for Fly.io compatibility, fallback to 3001 for local development
     const PORT = process.env.PORT || process.env.LIVE_SERVER_PORT || 3001;
+const IS_MOCK = (process.env.FBC_USE_MOCKS === '1' || process.env.LIVE_MOCK === '1');
 
     // --- Voice & Language Utilities ---
     const VOICE_BY_LANG: Record<string, string> = {
@@ -199,6 +200,14 @@ nodeProcess?.on('unhandledRejection', (reason: unknown) => {
     return
   }
   sessionStarting.add(connectionId)
+
+  if (IS_MOCK) {
+    // Mock session: immediately report started without touching Gemini
+    safeSend(ws, JSON.stringify({ type: 'session_started', payload: { connectionId, languageCode: payload?.languageCode || 'en-US', voiceName: payload?.voiceName || 'Puck', mock: true } }));
+    activeSessions.set(connectionId, { ws, session: {} as any });
+    sessionStarting.delete(connectionId)
+    return
+  }
 
   if (!process.env.GEMINI_API_KEY) {
     console.error(`[${connectionId}] FATAL: GEMINI_API_KEY not configured.`);
@@ -416,6 +425,20 @@ Guidelines:
     }
 
     async function handleUserMessage(connectionId: string, ws: WebSocket, payload: any) {
+        if (IS_MOCK) {
+            // Produce a tiny PCM16 100ms silence (16kHz) and a mock text for each audio chunk
+            if (payload?.audioData) {
+                const mockText = 'Mock: I heard you. This is a placeholder response.'
+                safeSend(ws, JSON.stringify({ type: 'text', payload: { content: mockText } }))
+                safeSend(ws, JSON.stringify({ type: 'model_text', payload: { text: mockText } }))
+                try {
+                    const silencePcm16 = Buffer.alloc(1600 * 2) // 100ms @16k mono
+                    const b64 = (Buffer as any).from(silencePcm16).toString('base64')
+                    safeSend(ws, JSON.stringify({ type: 'audio', payload: { audioData: b64, mimeType: 'audio/pcm;rate=16000' } }))
+                } catch {}
+            }
+            return
+        }
         if (payload.audioData && payload.mimeType) {
             // Accept common PCM rates used in the app; forward as-is to Gemini
             const allowed = payload.mimeType === 'audio/pcm;rate=16000' || payload.mimeType === 'audio/pcm;rate=24000'
@@ -538,6 +561,10 @@ wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
                         await handleUserMessage(connectionId, ws, parsedMessage.payload);
                         break;
                     case 'TURN_COMPLETE': {
+                        if (IS_MOCK) {
+                            safeSend(ws, JSON.stringify({ type: 'turn_complete' }))
+                            break
+                        }
                         let client = activeSessions.get(connectionId)
                         if (!client) {
                           pendingTurnComplete.set(connectionId, true)
