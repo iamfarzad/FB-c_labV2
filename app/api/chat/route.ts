@@ -861,12 +861,30 @@ ${getStageInstructions(conversationResult.newStage)}
               if (evt.citations) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ sources: evt.citations.map((u: string) => ({ url: u })) })}\n\n`))
             }
           } else {
+            let finalText = ''
             for await (const chunk of responseStream) {
               const text = chunk.text || ''
+              finalText += text
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: text })}\n\n`))
             }
             // Emit sources gathered from GoogleSearchService alongside Gemini output
-            if (searchSources.length) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ sources: searchSources })}\n\n`))
+            let sourcesOut = searchSources
+            try {
+              // Extract bare URLs from finalText to provide minimal citations when search is disabled
+              const urlRegex = /https?:\/\/[^\s)]+/g
+              const found = Array.from(finalText.matchAll(urlRegex)).map(m => ({ url: m[0] }))
+              if (found.length) {
+                // merge and de-dup by url
+                const seen = new Set<string>()
+                sourcesOut = [...sourcesOut, ...found].filter(s => {
+                  if (!s?.url) return false
+                  if (seen.has(s.url)) return false
+                  seen.add(s.url)
+                  return true
+                })
+              }
+            } catch {}
+            if (sourcesOut.length) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ sources: sourcesOut })}\n\n`))
           }
           controller.close();
         } catch (error: any) {

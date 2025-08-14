@@ -17,7 +17,9 @@ export function VideoToApp({
   onClose,
   onCancel,
   onAppGenerated,
-  onAnalysisComplete
+  onAnalysisComplete,
+  // Compact canvas rendering when parent provides its own header
+  hideHeader
 }: VideoToAppProps) {
   const { toast } = useToast()
   const [videoUrl, setVideoUrl] = useState(initialVideoUrl)
@@ -278,18 +280,20 @@ export function VideoToApp({
   if (mode === 'canvas') {
     return (
       <div className="flex h-full w-full flex-col overflow-hidden">
-        <div className="flex h-10 items-center justify-between border-b px-2 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-green-500" />
-            <span>Video → App</span>
+        {!hideHeader && (
+          <div className="flex h-10 items-center justify-between border-b px-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-green-500" />
+              <span>Video → App</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="ghost" onClick={handleGenerate} disabled={isGenerating || !videoUrl}>
+                Generate
+              </Button>
+              <Button size="sm" variant="ghost" onClick={onClose}>Close</Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="ghost" onClick={handleGenerate} disabled={isGenerating || !videoUrl}>
-              Generate
-            </Button>
-            <Button size="sm" variant="ghost" onClick={onClose}>Close</Button>
-          </div>
-        </div>
+        )}
         <div className="flex min-h-0 flex-1 flex-col p-2">
           <VideoToAppUI />
         </div>

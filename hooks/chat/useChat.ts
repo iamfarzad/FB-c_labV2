@@ -20,6 +20,7 @@ interface ChatData {
   }
   sessionId?: string
   userId?: string
+  enableLeadGeneration?: boolean
 }
 
 interface UseChatProps {
@@ -157,7 +158,7 @@ export function useChat({
             userId: data.userId,
             // Keep enhanced flags aligned with the current chat page implementation
             conversationSessionId: data.sessionId || undefined,
-            enableLeadGeneration: true
+            enableLeadGeneration: data.enableLeadGeneration ?? false
           }
         }),
         signal: abortControllerRef.current.signal

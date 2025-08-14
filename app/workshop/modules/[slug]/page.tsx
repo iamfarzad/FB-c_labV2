@@ -54,6 +54,13 @@ export default function WorkshopModulePage() {
     }
     setShowConfetti(true)
     completeModule(slug, { title: module.title, phase: module.phase })
+    try {
+      fetch('/api/intelligence/education', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ moduleId: slug, stepId: 'quiz', xp: 30, moduleTitle: module.title })
+      }).catch(() => {})
+    } catch {}
     setIsCompleted(true)
     setTimeout(() => { setShowCompletionDialog(true); setShowConfetti(false) }, 1200)
   }

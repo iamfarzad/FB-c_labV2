@@ -22,6 +22,8 @@ const workshopFeatures = [
   "You learn AI automation by doing and build real AI tools",
 ]
 
+export const dynamic = "force-dynamic"
+
 export default function WorkshopPage() {
   return (
     <>

@@ -43,6 +43,7 @@ export function CanvasOrchestrator() {
               videoUrl={(props?.videoUrl as string) || ''}
               onClose={closeCanvas}
               onAppGenerated={props?.onAppGenerated as any}
+              hideHeader
             />
           </div>
         )
@@ -74,6 +75,7 @@ export function CanvasOrchestrator() {
       onClose={closeCanvas}
       left={props?.left as React.ReactNode}
       consoleArea={props?.console as React.ReactNode}
+      compact
     >
       {content}
     </CanvasWorkspace>

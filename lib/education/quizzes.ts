@@ -13,6 +13,16 @@ export const MODULE_QUIZZES: Record<string, QuizQuestion[]> = {
       ],
       correctKey: 'b',
     },
+    {
+      id: 'q2',
+      prompt: 'LLMs are a subset of…',
+      options: [
+        { key: 'a', label: 'Generative AI' },
+        { key: 'b', label: 'Reinforcement Learning' },
+        { key: 'c', label: 'Robotics' },
+      ],
+      correctKey: 'a',
+    },
   ],
   'tokenization-visualizer': [
     {
@@ -22,6 +32,16 @@ export const MODULE_QUIZZES: Record<string, QuizQuestion[]> = {
         { key: 'a', label: 'A unit of currency' },
         { key: 'b', label: 'A piece of text (word, subword, or character)' },
         { key: 'c', label: 'A GPU memory page' },
+      ],
+      correctKey: 'b',
+    },
+    {
+      id: 'q2',
+      prompt: 'The context window limits…',
+      options: [
+        { key: 'a', label: 'How many parameters a model has' },
+        { key: 'b', label: 'How many tokens the model considers at once' },
+        { key: 'c', label: 'Network latency' },
       ],
       correctKey: 'b',
     },
@@ -37,6 +57,16 @@ export const MODULE_QUIZZES: Record<string, QuizQuestion[]> = {
       ],
       correctKey: 'a',
     },
+    {
+      id: 'q2',
+      prompt: 'Chinchilla showed that for a fixed compute budget…',
+      options: [
+        { key: 'a', label: 'Smaller models trained on more tokens can perform better' },
+        { key: 'b', label: 'Only bigger models matter' },
+        { key: 'c', label: 'Data has no effect' },
+      ],
+      correctKey: 'a',
+    },
   ],
   'attention-mechanism-demo': [
     {
@@ -49,6 +79,16 @@ export const MODULE_QUIZZES: Record<string, QuizQuestion[]> = {
       ],
       correctKey: 'b',
     },
+    {
+      id: 'q2',
+      prompt: 'Multi‑head attention helps by…',
+      options: [
+        { key: 'a', label: 'Looking at different relationships in parallel' },
+        { key: 'b', label: 'Reducing tokenization cost' },
+        { key: 'c', label: 'Storing weights on disk' },
+      ],
+      correctKey: 'a',
+    },
   ],
   'embedding-explorer': [
     {
@@ -58,6 +98,16 @@ export const MODULE_QUIZZES: Record<string, QuizQuestion[]> = {
         { key: 'a', label: 'Close together in vector space' },
         { key: 'b', label: 'Randomly' },
         { key: 'c', label: 'Only along the x‑axis' },
+      ],
+      correctKey: 'a',
+    },
+    {
+      id: 'q2',
+      prompt: 'Cosine similarity compares embeddings by…',
+      options: [
+        { key: 'a', label: 'Angle between vectors' },
+        { key: 'b', label: 'Parameter count' },
+        { key: 'c', label: 'Text length' },
       ],
       correctKey: 'a',
     },
@@ -73,6 +123,16 @@ export const MODULE_QUIZZES: Record<string, QuizQuestion[]> = {
       ],
       correctKey: 'b',
     },
+    {
+      id: 'q2',
+      prompt: 'Top‑p sampling selects tokens…',
+      options: [
+        { key: 'a', label: 'From the smallest probability only' },
+        { key: 'b', label: 'Until cumulative probability reaches p' },
+        { key: 'c', label: 'Alphabetically' },
+      ],
+      correctKey: 'b',
+    },
   ],
   'customization-modes': [
     {
@@ -84,6 +144,16 @@ export const MODULE_QUIZZES: Record<string, QuizQuestion[]> = {
         { key: 'c', label: 'Prompt engineering' },
       ],
       correctKey: 'c',
+    },
+    {
+      id: 'q2',
+      prompt: 'RAG is preferred when…',
+      options: [
+        { key: 'a', label: 'You need to inject fresh/private knowledge' },
+        { key: 'b', label: 'You only need formatting changes' },
+        { key: 'c', label: 'You want fewer tokens' },
+      ],
+      correctKey: 'a',
     },
   ],
   'prompt-engineering-sandbox': [
@@ -97,6 +167,16 @@ export const MODULE_QUIZZES: Record<string, QuizQuestion[]> = {
       ],
       correctKey: 'b',
     },
+    {
+      id: 'q2',
+      prompt: 'Chain‑of‑thought helps when…',
+      options: [
+        { key: 'a', label: 'You need stepwise reasoning' },
+        { key: 'b', label: 'You want more randomness' },
+        { key: 'c', label: 'You need faster sampling' },
+      ],
+      correctKey: 'a',
+    },
   ],
   'cost-speed-chart': [
     {
@@ -106,6 +186,16 @@ export const MODULE_QUIZZES: Record<string, QuizQuestion[]> = {
         { key: 'a', label: 'Latency, cost, and quality' },
         { key: 'b', label: 'Only parameters' },
         { key: 'c', label: 'Only speed' },
+      ],
+      correctKey: 'a',
+    },
+    {
+      id: 'q2',
+      prompt: 'Smaller models can be better when…',
+      options: [
+        { key: 'a', label: 'Latency/cost limits dominate' },
+        { key: 'b', label: 'You never care about speed' },
+        { key: 'c', label: 'Input length is zero' },
       ],
       correctKey: 'a',
     },
@@ -121,6 +211,16 @@ export const MODULE_QUIZZES: Record<string, QuizQuestion[]> = {
       ],
       correctKey: 'a',
     },
+    {
+      id: 'q2',
+      prompt: 'Guardrails typically include…',
+      options: [
+        { key: 'a', label: 'Input validation and policy checks' },
+        { key: 'b', label: 'Random token dropping' },
+        { key: 'c', label: 'GPU overclocking' },
+      ],
+      correctKey: 'a',
+    },
   ],
   'bias-explorer': [
     {
@@ -133,6 +233,16 @@ export const MODULE_QUIZZES: Record<string, QuizQuestion[]> = {
       ],
       correctKey: 'a',
     },
+    {
+      id: 'q2',
+      prompt: 'Evaluation should consider…',
+      options: [
+        { key: 'a', label: 'Representative test sets' },
+        { key: 'b', label: 'Only hand‑picked examples' },
+        { key: 'c', label: 'No measurements' },
+      ],
+      correctKey: 'a',
+    },
   ],
   'reasoning-visualizer': [
     {
@@ -142,6 +252,16 @@ export const MODULE_QUIZZES: Record<string, QuizQuestion[]> = {
         { key: 'a', label: 'Splitting problems into steps' },
         { key: 'b', label: 'Hiding intermediate steps' },
         { key: 'c', label: 'Only using embeddings' },
+      ],
+      correctKey: 'a',
+    },
+    {
+      id: 'q2',
+      prompt: 'A failure mode to watch for is…',
+      options: [
+        { key: 'a', label: 'Hallucinated intermediate steps' },
+        { key: 'b', label: 'Lower cosine similarity' },
+        { key: 'c', label: 'Too many parameters' },
       ],
       correctKey: 'a',
     },

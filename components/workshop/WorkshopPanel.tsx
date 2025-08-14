@@ -1,7 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -12,6 +13,9 @@ import { useModuleProgress } from "@/hooks/workshop/use-module-progress"
 import { BookOpen, Award, TrendingUp, Brain, ChevronRight } from "lucide-react"
 import { CourseOutline } from "@/components/workshop/CourseOutline"
 import { CitationsDemo } from "@/components/experience/citations-demo"
+import ModuleRenderer from "@/components/workshop/ModuleRenderer"
+import { getModuleBySlug } from "@/lib/education/modules"
+import { MODULE_QUIZZES, hasQuizFor, type QuizQuestion } from "@/lib/education/quizzes"
 
 export function WorkshopPanel() {
   const { completedModules } = useModuleProgress()
@@ -19,6 +23,11 @@ export function WorkshopPanel() {
     "dashboard" | "modules" | "outline" | "lab" | "achievements" | "stats"
   >("dashboard")
   const [showConfetti, setShowConfetti] = useState(false)
+  const [activeModuleSlug, setActiveModuleSlug] = useState<string | null>(null)
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({})
+  const [quizSubmitted, setQuizSubmitted] = useState(false)
+  const router = useRouter()
+  const search = useSearchParams()
 
   const modules = useMemo(() => getAllModules(), [])
   const augmented = useMemo(() => {
@@ -35,6 +44,32 @@ export function WorkshopPanel() {
 
   const xpForModule = (phase: number) => (phase <= 1 ? 30 : phase === 2 ? 40 : phase === 3 ? 50 : 60)
   const totalXp = augmented.reduce((sum, m) => sum + (m.completed ? xpForModule(m.phase) : 0), 0)
+
+  // URL -> in-panel module view (shallow)
+  useEffect(() => {
+    const slug = search?.get('module')
+    if (slug) {
+      setActiveSection('modules')
+      setActiveModuleSlug(slug)
+      setQuizAnswers({})
+      setQuizSubmitted(false)
+    }
+  }, [search])
+
+  function openModule(slug: string) {
+    setActiveSection('modules')
+    setActiveModuleSlug(slug)
+    setQuizAnswers({})
+    setQuizSubmitted(false)
+    try { router.replace(`/workshop?module=${slug}`, { scroll: false }) } catch {}
+  }
+
+  function closeModule() {
+    setActiveModuleSlug(null)
+    setQuizAnswers({})
+    setQuizSubmitted(false)
+    try { router.replace(`/workshop`, { scroll: false }) } catch {}
+  }
 
   function handleCelebrate() {
     setShowConfetti(true)
@@ -116,6 +151,67 @@ export function WorkshopPanel() {
   }
 
   function Modules() {
+    if (activeModuleSlug) {
+      const module = getModuleBySlug(activeModuleSlug)
+      if (!module) return <div className="text-muted-foreground">Module not found.</div>
+      const questions: QuizQuestion[] = MODULE_QUIZZES[activeModuleSlug] || []
+      const allCorrect = questions.length === 0 || questions.every(q => quizAnswers[q.id] === q.correctKey)
+      const isCompleted = completedModules.includes(activeModuleSlug)
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold">{module.title}</h2>
+              <div className="text-sm text-muted-foreground">Phase {module.phase}</div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={closeModule}>Back</Button>
+              <Button
+                variant={isCompleted ? 'outline' : 'default'}
+                disabled={isCompleted || (hasQuizFor(activeModuleSlug) && !allCorrect)}
+                onClick={() => {
+                  if (hasQuizFor(activeModuleSlug) && !allCorrect) { setQuizSubmitted(true); return }
+                  setShowConfetti(true)
+                  try {
+                    fetch('/api/intelligence/education', {
+                      method: 'POST', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ moduleId: activeModuleSlug, stepId: 'quiz', xp: 30, moduleTitle: module.title })
+                    }).catch(() => {})
+                  } catch {}
+                }}
+              >{isCompleted ? 'Completed' : 'Mark as Complete'}</Button>
+            </div>
+          </div>
+          <ModuleRenderer module={module} />
+          {hasQuizFor(activeModuleSlug) && (
+            <Card>
+              <CardHeader><CardTitle className="text-lg">Quick Check</CardTitle></CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {questions.map(q => (
+                    <div key={q.id} className="space-y-3">
+                      <div className="text-sm font-medium">{q.prompt}</div>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {q.options.map(opt => (
+                          <Button key={opt.key} variant={quizAnswers[q.id] === opt.key ? 'default' : 'outline'} onClick={() => setQuizAnswers(prev => ({ ...prev, [q.id]: opt.key }))} className="justify-start">{opt.label}</Button>
+                        ))}
+                      </div>
+                      {quizSubmitted && quizAnswers[q.id] !== q.correctKey && (
+                        <div className="text-xs text-red-600">Try again.</div>
+                      )}
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <Button onClick={() => setQuizSubmitted(true)}>Check Answers</Button>
+                    <Button variant="ghost" onClick={() => { setQuizAnswers({}); setQuizSubmitted(false) }}>Reset</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )
+    }
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -135,11 +231,9 @@ export function WorkshopPanel() {
                   <div className="text-sm text-muted-foreground truncate">{m.description}</div>
                   <div className="text-xs text-muted-foreground mt-1">~{m.duration}</div>
                 </div>
-                <Button asChild variant={m.completed ? "outline" : "default"}>
-                  <Link href={`/workshop/modules/${m.slug}`}>
-                    {m.completed ? "Review" : "Start"}
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </Link>
+                <Button variant={m.completed ? "outline" : "default"} onClick={() => openModule(m.slug)}>
+                  {m.completed ? "Review" : "Start"}
+                  <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
             </CardContent>

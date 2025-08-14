@@ -15,9 +15,10 @@ export type CanvasWorkspaceProps = {
   left?: React.ReactNode
   consoleArea?: React.ReactNode
   children: React.ReactNode
+  compact?: boolean
 }
 
-export function CanvasWorkspace({ open, title = 'Canvas', onClose, left, consoleArea, children }: CanvasWorkspaceProps) {
+export function CanvasWorkspace({ open, title = 'Canvas', onClose, left, consoleArea, children, compact }: CanvasWorkspaceProps) {
   const isMobile = useIsMobile()
   useEffect(() => {
     if (!open) return
@@ -33,16 +34,16 @@ export function CanvasWorkspace({ open, title = 'Canvas', onClose, left, console
   return (
     <div className="fixed inset-0 z-[70] bg-background/95">
       {/* Toolbar */}
-      <div className="flex h-12 items-center justify-between border-b px-3">
+      <div className={compact ? "flex h-10 items-center justify-between border-b px-2" : "flex h-12 items-center justify-between border-b px-3"}>
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-accent" />
-          <span className="text-sm font-medium">{title}</span>
+          <div className={compact ? "h-1.5 w-1.5 rounded-full bg-accent" : "h-2 w-2 rounded-full bg-accent"} />
+          <span className={compact ? "text-xs font-medium" : "text-sm font-medium"}>{title}</span>
         </div>
         <div className="flex items-center gap-2">
           {isMobile && left ? (
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm">Details</Button>
+                <Button variant="ghost" size={compact ? "xs" : "sm"}>Details</Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[88vw] max-w-[420px]">
                 <div className="h-full overflow-auto p-2 text-sm">{left}</div>
@@ -59,7 +60,7 @@ export function CanvasWorkspace({ open, title = 'Canvas', onClose, left, console
         </div>
       </div>
       {/* Body with resizable panels */}
-      <div className="h-[calc(100%-3rem)] w-full overflow-hidden p-3">
+      <div className={compact ? "h-[calc(100%-2.5rem)] w-full overflow-hidden p-2" : "h-[calc(100%-3rem)] w-full overflow-hidden p-3"}>
         {isMobile ? (
           <div className="flex h-full flex-col gap-3">
             <div className="flex-1 overflow-hidden rounded-md border bg-background">
