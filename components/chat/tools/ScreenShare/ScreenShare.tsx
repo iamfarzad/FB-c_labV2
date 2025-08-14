@@ -65,9 +65,10 @@ export function ScreenShare({
     try {
       setIsAnalyzing(true)
       onLog?.({ level: 'log', message: 'Analyzing screen frame…', timestamp: new Date() })
+      const sid = typeof window !== 'undefined' ? (localStorage.getItem('intelligence-session-id') || '') : ''
       const response = await fetch('/api/tools/screen', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(sid ? { 'x-intelligence-session-id': sid } : {}) },
         body: JSON.stringify({
           image: imageData,
           type: 'screen' // Specify this is a screen capture for analysis

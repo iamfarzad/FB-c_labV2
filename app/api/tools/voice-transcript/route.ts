@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { VoiceTranscriptSchema } from '@/lib/services/tool-service'
 import type { ToolRunResult } from '@/types/intelligence'
+import { recordCapabilityUsed } from '@/lib/context/capabilities'
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,7 +28,10 @@ export async function POST(req: NextRequest) {
         processedAt: new Date().toISOString()
       }
     }
-
+    const sessionId = req.headers.get('x-intelligence-session-id') || undefined
+    if (sessionId) {
+      try { await recordCapabilityUsed(String(sessionId), 'voiceTranscript', { bytes: audioData.length, mimeType }) } catch {}
+    }
     return NextResponse.json(response, { status: 200 })
     
   } catch (error) {

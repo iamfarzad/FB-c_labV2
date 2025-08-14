@@ -8,7 +8,7 @@ describe('Header Component', () => {
     expect(screen.getByText('Home')).toBeInTheDocument()
     expect(screen.getByText('Consulting')).toBeInTheDocument()
     expect(screen.getByText('About')).toBeInTheDocument()
-    expect(screen.getByText('Workshop')).toBeInTheDocument()
+    // Workshop moved to collab shell sidebar; not shown in global header
     expect(screen.getByText('Contact')).toBeInTheDocument()
   })
 

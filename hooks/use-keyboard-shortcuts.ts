@@ -151,12 +151,7 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
         return
       }
 
-      // Workshop: Alt + 3
-      if (altModifier && event.key === "3" && !modifier && !shiftModifier) {
-        event.preventDefault()
-        router.push("/workshop")
-        return
-      }
+      // Workshop shortcut removed; workshop is accessible via collab sidebar
 
       // Contact: Alt + 4
       if (altModifier && event.key === "4" && !modifier && !shiftModifier) {
@@ -274,7 +269,7 @@ function getShortcutsList() {
         { key: "Alt + C", description: "Go to Chat" },
         { key: "Alt + 1", description: "Go to Consulting" },
         { key: "Alt + 2", description: "Go to About" },
-        { key: "Alt + 3", description: "Go to Workshop" },
+        // Workshop removed from global nav; accessible in collab shell
         { key: "Alt + 4", description: "Go to Contact" },
       ],
     },

@@ -11,6 +11,7 @@ import { selectModelForFeature, estimateTokens } from "@/lib/model-selector"
 import { getSupabase } from "@/lib/supabase/server"
 import { enforceBudgetAndLog } from "@/lib/token-usage-logger"
 import { withFullSecurity } from "@/lib/api-security"
+import { recordCapabilityUsed } from "@/lib/context/capabilities"
 
 
 // Timeout wrapper for production stability
@@ -285,11 +286,15 @@ export const POST = withFullSecurity(async function POST(request: NextRequest) {
         correlationId 
       })
 
-      return NextResponse.json({ 
+      const resBody = { 
         spec: parsedSpec,
         model: modelSelection.model,
         estimatedCost: modelSelection.estimatedCost
-      })
+      }
+      if (sessionId) {
+        try { await recordCapabilityUsed(String(sessionId), 'video2app', { action: 'spec', hasTranscript: true }) } catch {}
+      }
+      return NextResponse.json(resBody)
     } else if (action === "generateCode") {
       if (!spec) throw new Error('Spec required for code generation')
       
@@ -405,12 +410,16 @@ export const POST = withFullSecurity(async function POST(request: NextRequest) {
         correlationId 
       })
       
-      return NextResponse.json({ 
+      const resBody2 = { 
         code,
         model: modelSelection.model,
         estimatedCost: modelSelection.estimatedCost,
         artifactId
-      })
+      }
+      if (sessionId) {
+        try { await recordCapabilityUsed(String(sessionId), 'video2app', { action: 'code', artifactId }) } catch {}
+      }
+      return NextResponse.json(resBody2)
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 })

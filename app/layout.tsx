@@ -4,8 +4,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { MeetingProvider } from "@/components/providers/meeting-provider"
 import { DemoSessionProvider } from "@/components/demo-session-manager"
-import Header from "@/components/header"
-import Footer from "@/components/footer"
+import { GlobalChrome } from "@/components/GlobalChrome"
 import { Toaster } from "@/components/ui/toaster"
 import { PermissionManager } from "@/components/permissions/PermissionManager"
 import { cn } from "@/lib/utils"
@@ -34,6 +33,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const pathname = undefined as unknown as string // placeholder for types; actual hook used in client shell
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -44,11 +44,10 @@ export default function RootLayout({
           <DemoSessionProvider>
             <MeetingProvider>
               <CanvasProvider>
-                <Header />
+                <GlobalChrome />
                 <main className="min-h-screen">
                   {children}
                 </main>
-                <Footer />
                 <Toaster />
                 <PermissionManager />
               </CanvasProvider>

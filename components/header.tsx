@@ -17,7 +17,7 @@ const navLinks = [
   { href: "/", label: "Home" },
   { href: "/consulting", label: "Consulting" },
   { href: "/about", label: "About" },
-  { href: "/workshop", label: "Workshop" },
+  // Workshop now accessed via the sidebar in the collab shell
   { href: "/contact", label: "Contact" },
 ]
 

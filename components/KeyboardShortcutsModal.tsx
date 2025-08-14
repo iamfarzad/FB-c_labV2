@@ -56,7 +56,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
         { key: ["Alt", "C"], description: "Go to Chat" },
         { key: ["Alt", "1"], description: "Go to Consulting" },
         { key: ["Alt", "2"], description: "Go to About" },
-        { key: ["Alt", "3"], description: "Go to Workshop" },
+        // Workshop moved into collab shell sidebar
         { key: ["Alt", "4"], description: "Go to Contact" },
       ],
     },

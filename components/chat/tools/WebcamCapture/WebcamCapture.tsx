@@ -81,10 +81,12 @@ export function WebcamCapture({
       setIsAnalyzing(true)
       onLog?.({ level: 'log', message: 'Analyzing webcam frame…', timestamp: new Date() })
       
+      const sid = typeof window !== 'undefined' ? (localStorage.getItem('intelligence-session-id') || '') : ''
       const response = await fetch('/api/tools/webcam', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(sid ? { 'x-intelligence-session-id': sid } : {}),
         },
         body: JSON.stringify({
           image: imageData,
