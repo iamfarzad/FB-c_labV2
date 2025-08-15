@@ -96,6 +96,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2025-01-24] - Collab Page Chat Visibility Fix
+
+### Fixed
+- **Chat Area Visibility**: Resolved critical UI issue where chat output was barely visible
+  - Added proper background styling with `bg-muted/10` and border for chat container
+  - Improved chat area contrast with rounded corners and margin spacing
+  - Added empty state for dock mode with clear messaging and icon
+  - Fixed ConversationContent padding for dock mode to prevent overflow issues
+
+### Improved
+- **Chat UX**: Enhanced chat interface visibility and user experience
+  - Chat area now has clear visual boundaries and proper contrast
+  - Added "Ready to chat with F.B/c AI" empty state when no messages
+  - Improved dock mode styling with better spacing and padding
+  - Chat container now properly contained within rounded border
+
+### Technical
+- **Component Styling**: Updated AIEChat and collab page styling
+  - Added MessageCircle import for empty state icon
+  - Improved responsive padding for dock vs full mode
+  - Enhanced visual hierarchy with proper background colors
+
+## [2025-08-15] - Collab Page Cleanup (No-op Features Removed)
+
+### Removed
+- Header online presence badge ("0 online") pending real presence pipeline
+- Sidebar footer actions: Plus and Settings (no functional pipeline yet)
+
+### Changed
+- Cleaned up unused icon imports in `app/collab/page.tsx`
+- Kept tooltip and accessibility structure intact for existing feature tabs only
+
 ## [Unreleased]
 
 ### UI Unification & Mobile Canvas - 2025-08-14
@@ -128,6 +160,17 @@ All notable changes to this project will be documented in this file.
   - `scripts/function-validation-criteria.ts` endpoints updated
 - Middleware cleanup: removed legacy `/api/lead-research` mock mapping
 - No functional UI regressions expected; mocks still respected when enabled
+
+### Browser Tools MCP Integration - 2025-08-14
+- Added pnpm scripts to streamline AgentDeskAI Browser Tools setup:
+  - `pnpm mcp:bridge` → runs `@agentdeskai/browser-tools-server@latest` (bridge on port 3025)
+  - `pnpm mcp:server` → runs `@agentdeskai/browser-tools-mcp@1.2.0`
+  - `pnpm mcp:dev` → runs both concurrently
+- Usage notes:
+  - Load the Chrome extension (unpacked) from the repo's `chrome-extension` folder
+  - In Cursor Settings → MCP Servers, configure:
+    `{ "mcpServers": { "browser-tools": { "command": "pnpm", "args": ["mcp:server"] } } }`
+  - Ensure the bridge is running before starting the MCP server
 
 ### Gamified Workshop Education - 2025-08-13
 - Converted `/workshop` into an interactive, gamified education page

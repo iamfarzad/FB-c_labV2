@@ -2,7 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useState } from 'react'
 
-export type CanvasType = 'webpreview' | 'screen' | 'webcam' | 'video' | 'pdf' | 'code'
+export type CanvasType = 'webpreview' | 'screen' | 'webcam' | 'video' | 'pdf' | 'code' | 'roi'
 
 export type CanvasState = {
   type: CanvasType | null

@@ -5,6 +5,7 @@ import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/comp
 import { Button } from '@/components/ui/button'
 import { FbcIcon } from '@/components/ui/fbc-icon'
 import { Video, Send, Download, Calculator, Monitor, Camera } from '@/lib/icon-mapping'
+import { MessageCircle } from 'lucide-react'
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation'
 import { Message, MessageContent, MessageAvatar } from '@/components/ai-elements/message'
 import { Response } from '@/components/ai-elements/response'
@@ -34,7 +35,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 
-export function AIEChat() {
+export function AIEChat({ mode = 'full' as 'full' | 'dock', onOpenVoice }: { mode?: 'full' | 'dock', onOpenVoice?: () => void }) {
+  const isDock = mode === 'dock'
   const meeting = useMeeting()
   const [sessionId, setSessionId] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null
@@ -409,7 +411,8 @@ export function AIEChat() {
 
   return (
     <TooltipProvider>
-      <div className="fixed inset-0 z-40 flex h-[100dvh] flex-col overflow-hidden bg-background" data-chat-root>
+      <div className={cn(isDock ? 'h-full flex flex-col overflow-hidden' : 'fixed inset-0 z-40 flex h-[100dvh] flex-col overflow-hidden bg-background')} data-chat-root>
+        {!isDock && (
         <header className="flex items-center justify-between border-b bg-background/50 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex items-center gap-3">
             <FbcIcon className="h-6 w-6" />
@@ -424,17 +427,18 @@ export function AIEChat() {
               <Button
                 data-test="open-voice"
                 aria-label="Open voice overlay"
-                onClick={() => setOpenVoice(true)}
+                onClick={() => (onOpenVoice ? onOpenVoice() : setOpenVoice(true))}
               >
                 Voice (test)
               </Button>
             )}
           </div>
         </header>
+        )}
 
         {/* Consent Hard Gate */}
         {consentChecked && !consentAllowed && !consentDenied && (
-          <div className="absolute inset-0 z-50 grid place-items-center bg-background/95 p-4">
+          <div className={cn("grid place-items-center p-4", isDock ? "" : "absolute inset-0 z-50 bg-background/95") }>
             <div className="w-full max-w-lg rounded-xl border bg-card p-4 shadow">
               <h2 className="text-base font-semibold">Personalize this chat using your public company info?</h2>
               <p className="mt-1 text-sm text-muted-foreground">We’ll fetch from your company site and LinkedIn to ground results with citations. See our <a href="/privacy" className="underline">Privacy & Terms</a>.</p>
@@ -463,7 +467,7 @@ export function AIEChat() {
         )}
 
         {consentDenied && (
-          <div className="absolute inset-0 z-50 grid place-items-center bg-background/95 p-4">
+          <div className={cn("grid place-items-center p-4", isDock ? "" : "absolute inset-0 z-50 bg-background/95") }>
             <div className="w-full max-w-md rounded-xl border bg-card p-4 text-center">
               <h2 className="text-base font-semibold">Consent is required to continue</h2>
               <p className="mt-1 text-sm text-muted-foreground">We use public company info with citations to personalize results. Review our <a href="/privacy" className="underline">policy</a> and start again anytime.</p>
@@ -473,7 +477,11 @@ export function AIEChat() {
 
         <div className="flex flex-1 min-h-0 flex-col">
           <Conversation className="h-full">
-            <ConversationContent className="mx-auto w-full max-w-3xl space-y-2 p-4 pb-28 md:pb-32">
+            <ConversationContent className={cn(
+              isDock
+                ? "mx-auto w-full max-w-3xl space-y-2 p-4 pb-4"
+                : "w-full max-w-none space-y-4 p-4 md:p-6 pb-28 md:pb-32"
+            )}>
               {/* Personalized greeting when context is loaded and no messages yet */}
               {context && uiMessages.length === 0 && !isLoading && (
                 <Message from="assistant">
@@ -484,6 +492,17 @@ export function AIEChat() {
                     <Response>{generatePersonalizedGreeting(context)}</Response>
                   </MessageContent>
                 </Message>
+              )}
+              
+              {/* Empty state for dock mode when no messages */}
+              {!context && uiMessages.length === 0 && !isLoading && isDock && (
+                <div className="flex items-center justify-center h-full text-center text-muted-foreground">
+                  <div className="max-w-sm">
+                    <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-60" />
+                    <p className="text-sm">Ready to chat with F.B/c AI</p>
+                    <p className="text-xs opacity-70 mt-1">Type a message below to get started</p>
+                  </div>
+                </div>
               )}
               
               {uiMessages.map((m, idx) => (
@@ -569,7 +588,12 @@ export function AIEChat() {
             <ConversationScrollButton className="bg-background/80 backdrop-blur z-50" />
           </Conversation>
 
-          <div className="sticky bottom-0 z-50 mx-auto w-full max-w-3xl bg-gradient-to-t from-background via-background/90 to-transparent px-4 pb-4 pt-2">
+          <div className={cn(
+            isDock
+              ? 'sticky bottom-0 z-50 mx-auto w-full max-w-3xl px-4 pb-4 pt-2'
+              : 'sticky bottom-0 z-50 w-full px-6 pb-4 pt-2',
+            isDock ? 'bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/50' : 'bg-gradient-to-t from-background via-background/90 to-transparent'
+          )}>
             {/* Phase 2: Suggested actions */}
             <SuggestedActions sessionId={sessionId} stage={stage as any} onRun={handleSuggestionRun} />
             <PromptInput onSubmit={handleSubmit}>
@@ -602,10 +626,10 @@ export function AIEChat() {
                 />
               <div className="flex items-center justify-between p-1">
                 <div className="flex items-center gap-2">
-                  {coachNext === 'roi' && (
+                   {coachNext === 'roi' && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button data-coach-cta onClick={() => { addLog('coach → roi'); openCanvas('screen'); emitUsed('roi'); }} aria-label="Open ROI calculator">
+                        <button data-coach-cta onClick={() => { addLog('coach → roi'); openCanvas('roi'); emitUsed('roi'); }} aria-label="Open ROI calculator">
                           <Calculator className="h-3.5 w-3.5" /> ROI Calculator
                         </button>
                       </TooltipTrigger>
@@ -686,7 +710,7 @@ export function AIEChat() {
             </PromptInput>
           </div>
 
-          {liveEnabled && (
+          {liveEnabled && !onOpenVoice && (
             <VoiceOverlay
               open={openVoice}
               sessionId={sessionId}
@@ -702,11 +726,13 @@ export function AIEChat() {
             </div>
           ) : null}
 
-          <div className="pointer-events-none fixed right-4 top-24 z-50 hidden md:block">
-            <div className="pointer-events-auto">
-              <LeadProgressIndicator currentStage={stage} leadData={lead} variant="rail" />
+          {!isDock && (
+            <div className="pointer-events-none fixed right-4 top-24 z-50 hidden md:block">
+              <div className="pointer-events-auto">
+                <LeadProgressIndicator currentStage={stage} leadData={lead} variant="rail" />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Global canvas overlay */}

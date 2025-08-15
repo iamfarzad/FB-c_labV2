@@ -4,3 +4,6 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+// Export spacing utilities
+export * from "./utils/spacing"

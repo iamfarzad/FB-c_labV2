@@ -1,0 +1,124 @@
+---
+alwaysApply: true
+description: Ensure the local dev pipeline (Next.js + WS + BrowserTools MCP + Bridge) runs for testing/design and to collect real data via DevTools
+---
+
+# Local Dev Pipeline: Next.js + WS + BrowserTools MCP
+
+Use this pipeline every time you test features or UI, and when you need real browser data (console, network, screenshots) via the BrowserTools Chrome extension.
+
+## Ports
+- Next.js: 3000
+- WebSocket server: 3001
+- BrowserTools Bridge: 3025
+
+Before starting, ensure no process is holding these ports. If needed, free them:
+
+```bash
+for p in 3000 3001 3025; do PID=$(lsof -ti tcp:$p); [ -n "$PID" ] && kill -9 $PID || true; done
+```
+
+## Start services (separate terminals)
+1) Bridge (required):
+```bash
+pnpm mcp:bridge
+```
+Expected log: "Aggregator listening on http://0.0.0.0:3025".
+
+2) MCP server:
+```bash
+pnpm mcp:server
+```
+Discovery should find the bridge at 127.0.0.1:3025. This uses the Cursor MCP config with BROWSER_TOOLS_SERVER_URL.
+
+3) App servers (Next.js 3000 + WS 3001):
+```bash
+pnpm dev:all
+```
+If the WS process exits immediately, run the WS server separately:
+```bash
+pnpm server
+```
+
+## Open the app
+```bash
+open http://localhost:3000/collab
+```
+
+## Cursor MCP configuration (BrowserTools)
+In Cursor Settings → MCP Servers, configure the BrowserTools server. Example equivalent to your local config:
+
+```json
+{
+  "mcpServers": {
+    "github.com/AgentDeskAI/browser-tools-mcp": {
+      "command": "pnpm",
+      "args": ["dlx", "@agentdeskai/browser-tools-mcp@1.2.0"],
+      "env": { "BROWSER_TOOLS_SERVER_URL": "http://localhost:3025" },
+      "disabled": false,
+      "autoApprove": [
+        "getConsoleLogs",
+        "getConsoleErrors",
+        "getNetworkLogs",
+        "takeScreenshot",
+        "runNextJSAudit"
+      ],
+      "timeout": 1800
+    }
+  }
+}
+```
+
+## Chrome Extension
+- Load the BrowserTools Chrome extension (unpacked) from the repo's `chrome-extension` folder.
+- Open DevTools → "BrowserTools" panel for logging, screenshots, and audits.
+
+## Health checks
+- App: `curl -sSI http://localhost:3000/collab` → 200 OK expected
+- Bridge: `curl -sSI http://localhost:3025` → 404 at `/` is OK; confirms listener
+- MCP: Terminal logs should show "Successfully discovered server at 127.0.0.1:3025"
+
+## Troubleshooting
+- If BrowserTools doesn’t appear in Cursor, restart Cursor after saving MCP config.
+- Verify the extension panel is present in DevTools and that the bridge is running on 3025.
+- Respect project ports policy: Next.js on 3000, WS on 3001, Bridge on 3025. See [server/live-server.ts](mdc:server/live-server.ts) and [middleware.ts](mdc:middleware.ts).
+
+## ✅ Prerequisites (assumed done)
+- Extension installed and active in Chrome (AI Browser Agent / BrowserTools extension)
+- MCP server running (use `pnpm mcp:server`; equivalent: `pnpm exec browser-tools-mcp`)
+- Browser Tools Bridge running (use `pnpm mcp:bridge`; equivalent: `npx @agentdeskai/browser-tools-server@latest`)
+- Cursor configured with the BrowserTools MCP entry (see config above)
+- Target webpage is open in Chrome
+- DevTools is open, and the “BrowserTools” tab is visible and connected
+
+## 🔧 Prompt examples to use in Cursor (with BrowserTools selected)
+
+1) UI/UX critique
+
+Analyze the current page’s UI and UX. Identify layout issues, spacing inconsistencies, visual hierarchy problems, and accessibility concerns. Suggest improvements based on modern design principles.
+
+2) Heuristic evaluation
+
+Perform a heuristic evaluation on the current page. Highlight violations of usability principles like consistency, feedback, affordance, and clarity.
+
+3) Component audit
+
+List all key UI components visible on the screen (cards, buttons, inputs). For each, evaluate contrast, padding, and responsiveness.
+
+4) Mobile readiness check
+
+Check if the page appears mobile responsive. Identify any elements that overflow or break layout at narrow widths.
+
+5) Design system check
+
+Does this page appear to follow a consistent design system? Are button styles, font sizes, and colors applied consistently across elements?
+
+6) Performance review
+
+Check for large images, slow-loading scripts, layout shifts, or animation jank that could hurt perceived performance or UX.
+
+7) User interaction feedback
+
+Click one of the buttons and describe the feedback provided to the user. Is it clear something happened? Is the animation or response time appropriate?
+
+

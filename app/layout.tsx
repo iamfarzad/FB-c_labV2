@@ -44,12 +44,13 @@ export default function RootLayout({
           <DemoSessionProvider>
             <MeetingProvider>
               <CanvasProvider>
-                <GlobalChrome />
-                <main className="min-h-screen">
-                  {children}
-                </main>
-                <Toaster />
-                <PermissionManager />
+                <GlobalChrome>
+                  <main className="min-h-screen">
+                    {children}
+                  </main>
+                  <Toaster />
+                  <PermissionManager />
+                </GlobalChrome>
               </CanvasProvider>
             </MeetingProvider>
           </DemoSessionProvider>

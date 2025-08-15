@@ -15,7 +15,12 @@ interface UploadedFile {
 }
 
 export function EnhancedFileUpload() {
-  const { addActivity } = useChatContext()
+  // Safe activity logger: works even if ChatProvider isn't mounted (e.g., on /collab)
+  let addActivity: (entry: any) => void = () => {}
+  try {
+    const ctx = (useChatContext as any)()
+    if (ctx?.addActivity) addActivity = ctx.addActivity
+  } catch {}
   const [files, setFiles] = useState<UploadedFile[]>([])
 
   const getSessionId = () => {
