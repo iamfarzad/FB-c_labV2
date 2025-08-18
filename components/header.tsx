@@ -65,11 +65,13 @@ export default function Header() {
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
           <LanguageSelector />
-          <ThemeToggle />
+          <div className="min-h-11 min-w-11 inline-flex items-center justify-center">
+            <ThemeToggle />
+          </div>
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="min-h-11 min-w-11">
                   <Menu className="h-6 w-6" />
                   <span className="sr-only">Open navigation menu</span>
                 </Button>
