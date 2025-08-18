@@ -18,6 +18,7 @@ import { ScreenSharePanel } from "@/components/collab/ScreenSharePanel"
 import { PanelSkeleton } from "@/components/collab/PanelSkeleton"
 import { RoiPanel } from "@/components/collab/RoiPanel"
 import { HelpHint } from "@/components/collab/HelpHint"
+import { VoiceOverlay } from "@/components/collab/VoiceOverlay"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi" | "webpreview"
 
@@ -27,6 +28,7 @@ export default function TestChatDesignPage() {
   const [input, setInput] = useState("")
   const [sessionId, setSessionId] = useState<string | null>(() => (typeof window !== 'undefined' ? window.localStorage.getItem('intelligence-session-id') : null))
   const [intent, setIntent] = useState<string | null>(null)
+  const [voiceOpen, setVoiceOpen] = useState(false)
 
   function switchState(next: PanelState) {
     if (next === 'empty') return setState(next)
@@ -143,11 +145,13 @@ export default function TestChatDesignPage() {
                 { id: 'roi', label: 'ROI', onClick: () => switchState('roi') },
                 { id: 'video', label: 'Video→App', onClick: () => switchState('video') },
               ]}
+              rightArea={<button type="button" className="btn-minimal" onClick={() => setVoiceOpen(true)} aria-label="Open voice overlay">Mic</button>}
             />
           </div>
         </div>
       }
     />
+    <VoiceOverlay open={voiceOpen} onClose={() => setVoiceOpen(false)} />
     </>
   )
 }
