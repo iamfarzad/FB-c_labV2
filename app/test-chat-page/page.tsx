@@ -66,9 +66,8 @@ export default function TestChatDesignPage() {
               <div className="mt-4">
                 <button
                   type="button"
-                  aria-label="Start website analysis"
                   onClick={() => switchState('webpreview')}
-                  className="inline-flex h-10 min-w-[44px] items-center justify-center rounded-lg bg-[var(--color-orange-accent)] px-4 text-sm font-medium text-white shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-orange-accent)]/40 focus-visible:ring-offset-2 hover:opacity-95 active:opacity-90"
+                  className="inline-flex h-10 min-w-[44px] items-center justify-center rounded-lg bg-[var(--color-orange-accent)] px-4 text-sm font-medium text-foreground shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-orange-accent)]/40 focus-visible:ring-offset-2 hover:opacity-95 active:opacity-90"
                 >
                   Start with Website Analysis
                 </button>
