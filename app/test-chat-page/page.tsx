@@ -94,9 +94,14 @@ export default function TestChatDesignPage() {
           }
         >
           {state === 'empty' ? (
-            <div className="rounded-xl border border-border/50 bg-background/60 p-6 text-sm text-muted-foreground">
-              Mock content panel: <span className="font-medium text-foreground">{state}</span>
-            </div>
+            <ChatPane sessionId={sessionId} onAfterSend={async (text) => {
+              try {
+                setIntentLoading(true)
+                const res = await fetch('/api/intelligence/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, userMessage: text }) })
+                if (res.ok) { const j = await res.json(); setIntent(j?.output?.type || j?.type || null) }
+              } catch {}
+              finally { setIntentLoading(false) }
+            }} />
           ) : loading ? (
             <PanelSkeleton />
           ) : state === 'webpreview' ? (
