@@ -21,7 +21,11 @@ interface ChatPaneProps {
 export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
   const { messages, input, setInput, isLoading, sendMessage, clearMessages } = useChat({ data: { enableLeadGeneration: false, sessionId: sessionId ?? undefined } })
 
-  const uiMessages = useMemo(() => messages.map(m => ({ id: m.id, role: m.role, text: m.content })), [messages])
+  const uiMessages = useMemo(() => messages.map(m => ({ id: m.id, role: m.role, text: m.content, timestamp: m.timestamp })), [messages])
+  const latestAssistantId = useMemo(() => {
+    const last = [...messages].reverse().find(m => m.role === 'assistant')
+    return last?.id
+  }, [messages])
 
   return (
     <div className={className}>
@@ -34,13 +38,20 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
             {uiMessages.map(m => (
               <Message key={m.id} from={m.role}>
                 <MessageContent>
-                  {m.role === 'assistant' && isLoading ? (
+                  {m.role === 'assistant' && isLoading && m.id === latestAssistantId ? (
                     <Reasoning defaultOpen={false} isStreaming={true} duration={3}>
                       <ReasoningTrigger>Thinking…</ReasoningTrigger>
                       <ReasoningContent>Processing your input</ReasoningContent>
                     </Reasoning>
                   ) : null}
                   {!!m.text && <Response>{m.text}</Response>}
+                  {m.timestamp ? (
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      <time dateTime={new Date(m.timestamp).toISOString()}>
+                        {new Date(m.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                      </time>
+                    </div>
+                  ) : null}
                 </MessageContent>
               </Message>
             ))}
