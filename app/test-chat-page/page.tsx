@@ -9,6 +9,7 @@ import { TopHeader } from "@/components/collab/TopHeader"
 import { CenterCanvas } from "@/components/collab/CenterCanvas"
 import { CollabShell } from "@/components/collab/CollabShell"
 import { MobileStageProgress } from "@/components/collab/MobileStageProgress"
+import { QuickActionsRow } from "@/components/collab/QuickActionsRow"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi"
 
@@ -46,12 +47,15 @@ export default function TestChatDesignPage() {
               <MessageCircle className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
               <h2 className="text-lg font-semibold">Start in the dock below</h2>
               <p className="mt-1 text-sm text-muted-foreground">Use a quick action or type a message.</p>
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                <Chip onClick={() => setState('webcam')}>Webcam</Chip>
-                <Chip onClick={() => setState('screen')}>Screen</Chip>
-                <Chip onClick={() => setState('roi')}>ROI</Chip>
-                <Chip onClick={() => setState('video')}>Video→App</Chip>
-              </div>
+              <QuickActionsRow
+                actions={[
+                  { id: 'webcam', label: 'Webcam', onClick: () => setState('webcam') },
+                  { id: 'screen', label: 'Screen', onClick: () => setState('screen') },
+                  { id: 'roi', label: 'ROI', onClick: () => setState('roi') },
+                  { id: 'video', label: 'Video→App', onClick: () => setState('video') },
+                ]}
+                className="mt-4"
+              />
             </div>
           }
         >
