@@ -11,7 +11,7 @@ import { CollabShell } from "@/components/collab/CollabShell"
 import { MobileStageProgress } from "@/components/collab/MobileStageProgress"
 import { QuickActionsRow } from "@/components/collab/QuickActionsRow"
 import { ChatPane } from "@/components/collab/ChatPane"
-import { ConsentOverlay } from "@/components/collab/ConsentOverlay"
+import { WebPreviewPanel } from "@/components/collab/WebPreviewPanel"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi"
 
@@ -20,9 +20,6 @@ export default function TestChatDesignPage() {
   const [input, setInput] = useState("")
   const [sessionId, setSessionId] = useState<string | null>(() => (typeof window !== 'undefined' ? window.localStorage.getItem('intelligence-session-id') : null))
   const [intent, setIntent] = useState<string | null>(null)
-  const [consentOpen, setConsentOpen] = useState(true)
-  const [consentEmail, setConsentEmail] = useState('')
-  const [consentCompany, setConsentCompany] = useState('')
 
   return (
     <>
@@ -56,6 +53,7 @@ export default function TestChatDesignPage() {
               <p className="mt-1 text-sm text-muted-foreground">Use a quick action or type a message.</p>
               <QuickActionsRow
                 actions={[
+                  { id: 'search', label: 'Search', onClick: () => setState('webcam') },
                   { id: 'webcam', label: 'Webcam', onClick: () => setState('webcam') },
                   { id: 'screen', label: 'Screen', onClick: () => setState('screen') },
                   { id: 'roi', label: 'ROI', onClick: () => setState('roi') },
@@ -70,6 +68,8 @@ export default function TestChatDesignPage() {
             <div className="rounded-xl border border-border/50 bg-background/60 p-6 text-sm text-muted-foreground">
               Mock content panel: <span className="font-medium text-foreground">{state}</span>
             </div>
+          ) : state === 'webcam' ? (
+            <WebPreviewPanel url="https://example.com" />
           ) : (
             <ChatPane sessionId={sessionId} onAfterSend={async (text) => {
               try {
@@ -97,7 +97,7 @@ export default function TestChatDesignPage() {
               value={input}
               onChange={setInput}
               onSend={() => {}}
-              disabled={consentOpen}
+              disabled={false}
               quick={[
                 { id: 'webcam', label: 'Webcam', onClick: () => setState('webcam') },
                 { id: 'screen', label: 'Screen', onClick: () => setState('screen') },
@@ -108,15 +108,6 @@ export default function TestChatDesignPage() {
           </div>
         </div>
       }
-    />
-    <ConsentOverlay
-      open={consentOpen}
-      email={consentEmail}
-      company={consentCompany}
-      onEmailChange={setConsentEmail}
-      onCompanyChange={setConsentCompany}
-      onAllow={() => setConsentOpen(false)}
-      onDeny={() => setConsentOpen(false)}
     />
     </>
   )
