@@ -61,8 +61,8 @@ export default function TestChatDesignPage() {
           empty={
             <div className="max-w-sm" role="region" aria-label="Empty state quick actions">
               <MessageCircle className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
-              <h2 className="text-lg font-semibold">Start in the dock below</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Pick a tool or type a message to begin. You can always switch tools from the left rail.</p>
+              <h2 className="text-lg font-semibold">What do you want to do?</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Use a quick action or type your request. Tools live on the left rail; results appear here.</p>
               <QuickActionsRow
                 actions={[
                   { id: 'search', label: 'Search', onClick: () => switchState('webpreview') },

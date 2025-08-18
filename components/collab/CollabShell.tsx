@@ -21,7 +21,7 @@ export function CollabShell({ left, header, center, right, dock, className }: Co
       )}
     >
       {/* Header row (spans center + right on desktop) */}
-      <div className="col-span-full md:col-start-2 md:col-end-4 pt-[env(safe-area-inset-top)] md:pt-0">{header}</div>
+      <div className="col-span-full md:col-start-2 md:col-end-4 pt-[env(safe-area-inset-top)] md:pt-0 px-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">{header}</div>
 
       {/* Left rail */}
       <aside className="hidden md:block border-r bg-card/40">{left}</aside>
@@ -33,7 +33,7 @@ export function CollabShell({ left, header, center, right, dock, className }: Co
       <aside className="hidden md:block border-l bg-card/30">{right}</aside>
 
       {/* Bottom dock (spans center + right on desktop) */}
-      <div className="col-span-full md:col-start-2 md:col-end-4 pb-[env(safe-area-inset-bottom)] md:pb-0">{dock}</div>
+      <div className="col-span-full md:col-start-2 md:col-end-4 pb-[env(safe-area-inset-bottom)] md:pb-0 px-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">{dock}</div>
     </div>
   )
 }
