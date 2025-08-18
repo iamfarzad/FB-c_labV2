@@ -129,6 +129,7 @@ export const PromptInputTextarea = ({
         className,
       )}
       name="message"
+      aria-label={placeholder}
       onChange={(e) => {
         adjustHeight();
         onChange?.(e);
