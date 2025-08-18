@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { FbcIcon } from "@/components/ui/fbc-icon"
 import { cn } from "@/lib/utils"
 import { Camera, Monitor, Calculator, Video, MessageCircle } from "lucide-react"
+import { LeftToolRail } from "@/components/collab/LeftToolRail"
 import {
   PromptInput,
   PromptInputToolbar,
@@ -39,12 +40,14 @@ export default function TestChatDesignPage() {
 
       {/* Left rail */}
       <aside className="hidden md:block border-r bg-card/40">
-        <div className="flex flex-col items-center gap-2 p-2">
-          <RailButton label="Webcam" active={state === "webcam"} onClick={() => setState("webcam")}> <Camera className="h-4 w-4" /> </RailButton>
-          <RailButton label="Screen" active={state === "screen"} onClick={() => setState("screen")}> <Monitor className="h-4 w-4" /> </RailButton>
-          <RailButton label="ROI" active={state === "roi"} onClick={() => setState("roi")}> <Calculator className="h-4 w-4" /> </RailButton>
-          <RailButton label="Video→App" active={state === "video"} onClick={() => setState("video")}> <Video className="h-4 w-4" /> </RailButton>
-        </div>
+        <LeftToolRail
+          items={[
+            { id: 'webcam', icon: <Camera className="h-4 w-4" />, label: 'Webcam', active: state === 'webcam', onClick: () => setState('webcam') },
+            { id: 'screen', icon: <Monitor className="h-4 w-4" />, label: 'Screen', active: state === 'screen', onClick: () => setState('screen') },
+            { id: 'roi', icon: <Calculator className="h-4 w-4" />, label: 'ROI', active: state === 'roi', onClick: () => setState('roi') },
+            { id: 'video', icon: <Video className="h-4 w-4" />, label: 'Video→App', active: state === 'video', onClick: () => setState('video') },
+          ]}
+        />
       </aside>
 
       {/* Center canvas */}
@@ -120,21 +123,7 @@ export default function TestChatDesignPage() {
   )
 }
 
-function RailButton({ label, active, onClick, children }: { label: string; active?: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className={cn(
-        "inline-flex h-11 w-11 items-center justify-center rounded-xl border transition-colors",
-        active ? "bg-[var(--color-orange-accent)]/10 border-[var(--color-orange-accent)]/30 text-[var(--color-orange-accent)]" : "bg-card/60 border-border/40 text-muted-foreground hover:text-foreground"
-      )}
-    >
-      {children}
-    </button>
-  )
-}
+// RailButton removed; replaced by LeftToolRail
 
 function Chip({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
