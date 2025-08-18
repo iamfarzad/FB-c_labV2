@@ -49,18 +49,8 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
   return (
     <div className={className}>
       <div className="h-[58vh] md:h-[60vh] rounded-xl border bg-card overflow-hidden">
-        <div className="flex items-center justify-end p-2 text-xs">
-          <button
-            type="button"
-            aria-pressed={compact}
-            className="btn-minimal px-2 py-1 min-h-11 min-w-11"
-            onClick={() => setCompact(v => !v)}
-          >
-            {compact ? 'Density: Compact' : 'Density: Comfortable'}
-          </button>
-        </div>
         <Conversation className="h-full">
-          <ConversationContent ref={contentRef} className={`w-full max-w-4xl mx-auto ${compact ? 'space-y-2 p-3' : 'space-y-3 p-5'}`}>
+          <ConversationContent ref={contentRef} className={`w-full max-w-5xl mx-auto ${compact ? 'space-y-2 p-4' : 'space-y-4 p-6'}`}>
             {uiMessages.length === 0 && !isLoading && (
               <div className="text-center text-sm text-muted-foreground py-10">Start the conversation below</div>
             )}
@@ -130,7 +120,7 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
         </Conversation>
       </div>
 
-      <div className="mt-1">
+      <div className="mt-2">
         <BottomDock
           value={input}
           onChange={setInput}
@@ -153,6 +143,7 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
           ref={fileInputRef}
           type="file"
           className="sr-only"
+          aria-label="Attach file"
           onChange={e => {
             const f = e.target.files && e.target.files[0]
             setAttachedFile(f ? f.name : null)
