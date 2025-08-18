@@ -67,7 +67,7 @@ export default function TestChatDesignPage() {
                 <button
                   type="button"
                   onClick={() => switchState('webpreview')}
-                  className="inline-flex h-10 min-w-[44px] items-center justify-center rounded-lg bg-[var(--color-orange-accent)] px-4 text-sm font-medium text-foreground shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-orange-accent)]/40 focus-visible:ring-offset-2 hover:opacity-95 active:opacity-90"
+                  className="inline-flex h-10 min-w-[44px] items-center justify-center rounded-lg bg-[var(--color-orange-accent)] px-4 text-sm font-medium text-[var(--color-gunmetal)] shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-orange-accent)]/40 focus-visible:ring-offset-2"
                 >
                   Start with Website Analysis
                 </button>
