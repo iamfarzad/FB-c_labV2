@@ -8,6 +8,7 @@ import { LeftToolRail } from "@/components/collab/LeftToolRail"
 import { RightStageRail } from "@/components/collab/RightStageRail"
 import { BottomDock } from "@/components/collab/BottomDock"
 import { TopHeader } from "@/components/collab/TopHeader"
+import { CenterCanvas } from "@/components/collab/CenterCanvas"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi"
 
@@ -40,31 +41,26 @@ export default function TestChatDesignPage() {
 
       {/* Center canvas */}
       <main className="min-h-0 overflow-hidden">
-        <div className="h-full p-4 md:p-6">
-          <div className="h-full rounded-xl border bg-card">
-            {state === "empty" ? (
-              <div className="grid h-full place-items-center p-6 text-center">
-                <div className="max-w-sm" role="region" aria-label="Empty state quick actions">
-                  <MessageCircle className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
-                  <h2 className="text-lg font-semibold">Start in the dock below</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">Use a quick action or type a message.</p>
-                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                    <Chip onClick={() => setState("webcam")}>Webcam</Chip>
-                    <Chip onClick={() => setState("screen")}>Screen</Chip>
-                    <Chip onClick={() => setState("roi")}>ROI</Chip>
-                    <Chip onClick={() => setState("video")}>Video→App</Chip>
-                  </div>
-                </div>
+        <CenterCanvas
+          state={state}
+          empty={
+            <div className="max-w-sm" role="region" aria-label="Empty state quick actions">
+              <MessageCircle className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
+              <h2 className="text-lg font-semibold">Start in the dock below</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Use a quick action or type a message.</p>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                <Chip onClick={() => setState('webcam')}>Webcam</Chip>
+                <Chip onClick={() => setState('screen')}>Screen</Chip>
+                <Chip onClick={() => setState('roi')}>ROI</Chip>
+                <Chip onClick={() => setState('video')}>Video→App</Chip>
               </div>
-            ) : (
-              <div className="h-full grid place-items-center p-6">
-                <div className="rounded-xl border border-border/50 bg-background/60 p-6 text-sm text-muted-foreground">
-                  Mock content panel: <span className="font-medium text-foreground">{state}</span>
-                </div>
-              </div>
-            )}
+            </div>
+          }
+        >
+          <div className="rounded-xl border border-border/50 bg-background/60 p-6 text-sm text-muted-foreground">
+            Mock content panel: <span className="font-medium text-foreground">{state}</span>
           </div>
-        </div>
+        </CenterCanvas>
       </main>
 
       {/* Right stage rail */}
