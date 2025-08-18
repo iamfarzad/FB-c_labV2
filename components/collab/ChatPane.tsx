@@ -60,7 +60,7 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
           </button>
         </div>
         <Conversation className="h-full">
-          <ConversationContent ref={contentRef} className={`w-full max-w-3xl mx-auto ${compact ? 'space-y-2 p-3' : 'space-y-3 p-4'}`}>
+          <ConversationContent ref={contentRef} className={`w-full max-w-4xl mx-auto ${compact ? 'space-y-2 p-3' : 'space-y-3 p-5'}`}>
             {uiMessages.length === 0 && !isLoading && (
               <div className="text-center text-sm text-muted-foreground py-10">Start the conversation below</div>
             )}
@@ -130,7 +130,7 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
         </Conversation>
       </div>
 
-      <div className="mt-2">
+      <div className="mt-1">
         <BottomDock
           value={input}
           onChange={setInput}
