@@ -24,45 +24,62 @@
 
 @layer base {
   :root {
-    --font-sans: "Inter", sans-serif;
-    --color-orange-accent: 21 100% 51%;
-    --color-gunmetal: 203 23% 18%;
-    --color-light-silver: 108 13% 85%;
-    --color-gunmetal-lighter: 203 23% 24%;
-    --color-light-silver-darker: 108 13% 78%;
-    --color-orange-accent-hover: 21 100% 45%;
-    --background: 0 0% 98%;
+    /* F.B/c AI Brand Colors */
+    --color-orange-accent: #ff5b04;
+    --color-orange-accent-hover: #e65200;
+    --color-gunmetal: #1a1a1a;
+    --color-gunmetal-lighter: #2a2a2a;
+    --color-light-silver: #f5f5f5;
+    --color-light-silver-darker: #e0e0e0;
+
+    /* Font Stack */
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+
+    /* Border Radius */
+    --border-radius-minimal: 4px;
+    --border-radius-medium: 8px;
+
+    /* Shadows */
+    --shadow-minimal: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.15);
+
+    /* Glassmorphism */
+    --glass-bg: rgba(245, 245, 245, 0.8);
+    --glass-border: rgba(224, 224, 224, 0.3);
+    --glass-bg-dark: rgba(42, 42, 42, 0.8);
+    --glass-border-dark: rgba(74, 74, 74, 0.3);
+
+    /* Semantic Color Mapping */
+    --background: var(--color-light-silver);
     --foreground: var(--color-gunmetal);
-    --primary: var(--color-gunmetal);
-    --primary-foreground: var(--color-light-silver);
-    --secondary: var(--color-light-silver);
+    --card: var(--color-light-silver);
+    --card-foreground: var(--color-gunmetal);
+    --popover: var(--color-light-silver);
+    --popover-foreground: var(--color-gunmetal);
+    --primary: var(--color-orange-accent);
+    --primary-foreground: white;
+    --secondary: var(--color-light-silver-darker);
     --secondary-foreground: var(--color-gunmetal);
+    --muted: var(--color-light-silver-darker);
+    --muted-foreground: #666666;
     --accent: var(--color-orange-accent);
-    --accent-foreground: var(--color-light-silver);
+    --accent-foreground: white;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --muted: var(--color-light-silver-darker);
-    --muted-foreground: 0 0% 40%;
-    --border: 0 0% 85%;
-    --input: 0 0% 85%;
+    --border: var(--color-light-silver-darker);
+    --input: var(--color-light-silver);
     --ring: var(--color-orange-accent);
-    --card: 0 0% 100%;
-    --card-foreground: var(--color-gunmetal);
-    --popover: var(--card);
-    --popover-foreground: var(--card-foreground);
-    --glass-bg: rgba(255, 255, 255, 0.5);
-    --glass-border: rgba(0, 0, 0, 0.1);
-    --radius: 0.75rem;
-    
-    /* Sidebar Colors */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --radius: var(--border-radius-medium);
+
+    /* Sidebar */
+    --sidebar: var(--color-light-silver);
+    --sidebar-foreground: var(--color-gunmetal);
+    --sidebar-primary: var(--color-orange-accent);
+    --sidebar-primary-foreground: white;
+    --sidebar-accent: var(--color-light-silver-darker);
+    --sidebar-accent-foreground: var(--color-gunmetal);
+    --sidebar-border: var(--color-light-silver-darker);
+    --sidebar-ring: var(--color-orange-accent);
     
     /* Chart Colors */
     --chart-primary: var(--color-orange-accent);
@@ -70,19 +87,15 @@
     --chart-success: 142 76% 36%;
     --chart-warning: 38 92% 50%;
     --chart-error: 0 84% 60%;
-    
-    /* Destructive Colors */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
 
-      /* Enhanced Design Tokens */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-  --shadow-accent: 0 4px 14px 0 hsl(var(--accent) / 0.2);
+    /* Enhanced Design Tokens */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    --shadow-accent: 0 4px 14px 0 hsl(var(--accent) / 0.2);
     
     /* Animation Durations */
     --duration-75: 75ms;
@@ -118,25 +131,35 @@
   .dark {
     --background: var(--color-gunmetal);
     --foreground: var(--color-light-silver);
-    --primary: var(--color-light-silver);
-    --primary-foreground: var(--color-gunmetal);
-    --secondary: var(--color-gunmetal-lighter);
-    --secondary-foreground: var(--color-light-silver);
-    --accent: var(--color-orange-accent);
-    --accent-foreground: var(--color-gunmetal);
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --muted: var(--color-gunmetal-lighter);
-    --muted-foreground: 0 0% 60%;
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: var(--color-orange-accent);
     --card: var(--color-gunmetal-lighter);
     --card-foreground: var(--color-light-silver);
-    --popover: var(--card);
-    --popover-foreground: var(--card-foreground);
-    --glass-bg: rgba(26, 26, 26, 0.5);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --popover: var(--color-gunmetal-lighter);
+    --popover-foreground: var(--color-light-silver);
+    --primary: var(--color-orange-accent);
+    --primary-foreground: white;
+    --secondary: var(--color-gunmetal-lighter);
+    --secondary-foreground: var(--color-light-silver);
+    --muted: var(--color-gunmetal-lighter);
+    --muted-foreground: #999999;
+    --accent: var(--color-orange-accent);
+    --accent-foreground: white;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: var(--color-gunmetal);
+    --border: var(--color-gunmetal-lighter);
+    --input: var(--color-gunmetal-lighter);
+    --ring: var(--color-orange-accent);
+
+    --glass-bg: var(--glass-bg-dark);
+    --glass-border: var(--glass-border-dark);
+
+    --sidebar: var(--color-gunmetal);
+    --sidebar-foreground: var(--color-light-silver);
+    --sidebar-primary: var(--color-orange-accent);
+    --sidebar-primary-foreground: white;
+    --sidebar-accent: var(--color-gunmetal-lighter);
+    --sidebar-accent-foreground: var(--color-light-silver);
+    --sidebar-border: var(--color-gunmetal-lighter);
+    --sidebar-ring: var(--color-orange-accent);
     
     /* Chart Colors - Dark Mode */
     --chart-primary: var(--color-orange-accent);
@@ -144,10 +167,6 @@
     --chart-success: 142 76% 36%;
     --chart-warning: 38 92% 50%;
     --chart-error: 0 84% 60%;
-    
-    /* Destructive Colors - Dark Mode */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: var(--color-gunmetal);
 
     /* Enhanced shadows for dark mode */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
@@ -156,16 +175,6 @@
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
     --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.6);
-    
-    /* Sidebar Colors - Dark Mode */
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   html {
@@ -250,7 +259,7 @@
 
   .card-elevated {
     @apply bg-card border border-border/20 rounded-2xl p-6;
-    @apply shadow-2xl hover:shadow-3xl transition-all duration-300;
+    @apply shadow-xl hover:shadow-2xl transition-all duration-300;
     @apply hover:-translate-y-1;
   }
 
@@ -545,169 +554,169 @@
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
-  }
+}
 
-  /* F.B/c Business Content Styles */
-  .fbc-business-card {
-    @apply bg-card/90 border border-border/30 rounded-2xl p-6;
-    @apply backdrop-blur-sm shadow-lg hover:shadow-xl;
-    @apply transition-all duration-300;
-  }
+/* F.B/c Business Content Styles */
+.fbc-business-card {
+  @apply bg-card/90 border border-border/30 rounded-2xl p-6;
+  @apply backdrop-blur-sm shadow-lg hover:shadow-xl;
+  @apply transition-all duration-300;
+}
 
-  .fbc-metric-display {
-    @apply bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20;
-    @apply rounded-xl p-4 text-center;
-    @apply shadow-md hover:shadow-lg transition-all duration-200;
-  }
+.fbc-metric-display {
+  @apply bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20;
+  @apply rounded-xl p-4 text-center;
+  @apply shadow-md hover:shadow-lg transition-all duration-200;
+}
 
-  .fbc-metric-value {
-    @apply text-2xl font-bold text-accent mb-1;
-  }
+.fbc-metric-value {
+  @apply text-2xl font-bold text-accent mb-1;
+}
 
-  .fbc-metric-label {
-    @apply text-sm text-muted-foreground;
-  }
+.fbc-metric-label {
+  @apply text-sm text-muted-foreground;
+}
 
-  .fbc-consultation-step {
-    @apply bg-card/80 border border-border/30 rounded-xl p-4 mb-4;
-    @apply backdrop-blur-sm shadow-sm hover:shadow-md;
-    @apply transition-all duration-200;
-  }
+.fbc-consultation-step {
+  @apply bg-card/80 border border-border/30 rounded-xl p-4 mb-4;
+  @apply backdrop-blur-sm shadow-sm hover:shadow-md;
+  @apply transition-all duration-200;
+}
 
-  .fbc-consultation-step.active {
-    @apply border-accent/50 bg-accent/5;
-  }
+.fbc-consultation-step.active {
+  @apply border-accent/50 bg-accent/5;
+}
 
-  .fbc-consultation-step.completed {
-    @apply border-green-500/50 bg-green-500/5;
-  }
+.fbc-consultation-step.completed {
+  @apply border-green-500/50 bg-green-500/5;
+}
 
-  .fbc-lead-form {
-    @apply bg-card/90 border border-border/30 rounded-2xl p-6;
-    @apply backdrop-blur-sm shadow-lg;
-    @apply space-y-4;
-  }
+.fbc-lead-form {
+  @apply bg-card/90 border border-border/30 rounded-2xl p-6;
+  @apply backdrop-blur-sm shadow-lg;
+  @apply space-y-4;
+}
 
-  .fbc-interactive-element {
-    @apply cursor-pointer transition-all duration-200;
-    @apply hover:scale-105 hover:shadow-md;
-    @apply focus:ring-2 focus:ring-accent/20 focus:ring-offset-2;
-  }
+.fbc-interactive-element {
+  @apply cursor-pointer transition-all duration-200;
+  @apply hover:scale-105 hover:shadow-md;
+  @apply focus:ring-2 focus:ring-accent/20 focus:ring-offset-2;
+}
 
-  .fbc-business-button {
-    @apply bg-accent text-accent-foreground px-6 py-3 rounded-xl;
-    @apply font-medium shadow-lg hover:shadow-xl;
-    @apply hover:bg-accent/90 transition-all duration-300;
-    @apply focus:ring-2 focus:ring-accent/30 focus:ring-offset-2;
-  }
+.fbc-business-button {
+  @apply bg-accent text-accent-foreground px-6 py-3 rounded-xl;
+  @apply font-medium shadow-lg hover:shadow-xl;
+  @apply hover:bg-accent/90 transition-all duration-300;
+  @apply focus:ring-2 focus:ring-accent/30 focus:ring-offset-2;
+}
 
-  .fbc-secondary-button {
-    @apply bg-muted/50 text-muted-foreground px-6 py-3 rounded-xl;
-    @apply font-medium border border-border/30;
-    @apply hover:bg-muted/80 hover:border-accent/30;
-    @apply transition-all duration-200;
-    @apply focus:ring-2 focus:ring-muted/30 focus:ring-offset-2;
-  }
+.fbc-secondary-button {
+  @apply bg-muted/50 text-muted-foreground px-6 py-3 rounded-xl;
+  @apply font-medium border border-border/30;
+  @apply hover:bg-muted/80 hover:border-accent/30;
+  @apply transition-all duration-200;
+  @apply focus:ring-2 focus:ring-muted/30 focus:ring-offset-2;
+}
 
-  .fbc-progress-bar {
-    @apply w-full bg-muted/30 rounded-full h-2 overflow-hidden;
-  }
+.fbc-progress-bar {
+  @apply w-full bg-muted/30 rounded-full h-2 overflow-hidden;
+}
 
-  .fbc-progress-fill {
-    @apply bg-gradient-to-r from-accent to-accent/80 h-full;
-    @apply transition-all duration-500 ease-out;
-  }
+.fbc-progress-fill {
+  @apply bg-gradient-to-r from-accent to-accent/80 h-full;
+  @apply transition-all duration-500 ease-out;
+}
 
-  .fbc-chart-container {
-    @apply bg-card/80 border border-border/30 rounded-xl p-4;
-    @apply backdrop-blur-sm shadow-md;
-  }
+.fbc-chart-container {
+  @apply bg-card/80 border border-border/30 rounded-xl p-4;
+  @apply backdrop-blur-sm shadow-md;
+}
 
-  .fbc-roi-summary {
-    @apply bg-gradient-to-br from-green-500/10 to-green-500/5;
-    @apply border border-green-500/20 rounded-xl p-6;
-    @apply shadow-lg;
-  }
+.fbc-roi-summary {
+  @apply bg-gradient-to-br from-green-500/10 to-green-500/5;
+  @apply border border-green-500/20 rounded-xl p-6;
+  @apply shadow-lg;
+}
 
-  .fbc-proposal-section {
-    @apply bg-card/90 border border-border/30 rounded-xl p-6 mb-4;
-    @apply backdrop-blur-sm shadow-md;
-  }
+.fbc-proposal-section {
+  @apply bg-card/90 border border-border/30 rounded-xl p-6 mb-4;
+  @apply backdrop-blur-sm shadow-md;
+}
 
-  .fbc-educational-module {
-    @apply bg-gradient-to-br from-blue-500/10 to-blue-500/5;
-    @apply border border-blue-500/20 rounded-xl p-6;
-    @apply shadow-lg;
-  }
+.fbc-educational-module {
+  @apply bg-gradient-to-br from-blue-500/10 to-blue-500/5;
+  @apply border border-blue-500/20 rounded-xl p-6;
+  @apply shadow-lg;
+}
 
-  .fbc-status-indicator {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
-  }
+.fbc-status-indicator {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+}
 
-  .fbc-status-indicator.pending {
-    @apply bg-yellow-500/10 text-yellow-600 border border-yellow-500/20;
-  }
+.fbc-status-indicator.pending {
+  @apply bg-yellow-500/10 text-yellow-600 border border-yellow-500/20;
+}
 
-  .fbc-status-indicator.active {
-    @apply bg-blue-500/10 text-blue-600 border border-blue-500/20;
-  }
+.fbc-status-indicator.active {
+  @apply bg-blue-500/10 text-blue-600 border border-blue-500/20;
+}
 
-  .fbc-status-indicator.completed {
-    @apply bg-green-500/10 text-green-600 border border-green-500/20;
-  }
+.fbc-status-indicator.completed {
+  @apply bg-green-500/10 text-green-600 border border-green-500/20;
+}
 
-  .fbc-input-group {
-    @apply space-y-2;
-  }
+.fbc-input-group {
+  @apply space-y-2;
+}
 
-  .fbc-input-label {
-    @apply block text-sm font-medium text-foreground mb-1;
-  }
+.fbc-input-label {
+  @apply block text-sm font-medium text-foreground mb-1;
+}
 
-  .fbc-business-input {
-    @apply w-full px-4 py-3 rounded-xl border border-border/30 bg-card/50;
-    @apply focus:border-accent/50 focus:ring-2 focus:ring-accent/20 focus:ring-offset-2;
-    @apply backdrop-blur-sm transition-all duration-200;
-    @apply placeholder:text-muted-foreground/60;
-  }
+.fbc-business-input {
+  @apply w-full px-4 py-3 rounded-xl border border-border/30 bg-card/50;
+  @apply focus:border-accent/50 focus:ring-2 focus:ring-accent/20 focus:ring-offset-2;
+  @apply backdrop-blur-sm transition-all duration-200;
+  @apply placeholder:text-muted-foreground/60;
+}
 
-  .fbc-business-select {
-    @apply w-full px-4 py-3 rounded-xl border border-border/30 bg-card/50;
-    @apply focus:border-accent/50 focus:ring-2 focus:ring-accent/20 focus:ring-offset-2;
-    @apply backdrop-blur-sm transition-all duration-200;
-    @apply appearance-none cursor-pointer;
-  }
+.fbc-business-select {
+  @apply w-full px-4 py-3 rounded-xl border border-border/30 bg-card/50;
+  @apply focus:border-accent/50 focus:ring-2 focus:ring-accent/20 focus:ring-offset-2;
+  @apply backdrop-blur-sm transition-all duration-200;
+  @apply appearance-none cursor-pointer;
+}
 
-  .fbc-business-textarea {
-    @apply w-full px-4 py-3 rounded-xl border border-border/30 bg-card/50;
-    @apply focus:border-accent/50 focus:ring-2 focus:ring-accent/20 focus:ring-offset-2;
-    @apply backdrop-blur-sm transition-all duration-200;
-    @apply placeholder:text-muted-foreground/60 resize-none;
-    min-height: 100px;
-  }
+.fbc-business-textarea {
+  @apply w-full px-4 py-3 rounded-xl border border-border/30 bg-card/50;
+  @apply focus:border-accent/50 focus:ring-2 focus:ring-accent/20 focus:ring-offset-2;
+  @apply backdrop-blur-sm transition-all duration-200;
+  @apply placeholder:text-muted-foreground/60 resize-none;
+  min-height: 100px;
+}
 
-  .fbc-grid-2 {
-    @apply grid grid-cols-1 md:grid-cols-2 gap-4;
-  }
+.fbc-grid-2 {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
 
-  .fbc-grid-3 {
-    @apply grid grid-cols-1 md:grid-cols-3 gap-4;
-  }
+.fbc-grid-3 {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+}
 
-  .fbc-flex-between {
-    @apply flex items-center justify-between;
-  }
+.fbc-flex-between {
+  @apply flex items-center justify-between;
+}
 
-  .fbc-flex-center {
-    @apply flex items-center justify-center;
-  }
+.fbc-flex-center {
+  @apply flex items-center justify-center;
+}
 
-  .fbc-text-gradient {
-    background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent)) 60%, hsl(var(--primary)));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+.fbc-text-gradient {
+  background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent)) 60%, hsl(var(--primary)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 /* Enhanced fixed layout */
 .fixed-layout {
