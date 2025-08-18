@@ -95,7 +95,12 @@ export function LeftToolRail({ items, className, ariaLabel = "Primary tools" }: 
                   item.disabled && "opacity-50 cursor-not-allowed"
                 )}
               >
-                {item.icon}
+                <div className="relative">
+                  {item.icon}
+                  {item.active && (
+                    <span className="absolute -right-1 -bottom-1 inline-block h-2 w-2 rounded-full bg-[var(--color-orange-accent)] shadow-[0_0_6px_var(--color-orange-accent)]" aria-hidden />
+                  )}
+                </div>
               </button>
             </TooltipTrigger>
             <TooltipContent side="right">{item.label}</TooltipContent>

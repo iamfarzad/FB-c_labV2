@@ -12,6 +12,7 @@ import { MobileStageProgress } from "@/components/collab/MobileStageProgress"
 import { QuickActionsRow } from "@/components/collab/QuickActionsRow"
 import { ChatPane } from "@/components/collab/ChatPane"
 import { WebPreviewPanel } from "@/components/collab/WebPreviewPanel"
+import { SuggestionsRow } from "@/components/collab/SuggestionsRow"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi"
 
@@ -93,6 +94,14 @@ export default function TestChatDesignPage() {
       dock={
         <div className="border-t bg-background/70 backdrop-blur">
           <div className="p-2">
+            <SuggestionsRow
+              suggestions={[
+                { id: 'suggest-1', label: 'Analyze website', onClick: () => setState('webcam') },
+                { id: 'suggest-2', label: 'Calculate ROI', onClick: () => setState('roi') },
+                { id: 'suggest-3', label: 'Translate to Spanish', onClick: () => {} },
+              ]}
+              className="mb-1"
+            />
             <BottomDock
               value={input}
               onChange={setInput}
