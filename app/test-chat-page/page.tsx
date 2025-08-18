@@ -11,6 +11,7 @@ import { CollabShell } from "@/components/collab/CollabShell"
 import { MobileStageProgress } from "@/components/collab/MobileStageProgress"
 import { QuickActionsRow } from "@/components/collab/QuickActionsRow"
 import { ChatPane } from "@/components/collab/ChatPane"
+import { ConsentOverlay } from "@/components/collab/ConsentOverlay"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi"
 
@@ -19,6 +20,9 @@ export default function TestChatDesignPage() {
   const [input, setInput] = useState("")
   const [sessionId, setSessionId] = useState<string | null>(() => (typeof window !== 'undefined' ? window.localStorage.getItem('intelligence-session-id') : null))
   const [intent, setIntent] = useState<string | null>(null)
+  const [consentOpen, setConsentOpen] = useState(true)
+  const [consentEmail, setConsentEmail] = useState('')
+  const [consentCompany, setConsentCompany] = useState('')
 
   return (
     <>
@@ -93,7 +97,7 @@ export default function TestChatDesignPage() {
               value={input}
               onChange={setInput}
               onSend={() => {}}
-              disabled={false}
+              disabled={consentOpen}
               quick={[
                 { id: 'webcam', label: 'Webcam', onClick: () => setState('webcam') },
                 { id: 'screen', label: 'Screen', onClick: () => setState('screen') },
@@ -104,6 +108,15 @@ export default function TestChatDesignPage() {
           </div>
         </div>
       }
+    />
+    <ConsentOverlay
+      open={consentOpen}
+      email={consentEmail}
+      company={consentCompany}
+      onEmailChange={setConsentEmail}
+      onCompanyChange={setConsentCompany}
+      onAllow={() => setConsentOpen(false)}
+      onDeny={() => setConsentOpen(false)}
     />
     </>
   )
