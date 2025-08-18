@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { FormEvent, useEffect, useMemo, useRef, useState } from "react"
 import {
   Conversation,
   ConversationContent,
@@ -15,6 +15,7 @@ import { Actions, Action } from "@/components/ai-elements/actions"
 import { CodeBlock, CodeBlockCopyButton } from "@/components/ai-elements/code-block"
 import { BottomDock } from "@/components/collab/BottomDock"
 import useChat from "@/hooks/chat/useChat"
+import { Copy, ThumbsUp, ThumbsDown, Volume2, Link as LinkIcon, RotateCw, Plus, Mic, Equalizer } from "lucide-react"
 
 interface ChatPaneProps {
   className?: string
@@ -62,7 +63,25 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
         <Conversation className="h-full">
           <ConversationContent ref={contentRef} className={`w-full max-w-3xl mx-auto ${compact ? 'space-y-2 p-3' : 'space-y-3 p-4'}`}>
             {uiMessages.length === 0 && !isLoading && (
-              <div className="text-center text-sm text-muted-foreground py-10">Start the conversation below</div>
+              <div className="py-10 flex flex-col items-center gap-6">
+                <h2 className="text-2xl md:text-3xl font-semibold text-center">Hey, Farzad. Ready to dive in?</h2>
+                <form
+                  aria-label="Hero composer"
+                  onSubmit={(e: FormEvent) => { e.preventDefault(); const text = (input || '').trim(); if (!text) return; sendMessage(text); }}
+                  className="w-full max-w-2xl rounded-full border bg-background/70 shadow-sm px-3 py-2 flex items-center gap-2"
+                >
+                  <span aria-hidden className="inline-flex items-center justify-center rounded-full bg-muted text-foreground/70 w-6 h-6"><Plus className="w-3.5 h-3.5" /></span>
+                  <input
+                    aria-label="Ask anything"
+                    placeholder="Ask anything"
+                    className="flex-1 bg-transparent outline-none text-sm md:text-base"
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                  />
+                  <button type="button" aria-label="Voice" className="btn-minimal rounded-full min-h-10 min-w-10"><Mic className="w-4 h-4" /></button>
+                  <button type="submit" aria-label="Send" className="btn-minimal rounded-full min-h-10 min-w-10"><Equalizer className="w-4 h-4" /></button>
+                </form>
+              </div>
             )}
             {uiMessages.map(m => {
               const codeMatch = typeof m.text === 'string' ? m.text.match(/```(\w+)?\n([\s\S]*?)```/) : null
@@ -106,13 +125,13 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
                     </div>
                   ) : null}
                   <Actions className="mt-2 text-[10px]">
-                    <Action label="Copy message" tooltip="Copy" onClick={() => { try { navigator.clipboard.writeText(m.text || '') } catch {} }} />
-                    <Action label="Translate" tooltip="Translate" onClick={() => { /* design-only */ }} />
-                    {m.role === 'user' && (
-                      <Action label="Delete" tooltip="Delete" onClick={() => deleteMessage(m.id)} />
-                    )}
+                    <Action label="Copy" tooltip="Copy"><Copy className="w-3.5 h-3.5" /></Action>
+                    <Action label="Like" tooltip="Like"><ThumbsUp className="w-3.5 h-3.5" /></Action>
+                    <Action label="Dislike" tooltip="Dislike"><ThumbsDown className="w-3.5 h-3.5" /></Action>
+                    <Action label="Listen" tooltip="Listen"><Volume2 className="w-3.5 h-3.5" /></Action>
+                    <Action label="Link" tooltip="Link"><LinkIcon className="w-3.5 h-3.5" /></Action>
                     {m.role === 'assistant' && m.id === latestAssistantId && (
-                      <Action label="Regenerate" tooltip="Regenerate" onClick={() => reload()} />
+                      <Action label="Regenerate" tooltip="Regenerate"><RotateCw className="w-3.5 h-3.5" onClick={() => reload()} /></Action>
                     )}
                   </Actions>
                   {m.timestamp ? (
