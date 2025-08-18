@@ -51,7 +51,7 @@ export default function TestChatDesignPage() {
             <div className="max-w-sm" role="region" aria-label="Empty state quick actions">
               <MessageCircle className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
               <h2 className="text-lg font-semibold">Start in the dock below</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Use a quick action or type a message.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Pick a tool or type a message to begin. You can always switch tools from the left rail.</p>
               <QuickActionsRow
                 actions={[
                   { id: 'search', label: 'Search', onClick: () => setState('webcam') },
