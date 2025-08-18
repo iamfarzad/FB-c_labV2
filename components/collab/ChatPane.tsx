@@ -19,11 +19,11 @@ interface ChatPaneProps {
 }
 
 export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
-  const { messages, input, setInput, isLoading, sendMessage, clearMessages } = useChat({ data: { enableLeadGeneration: false, sessionId: sessionId ?? undefined } })
+  const { messages, input, setInput, isLoading, sendMessage, clearMessages, reload, deleteMessage } = useChat({ data: { enableLeadGeneration: false, sessionId: sessionId ?? undefined } })
   const [compact, setCompact] = useState(false)
   const contentRef = useRef<HTMLDivElement | null>(null)
 
-  const uiMessages = useMemo(() => messages.map(m => ({ id: m.id, role: m.role, text: m.content, timestamp: m.timestamp })), [messages])
+  const uiMessages = useMemo(() => messages.map(m => ({ id: m.id, role: m.role, text: m.content, timestamp: m.timestamp, sources: (m as any).sources, citations: (m as any).citations })), [messages])
   const latestAssistantId = useMemo(() => {
     const last = [...messages].reverse().find(m => m.role === 'assistant')
     return last?.id
@@ -68,6 +68,60 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
                     </Reasoning>
                   ) : null}
                   {!!m.text && <Response>{m.text}</Response>}
+                  {Array.isArray(m.sources) && m.sources.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {m.sources.map((s: any, i: number) => (
+                        <a
+                          key={`${m.id}-src-${i}`}
+                          href={s.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center rounded-full border px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground hover:border-[var(--color-orange-accent)]/40"
+                          aria-label={`Source: ${s.title || s.url}`}
+                        >
+                          {s.title || s.url}
+                        </a>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <button
+                      type="button"
+                      className="btn-minimal px-2 py-1"
+                      aria-label="Copy message"
+                      onClick={() => { try { navigator.clipboard.writeText(m.text || '') } catch {} }}
+                    >
+                      Copy
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-minimal px-2 py-1"
+                      aria-label="Translate message"
+                      onClick={() => { /* design-only */ }}
+                    >
+                      Translate
+                    </button>
+                    {m.role === 'user' ? (
+                      <button
+                        type="button"
+                        className="btn-minimal px-2 py-1"
+                        aria-label="Delete message"
+                        onClick={() => deleteMessage(m.id)}
+                      >
+                        Delete
+                      </button>
+                    ) : null}
+                    {m.role === 'assistant' && m.id === latestAssistantId ? (
+                      <button
+                        type="button"
+                        className="btn-minimal px-2 py-1"
+                        aria-label="Regenerate response"
+                        onClick={() => reload()}
+                      >
+                        Regenerate
+                      </button>
+                    ) : null}
+                  </div>
                   {m.timestamp ? (
                     <div className="mt-1 text-[10px] text-muted-foreground">
                       <time dateTime={new Date(m.timestamp).toISOString()}>
