@@ -6,14 +6,7 @@ import { cn } from "@/lib/utils"
 import { Camera, Monitor, Calculator, Video, MessageCircle } from "lucide-react"
 import { LeftToolRail } from "@/components/collab/LeftToolRail"
 import { RightStageRail } from "@/components/collab/RightStageRail"
-import {
-  PromptInput,
-  PromptInputToolbar,
-  PromptInputTools,
-  PromptInputTextarea,
-  PromptInputSubmit,
-  PromptInputButton,
-} from "@/components/ai-elements/prompt-input"
+import { BottomDock } from "@/components/collab/BottomDock"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi"
 
@@ -95,29 +88,18 @@ export default function TestChatDesignPage() {
       {/* Bottom dock (mobile + desktop) */}
       <div className="col-span-full md:col-start-2 md:col-end-4 border-t bg-background/70 backdrop-blur">
         <div className="p-2">
-          <PromptInput onSubmit={e => { e.preventDefault() }}>
-            <PromptInputToolbar>
-              <PromptInputTools>
-                <PromptInputButton variant="ghost" onClick={() => setState("webcam")}>Webcam</PromptInputButton>
-                <PromptInputButton variant="ghost" onClick={() => setState("screen")}>Screen</PromptInputButton>
-                <PromptInputButton variant="ghost" onClick={() => setState("roi")}>ROI</PromptInputButton>
-                <PromptInputButton variant="ghost" onClick={() => setState("video")}>Video→App</PromptInputButton>
-              </PromptInputTools>
-            </PromptInputToolbar>
-            <PromptInputTextarea
-              placeholder="Message F.B/c… (design-only sandbox)"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                }
-              }}
-            />
-            <div className="flex items-center justify-end p-1">
-              <PromptInputSubmit status="submitted">Send</PromptInputSubmit>
-            </div>
-          </PromptInput>
+          <BottomDock
+            value={input}
+            onChange={setInput}
+            onSend={() => {}}
+            disabled={false}
+            quick={[
+              { id: 'webcam', label: 'Webcam', onClick: () => setState('webcam') },
+              { id: 'screen', label: 'Screen', onClick: () => setState('screen') },
+              { id: 'roi', label: 'ROI', onClick: () => setState('roi') },
+              { id: 'video', label: 'Video→App', onClick: () => setState('video') },
+            ]}
+          />
         </div>
       </div>
     </div>
