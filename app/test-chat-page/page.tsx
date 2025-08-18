@@ -63,6 +63,16 @@ export default function TestChatDesignPage() {
               <MessageCircle className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
               <h2 className="text-lg font-semibold">What do you want to do?</h2>
               <p className="mt-1 text-sm text-muted-foreground">Use a quick action or type your request. Tools live on the left rail; results appear here.</p>
+              <div className="mt-4">
+                <button
+                  type="button"
+                  aria-label="Start website analysis"
+                  onClick={() => switchState('webpreview')}
+                  className="inline-flex h-10 min-w-[44px] items-center justify-center rounded-lg bg-[var(--color-orange-accent)] px-4 text-sm font-medium text-white shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-orange-accent)]/40 focus-visible:ring-offset-2 hover:opacity-95 active:opacity-90"
+                >
+                  Start with Website Analysis
+                </button>
+              </div>
               <QuickActionsRow
                 actions={[
                   { id: 'search', label: 'Search', onClick: () => switchState('webpreview') },
