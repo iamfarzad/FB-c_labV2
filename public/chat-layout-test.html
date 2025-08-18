@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat Layout Test (AI Elements defaults)</title>
+  <style>
+    :root {
+      --bg: #0b1620;
+      --fg: #e6edf3;
+      --secondary: rgba(230, 237, 243, 0.08);
+      --primary: #ff5b04;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+    }
+    .page { min-height: 100%; display: flex; flex-direction: column; }
+    .toolbar { display:flex; gap:8px; align-items:center; padding:10px 14px; border-bottom:1px solid rgba(255,255,255,.08) }
+    select, button { background:#111a22; color:var(--fg); border:1px solid rgba(255,255,255,.15); border-radius:8px; padding:8px 10px; }
+    .wrap { flex:1; display:flex; justify-content:center; padding:16px; }
+    .col { width:100%; max-width:768px; /* 3xl default */ }
+    .log { position:relative; height:60vh; overflow:auto; padding:16px; border:1px solid rgba(255,255,255,.12); border-radius:12px; background: rgba(255,255,255,.02); }
+    .row { display:flex; gap:8px; padding:16px 0; }
+    .row.user { flex-direction: row-reverse; }
+    .bubble { max-width:80%; padding:12px 16px; border-radius:10px; background: var(--secondary); }
+    .row.user .bubble { background: var(--primary); color:#111; }
+    .ts { font-size: 10px; opacity:.7; margin-top:4px; }
+    .dock { margin-top:8px; border:1px solid rgba(255,255,255,.12); border-radius:12px; overflow:hidden; }
+    .dock-top { display:flex; gap:8px; padding:8px; background: rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); }
+    .chip { padding:6px 10px; border:1px solid rgba(255,255,255,.15); border-radius:999px; background: rgba(255,255,255,.03); font-size:12px; }
+    .dock-body { display:flex; align-items:flex-end; gap:8px; padding:8px; }
+    .input { flex:1; min-height:44px; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); color:var(--fg); }
+    .send { min-width:44px; min-height:44px; border-radius:10px; background: var(--primary); color:#111; border:none; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="toolbar">
+      <label for="w">Column width:</label>
+      <select id="w" aria-label="Column width">
+        <option value="768">3xl (768px)</option>
+        <option value="896">4xl (896px)</option>
+        <option value="1024">5xl (1024px)</option>
+      </select>
+      <button id="clear" type="button">Clear messages</button>
+    </div>
+    <div class="wrap">
+      <div id="col" class="col">
+        <div id="log" class="log" role="log" aria-live="polite">
+          <div class="row assistant">
+            <div class="bubble">
+              Hi — this layout mirrors AI Elements defaults. Max bubble width is 80% of the column. Font 14px, padding 12/16, radius 10.
+              <div class="ts">6:34 PM</div>
+            </div>
+          </div>
+        </div>
+        <div class="dock" role="region" aria-label="Chat composer">
+          <div class="dock-top">
+            <div class="chip">Generate a PDF summary</div>
+            <div class="chip">Book a call</div>
+          </div>
+          <div class="dock-body">
+            <input id="msg" class="input" placeholder="Message… (Enter to send)" aria-label="Message input" />
+            <button id="send" class="send" type="button" aria-label="Send">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const sel = document.getElementById('w');
+    const col = document.getElementById('col');
+    const log = document.getElementById('log');
+    const msg = document.getElementById('msg');
+    const send = document.getElementById('send');
+    const clear = document.getElementById('clear');
+    sel.addEventListener('change', () => { col.style.maxWidth = sel.value + 'px'; });
+    col.style.maxWidth = sel.value + 'px';
+    function append(role, text) {
+      const row = document.createElement('div'); row.className = 'row ' + role;
+      const b = document.createElement('div'); b.className = 'bubble'; b.textContent = text;
+      const ts = document.createElement('div'); ts.className = 'ts'; ts.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      b.appendChild(ts); row.appendChild(b); log.appendChild(row); log.scrollTop = log.scrollHeight;
+    }
+    send.addEventListener('click', () => { if (!msg.value.trim()) return; append('user', msg.value.trim()); msg.value=''; setTimeout(()=>append('assistant','Thinking…'), 200); });
+    msg.addEventListener('keydown', (e) => { if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send.click(); }});
+    clear.addEventListener('click', () => { log.innerHTML=''; });
+  </script>
+</body>
+</html>
+
+
