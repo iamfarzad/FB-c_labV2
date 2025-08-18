@@ -8,6 +8,7 @@ import { BottomDock } from "@/components/collab/BottomDock"
 import { TopHeader } from "@/components/collab/TopHeader"
 import { CenterCanvas } from "@/components/collab/CenterCanvas"
 import { CollabShell } from "@/components/collab/CollabShell"
+import { MobileStageProgress } from "@/components/collab/MobileStageProgress"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi"
 
@@ -16,15 +17,24 @@ export default function TestChatDesignPage() {
   const [input, setInput] = useState("")
 
   return (
-    <CollabShell
+    <>
+      <MobileStageProgress
+        stages={[
+          { id: 'greet', label: 'Greeting', done: true },
+          { id: 'research', label: 'Background Research', current: true },
+          { id: 'proposal', label: 'Proposal' },
+          { id: 'finish', label: 'Finish & Email' },
+        ]}
+      />
+      <CollabShell
       header={<TopHeader title="F.B/c — Test Chat (Design Only)" subtitle="Brand tokens · glass surfaces · AA contrast" rightActions={<button className="btn-minimal">Feedback</button>} />}
       left={
         <LeftToolRail
           items={[
-            { id: 'webcam', icon: <Camera className=\"h-4 w-4\" />, label: 'Webcam', active: state === 'webcam', onClick: () => setState('webcam') },
-            { id: 'screen', icon: <Monitor className=\"h-4 w-4\" />, label: 'Screen', active: state === 'screen', onClick: () => setState('screen') },
-            { id: 'roi', icon: <Calculator className=\"h-4 w-4\" />, label: 'ROI', active: state === 'roi', onClick: () => setState('roi') },
-            { id: 'video', icon: <Video className=\"h-4 w-4\" />, label: 'Video→App', active: state === 'video', onClick: () => setState('video') },
+            { id: 'webcam', icon: <Camera className="h-4 w-4" />, label: 'Webcam', active: state === 'webcam', onClick: () => setState('webcam') },
+            { id: 'screen', icon: <Monitor className="h-4 w-4" />, label: 'Screen', active: state === 'screen', onClick: () => setState('screen') },
+            { id: 'roi', icon: <Calculator className="h-4 w-4" />, label: 'ROI', active: state === 'roi', onClick: () => setState('roi') },
+            { id: 'video', icon: <Video className="h-4 w-4" />, label: 'Video→App', active: state === 'video', onClick: () => setState('video') },
           ]}
         />
       }
@@ -79,6 +89,7 @@ export default function TestChatDesignPage() {
         </div>
       }
     />
+    </>
   )
 }
 
