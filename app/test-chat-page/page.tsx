@@ -1,14 +1,13 @@
 "use client"
 
 import React, { useState } from "react"
-import { FbcIcon } from "@/components/ui/fbc-icon"
-import { cn } from "@/lib/utils"
 import { Camera, Monitor, Calculator, Video, MessageCircle } from "lucide-react"
 import { LeftToolRail } from "@/components/collab/LeftToolRail"
 import { RightStageRail } from "@/components/collab/RightStageRail"
 import { BottomDock } from "@/components/collab/BottomDock"
 import { TopHeader } from "@/components/collab/TopHeader"
 import { CenterCanvas } from "@/components/collab/CenterCanvas"
+import { CollabShell } from "@/components/collab/CollabShell"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi"
 
@@ -17,30 +16,19 @@ export default function TestChatDesignPage() {
   const [input, setInput] = useState("")
 
   return (
-    <div className="h-dvh grid grid-rows-[auto_1fr_auto] md:grid-rows-[auto_1fr] md:grid-cols-[56px_1fr_320px] bg-background text-foreground">
-      {/* Header */}
-      <div className="col-span-full md:col-start-2 md:col-end-4">
-        <TopHeader
-          title="F.B/c — Test Chat (Design Only)"
-          subtitle="Brand tokens · glass surfaces · AA contrast"
-          rightActions={<button className="btn-minimal">Feedback</button>}
-        />
-      </div>
-
-      {/* Left rail */}
-      <aside className="hidden md:block border-r bg-card/40">
+    <CollabShell
+      header={<TopHeader title="F.B/c — Test Chat (Design Only)" subtitle="Brand tokens · glass surfaces · AA contrast" rightActions={<button className="btn-minimal">Feedback</button>} />}
+      left={
         <LeftToolRail
           items={[
-            { id: 'webcam', icon: <Camera className="h-4 w-4" />, label: 'Webcam', active: state === 'webcam', onClick: () => setState('webcam') },
-            { id: 'screen', icon: <Monitor className="h-4 w-4" />, label: 'Screen', active: state === 'screen', onClick: () => setState('screen') },
-            { id: 'roi', icon: <Calculator className="h-4 w-4" />, label: 'ROI', active: state === 'roi', onClick: () => setState('roi') },
-            { id: 'video', icon: <Video className="h-4 w-4" />, label: 'Video→App', active: state === 'video', onClick: () => setState('video') },
+            { id: 'webcam', icon: <Camera className=\"h-4 w-4\" />, label: 'Webcam', active: state === 'webcam', onClick: () => setState('webcam') },
+            { id: 'screen', icon: <Monitor className=\"h-4 w-4\" />, label: 'Screen', active: state === 'screen', onClick: () => setState('screen') },
+            { id: 'roi', icon: <Calculator className=\"h-4 w-4\" />, label: 'ROI', active: state === 'roi', onClick: () => setState('roi') },
+            { id: 'video', icon: <Video className=\"h-4 w-4\" />, label: 'Video→App', active: state === 'video', onClick: () => setState('video') },
           ]}
         />
-      </aside>
-
-      {/* Center canvas */}
-      <main className="min-h-0 overflow-hidden">
+      }
+      center={
         <CenterCanvas
           state={state}
           empty={
@@ -61,10 +49,8 @@ export default function TestChatDesignPage() {
             Mock content panel: <span className="font-medium text-foreground">{state}</span>
           </div>
         </CenterCanvas>
-      </main>
-
-      {/* Right stage rail */}
-      <aside className="hidden md:block border-l bg-card/30">
+      }
+      right={
         <RightStageRail
           stages={[
             { id: 'greet', label: 'Greeting', done: true, onClick: () => {} },
@@ -73,26 +59,26 @@ export default function TestChatDesignPage() {
             { id: 'finish', label: 'Finish & Email', onClick: () => {} },
           ]}
         />
-      </aside>
-
-      {/* Bottom dock (mobile + desktop) */}
-      <div className="col-span-full md:col-start-2 md:col-end-4 border-t bg-background/70 backdrop-blur">
-        <div className="p-2">
-          <BottomDock
-            value={input}
-            onChange={setInput}
-            onSend={() => {}}
-            disabled={false}
-            quick={[
-              { id: 'webcam', label: 'Webcam', onClick: () => setState('webcam') },
-              { id: 'screen', label: 'Screen', onClick: () => setState('screen') },
-              { id: 'roi', label: 'ROI', onClick: () => setState('roi') },
-              { id: 'video', label: 'Video→App', onClick: () => setState('video') },
-            ]}
-          />
+      }
+      dock={
+        <div className="border-t bg-background/70 backdrop-blur">
+          <div className="p-2">
+            <BottomDock
+              value={input}
+              onChange={setInput}
+              onSend={() => {}}
+              disabled={false}
+              quick={[
+                { id: 'webcam', label: 'Webcam', onClick: () => setState('webcam') },
+                { id: 'screen', label: 'Screen', onClick: () => setState('screen') },
+                { id: 'roi', label: 'ROI', onClick: () => setState('roi') },
+                { id: 'video', label: 'Video→App', onClick: () => setState('video') },
+              ]}
+            />
+          </div>
         </div>
-      </div>
-    </div>
+      }
+    />
   )
 }
 
