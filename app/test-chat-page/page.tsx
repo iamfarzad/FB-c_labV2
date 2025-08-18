@@ -53,7 +53,7 @@ export default function TestChatDesignPage() {
           <div className="h-full rounded-xl border bg-card">
             {state === "empty" ? (
               <div className="grid h-full place-items-center p-6 text-center">
-                <div className="max-w-sm">
+                <div className="max-w-sm" role="region" aria-label="Empty state quick actions">
                   <MessageCircle className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
                   <h2 className="text-lg font-semibold">Start in the dock below</h2>
                   <p className="mt-1 text-sm text-muted-foreground">Use a quick action or type a message.</p>
@@ -111,7 +111,7 @@ export default function TestChatDesignPage() {
               }}
             />
             <div className="flex items-center justify-end p-1">
-              <PromptInputSubmit status="submitted" />
+              <PromptInputSubmit status="submitted">Send</PromptInputSubmit>
             </div>
           </PromptInput>
         </div>
@@ -150,20 +150,21 @@ function Chip({ onClick, children }: { onClick: () => void; children: React.Reac
 function StageItem({ label, done, current }: { label: string; done?: boolean; current?: boolean }) {
   return (
     <li>
-      <div
+      <button
+        type="button"
         className={cn(
           "w-full text-left rounded-lg border p-2.5 transition",
           current ? "border-[var(--color-orange-accent)]/40 bg-[var(--color-orange-accent)]/10" : "border-border/40 hover:bg-card/70",
           done && "opacity-90"
         )}
-        role="button"
-        aria-pressed={current}
+        aria-current={current ? "step" : undefined}
+        aria-label={label}
       >
         <div className="flex items-center gap-2">
           <span className={cn("inline-block h-2 w-2 rounded-full", done ? "bg-green-500" : current ? "bg-[var(--color-orange-accent)]" : "bg-muted-foreground/40")} />
           <span className="text-sm">{label}</span>
         </div>
-      </div>
+      </button>
     </li>
   )
 }
