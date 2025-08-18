@@ -15,7 +15,7 @@ export function FbcIcon({ className }: FbcIconProps) {
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ scale: 1.05 }}
       transition={{ type: "spring", stiffness: 300, damping: 15 }}
-      aria-label="F.B/c Orb Icon"
+      aria-hidden="true"
     >
       <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
         <defs>
