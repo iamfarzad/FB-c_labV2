@@ -53,7 +53,7 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
           <button
             type="button"
             aria-pressed={compact}
-            className="btn-minimal px-2 py-1"
+            className="btn-minimal px-2 py-1 min-h-11 min-w-11"
             onClick={() => setCompact(v => !v)}
           >
             {compact ? 'Density: Compact' : 'Density: Comfortable'}
