@@ -16,6 +16,7 @@ import { SuggestionsRow } from "@/components/collab/SuggestionsRow"
 import { WebcamPanel } from "@/components/collab/WebcamPanel"
 import { ScreenSharePanel } from "@/components/collab/ScreenSharePanel"
 import { PanelSkeleton } from "@/components/collab/PanelSkeleton"
+import { RoiPanel } from "@/components/collab/RoiPanel"
 import { HelpHint } from "@/components/collab/HelpHint"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi" | "webpreview"
@@ -97,6 +98,8 @@ export default function TestChatDesignPage() {
             <WebcamPanel onBack={() => switchState('empty')} />
           ) : state === 'screen' ? (
             <ScreenSharePanel onBack={() => switchState('empty')} />
+          ) : state === 'roi' ? (
+            <RoiPanel onBack={() => switchState('empty')} />
           ) : (
             <ChatPane sessionId={sessionId} onAfterSend={async (text) => {
               try {
