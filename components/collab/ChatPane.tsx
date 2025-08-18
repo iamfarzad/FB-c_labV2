@@ -19,9 +19,11 @@ interface ChatPaneProps {
 }
 
 export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
-  const { messages, input, setInput, isLoading, sendMessage, clearMessages, reload, deleteMessage } = useChat({ data: { enableLeadGeneration: false, sessionId: sessionId ?? undefined } })
+  const { messages, input, setInput, isLoading, sendMessage, clearMessages, reload, deleteMessage, stop } = useChat({ data: { enableLeadGeneration: false, sessionId: sessionId ?? undefined } })
   const [compact, setCompact] = useState(false)
   const contentRef = useRef<HTMLDivElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [attachedFile, setAttachedFile] = useState<string | null>(null)
 
   const uiMessages = useMemo(() => messages.map(m => ({ id: m.id, role: m.role, text: m.content, timestamp: m.timestamp, sources: (m as any).sources, citations: (m as any).citations })), [messages])
   const latestAssistantId = useMemo(() => {
@@ -147,8 +149,27 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
             sendMessage(text)
             if (onAfterSend) onAfterSend(text)
           }}
-          quick={[{ id: 'clear', label: 'Clear', onClick: () => clearMessages() }]}
+          quick={[
+            { id: 'attach', label: 'Attach', onClick: () => fileInputRef.current?.click() },
+            { id: 'clear', label: 'Clear', onClick: () => clearMessages() }
+          ]}
+          status={isLoading ? 'streaming' : undefined}
+          rightArea={isLoading ? (
+            <button type="button" className="btn-minimal" onClick={() => stop()} aria-label="Stop streaming">Stop</button>
+          ) : null}
         />
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="sr-only"
+          onChange={e => {
+            const f = e.target.files && e.target.files[0]
+            setAttachedFile(f ? f.name : null)
+          }}
+        />
+        {attachedFile ? (
+          <div role="status" aria-live="polite" className="px-1 pt-1 text-[10px] text-muted-foreground">Attached: {attachedFile}</div>
+        ) : null}
       </div>
     </div>
   )
