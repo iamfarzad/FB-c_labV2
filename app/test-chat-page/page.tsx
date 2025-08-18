@@ -13,8 +13,10 @@ import { QuickActionsRow } from "@/components/collab/QuickActionsRow"
 import { ChatPane } from "@/components/collab/ChatPane"
 import { WebPreviewPanel } from "@/components/collab/WebPreviewPanel"
 import { SuggestionsRow } from "@/components/collab/SuggestionsRow"
+import { WebcamPanel } from "@/components/collab/WebcamPanel"
+import { ScreenSharePanel } from "@/components/collab/ScreenSharePanel"
 
-type PanelState = "empty" | "webcam" | "screen" | "video" | "roi"
+type PanelState = "empty" | "webcam" | "screen" | "video" | "roi" | "webpreview"
 
 export default function TestChatDesignPage() {
   const [state, setState] = useState<PanelState>("empty")
@@ -54,7 +56,7 @@ export default function TestChatDesignPage() {
               <p className="mt-1 text-sm text-muted-foreground">Pick a tool or type a message to begin. You can always switch tools from the left rail.</p>
               <QuickActionsRow
                 actions={[
-                  { id: 'search', label: 'Search', onClick: () => setState('webcam') },
+                  { id: 'search', label: 'Search', onClick: () => setState('webpreview') },
                   { id: 'webcam', label: 'Webcam', onClick: () => setState('webcam') },
                   { id: 'screen', label: 'Screen', onClick: () => setState('screen') },
                   { id: 'roi', label: 'ROI', onClick: () => setState('roi') },
@@ -69,8 +71,12 @@ export default function TestChatDesignPage() {
             <div className="rounded-xl border border-border/50 bg-background/60 p-6 text-sm text-muted-foreground">
               Mock content panel: <span className="font-medium text-foreground">{state}</span>
             </div>
-          ) : state === 'webcam' ? (
+          ) : state === 'webpreview' ? (
             <WebPreviewPanel url="https://example.com" />
+          ) : state === 'webcam' ? (
+            <WebcamPanel onBack={() => setState('empty')} />
+          ) : state === 'screen' ? (
+            <ScreenSharePanel onBack={() => setState('empty')} />
           ) : (
             <ChatPane sessionId={sessionId} onAfterSend={async (text) => {
               try {
@@ -96,7 +102,7 @@ export default function TestChatDesignPage() {
           <div className="p-2">
             <SuggestionsRow
               suggestions={[
-                { id: 'suggest-1', label: 'Analyze website', onClick: () => setState('webcam') },
+                { id: 'suggest-1', label: 'Analyze website', onClick: () => setState('webpreview') },
                 { id: 'suggest-2', label: 'Calculate ROI', onClick: () => setState('roi') },
                 { id: 'suggest-3', label: 'Translate to Spanish', onClick: () => {} },
               ]}
