@@ -36,15 +36,15 @@ export default function Header() {
   )
 
   const NavLinks = ({ className }: { className?: string }) => (
-    <nav className={cn("flex items-center gap-4 md:gap-6 text-sm", className)}>
+    <nav className={cn("flex items-center gap-3 md:gap-4 text-sm", className)}>
       {navLinks.map(({ href, label }) => (
         <Link
           key={href}
           href={href}
           className={cn(
-            "transition-all hover:text-foreground focus:text-foreground rounded px-2 py-1",
+            "transition-colors hover:text-foreground focus:text-foreground rounded inline-flex items-center px-3 py-2 min-h-[44px]",
             "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
-            pathname === href ? "text-primary" : "text-muted-foreground",
+            pathname === href ? "text-foreground" : "text-foreground/90",
           )}
         >
           {label}

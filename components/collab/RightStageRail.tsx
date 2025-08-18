@@ -61,7 +61,7 @@ export function RightStageRail({ stages, className, ariaLabel = "Conversation st
               aria-current={s.current ? "step" : undefined}
               aria-label={s.label}
               className={cn(
-                "w-full text-left rounded-lg border p-2.5 transition",
+                "w-full text-left rounded-lg border p-3 transition min-h-[44px]",
                 s.current ? "border-[var(--color-orange-accent)]/40 bg-[var(--color-orange-accent)]/10" : "border-border/40 hover:bg-card/70",
                 s.done && "opacity-90"
               )}
