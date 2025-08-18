@@ -151,6 +151,7 @@ export default function TestChatDesignPage() {
               className="mb-1"
             />
             <HelpHint className="mb-1" />
+            {state !== 'empty' && (
             <BottomDock
               value={input}
               onChange={setInput}
@@ -179,7 +180,7 @@ export default function TestChatDesignPage() {
               rightArea={<button ref={micBtnRef} type="button" className="btn-minimal" onClick={() => setVoiceOpen(true)} aria-pressed={voiceOpen} aria-label="Open voice overlay">Mic</button>}
               status={sendStatus}
               errorMessage={sendError}
-            />
+            />)}
           </div>
         </div>
       }
