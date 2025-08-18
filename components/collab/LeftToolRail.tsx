@@ -88,7 +88,7 @@ export function LeftToolRail({ items, className, ariaLabel = "Primary tools" }: 
                 disabled={item.disabled}
                 onClick={item.onClick}
                 className={cn(
-                  "inline-flex h-11 w-11 items-center justify-center rounded-xl border transition-colors",
+                  "inline-flex h-11 w-11 items-center justify-center rounded-xl border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-orange-accent)]/40 focus-visible:ring-offset-2",
                   item.active
                     ? "bg-[var(--color-orange-accent)]/10 border-[var(--color-orange-accent)]/30 text-[var(--color-orange-accent)]"
                     : "bg-card/60 border-border/40 text-muted-foreground hover:text-foreground",

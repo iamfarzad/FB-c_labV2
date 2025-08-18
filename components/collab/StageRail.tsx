@@ -73,93 +73,79 @@ export function StageRail({ sessionId }: { sessionId?: string }) {
   const progressPercentage = Math.round(((ctx.exploredCount || 0) / (ctx.total || 16)) * 100)
 
   return (
-    <div 
-      className="fixed z-20 flex flex-col items-center right-2 md:right-4 top-20 md:top-24 gap-3"
+    <aside 
+      className="fixed z-20 flex flex-col items-center right-2 md:right-4 top-[72px] md:top-[88px] gap-3"
       role="complementary"
       aria-label="Session progress and stage information"
     >
-      {/* Stage Progress */}
-      <div className="text-xs text-muted-foreground font-medium tracking-wide">
-        STAGE {currentStage}/7
-      </div>
-      
-      {/* Stage Indicators */}
-      <div className={cn("flex flex-col gap-2")} role="progressbar" aria-valuenow={currentStage} aria-valuemin={1} aria-valuemax={7}>
+      <div className="text-xs text-muted-foreground font-medium tracking-wide" aria-live="polite">Stage {currentStage} of 7</div>
+      <ol className={cn("flex flex-col gap-2")} role="list">
         {Array.from({ length: 7 }).map((_, i) => {
           const stageNumber = i + 1
           const isCurrent = stageNumber === currentStage
           const isCompleted = stageNumber < currentStage
           const isUpcoming = stageNumber > currentStage
-          
           return (
-            <TooltipProvider key={stageNumber}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="group relative">
-                    <button
-                      className={cn(
-                        "w-8 h-8 md:w-10 md:h-10 rounded-full grid place-items-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                        isCurrent 
-                          ? "bg-primary text-primary-foreground shadow-lg scale-110" 
-                          : isCompleted
-                          ? "bg-primary/80 text-primary-foreground"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+            <li key={stageNumber}>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="group relative">
+                      <button
+                        className={cn(
+                          "w-11 h-11 md:w-10 md:h-10 rounded-full grid place-items-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                          isCurrent 
+                            ? "bg-primary text-primary-foreground shadow-lg scale-110" 
+                            : isCompleted
+                            ? "bg-primary/80 text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        )}
+                        aria-label={`Stage ${stageNumber}: ${STAGE_DESCRIPTIONS[stageNumber as keyof typeof STAGE_DESCRIPTIONS]}${isCurrent ? ' (current)' : ''}`}
+                        aria-current={isCurrent ? 'step' : undefined}
+                        disabled={isUpcoming}
+                      >
+                        {isCompleted ? (
+                          <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <span className="text-xs md:text-sm font-medium">{stageNumber}</span>
+                        )}
+                      </button>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-xs">
+                    <div className="space-y-1">
+                      <p className="font-medium">Stage {stageNumber}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {STAGE_DESCRIPTIONS[stageNumber as keyof typeof STAGE_DESCRIPTIONS]}
+                      </p>
+                      {isCurrent && (
+                        <p className="text-xs text-primary font-medium">Current stage</p>
                       )}
-                      aria-label={`Stage ${stageNumber}: ${STAGE_DESCRIPTIONS[stageNumber as keyof typeof STAGE_DESCRIPTIONS]}${isCurrent ? ' (current)' : ''}`}
-                      aria-current={isCurrent ? 'step' : undefined}
-                      disabled={isUpcoming}
-                    >
-                      {isCompleted ? (
-                        <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      ) : (
-                        <span className="text-xs md:text-sm font-medium">{stageNumber}</span>
-                      )}
-                    </button>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="left" className="max-w-xs">
-                  <div className="space-y-1">
-                    <p className="font-medium">Stage {stageNumber}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {STAGE_DESCRIPTIONS[stageNumber as keyof typeof STAGE_DESCRIPTIONS]}
-                    </p>
-                    {isCurrent && (
-                      <p className="text-xs text-primary font-medium">Current stage</p>
-                    )}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </li>
           )
         })}
-      </div>
-      
-      {/* Progress Indicator */}
+      </ol>
       <div className="text-xs text-muted-foreground text-center space-y-1">
-        <div className="flex items-center justify-between gap-2">
+        <div className="text-[10px] opacity-70">Exploration</div>
+        <div className="flex items-center justify-center gap-1">
           <span>{ctx.exploredCount}</span>
-          <span>/</span>
+          <span>of</span>
           <span>{ctx.total}</span>
         </div>
-        <div className="text-[10px] opacity-70">explored</div>
-        
-        {/* Progress Bar */}
-        <div className="w-12 h-1 bg-muted rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-primary transition-all duration-500 ease-out"
-            style={{ width: `${progressPercentage}%` }}
-            aria-label={`${progressPercentage}% complete`}
-          />
+        <div className="w-12 h-1 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercentage} aria-label="Exploration progress">
+          <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }} />
         </div>
       </div>
-      
-      {/* Loading Indicator */}
       {isLoading && (
         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" aria-label="Loading progress" />
       )}
-    </div>
+    </aside>
   )
 }
 

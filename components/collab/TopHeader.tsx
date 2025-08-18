@@ -12,7 +12,7 @@ interface TopHeaderProps {
   className?: string
 }
 
-export function TopHeader({ title, subtitle, rightActions, className }: TopHeaderProps) {
+export function TopHeader({ title, subtitle, rightActions, statusChip, className }: TopHeaderProps) {
   return (
     <header
       className={cn(
