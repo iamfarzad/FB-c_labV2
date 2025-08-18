@@ -44,7 +44,7 @@ export default function TestChatDesignPage() {
         ]}
       />
       <CollabShell
-      header={<TopHeader title="F.B/c — Test Chat (Design Only)" subtitle="Brand tokens · glass surfaces · AA contrast" rightActions={<button className="btn-minimal">Feedback</button>} statusChip={intent ? (<span className="text-[10px] rounded-md border px-2 py-0.5 text-muted-foreground">intent: {intent}</span>) : null} />}
+      header={<TopHeader title="F.B/c — Test Chat (Design Only)" subtitle="Brand tokens · glass surfaces · AA contrast" rightActions={<button className="btn-minimal hover:bg-[var(--color-orange-accent)]/10 hover:border-[var(--color-orange-accent)]/30">Feedback</button>} statusChip={intent ? (<span className="text-[10px] rounded-md border px-2 py-0.5 text-muted-foreground">intent: {intent}</span>) : null} />}
       left={
         <LeftToolRail
           items={[
@@ -83,7 +83,7 @@ export default function TestChatDesignPage() {
           ) : loading ? (
             <PanelSkeleton />
           ) : state === 'webpreview' ? (
-            <WebPreviewPanel url="https://example.com" />
+            <WebPreviewPanel url="https://example.com" onBack={() => switchState('empty')} />
           ) : state === 'webcam' ? (
             <WebcamPanel onBack={() => switchState('empty')} />
           ) : state === 'screen' ? (

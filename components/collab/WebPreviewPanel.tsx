@@ -11,10 +11,16 @@ import {
 } from "@/components/ai-elements/web-preview"
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react"
 
-export function WebPreviewPanel({ url = "https://example.com" }: { url?: string }) {
+export function WebPreviewPanel({ url = "https://example.com", onBack }: { url?: string, onBack?: () => void }) {
   const logs = [{ level: 'log' as const, message: 'Console initialized', timestamp: new Date() }]
   return (
     <div className="h-full w-full p-3">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-medium">Web Preview</h3>
+        {onBack && (
+          <button className="btn-minimal" onClick={onBack} aria-label="Back to chat">Back to Chat</button>
+        )}
+      </div>
       <WebPreview defaultUrl={url}>
         <WebPreviewNavigation>
           <WebPreviewNavigationButton tooltip="Back" aria-label="Back">
