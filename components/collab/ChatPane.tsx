@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import {
   Conversation,
   ConversationContent,
@@ -20,6 +20,8 @@ interface ChatPaneProps {
 
 export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
   const { messages, input, setInput, isLoading, sendMessage, clearMessages } = useChat({ data: { enableLeadGeneration: false, sessionId: sessionId ?? undefined } })
+  const [compact, setCompact] = useState(false)
+  const contentRef = useRef<HTMLDivElement | null>(null)
 
   const uiMessages = useMemo(() => messages.map(m => ({ id: m.id, role: m.role, text: m.content, timestamp: m.timestamp })), [messages])
   const latestAssistantId = useMemo(() => {
@@ -27,11 +29,32 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
     return last?.id
   }, [messages])
 
+  // Subtle scroll anchoring: if near bottom when a new message arrives, keep anchored to bottom
+  useEffect(() => {
+    const el = contentRef.current
+    if (!el) return
+    const distanceFromBottom = el.scrollHeight - (el.scrollTop + el.clientHeight)
+    const isNearBottom = distanceFromBottom < 80
+    if (isNearBottom) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+    }
+  }, [uiMessages.length])
+
   return (
     <div className={className}>
       <div className="h-[58vh] md:h-[60vh] rounded-xl border bg-card overflow-hidden">
+        <div className="flex items-center justify-end p-2 text-xs">
+          <button
+            type="button"
+            aria-pressed={compact}
+            className="btn-minimal px-2 py-1"
+            onClick={() => setCompact(v => !v)}
+          >
+            {compact ? 'Density: Compact' : 'Density: Comfortable'}
+          </button>
+        </div>
         <Conversation className="h-full">
-          <ConversationContent className="w-full max-w-3xl mx-auto space-y-3 p-4">
+          <ConversationContent ref={contentRef} className={`w-full max-w-3xl mx-auto ${compact ? 'space-y-2 p-3' : 'space-y-3 p-4'}`}>
             {uiMessages.length === 0 && !isLoading && (
               <div className="text-center text-sm text-muted-foreground py-10">Start the conversation below</div>
             )}
