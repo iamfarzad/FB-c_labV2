@@ -14,10 +14,12 @@ import useChat from "@/hooks/chat/useChat"
 
 interface ChatPaneProps {
   className?: string
+  sessionId?: string | null
+  onAfterSend?: (text: string) => void
 }
 
-export function ChatPane({ className }: ChatPaneProps) {
-  const { messages, input, setInput, isLoading, sendMessage, clearMessages } = useChat({ data: { enableLeadGeneration: false } })
+export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
+  const { messages, input, setInput, isLoading, sendMessage, clearMessages } = useChat({ data: { enableLeadGeneration: false, sessionId: sessionId ?? undefined } })
 
   const uiMessages = useMemo(() => messages.map(m => ({ id: m.id, role: m.role, text: m.content })), [messages])
 
@@ -51,7 +53,12 @@ export function ChatPane({ className }: ChatPaneProps) {
         <BottomDock
           value={input}
           onChange={setInput}
-          onSend={() => { const text = (input || '').trim(); if (text) { sendMessage(text); } }}
+          onSend={() => {
+            const text = (input || '').trim()
+            if (!text) return
+            sendMessage(text)
+            if (onAfterSend) onAfterSend(text)
+          }}
           quick={[{ id: 'clear', label: 'Clear', onClick: () => clearMessages() }]}
         />
       </div>

@@ -17,6 +17,8 @@ type PanelState = "empty" | "webcam" | "screen" | "video" | "roi"
 export default function TestChatDesignPage() {
   const [state, setState] = useState<PanelState>("empty")
   const [input, setInput] = useState("")
+  const [sessionId, setSessionId] = useState<string | null>(() => (typeof window !== 'undefined' ? window.localStorage.getItem('intelligence-session-id') : null))
+  const [intent, setIntent] = useState<string | null>(null)
 
   return (
     <>
@@ -29,7 +31,7 @@ export default function TestChatDesignPage() {
         ]}
       />
       <CollabShell
-      header={<TopHeader title="F.B/c — Test Chat (Design Only)" subtitle="Brand tokens · glass surfaces · AA contrast" rightActions={<button className="btn-minimal">Feedback</button>} />}
+      header={<TopHeader title="F.B/c — Test Chat (Design Only)" subtitle="Brand tokens · glass surfaces · AA contrast" rightActions={<button className="btn-minimal">Feedback</button>} statusChip={intent ? (<span className="text-[10px] rounded-md border px-2 py-0.5 text-muted-foreground">intent: {intent}</span>) : null} />}
       left={
         <LeftToolRail
           items={[
@@ -65,7 +67,12 @@ export default function TestChatDesignPage() {
               Mock content panel: <span className="font-medium text-foreground">{state}</span>
             </div>
           ) : (
-            <ChatPane />
+            <ChatPane sessionId={sessionId} onAfterSend={async (text) => {
+              try {
+                const res = await fetch('/api/intelligence/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, userMessage: text }) })
+                if (res.ok) { const j = await res.json(); setIntent(j?.output?.type || j?.type || null) }
+              } catch {}
+            }} />
           )}
         </CenterCanvas>
       }

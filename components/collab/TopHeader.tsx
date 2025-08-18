@@ -8,6 +8,7 @@ interface TopHeaderProps {
   title: string
   subtitle?: string
   rightActions?: React.ReactNode
+  statusChip?: React.ReactNode
   className?: string
 }
 
@@ -23,7 +24,10 @@ export function TopHeader({ title, subtitle, rightActions, className }: TopHeade
         <div className="flex items-center gap-3">
           <FbcIcon className="h-5 w-5" />
           <div>
-            <h1 className="text-sm font-semibold leading-tight tracking-tight">{title}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-semibold leading-tight tracking-tight">{title}</h1>
+              {statusChip}
+            </div>
             {subtitle ? (
               <p className="text-xs text-muted-foreground">{subtitle}</p>
             ) : null}
