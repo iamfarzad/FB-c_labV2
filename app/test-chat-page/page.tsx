@@ -15,14 +15,22 @@ import { WebPreviewPanel } from "@/components/collab/WebPreviewPanel"
 import { SuggestionsRow } from "@/components/collab/SuggestionsRow"
 import { WebcamPanel } from "@/components/collab/WebcamPanel"
 import { ScreenSharePanel } from "@/components/collab/ScreenSharePanel"
+import { PanelSkeleton } from "@/components/collab/PanelSkeleton"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi" | "webpreview"
 
 export default function TestChatDesignPage() {
   const [state, setState] = useState<PanelState>("empty")
+  const [loading, setLoading] = useState(false)
   const [input, setInput] = useState("")
   const [sessionId, setSessionId] = useState<string | null>(() => (typeof window !== 'undefined' ? window.localStorage.getItem('intelligence-session-id') : null))
   const [intent, setIntent] = useState<string | null>(null)
+
+  function switchState(next: PanelState) {
+    if (next === 'empty') return setState(next)
+    setLoading(true)
+    setTimeout(() => { setState(next); setLoading(false) }, 200)
+  }
 
   return (
     <>
@@ -39,10 +47,10 @@ export default function TestChatDesignPage() {
       left={
         <LeftToolRail
           items={[
-            { id: 'webcam', icon: <Camera className="h-4 w-4" />, label: 'Webcam', active: state === 'webcam', onClick: () => setState('webcam') },
-            { id: 'screen', icon: <Monitor className="h-4 w-4" />, label: 'Screen', active: state === 'screen', onClick: () => setState('screen') },
-            { id: 'roi', icon: <Calculator className="h-4 w-4" />, label: 'ROI', active: state === 'roi', onClick: () => setState('roi') },
-            { id: 'video', icon: <Video className="h-4 w-4" />, label: 'Video→App', active: state === 'video', onClick: () => setState('video') },
+            { id: 'webcam', icon: <Camera className="h-4 w-4" />, label: 'Webcam', active: state === 'webcam', onClick: () => switchState('webcam') },
+            { id: 'screen', icon: <Monitor className="h-4 w-4" />, label: 'Screen', active: state === 'screen', onClick: () => switchState('screen') },
+            { id: 'roi', icon: <Calculator className="h-4 w-4" />, label: 'ROI', active: state === 'roi', onClick: () => switchState('roi') },
+            { id: 'video', icon: <Video className="h-4 w-4" />, label: 'Video→App', active: state === 'video', onClick: () => switchState('video') },
           ]}
         />
       }
@@ -56,11 +64,11 @@ export default function TestChatDesignPage() {
               <p className="mt-1 text-sm text-muted-foreground">Pick a tool or type a message to begin. You can always switch tools from the left rail.</p>
               <QuickActionsRow
                 actions={[
-                  { id: 'search', label: 'Search', onClick: () => setState('webpreview') },
-                  { id: 'webcam', label: 'Webcam', onClick: () => setState('webcam') },
-                  { id: 'screen', label: 'Screen', onClick: () => setState('screen') },
-                  { id: 'roi', label: 'ROI', onClick: () => setState('roi') },
-                  { id: 'video', label: 'Video→App', onClick: () => setState('video') },
+                  { id: 'search', label: 'Search', onClick: () => switchState('webpreview') },
+                  { id: 'webcam', label: 'Webcam', onClick: () => switchState('webcam') },
+                  { id: 'screen', label: 'Screen', onClick: () => switchState('screen') },
+                  { id: 'roi', label: 'ROI', onClick: () => switchState('roi') },
+                  { id: 'video', label: 'Video→App', onClick: () => switchState('video') },
                 ]}
                 className="mt-4"
               />
@@ -71,12 +79,14 @@ export default function TestChatDesignPage() {
             <div className="rounded-xl border border-border/50 bg-background/60 p-6 text-sm text-muted-foreground">
               Mock content panel: <span className="font-medium text-foreground">{state}</span>
             </div>
+          ) : loading ? (
+            <PanelSkeleton />
           ) : state === 'webpreview' ? (
             <WebPreviewPanel url="https://example.com" />
           ) : state === 'webcam' ? (
-            <WebcamPanel onBack={() => setState('empty')} />
+            <WebcamPanel onBack={() => switchState('empty')} />
           ) : state === 'screen' ? (
-            <ScreenSharePanel onBack={() => setState('empty')} />
+            <ScreenSharePanel onBack={() => switchState('empty')} />
           ) : (
             <ChatPane sessionId={sessionId} onAfterSend={async (text) => {
               try {
@@ -102,8 +112,8 @@ export default function TestChatDesignPage() {
           <div className="p-2">
             <SuggestionsRow
               suggestions={[
-                { id: 'suggest-1', label: 'Analyze website', onClick: () => setState('webpreview') },
-                { id: 'suggest-2', label: 'Calculate ROI', onClick: () => setState('roi') },
+                { id: 'suggest-1', label: 'Analyze website', onClick: () => switchState('webpreview') },
+                { id: 'suggest-2', label: 'Calculate ROI', onClick: () => switchState('roi') },
                 { id: 'suggest-3', label: 'Translate to Spanish', onClick: () => {} },
               ]}
               className="mb-1"
@@ -114,10 +124,10 @@ export default function TestChatDesignPage() {
               onSend={() => {}}
               disabled={false}
               quick={[
-                { id: 'webcam', label: 'Webcam', onClick: () => setState('webcam') },
-                { id: 'screen', label: 'Screen', onClick: () => setState('screen') },
-                { id: 'roi', label: 'ROI', onClick: () => setState('roi') },
-                { id: 'video', label: 'Video→App', onClick: () => setState('video') },
+                { id: 'webcam', label: 'Webcam', onClick: () => switchState('webcam') },
+                { id: 'screen', label: 'Screen', onClick: () => switchState('screen') },
+                { id: 'roi', label: 'ROI', onClick: () => switchState('roi') },
+                { id: 'video', label: 'Video→App', onClick: () => switchState('video') },
               ]}
             />
           </div>
