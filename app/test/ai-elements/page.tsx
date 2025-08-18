@@ -109,7 +109,7 @@ export default function AIElementsGalleryPage() {
             </div>
           </div>
           <Button asChild variant="outline" className="border-orange-accent/40 text-orange-accent hover:bg-orange-accent/10">
-            <a href="/" className="">Back</a>
+            <a href="/" aria-label="Back to home" className="">Back</a>
           </Button>
         </header>
 
