@@ -14,7 +14,9 @@ interface TopHeaderProps {
 
 export function TopHeader({ title, subtitle, rightActions, statusChip, className }: TopHeaderProps) {
   return (
-    <header
+    <div
+      role="region"
+      aria-label="Chat header"
       className={cn(
         "border-b bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/70",
         className
@@ -37,7 +39,7 @@ export function TopHeader({ title, subtitle, rightActions, statusChip, className
           {rightActions}
         </div>
       </div>
-    </header>
+    </div>
   )}
 
 

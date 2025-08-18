@@ -35,7 +35,7 @@ export function BottomDock({ value, onChange, onSend, disabled, quick = [], clas
         <PromptInputToolbar>
           <PromptInputTools>
             {quick.slice(0, 4).map(q => (
-              <PromptInputButton key={q.id} variant="ghost" onClick={q.onClick}>{q.label}</PromptInputButton>
+              <PromptInputButton key={q.id} variant="ghost" className="min-h-11 min-w-11" onClick={q.onClick}>{q.label}</PromptInputButton>
             ))}
           </PromptInputTools>
           {rightArea ? <div className="ml-auto">{rightArea}</div> : null}
@@ -49,7 +49,7 @@ export function BottomDock({ value, onChange, onSend, disabled, quick = [], clas
           aria-invalid={status === 'error'}
         />
         <div className="flex items-center justify-end p-1">
-          <PromptInputSubmit status={status}>Send</PromptInputSubmit>
+          <PromptInputSubmit className="min-h-11 min-w-11" status={status}>Send</PromptInputSubmit>
         </div>
       </PromptInput>
       {status === 'error' && errorMessage ? (
