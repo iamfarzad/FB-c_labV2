@@ -7,6 +7,7 @@ import { Camera, Monitor, Calculator, Video, MessageCircle } from "lucide-react"
 import { LeftToolRail } from "@/components/collab/LeftToolRail"
 import { RightStageRail } from "@/components/collab/RightStageRail"
 import { BottomDock } from "@/components/collab/BottomDock"
+import { TopHeader } from "@/components/collab/TopHeader"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi"
 
@@ -17,19 +18,12 @@ export default function TestChatDesignPage() {
   return (
     <div className="h-dvh grid grid-rows-[auto_1fr_auto] md:grid-rows-[auto_1fr] md:grid-cols-[56px_1fr_320px] bg-background text-foreground">
       {/* Header */}
-      <div className="col-span-full md:col-start-2 md:col-end-4 border-b bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <FbcIcon className="h-5 w-5" />
-            <div>
-              <h1 className="text-sm font-semibold leading-tight tracking-tight">F.B/c — Test Chat (Design Only)</h1>
-              <p className="text-xs text-muted-foreground">Brand tokens · glass surfaces · AA contrast</p>
-            </div>
-          </div>
-          <div className="hidden md:flex items-center gap-2">
-            <button className="btn-minimal">Feedback</button>
-          </div>
-        </div>
+      <div className="col-span-full md:col-start-2 md:col-end-4">
+        <TopHeader
+          title="F.B/c — Test Chat (Design Only)"
+          subtitle="Brand tokens · glass surfaces · AA contrast"
+          rightActions={<button className="btn-minimal">Feedback</button>}
+        />
       </div>
 
       {/* Left rail */}
