@@ -16,6 +16,7 @@ import { SuggestionsRow } from "@/components/collab/SuggestionsRow"
 import { WebcamPanel } from "@/components/collab/WebcamPanel"
 import { ScreenSharePanel } from "@/components/collab/ScreenSharePanel"
 import { PanelSkeleton } from "@/components/collab/PanelSkeleton"
+import { HelpHint } from "@/components/collab/HelpHint"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi" | "webpreview"
 
@@ -118,6 +119,7 @@ export default function TestChatDesignPage() {
               ]}
               className="mb-1"
             />
+            <HelpHint className="mb-1" />
             <BottomDock
               value={input}
               onChange={setInput}
