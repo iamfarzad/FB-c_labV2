@@ -96,7 +96,7 @@ export function LeftToolRail({ items, className, ariaLabel = "Primary tools" }: 
                 )}
               >
                 <div className="relative">
-                  {item.icon}
+                  <span aria-hidden>{item.icon}</span>
                   {item.active && (
                     <span className="absolute -right-1 -bottom-1 inline-block h-2 w-2 rounded-full bg-[var(--color-orange-accent)] shadow-[0_0_6px_var(--color-orange-accent)]" aria-hidden />
                   )}

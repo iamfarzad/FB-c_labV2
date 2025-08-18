@@ -25,9 +25,8 @@ export function QuickActionsRow({ actions, className }: QuickActionsRowProps) {
           onClick={a.onClick}
           className={cn(
             "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-orange-accent)]/40 focus-visible:ring-offset-2 hover:-translate-y-0.5 active:translate-y-0",
-            "border-border/40 bg-card/60 text-foreground hover:bg-[var(--color-orange-accent)]/10 hover:border-[var(--color-orange-accent)]/30 hover:text-[var(--color-orange-accent)]"
+            "border-border/40 bg-card/60 text-foreground hover:bg-[var(--color-orange-accent)]/15 hover:border-[var(--color-orange-accent)]/40 hover:text-foreground"
           )}
-          aria-label={a.label}
         >
           {a.icon}
           <span>{a.label}</span>

@@ -18,9 +18,8 @@ export function SuggestionsRow({ suggestions, className }: SuggestionsRowProps) 
           onClick={s.onClick}
           className={cn(
             "inline-flex items-center rounded-full border px-3 py-1.5 text-xs transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-orange-accent)]/40 focus-visible:ring-offset-2",
-            "border-border/40 bg-card/60 text-foreground hover:bg-[var(--color-orange-accent)]/10 hover:border-[var(--color-orange-accent)]/30 hover:text-[var(--color-orange-accent)]"
+            "border-border/40 bg-card/60 text-foreground hover:bg-[var(--color-orange-accent)]/15 hover:border-[var(--color-orange-accent)]/40 hover:text-foreground"
           )}
-          aria-label={s.label}
         >
           {s.label}
         </button>

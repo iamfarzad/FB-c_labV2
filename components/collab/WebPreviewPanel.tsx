@@ -18,7 +18,7 @@ export function WebPreviewPanel({ url = "https://example.com", onBack }: { url?:
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-medium">Web Preview</h3>
         {onBack && (
-          <button className="btn-minimal" onClick={onBack} aria-label="Back to chat">Back to Chat</button>
+          <button className="btn-minimal" onClick={onBack}>Back to Chat</button>
         )}
       </div>
       <WebPreview defaultUrl={url}>
