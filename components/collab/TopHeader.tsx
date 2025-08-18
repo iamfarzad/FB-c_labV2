@@ -18,8 +18,6 @@ export function TopHeader({ title, subtitle, rightActions, className }: TopHeade
         "border-b bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/70",
         className
       )}
-      role="region"
-      aria-label="Collaboration header"
     >
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
