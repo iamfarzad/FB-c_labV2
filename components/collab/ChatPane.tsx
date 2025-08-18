@@ -9,6 +9,10 @@ import {
 import { Message, MessageContent } from "@/components/ai-elements/message"
 import { Response } from "@/components/ai-elements/response"
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ai-elements/reasoning"
+import { Sources, SourcesTrigger, SourcesContent, Source } from "@/components/ai-elements/source"
+import { GroundedCitation } from "@/components/ai-elements/inline-citation"
+import { Actions, Action } from "@/components/ai-elements/actions"
+import { CodeBlock, CodeBlockCopyButton } from "@/components/ai-elements/code-block"
 import { BottomDock } from "@/components/collab/BottomDock"
 import useChat from "@/hooks/chat/useChat"
 
@@ -60,7 +64,12 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
             {uiMessages.length === 0 && !isLoading && (
               <div className="text-center text-sm text-muted-foreground py-10">Start the conversation below</div>
             )}
-            {uiMessages.map(m => (
+            {uiMessages.map(m => {
+              const codeMatch = typeof m.text === 'string' ? m.text.match(/```(\w+)?\n([\s\S]*?)```/) : null
+              const codeLang = codeMatch?.[1] || 'text'
+              const codeBody = codeMatch?.[2]
+              const nonCodeText = codeMatch ? m.text.replace(codeMatch[0], '').trim() : m.text
+              return (
               <Message key={m.id} from={m.role}>
                 <MessageContent>
                   {m.role === 'assistant' && isLoading && m.id === latestAssistantId ? (
@@ -69,61 +78,43 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
                       <ReasoningContent>Processing your input</ReasoningContent>
                     </Reasoning>
                   ) : null}
-                  {!!m.text && <Response>{m.text}</Response>}
+                  {codeBody ? (
+                    <div className="space-y-2">
+                      {nonCodeText && <Response>{nonCodeText}</Response>}
+                      <CodeBlock code={codeBody} language={codeLang}>
+                        <CodeBlockCopyButton aria-label="Copy code" />
+                      </CodeBlock>
+                    </div>
+                  ) : (
+                    !!m.text && <Response>{m.text}</Response>
+                  )}
                   {Array.isArray(m.sources) && m.sources.length > 0 ? (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {m.sources.map((s: any, i: number) => (
-                        <a
-                          key={`${m.id}-src-${i}`}
-                          href={s.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center rounded-full border px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground hover:border-[var(--color-orange-accent)]/40"
-                          aria-label={`Source: ${s.title || s.url}`}
-                        >
-                          {s.title || s.url}
-                        </a>
-                      ))}
+                    <div className="mt-2">
+                      <Sources>
+                        <SourcesTrigger count={m.sources.length} />
+                        <SourcesContent>
+                          {m.sources.map((s: any, i: number) => (
+                            <Source key={`${m.id}-src-${i}`} href={s.url} title={s.title || s.url} />
+                          ))}
+                        </SourcesContent>
+                      </Sources>
                     </div>
                   ) : null}
-                  <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
-                    <button
-                      type="button"
-                      className="btn-minimal px-2 py-1"
-                      aria-label="Copy message"
-                      onClick={() => { try { navigator.clipboard.writeText(m.text || '') } catch {} }}
-                    >
-                      Copy
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-minimal px-2 py-1"
-                      aria-label="Translate message"
-                      onClick={() => { /* design-only */ }}
-                    >
-                      Translate
-                    </button>
-                    {m.role === 'user' ? (
-                      <button
-                        type="button"
-                        className="btn-minimal px-2 py-1"
-                        aria-label="Delete message"
-                        onClick={() => deleteMessage(m.id)}
-                      >
-                        Delete
-                      </button>
-                    ) : null}
-                    {m.role === 'assistant' && m.id === latestAssistantId ? (
-                      <button
-                        type="button"
-                        className="btn-minimal px-2 py-1"
-                        aria-label="Regenerate response"
-                        onClick={() => reload()}
-                      >
-                        Regenerate
-                      </button>
-                    ) : null}
-                  </div>
+                  {Array.isArray(m.citations) && m.citations.length > 0 ? (
+                    <div className="mt-1">
+                      <GroundedCitation citations={m.citations as any} />
+                    </div>
+                  ) : null}
+                  <Actions className="mt-2 text-[10px]">
+                    <Action label="Copy message" tooltip="Copy" onClick={() => { try { navigator.clipboard.writeText(m.text || '') } catch {} }} />
+                    <Action label="Translate" tooltip="Translate" onClick={() => { /* design-only */ }} />
+                    {m.role === 'user' && (
+                      <Action label="Delete" tooltip="Delete" onClick={() => deleteMessage(m.id)} />
+                    )}
+                    {m.role === 'assistant' && m.id === latestAssistantId && (
+                      <Action label="Regenerate" tooltip="Regenerate" onClick={() => reload()} />
+                    )}
+                  </Actions>
                   {m.timestamp ? (
                     <div className="mt-1 text-[10px] text-muted-foreground">
                       <time dateTime={new Date(m.timestamp).toISOString()}>
@@ -133,7 +124,7 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
                   ) : null}
                 </MessageContent>
               </Message>
-            ))}
+            )})}
           </ConversationContent>
           <ConversationScrollButton />
         </Conversation>
