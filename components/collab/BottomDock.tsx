@@ -24,9 +24,11 @@ interface BottomDockProps {
   quick?: QuickAction[]
   className?: string
   rightArea?: React.ReactNode
+  status?: 'submitted' | 'streaming' | 'error'
+  errorMessage?: string
 }
 
-export function BottomDock({ value, onChange, onSend, disabled, quick = [], className, rightArea }: BottomDockProps) {
+export function BottomDock({ value, onChange, onSend, disabled, quick = [], className, rightArea, status, errorMessage }: BottomDockProps) {
   return (
     <div className={className}>
       <PromptInput onSubmit={e => { e.preventDefault(); if (!disabled) onSend() }}>
@@ -43,12 +45,16 @@ export function BottomDock({ value, onChange, onSend, disabled, quick = [], clas
           value={value}
           onChange={e => onChange(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!disabled) onSend() } }}
-          disabled={disabled}
+          disabled={disabled || status === 'submitted'}
+          aria-invalid={status === 'error'}
         />
         <div className="flex items-center justify-end p-1">
-          <PromptInputSubmit status={disabled ? 'submitted' : undefined}>Send</PromptInputSubmit>
+          <PromptInputSubmit status={status}>Send</PromptInputSubmit>
         </div>
       </PromptInput>
+      {status === 'error' && errorMessage ? (
+        <div role="status" aria-live="polite" className="px-3 pb-2 text-xs text-red-600">{errorMessage}</div>
+      ) : null}
     </div>
   )
 }

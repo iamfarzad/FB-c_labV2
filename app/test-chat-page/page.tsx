@@ -32,6 +32,8 @@ export default function TestChatDesignPage() {
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [intentLoading, setIntentLoading] = useState(false)
   const micBtnRef = useRef<HTMLButtonElement | null>(null)
+  const [sendStatus, setSendStatus] = useState<undefined | 'submitted' | 'error' | 'streaming'>(undefined)
+  const [sendError, setSendError] = useState<string | undefined>(undefined)
 
   function switchState(next: PanelState) {
     if (next === 'empty') return setState(next)
@@ -147,7 +149,21 @@ export default function TestChatDesignPage() {
             <BottomDock
               value={input}
               onChange={setInput}
-              onSend={() => {}}
+              onSend={() => {
+                if (!input.trim()) return
+                setSendStatus('submitted')
+                setSendError(undefined)
+                setTimeout(() => {
+                  // mock error 10% of time
+                  if (Math.random() < 0.1) {
+                    setSendStatus('error')
+                    setSendError('Something went wrong. Try again.')
+                    return
+                  }
+                  setSendStatus(undefined)
+                  setInput('')
+                }, 400)
+              }}
               disabled={false}
               quick={[
                 { id: 'webcam', label: 'Webcam', onClick: () => switchState('webcam') },
@@ -156,6 +172,8 @@ export default function TestChatDesignPage() {
                 { id: 'video', label: 'Video→App', onClick: () => switchState('video') },
               ]}
               rightArea={<button ref={micBtnRef} type="button" className="btn-minimal" onClick={() => setVoiceOpen(true)} aria-pressed={voiceOpen} aria-label="Open voice overlay">Mic</button>}
+              status={sendStatus}
+              errorMessage={sendError}
             />
           </div>
         </div>
