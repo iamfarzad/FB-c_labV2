@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import { Camera, Monitor, Calculator, Video, MessageCircle } from "lucide-react"
 import { LeftToolRail } from "@/components/collab/LeftToolRail"
 import { RightStageRail } from "@/components/collab/RightStageRail"
@@ -19,6 +19,7 @@ import { PanelSkeleton } from "@/components/collab/PanelSkeleton"
 import { RoiPanel } from "@/components/collab/RoiPanel"
 import { HelpHint } from "@/components/collab/HelpHint"
 import { VoiceOverlay } from "@/components/collab/VoiceOverlay"
+import { AIThinkingIndicator } from "@/components/chat/AIThinkingIndicator"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi" | "webpreview"
 
@@ -29,6 +30,8 @@ export default function TestChatDesignPage() {
   const [sessionId, setSessionId] = useState<string | null>(() => (typeof window !== 'undefined' ? window.localStorage.getItem('intelligence-session-id') : null))
   const [intent, setIntent] = useState<string | null>(null)
   const [voiceOpen, setVoiceOpen] = useState(false)
+  const [intentLoading, setIntentLoading] = useState(false)
+  const micBtnRef = useRef<HTMLButtonElement | null>(null)
 
   function switchState(next: PanelState) {
     if (next === 'empty') return setState(next)
@@ -105,9 +108,11 @@ export default function TestChatDesignPage() {
           ) : (
             <ChatPane sessionId={sessionId} onAfterSend={async (text) => {
               try {
+                setIntentLoading(true)
                 const res = await fetch('/api/intelligence/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, userMessage: text }) })
                 if (res.ok) { const j = await res.json(); setIntent(j?.output?.type || j?.type || null) }
               } catch {}
+              finally { setIntentLoading(false) }
             }} />
           )}
         </CenterCanvas>
@@ -125,6 +130,11 @@ export default function TestChatDesignPage() {
       dock={
         <div className="border-t bg-background/70 backdrop-blur">
           <div className="p-2">
+            {intentLoading ? (
+              <div aria-live="polite" className="mb-1">
+                <AIThinkingIndicator label="Analyzing intent" />
+              </div>
+            ) : null}
             <SuggestionsRow
               suggestions={[
                 { id: 'suggest-1', label: 'Analyze website', onClick: () => switchState('webpreview') },
@@ -145,13 +155,13 @@ export default function TestChatDesignPage() {
                 { id: 'roi', label: 'ROI', onClick: () => switchState('roi') },
                 { id: 'video', label: 'Video→App', onClick: () => switchState('video') },
               ]}
-              rightArea={<button type="button" className="btn-minimal" onClick={() => setVoiceOpen(true)} aria-label="Open voice overlay">Mic</button>}
+              rightArea={<button ref={micBtnRef} type="button" className="btn-minimal" onClick={() => setVoiceOpen(true)} aria-pressed={voiceOpen} aria-label="Open voice overlay">Mic</button>}
             />
           </div>
         </div>
       }
     />
-    <VoiceOverlay open={voiceOpen} onClose={() => setVoiceOpen(false)} />
+    <VoiceOverlay open={voiceOpen} onClose={() => { setVoiceOpen(false); micBtnRef.current?.focus() }} />
     </>
   )
 }
