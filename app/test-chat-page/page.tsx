@@ -10,6 +10,7 @@ import { CenterCanvas } from "@/components/collab/CenterCanvas"
 import { CollabShell } from "@/components/collab/CollabShell"
 import { MobileStageProgress } from "@/components/collab/MobileStageProgress"
 import { QuickActionsRow } from "@/components/collab/QuickActionsRow"
+import { ChatPane } from "@/components/collab/ChatPane"
 
 type PanelState = "empty" | "webcam" | "screen" | "video" | "roi"
 
@@ -59,9 +60,13 @@ export default function TestChatDesignPage() {
             </div>
           }
         >
-          <div className="rounded-xl border border-border/50 bg-background/60 p-6 text-sm text-muted-foreground">
-            Mock content panel: <span className="font-medium text-foreground">{state}</span>
-          </div>
+          {state === 'empty' ? (
+            <div className="rounded-xl border border-border/50 bg-background/60 p-6 text-sm text-muted-foreground">
+              Mock content panel: <span className="font-medium text-foreground">{state}</span>
+            </div>
+          ) : (
+            <ChatPane />
+          )}
         </CenterCanvas>
       }
       right={
