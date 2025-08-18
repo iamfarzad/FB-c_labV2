@@ -130,6 +130,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Test Chat Page UI/UX (Design-First) - 2025-08-18
+- Added `components/collab/CollabShell.tsx` mobile safe-area paddings (header/dock)
+- Refined empty-state copy and added primary CTA in `app/test-chat-page/page.tsx`
+- Introduced design-only `components/collab/RoiPanel.tsx` and wired `roi` state
+- A11y fixes across collab components:
+  - Removed redundant aria-labels where visible text exists
+  - Marked decorative icons `aria-hidden`
+  - Adjusted hover colors for sufficient contrast
+  - Ensured CTA meets AA contrast (dark text on orange)
+- Tailwind fix: replaced invalid `hover:shadow-3xl` with `hover:shadow-2xl`
+- Audits: Lighthouse Accessibility = 100 for `/test-chat-page`
+  - Report at `test-results/test-chat-page.lhr.json`
+
+### Accessibility - 2025-08-15
+- Collab page: Fixed duplicate main landmark
+  - Replaced global `<main>` in `app/layout.tsx` with `<div>` so each route controls its main region
+  - Leaves `app/collab/page.tsx` as the single, correctly labeled `<main>`
+
 ### UI Unification & Mobile Canvas - 2025-08-14
 - Added global `CanvasProvider` with `useCanvas()` for single-surface tool orchestration
 - Added `CanvasOrchestrator` to render `webcam`, `screen`, `video`, `pdf`, and `code` inside `CanvasWorkspace`
@@ -258,6 +276,11 @@ All notable changes to this project will be documented in this file.
 - AI Elements: Synced full component set via `shadcn add https://ai-sdk.dev/elements.json` (updated `code-block`, `inline-citation`, `response`, `ui/carousel`)
 - Gallery page to preview all AI Elements at `app/test/ai-elements/page.tsx` (route: `/test/ai-elements`)
 - Branded AI chat demo at `app/test/ai-chat/page.tsx` using AI Elements with `FbcIcon` for reasoning indicator and AI avatar styling
+
+### Added - 2025-08-13
+- F.B/c UI Kit (fb-elements): Introduced first composable primitive `Insight` to mirror AI Elements API style
+  - New: `components/fb-elements/insight.tsx` with `Insight`, `InsightHeader`, `InsightBody`, `InsightAction`
+  - Brand-aligned tokens and accessible roles/labels; variants: default, research, analysis, recommendation
 
 ### UI Polish - 2025-08-07
 - Unified focus rings across inputs, selects, textareas, buttons, and cards using brand accent with background offset
