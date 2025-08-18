@@ -5,6 +5,7 @@ import { FbcIcon } from "@/components/ui/fbc-icon"
 import { cn } from "@/lib/utils"
 import { Camera, Monitor, Calculator, Video, MessageCircle } from "lucide-react"
 import { LeftToolRail } from "@/components/collab/LeftToolRail"
+import { RightStageRail } from "@/components/collab/RightStageRail"
 import {
   PromptInput,
   PromptInputToolbar,
@@ -81,14 +82,14 @@ export default function TestChatDesignPage() {
 
       {/* Right stage rail */}
       <aside className="hidden md:block border-l bg-card/30">
-        <div className="h-full p-3">
-          <ol className="space-y-2">
-            <StageItem label="Greeting" done />
-            <StageItem label="Background Research" current />
-            <StageItem label="Proposal" />
-            <StageItem label="Finish & Email" />
-          </ol>
-        </div>
+        <RightStageRail
+          stages={[
+            { id: 'greet', label: 'Greeting', done: true, onClick: () => {} },
+            { id: 'research', label: 'Background Research', current: true, onClick: () => {} },
+            { id: 'proposal', label: 'Proposal', onClick: () => {} },
+            { id: 'finish', label: 'Finish & Email', onClick: () => {} },
+          ]}
+        />
       </aside>
 
       {/* Bottom dock (mobile + desktop) */}
@@ -136,26 +137,6 @@ function Chip({ onClick, children }: { onClick: () => void; children: React.Reac
   )
 }
 
-function StageItem({ label, done, current }: { label: string; done?: boolean; current?: boolean }) {
-  return (
-    <li>
-      <button
-        type="button"
-        className={cn(
-          "w-full text-left rounded-lg border p-2.5 transition",
-          current ? "border-[var(--color-orange-accent)]/40 bg-[var(--color-orange-accent)]/10" : "border-border/40 hover:bg-card/70",
-          done && "opacity-90"
-        )}
-        aria-current={current ? "step" : undefined}
-        aria-label={label}
-      >
-        <div className="flex items-center gap-2">
-          <span className={cn("inline-block h-2 w-2 rounded-full", done ? "bg-green-500" : current ? "bg-[var(--color-orange-accent)]" : "bg-muted-foreground/40")} />
-          <span className="text-sm">{label}</span>
-        </div>
-      </button>
-    </li>
-  )
-}
+// StageItem removed; replaced by RightStageRail
 
 
