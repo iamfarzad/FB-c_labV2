@@ -21,7 +21,7 @@ export function MobileStageProgress({ stages, className }: MobileStageProgressPr
           <span>{progress}%</span>
         </div>
         <div className="mt-1 h-2 w-full rounded-full bg-muted/60 overflow-hidden">
-          <div className="h-full rounded-full bg-[var(--color-orange-accent)]" style={{ width: `${progress}%` }} />
+          <div className="h-full rounded-full bg-[hsl(var(--accent))]" style={{ width: `${progress}%` }} />
         </div>
       </div>
     </div>

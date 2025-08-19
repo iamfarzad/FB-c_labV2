@@ -82,7 +82,7 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun, mode = 's
   })
   if (mode !== 'static' && visible.length === 0) return null
 
-  const outlineCtaClasses = "w-full sm:w-auto whitespace-nowrap border-[var(--color-orange-accent)]/30 hover:border-[var(--color-orange-accent)] hover:bg-[var(--color-orange-accent)]/10"
+  const outlineCtaClasses = "w-full sm:w-auto whitespace-nowrap border-[hsl(var(--accent)/0.30)] hover:border-[hsl(var(--accent))] hover:bg-[hsl(var(--accent)/0.10)]"
 
   if (mode === 'static') {
     return (
@@ -93,7 +93,7 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun, mode = 's
             <DropdownMenuTrigger asChild>
               <Button
                 size="sm"
-                className="rounded-full h-8 px-3 bg-[var(--color-orange-accent)] hover:bg-[var(--color-orange-accent-hover)] text-white"
+                className="rounded-full h-8 px-3 bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent)/0.90)] text-white"
               >
                 <FileText className="mr-2 h-3.5 w-3.5" /> Share Summary
               </Button>
@@ -241,7 +241,7 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun, mode = 's
                 <Button type="button" variant="outline" onClick={() => setFinishOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-[var(--color-orange-accent)] hover:bg-[var(--color-orange-accent-hover)]">
+                <Button type="submit" className="bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent)/0.90)]">
                   Send
                 </Button>
               </div>

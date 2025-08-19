@@ -15,7 +15,7 @@ import { Actions, Action } from "@/components/ai-elements/actions"
 import { CodeBlock, CodeBlockCopyButton } from "@/components/ai-elements/code-block"
 import { BottomDock } from "@/components/collab/BottomDock"
 import useChat from "@/hooks/chat/useChat"
-import { Copy, ThumbsUp, ThumbsDown, Volume2, Link as LinkIcon, RotateCw, Plus, Mic, Equalizer } from "lucide-react"
+import { Copy, ThumbsUp, ThumbsDown, Volume2, Link as LinkIcon, RotateCw, Plus, Mic, Send } from "lucide-react"
 
 interface ChatPaneProps {
   className?: string
@@ -79,7 +79,7 @@ export function ChatPane({ className, sessionId, onAfterSend }: ChatPaneProps) {
                     onChange={e => setInput(e.target.value)}
                   />
                   <button type="button" aria-label="Voice" className="btn-minimal rounded-full min-h-10 min-w-10"><Mic className="w-4 h-4" /></button>
-                  <button type="submit" aria-label="Send" className="btn-minimal rounded-full min-h-10 min-w-10"><Equalizer className="w-4 h-4" /></button>
+                  <button type="submit" aria-label="Send" className="btn-minimal rounded-full min-h-10 min-w-10"><Send className="w-4 h-4" /></button>
                 </form>
               </div>
             )}

@@ -17,8 +17,8 @@ export function SuggestionsRow({ suggestions, className }: SuggestionsRowProps) 
           type="button"
           onClick={s.onClick}
           className={cn(
-            "inline-flex items-center rounded-full border px-3 py-1.5 text-xs transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-orange-accent)]/40 focus-visible:ring-offset-2 min-h-11",
-            "border-border/40 bg-card/60 text-foreground hover:bg-[var(--color-orange-accent)]/15 hover:border-[var(--color-orange-accent)]/40 hover:text-foreground"
+            "inline-flex items-center rounded-full border px-3 py-1.5 text-xs transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent)/0.40)] focus-visible:ring-offset-2 min-h-11",
+            "border-border/40 bg-card/60 text-foreground hover:bg-[hsl(var(--accent)/0.15)] hover:border-[hsl(var(--accent)/0.40)] hover:text-foreground"
           )}
         >
           {s.label}

@@ -78,8 +78,8 @@ export function VoiceOverlay({ open, onClose, className }: VoiceOverlayProps) {
           <button ref={closeBtnRef} type="button" className="btn-minimal" onClick={onClose}>Close</button>
         </div>
         <div className="rounded-xl border border-border/30 bg-card/80 p-6 flex flex-col items-center text-center">
-          <div className="w-20 h-20 rounded-full bg-[var(--color-orange-accent)]/15 border border-[var(--color-orange-accent)]/30 flex items-center justify-center mb-3 animate-pulse-slow">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-orange-accent)]/30" aria-hidden />
+          <div className="w-20 h-20 rounded-full bg-[hsl(var(--accent)/0.15)] border border-[hsl(var(--accent)/0.30)] flex items-center justify-center mb-3 animate-pulse-slow">
+            <div className="w-10 h-10 rounded-full bg-[hsl(var(--accent)/0.30)]" aria-hidden />
           </div>
           <p className="text-sm text-muted-foreground">Listening… Speak to compose a message.</p>
           <p className="text-xs text-muted-foreground mt-1">Press Esc to close</p>

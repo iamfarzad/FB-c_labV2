@@ -60,15 +60,15 @@ export function RightStageRail({ stages, className, ariaLabel = "Conversation st
               onClick={s.onClick}
               aria-current={s.current ? "step" : undefined}
               className={cn(
-                "w-full text-left rounded-lg border p-3 transition min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-orange-accent)]/40 focus-visible:ring-offset-2 hover:-translate-y-0.5 active:translate-y-0",
-                s.current ? "border-[var(--color-orange-accent)]/40 bg-[var(--color-orange-accent)]/10" : "border-border/40 hover:bg-card/70",
+                "w-full text-left rounded-lg border p-3 transition min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent)/0.40)] focus-visible:ring-offset-2 hover:-translate-y-0.5 active:translate-y-0",
+                s.current ? "border-[hsl(var(--accent)/0.40)] bg-[hsl(var(--accent)/0.10)]" : "border-border/40 hover:bg-card/70",
                 s.done && "opacity-90"
               )}
             >
               <div className="flex items-center gap-2">
                 <span className={cn(
                   "inline-block h-2 w-2 rounded-full",
-                  s.done ? "bg-green-500" : s.current ? "bg-[var(--color-orange-accent)]" : "bg-muted-foreground/40"
+                  s.done ? "bg-green-500" : s.current ? "bg-[hsl(var(--accent))]" : "bg-muted-foreground/40"
                 )} />
                 <span className="text-sm">{s.label}</span>
               </div>

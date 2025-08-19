@@ -88,9 +88,9 @@ export function LeftToolRail({ items, className, ariaLabel = "Primary tools" }: 
                 disabled={item.disabled}
                 onClick={item.onClick}
                 className={cn(
-                  "inline-flex h-11 w-11 items-center justify-center rounded-xl border transition-colors transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-orange-accent)]/40 focus-visible:ring-offset-2 hover:-translate-y-0.5 active:translate-y-0",
+                  "inline-flex h-11 w-11 items-center justify-center rounded-xl border transition-colors transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent)/0.40)] focus-visible:ring-offset-2 hover:-translate-y-0.5 active:translate-y-0",
                   item.active
-                    ? "bg-[var(--color-orange-accent)]/10 border-[var(--color-orange-accent)]/30 text-[var(--color-orange-accent)]"
+                    ? "bg-[hsl(var(--accent)/0.10)] border-[hsl(var(--accent)/0.30)] text-[hsl(var(--accent))]"
                     : "bg-card/60 border-border/40 text-muted-foreground hover:text-foreground",
                   item.disabled && "opacity-50 cursor-not-allowed"
                 )}
@@ -98,7 +98,7 @@ export function LeftToolRail({ items, className, ariaLabel = "Primary tools" }: 
                 <div className="relative">
                   <span aria-hidden>{item.icon}</span>
                   {item.active && (
-                    <span className="absolute -right-1 -bottom-1 inline-block h-2 w-2 rounded-full bg-[var(--color-orange-accent)] shadow-[0_0_6px_var(--color-orange-accent)]" aria-hidden />
+                    <span className="absolute -right-1 -bottom-1 inline-block h-2 w-2 rounded-full bg-[hsl(var(--accent))] shadow-[0_0_6px_hsl(var(--accent))]" aria-hidden />
                   )}
                 </div>
               </button>

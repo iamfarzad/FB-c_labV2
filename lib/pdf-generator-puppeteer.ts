@@ -167,8 +167,8 @@ function buildDefaultOrbLogoDataUri(): string {
     </filter>
   </defs>
   <circle cx="50" cy="50" r="40" fill="url(#g)"/>
-  <path d="M 25 21 A 45 45 0 0 1 75 21" fill="none" stroke="#f97316" stroke-width="3" stroke-linecap="round" filter="url(#glow)"/>
-  <circle cx="50" cy="50" r="5" fill="#f97316" filter="url(#glow)"/>
+  <path d="M 25 21 A 45 45 0 0 1 75 21" fill="none" stroke="#ff5b04" stroke-width="3" stroke-linecap="round" filter="url(#glow)"/>
+  <circle cx="50" cy="50" r="5" fill="#ff5b04" filter="url(#glow)"/>
 </svg>`
     const base64 = (globalThis as any).Buffer
       ? (globalThis as any).Buffer.from(svg).toString('base64')
