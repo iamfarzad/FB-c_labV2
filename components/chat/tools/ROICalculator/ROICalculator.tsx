@@ -14,6 +14,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ToolCardWrapper } from "@/components/chat/ToolCardWrapper"
 import { cn } from "@/lib/utils"
 import type { ROICalculatorProps, ROICalculationResult, WizardStep } from "./ROICalculator.types"
+import type { ChatMessage, ROIResultPayload } from "@/types/chat"
 import { markCapabilityUsed } from "@/components/experience/progress-tracker"
 
 // Type for the API response data
@@ -104,6 +105,22 @@ export function ROICalculator({
       markCapabilityUsed("roi")
       try { localStorage.setItem(cacheKey, JSON.stringify({ output: data.output, ts: Date.now() })) } catch {}
       setLastHash(cacheKey)
+
+      // Emit structured chat message for inline rendering
+      try {
+        const payload: ROIResultPayload = {
+          roi: data.output.roi,
+          paybackMonths: data.output.paybackPeriod,
+          netProfit: data.output.netProfit,
+          monthlyProfit: data.output.monthlyProfit,
+          totalRevenue: data.output.totalRevenue,
+          totalExpenses: data.output.totalExpenses,
+          inputs: { ...formData, ...companyInfo },
+          calculatedAt: data.output.calculatedAt,
+        }
+        const msg: ChatMessage = { role: 'tool', type: 'roi.result', payload }
+        props.onEmitMessage?.(msg as any)
+      } catch {}
     } catch (error) {
       console.error('ROI calculation error:', error);
       toast({ 
