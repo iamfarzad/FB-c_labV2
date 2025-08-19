@@ -32,7 +32,10 @@ export function EnhancedFileUpload() {
     try {
       const form = new FormData()
       form.append('file', uploadedFile.file)
-      const res = await fetch('/api/upload', { method: 'POST', body: form })
+      const sessionId = getSessionId()
+      const headers: Record<string, string> = {}
+      if (sessionId) headers['x-intelligence-session-id'] = sessionId
+      const res = await fetch('/api/upload', { method: 'POST', body: form, headers })
       if (!res.ok) throw new Error(await res.text())
       const j = await res.json()
       addActivity({ type: 'file-upload', status: 'success', content: `${uploadedFile.file.name} → ${j.url}` })
@@ -40,7 +43,6 @@ export function EnhancedFileUpload() {
 
       // Kick off analysis depending on type
       const mime = uploadedFile.file.type || ''
-      const sessionId = getSessionId()
       if (mime.startsWith('image/')) {
         // Read as base64 for unified webcam tool analysis
         const reader = new FileReader()
@@ -56,22 +58,28 @@ export function EnhancedFileUpload() {
             const aj = await ar.json().catch(() => ({}))
             const analysisText = aj?.output?.analysis || aj?.analysis || 'No analysis'
             addActivity({ type: 'image-analysis', status: ar.ok ? 'success' : 'error', content: `${uploadedFile.file.name}: ${analysisText}` })
+            try {
+              window.dispatchEvent(new CustomEvent('chat:assistant', { detail: { content: analysisText, type: 'analysis' } }))
+            } catch {}
           } catch (err: any) {
             addActivity({ type: 'image-analysis', status: 'error', content: `${uploadedFile.file.name}: ${err?.message || 'analysis failed'}` })
           }
         }
         reader.readAsDataURL(uploadedFile.file)
       } else if (mime === 'application/pdf') {
-        // Use mock doc analysis for now; server-side doc analyzer can replace later
+        // Real doc analysis endpoint; when uploaded we know server path/filename
         try {
-          const dr = await fetch('/api/mock/analyze-document', {
+          const dr = await fetch('/api/tools/doc', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...(sessionId ? { 'x-intelligence-session-id': sessionId } : {}) },
-            body: JSON.stringify({ document: { name: uploadedFile.file.name, type: mime, size: uploadedFile.file.size }, analysisType: 'summary' })
+            body: JSON.stringify({ filename: j.filename, type: mime, analysisType: 'summary' })
           })
           const dj = await dr.json().catch(() => ({}))
-          const summary = dj?.analysis?.summary || 'Analyzed (mock)'
+          const summary = dj?.output?.analysis || dj?.analysis?.summary || 'Analyzed'
           addActivity({ type: 'document-analysis', status: dr.ok ? 'success' : 'error', content: `${uploadedFile.file.name}: ${summary}` })
+          try {
+            window.dispatchEvent(new CustomEvent('chat:assistant', { detail: { content: summary, type: 'analysis' } }))
+          } catch {}
         } catch (err: any) {
           addActivity({ type: 'document-analysis', status: 'error', content: `${uploadedFile.file.name}: ${err?.message || 'analysis failed'}` })
         }

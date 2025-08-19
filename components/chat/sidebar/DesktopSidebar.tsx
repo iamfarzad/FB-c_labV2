@@ -156,9 +156,9 @@ export const DesktopSidebar = ({
               "bg-card/90 backdrop-blur-2xl border border-border/30 rounded-xl shadow-lg hover:shadow-xl",
               "hover:bg-accent/10 hover:border-accent/30 transition-all duration-300",
               "group relative overflow-hidden",
-              // Responsive sizing
-              "tablet:h-10 tablet:w-10",
-              "desktop:h-11 desktop:w-11",
+              // Responsive sizing (Tailwind breakpoints)
+              "md:h-10 md:w-10",
+              "lg:h-11 lg:w-11",
             )}
             onClick={onToggle}
           >
@@ -175,9 +175,9 @@ export const DesktopSidebar = ({
               className="relative z-10"
             >
               {isOpen ? (
-                <ChevronLeft className={cn("tablet:h-4 tablet:w-4", "desktop:h-5 desktop:w-5")} />
+                <ChevronLeft className={cn("md:h-4 md:w-4", "lg:h-5 lg:w-5")} />
               ) : (
-                <ChevronRight className={cn("tablet:h-4 tablet:w-4", "desktop:h-5 desktop:w-5")} />
+                <ChevronRight className={cn("md:h-4 md:w-4", "lg:h-5 lg:w-5")} />
               )}
             </motion.div>
 

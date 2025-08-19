@@ -17,9 +17,7 @@ export function VideoToApp({
   onClose,
   onCancel,
   onAppGenerated,
-  onAnalysisComplete,
-  // Compact canvas rendering when parent provides its own header
-  hideHeader
+  onAnalysisComplete
 }: VideoToAppProps) {
   const { toast } = useToast()
   const [videoUrl, setVideoUrl] = useState(initialVideoUrl)
@@ -157,98 +155,228 @@ export function VideoToApp({
   }
 
   const VideoToAppUI = () => (
-    <div className={cn('space-y-4', mode === 'canvas' && 'h-full w-full overflow-hidden p-2') }>
-      <Input
-        placeholder="Enter video URL (e.g., YouTube)"
-        value={videoUrl}
-        onChange={(e) => setVideoUrl(e.target.value)}
-        disabled={isGenerating}
-      />
-      <Input
-        placeholder="Describe the learning app you want to create"
-        value={userPrompt}
-        onChange={(e) => setUserPrompt(e.target.value)}
-        disabled={isGenerating}
-      />
-      {/* Simple progress tracker */}
-      <div className="text-xs text-muted-foreground">
-        {isGenerating || progress !== 'idle' ? (
-          <div className="flex items-center gap-2">
-            <span className={cn('h-2 w-2 rounded-full', progress === 'analyze' ? 'bg-blue-500 animate-pulse' : 'bg-muted')}></span>
-            <span>Analyze video</span>
-            <span className={cn('h-2 w-2 rounded-full ml-4', progress === 'spec' ? 'bg-blue-500 animate-pulse' : progress !== 'idle' ? 'bg-muted' : 'bg-muted')}></span>
-            <span>Generate spec</span>
-            <span className={cn('h-2 w-2 rounded-full ml-4', progress === 'code' ? 'bg-blue-500 animate-pulse' : progress !== 'idle' ? 'bg-muted' : 'bg-muted')}></span>
-            <span>Generate code</span>
+    <div className="h-full flex">
+      {/* Main Video to App Area */}
+      <div className="flex-1 p-4">
+        {!generatedAppUrl ? (
+          <div className="h-full flex items-center justify-center">
+            <Card className="w-full max-w-2xl">
+              <CardContent className="p-6">
+                <div className="text-center mb-6">
+                  <Video className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">Video to Learning App</h2>
+                  <p className="text-slate-600">Transform any video into an interactive learning experience</p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Video URL</label>
+                    <Input
+                      placeholder="Enter video URL (e.g., YouTube, Vimeo)"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      disabled={isGenerating}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Learning Objectives</label>
+                    <Input
+                      placeholder="Describe the learning app you want to create"
+                      value={userPrompt}
+                      onChange={(e) => setUserPrompt(e.target.value)}
+                      disabled={isGenerating}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Progress tracker */}
+                  {(isGenerating || progress !== 'idle') && (
+                    <div className="bg-slate-50 p-4 rounded-lg">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className={cn('h-3 w-3 rounded-full', progress === 'analyze' ? 'bg-blue-500 animate-pulse' : progress !== 'idle' ? 'bg-green-500' : 'bg-slate-300')}></span>
+                          <span className={progress === 'analyze' ? 'text-blue-600 font-medium' : progress !== 'idle' ? 'text-green-600' : 'text-slate-500'}>
+                            Analyze Video
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={cn('h-3 w-3 rounded-full', progress === 'spec' ? 'bg-blue-500 animate-pulse' : ['code', 'ready'].includes(progress) ? 'bg-green-500' : 'bg-slate-300')}></span>
+                          <span className={progress === 'spec' ? 'text-blue-600 font-medium' : ['code', 'ready'].includes(progress) ? 'text-green-600' : 'text-slate-500'}>
+                            Generate Spec
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={cn('h-3 w-3 rounded-full', progress === 'code' ? 'bg-blue-500 animate-pulse' : progress === 'ready' ? 'bg-green-500' : 'bg-slate-300')}></span>
+                          <span className={progress === 'code' ? 'text-blue-600 font-medium' : progress === 'ready' ? 'text-green-600' : 'text-slate-500'}>
+                            Generate App
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <Button onClick={handleGenerate} disabled={isGenerating || !videoUrl} className="w-full">
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating Learning App...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Generate Learning App
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        ) : null}
-      </div>
-      <Button onClick={handleGenerate} disabled={isGenerating || !videoUrl} className="w-full">
-        {isGenerating ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Generating...
-          </>
         ) : (
-          <>
-            <Sparkles className="mr-2 h-4 w-4" />
-            Generate App
-          </>
-        )}
-      </Button>
-      {generatedAppUrl && (
-        <div className={cn('space-y-3', mode === 'canvas' && 'flex min-h-0 flex-1 flex-col') }>
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium">Your Interactive Learning App</p>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => window.open(generatedAppUrl, '_blank')}>
-                <Link className="w-4 h-4 mr-2" /> Open in New Tab
-              </Button>
-              {generatedCode && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                      if (!emailGateOk) { setEmailGateOpen(true); return }
-                      try {
-                        await navigator.clipboard.writeText(generatedCode)
-                        toast({ title: 'Copied', description: 'HTML copied to clipboard' })
-                      } catch {}
-                    }}
-                  >
-                    Copy HTML
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (!emailGateOk) { setEmailGateOpen(true); return }
-                      const file = new Blob([generatedCode], { type: 'text/html' })
-                      const url = URL.createObjectURL(file)
-                      const a = document.createElement('a')
-                      a.href = url
-                      a.download = 'video-app.html'
-                      a.click()
-                      URL.revokeObjectURL(url)
-                    }}
-                  >
-                    Download
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-          <div className={cn('border rounded-lg overflow-hidden h-64 bg-muted/10', mode === 'canvas' && 'flex-1 h-auto') }>
+          <div className="h-full bg-slate-900 rounded-lg overflow-hidden relative">
             <iframe
               src={generatedAppUrl}
-              className="h-full w-full"
+              className="w-full h-full"
               title="Generated Learning App Preview"
               sandbox="allow-scripts allow-same-origin"
             />
+            
+            {/* App Controls Overlay */}
+            <div className="absolute top-4 right-4">
+              <div className="flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2">
+                <Button variant="secondary" size="sm" onClick={() => window.open(generatedAppUrl, '_blank')}>
+                  <Link className="w-4 h-4 mr-2" /> Open
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => {
+                  setGeneratedAppUrl(null)
+                  setGeneratedCode(null)
+                  setProgress("idle")
+                }}>
+                  New App
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* Sidebar */}
+      <div className="w-80 bg-white border-l border-slate-200 p-4 space-y-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="w-5 h-5 text-emerald-600" />
+              <h3 className="font-semibold text-lg">Generation Status</h3>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span>Video Analysis</span>
+                <span className={cn('px-2 py-1 rounded text-xs', 
+                  ['analyze', 'spec', 'code', 'ready'].includes(progress) ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                )}>
+                  {['analyze', 'spec', 'code', 'ready'].includes(progress) ? 'Complete' : 'Pending'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span>App Specification</span>
+                <span className={cn('px-2 py-1 rounded text-xs', 
+                  ['spec', 'code', 'ready'].includes(progress) ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                )}>
+                  {['spec', 'code', 'ready'].includes(progress) ? 'Complete' : 'Pending'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span>Code Generation</span>
+                <span className={cn('px-2 py-1 rounded text-xs', 
+                  ['ready'].includes(progress) ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                )}>
+                  {progress === 'ready' ? 'Complete' : 'Pending'}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {generatedAppUrl && generatedCode && (
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="font-semibold text-lg mb-3">Export Options</h3>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                  onClick={async () => {
+                    if (!emailGateOk) { setEmailGateOpen(true); return }
+                    try {
+                      await navigator.clipboard.writeText(generatedCode)
+                      toast({ title: 'Copied', description: 'HTML copied to clipboard' })
+                    } catch {}
+                  }}
+                >
+                  Copy HTML Code
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                  onClick={() => {
+                    if (!emailGateOk) { setEmailGateOpen(true); return }
+                    const file = new Blob([generatedCode], { type: 'text/html' })
+                    const url = URL.createObjectURL(file)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = 'learning-app.html'
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }}
+                >
+                  Download HTML
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                  onClick={() => setEmailGateOpen(true)}
+                >
+                  Email Link
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="font-semibold text-lg mb-3">Quick Actions</h3>
+            <div className="space-y-2">
+              <Button variant="ghost" size="sm" className="w-full justify-start">
+                View Examples
+              </Button>
+              <Button variant="ghost" size="sm" className="w-full justify-start">
+                Learning Templates
+              </Button>
+              <Button variant="ghost" size="sm" className="w-full justify-start">
+                Help & Support
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="font-semibold text-lg mb-3">Tips</h3>
+            <div className="text-sm text-slate-600 space-y-2">
+              <p>• Use clear, educational videos for best results</p>
+              <p>• Describe specific learning objectives</p>
+              <p>• Generated apps work on all devices</p>
+              <p>• Apps include interactive elements automatically</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 
@@ -280,7 +408,7 @@ export function VideoToApp({
   if (mode === 'canvas') {
     return (
       <div className="flex h-full w-full flex-col overflow-hidden">
-        {!hideHeader && (
+        {(
           <div className="flex h-10 items-center justify-between border-b px-2 text-xs">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-green-500" />

@@ -17,7 +17,7 @@ function checkRate(key: string, max: number, windowMs: number) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { query, sessionId } = await request.json()
+    const { query, sessionId, urls } = await request.json()
     const headerSessionId = request.headers.get('x-intelligence-session-id') || undefined
     const effectiveSessionId = sessionId || headerSessionId
     const idemKey = request.headers.get('x-idempotency-key') || undefined
@@ -36,8 +36,19 @@ export async function POST(request: NextRequest) {
 
     console.info('🔍 Generic search request:', { query, sessionId })
 
-    // Perform grounded search
-    const result = await groundingProvider.groundedAnswer(query)
+    // Apply env gating for URL context
+    const urlContextEnabled = (process.env.URL_CONTEXT_ENABLED ?? 'true') === 'true'
+    const urlContextMax = Number(process.env.URL_CONTEXT_MAX_URLS ?? 10)
+    const allowed = String(process.env.URL_CONTEXT_ALLOWED_DOMAINS ?? '')
+      .split(',').map(s => s.trim()).filter(Boolean)
+    const filteredUrls = Array.isArray(urls)
+      ? urls.filter(u => {
+          if (!allowed.length) return true
+          try { const h = new URL(u).hostname; return allowed.some(d => h === d || h.endsWith(`.${d}`)) } catch { return false }
+        }).slice(0, urlContextMax)
+      : undefined
+    // Perform grounded search (optionally include URL context)
+    const result = await groundingProvider.groundedAnswer(query, urlContextEnabled ? filteredUrls : undefined)
 
     // Record capability usage if session is available
     if (effectiveSessionId) {
@@ -50,7 +61,7 @@ export async function POST(request: NextRequest) {
       } catch {}
     }
 
-    const body = { ok: true, output: { answer: result.text, citations: result.citations, query, sessionId: effectiveSessionId } }
+    const body = { ok: true, output: { answer: result.text, citations: result.citations, query, sessionId: effectiveSessionId, urls: Array.isArray(urls) ? urls : undefined } }
 
     if (effectiveSessionId && idemKey) {
       idem.set(`${effectiveSessionId}:${idemKey}`, { expires: Date.now() + 5 * 60_000, body })

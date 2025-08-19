@@ -2,15 +2,11 @@
 
 import type React from "react"
 import { useState, useEffect, useCallback, useRef } from "react"
-import { Camera, Upload, X, Brain, Video, VideoOff, Eye, EyeOff, Loader2, Download } from "@/lib/icon-mapping"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Camera, CameraOff, Mic, MicOff, Video, VideoOff, RotateCcw, Download, Settings, Users, Phone, PhoneOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
-import { ToolCardWrapper } from "@/components/chat/ToolCardWrapper"
-import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import type { WebcamCaptureProps, WebcamState, InputMode } from "./WebcamCapture.types"
 
@@ -30,540 +26,348 @@ export function WebcamCapture({
   onLog,
 }: WebcamCaptureProps) {
   const { toast } = useToast()
-  const [webcamState, setWebcamState] = useState<WebcamState>("initializing")
-  const [inputMode, setInputMode] = useState<InputMode>("camera")
+  const [isVideoOn, setIsVideoOn] = useState(true)
+  const [isAudioOn, setIsAudioOn] = useState(true)
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user")
+  const [brightness, setBrightness] = useState(100)
+  const [contrast, setContrast] = useState(100)
   const [stream, setStream] = useState<MediaStream | null>(null)
-  const [availableDevices, setAvailableDevices] = useState<MediaDeviceInfo[]>([])
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("")
-  const [captureCount, setCaptureCount] = useState(0)
-  const [isCapturing, setIsCapturing] = useState(false)
-  const [permissionGranted, setPermissionGranted] = useState(false)
-  
-  // Real-time analysis states
-  const [isAutoAnalyzing, setIsAutoAnalyzing] = useState(false)
-  const [currentAnalysis, setCurrentAnalysis] = useState("")
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [analysisHistory, setAnalysisHistory] = useState<AnalysisResult[]>([])
-  const [showAnalysisPanel, setShowAnalysisPanel] = useState(true)
-  const [analysisCount, setAnalysisCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const autoAnalysisInterval = useRef<ReturnType<typeof setInterval> | null>(null)
-  const sessionIdRef = useRef<string>(`webcam-session-${Date.now()}`)
-  const videoReadyRef = useRef<boolean>(false)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const recordingInterval = useRef<NodeJS.Timeout>()
 
-  async function waitForVideoReady(video: HTMLVideoElement): Promise<void> {
-    if (!video) return
-    if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
-      videoReadyRef.current = true
-      return
-    }
-    await new Promise<void>((resolve) => {
-      const onMeta = () => {
-        void video.play().catch(() => {})
-        if (video.videoWidth > 0 && video.videoHeight > 0) {
-          videoReadyRef.current = true
-          video.removeEventListener('loadedmetadata', onMeta)
-          resolve()
-        }
+  const participants = [
+    { id: "1", name: "You", isVideoOn: isVideoOn, isAudioOn: isAudioOn },
+    { id: "2", name: "Sarah Chen", isVideoOn: true, isAudioOn: true },
+    { id: "3", name: "Mike Johnson", isVideoOn: false, isAudioOn: true },
+    { id: "4", name: "Alex Rivera", isVideoOn: true, isAudioOn: false },
+  ]
+
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop())
       }
-      video.addEventListener('loadedmetadata', onMeta)
-      setTimeout(onMeta, 500)
-    })
-  }
+    }
+  }, [stream])
 
-  // Send video frame for analysis
-  const sendVideoFrame = useCallback(async (imageData: string) => {
+  const startCamera = async () => {
     try {
-      setIsAnalyzing(true)
-      onLog?.({ level: 'log', message: 'Analyzing webcam frame…', timestamp: new Date() })
-      
-      const sid = typeof window !== 'undefined' ? (localStorage.getItem('intelligence-session-id') || '') : ''
-      const response = await fetch('/api/tools/webcam', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(sid ? { 'x-intelligence-session-id': sid } : {}),
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
         },
-        body: JSON.stringify({
-          image: imageData,
-          type: 'webcam', // Explicitly set type to 'webcam'
-        })
+        audio: true,
       })
 
-      if (!response.ok) {
-        throw new Error(`Failed to analyze video frame: ${response.statusText}`)
+      setStream(mediaStream)
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream
       }
-
-      const result = await response.json()
-      const analysisText = result?.output?.analysis || result?.analysis || 'No analysis'
-      onLog?.({ level: 'log', message: `Webcam analysis: ${analysisText}` , timestamp: new Date() })
-      
-      const analysis: AnalysisResult = {
-        id: Date.now().toString(),
-        text: analysisText,
-        timestamp: Date.now(),
-        imageData
-      }
-      
-      setAnalysisHistory(prev => [...prev, analysis])
-      setCurrentAnalysis(analysis.text)
-      setAnalysisCount(prev => prev + 1)
-      
-      onAIAnalysis?.(analysis.text)
-      
+      setIsVideoOn(true)
+      setIsAudioOn(true)
     } catch (error) {
-      console.error('❌ Failed to analyze video frame:', error)
-      onLog?.({ level: 'error', message: `Webcam analysis error: ${error instanceof Error ? error.message : 'Unknown'}`, timestamp: new Date() })
-      setError(`Failed to analyze video frame: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    } finally {
-      setIsAnalyzing(false)
+      console.error("Error accessing camera:", error)
+      setError("Failed to access camera")
+      toast({
+        title: "Camera Error",
+        description: "Failed to access camera. Please check permissions.",
+        variant: "destructive",
+      })
     }
-  }, [onAIAnalysis])
-
-  // Auto-analysis interval with throttling and cost awareness
-  useEffect(() => {
-    if (isAutoAnalyzing && webcamState === "active" && videoReadyRef.current) {
-      let analysisCount = 0;
-      const maxAnalysisPerSession = 15; // Limit webcam analysis more strictly
-      
-      autoAnalysisInterval.current = setInterval(async () => {
-        // Check if we've exceeded the analysis limit
-        if (analysisCount >= maxAnalysisPerSession) {
-          console.warn('🚨 Webcam auto-analysis limit reached to prevent excessive API costs');
-          setIsAutoAnalyzing(false);
-          return;
-        }
-
-        if (videoRef.current && canvasRef.current && !isAnalyzing && videoRef.current.readyState >= 2 && videoRef.current.videoWidth > 0) {
-          const canvas = canvasRef.current
-          const video = videoRef.current
-          
-          canvas.width = video.videoWidth
-          canvas.height = video.videoHeight
-          
-          const ctx = canvas.getContext('2d')
-          if (ctx) {
-            ctx.drawImage(video, 0, 0)
-            const imageData = canvas.toDataURL('image/jpeg', 0.8)
-            analysisCount++;
-            console.info(`📹 Webcam auto-analysis ${analysisCount}/${maxAnalysisPerSession}`);
-            await sendVideoFrame(imageData)
-          }
-        }
-      }, 20000) // Increased to 20 seconds for webcam (more frequent than screen)
-    } else {
-      if (autoAnalysisInterval.current) {
-        clearInterval(autoAnalysisInterval.current)
-        autoAnalysisInterval.current = null
-      }
-    }
-
-    return () => {
-      if (autoAnalysisInterval.current) {
-        clearInterval(autoAnalysisInterval.current)
-      }
-    }
-  }, [isAutoAnalyzing, webcamState, sendVideoFrame])
-
-  const handleCapture = async (imageData: string) => {
-    onCapture(imageData)
-    
-    // Send for AI analysis
-    await sendVideoFrame(imageData)
   }
 
-  const handleClose = useCallback(() => {
+  const stopCamera = () => {
     if (stream) {
       stream.getTracks().forEach((track) => track.stop())
       setStream(null)
     }
-    if (autoAnalysisInterval.current) {
-      clearInterval(autoAnalysisInterval.current)
-    }
-    setWebcamState("stopped")
-    setIsAutoAnalyzing(false)
-    onClose?.()
-    onCancel?.()
-  }, [stream, onClose, onCancel])
+    setIsVideoOn(false)
+    setIsAudioOn(false)
+  }
 
-  const startCamera = useCallback(async (deviceId?: string) => {
-    try {
-      setWebcamState("initializing")
-      
-      // Start analysis session
-      // Removed startAnalysisSession - not needed for individual image analysis
-      
-      const constraints: MediaStreamConstraints = {
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: "user",
-          ...(deviceId && { deviceId: deviceId }),
-        },
-        audio: false,
-      }
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints)
-      setStream(mediaStream)
-      setWebcamState("active")
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream
-        await waitForVideoReady(videoRef.current)
-      }
-      
-      toast({
-        title: "Camera Started",
-        description: "Webcam is now active and ready for analysis."
-      })
-    } catch (error: any) {
-      console.error("Camera access failed:", error)
-      setWebcamState("error")
-      
-      let title = "Camera Access Failed"
-      let description = "Please check permissions and try again."
-      
-      // Handle specific error types
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        title = "Camera Access Denied"
-        description = "Please allow camera access in your browser settings and try again."
-      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        title = "No Camera Found"
-        description = "No camera device was found. Please connect a camera and try again."
-      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-        title = "Camera In Use"
-        description = "Camera is already in use by another application. Please close other apps using the camera."
-      }
-      
-      setError(title)
-      toast({
-        title,
-        description,
-        variant: "destructive",
-      })
-      
-      // Auto-close modal on permission denied
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        setTimeout(() => {
-          onClose?.()
-        }, 2000)
+  const toggleVideo = () => {
+    if (stream) {
+      const videoTrack = stream.getVideoTracks()[0]
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled
+        setIsVideoOn(videoTrack.enabled)
       }
     }
-  }, [toast, onClose])
+  }
 
-  const checkAndInitCamera = useCallback(async () => {
-    try {
-      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-        setWebcamState("error")
-        setError('Camera not supported')
-        toast({
-          title: "Camera Not Supported",
-          description: "Camera requires a secure connection (HTTPS) and a supported browser.",
-          variant: "destructive",
-        })
-        return
-      }
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true })
-      setPermissionGranted(true)
-      mediaStream.getTracks().forEach((track) => track.stop())
-
-      const devices = await navigator.mediaDevices.enumerateDevices()
-      const videoDevices = devices.filter((d) => d.kind === "videoinput")
-      setAvailableDevices(videoDevices)
-
-      const currentDeviceId = videoDevices[0]?.deviceId
-      if (currentDeviceId) {
-        setSelectedDeviceId(currentDeviceId)
-        await startCamera(currentDeviceId)
-      }
-    } catch (error: any) {
-      console.error("Camera initialization failed:", error)
-      setWebcamState("error")
-      
-      let title = "Camera Access Failed"
-      let description = "Camera initialization failed. Please try again."
-      
-      // Handle specific error types
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        title = "Camera Access Denied"
-        description = "Please allow camera access in your browser settings and try again."
-      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        title = "No Camera Found"
-        description = "No camera device was found. Please connect a camera and try again."
-      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-        title = "Camera In Use"
-        description = "Camera is already in use by another application. Please close other apps using the camera."
-      } else if (error.name === 'OverconstrainedError' || error.name === 'ConstraintNotSatisfiedError') {
-        title = "Camera Not Compatible"
-        description = "Your camera doesn't support the required settings. Please try a different camera."
-      } else if (error.name === 'NotSupportedError') {
-        title = "Camera Not Supported"
-        description = "Camera access is not supported in this browser or environment."
-      } else if (error.name === 'SecurityError') {
-        title = "Security Error"
-        description = "Camera access blocked for security reasons. Please use HTTPS."
-      }
-      
-      setError(title)
-      toast({
-        title,
-        description,
-        variant: "destructive",
-      })
-      
-      // Auto-close modal on permission denied
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        setTimeout(() => {
-          onClose?.()
-        }, 3000)
+  const toggleAudio = () => {
+    if (stream) {
+      const audioTrack = stream.getAudioTracks()[0]
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled
+        setIsAudioOn(audioTrack.enabled)
       }
     }
-  }, [startCamera, toast, onClose])
+  }
 
-  const captureImage = useCallback(() => {
+  const switchCamera = async () => {
+    const newFacingMode = facingMode === "user" ? "environment" : "user"
+    setFacingMode(newFacingMode)
+
+    if (stream) {
+      stopCamera()
+      setTimeout(() => {
+        setFacingMode(newFacingMode)
+        startCamera()
+      }, 100)
+    }
+  }
+
+  const startRecording = () => {
+    if (!stream) return
+
+    const mediaRecorder = new MediaRecorder(stream)
+    const chunks: BlobPart[] = []
+
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        chunks.push(event.data)
+      }
+    }
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks, { type: "video/webm" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `recording-${Date.now()}.webm`
+      a.click()
+    }
+
+    mediaRecorderRef.current = mediaRecorder
+    mediaRecorder.start()
+    setIsRecording(true)
+    setRecordingTime(0)
+
+    recordingInterval.current = setInterval(() => {
+      setRecordingTime((prev) => prev + 1)
+    }, 1000)
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop()
+      setIsRecording(false)
+      if (recordingInterval.current) {
+        clearInterval(recordingInterval.current)
+      }
+    }
+  }
+
+  const takeScreenshot = () => {
     if (!videoRef.current || !canvasRef.current) return
 
-    try {
-      setIsCapturing(true)
-      const canvas = canvasRef.current
-      const video = videoRef.current
+    const canvas = canvasRef.current
+    const video = videoRef.current
+    const ctx = canvas.getContext("2d")
 
-      if (video.videoWidth === 0 || video.videoHeight === 0 || video.readyState < 2) {
-        setError('Camera is warming up… try again in a moment')
-        return
-      }
+    if (ctx) {
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
+      ctx.drawImage(video, 0, 0)
 
-      const ctx = canvas.getContext("2d")
-      if (ctx) {
-        ctx.drawImage(video, 0, 0)
-        const imageData = canvas.toDataURL("image/jpeg", 0.8)
-        handleCapture(imageData)
-        setCaptureCount((prev) => prev + 1)
-      }
-    } catch (error) {
-      console.error("Capture failed:", error)
-      setError('Capture failed')
-    } finally {
-      setIsCapturing(false)
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement("a")
+          a.href = url
+          a.download = `screenshot-${Date.now()}.png`
+          a.click()
+          
+          // Also trigger onCapture callback
+          const imageData = canvas.toDataURL("image/jpeg", 0.8)
+          onCapture?.(imageData)
+        }
+      })
     }
-  }, [handleCapture])
+  }
 
-  const handleDeviceChange = useCallback(async (deviceId: string) => {
-    setSelectedDeviceId(deviceId)
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop())
-    }
-    await startCamera(deviceId)
-  }, [stream, startCamera])
-
-  const handleKeyPress = (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
-      handleClose()
-    }
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
   useEffect(() => {
-    document.addEventListener("keydown", handleKeyPress)
-    return () => document.removeEventListener("keydown", handleKeyPress)
-  }, [handleKeyPress])
-
-  useEffect(() => {
-    if (inputMode === "camera" && !stream) {
-      checkAndInitCamera()
+    if (!stream) {
+      startCamera()
     }
-  }, [inputMode, stream, checkAndInitCamera])
-
-  const WebcamUI = () => (
-    <div className={cn(
-      'flex flex-col gap-4',
-      mode === 'canvas' && 'h-full w-full overflow-hidden gap-3 p-2'
-    )}>
-      {/* Status and Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className={cn(
-            "w-2 h-2 rounded-full",
-            webcamState === "active" ? "bg-green-500" : "bg-gray-400"
-          )} />
-          <span className="text-sm">
-            {webcamState === "active" ? "Camera Active" : "Camera Inactive"}
-          </span>
-          {isAnalyzing && (
-            <Badge variant="secondary">
-              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-              Analyzing
-            </Badge>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={isAutoAnalyzing}
-            onCheckedChange={setIsAutoAnalyzing}
-            disabled={webcamState !== "active"}
-          />
-          <span className="text-xs">Auto Analysis</span>
-        </div>
-      </div>
-
-      {/* Video Display */}
-      <div className={cn('relative', mode === 'canvas' && 'flex-1 min-h-0') }>
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className={cn(
-            'w-full rounded-xl border border-border/20 shadow-md',
-            mode === 'canvas' && 'h-full object-contain'
-          )}
-        />
-        
-        {/* Capture Button Overlay */}
-        <div className="absolute bottom-4 right-4">
-          <Button
-            onClick={captureImage}
-            disabled={webcamState !== "active" || isCapturing}
-            className="w-12 h-12 rounded-full bg-white/90 hover:bg-white"
-          >
-            {isCapturing ? (
-              <Loader2 className="w-6 h-6 animate-spin text-gray-600" />
-            ) : (
-              <Camera className="w-6 h-6 text-gray-600" />
-            )}
-          </Button>
-        </div>
-        
-        {/* Analysis Panel Toggle */}
-        <Button
-          onClick={() => setShowAnalysisPanel(!showAnalysisPanel)}
-          variant="ghost"
-          size="sm"
-          className="absolute top-4 right-4 bg-black/40 text-white hover:bg-black/60 rounded-full"
-        >
-          {showAnalysisPanel ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-        </Button>
-      </div>
-
-      {/* Analysis Panel */}
-      <AnimatePresence>
-        {showAnalysisPanel && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-4"
-          >
-            {/* Current Analysis */}
-            {currentAnalysis && (
-              <Card className="border border-border/20 rounded-2xl">
-                <CardHeader>
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Brain className="w-4 h-4" />
-                    Live Analysis
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-foreground/80">{currentAnalysis}</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Analysis History */}
-            {analysisHistory.length > 0 && (
-              <Card className="border border-border/20 rounded-2xl">
-                <CardHeader>
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Video className="w-4 h-4" />
-                    Analysis History ({analysisCount})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 max-h-40 overflow-y-auto">
-                  {analysisHistory.slice(-3).map((analysis) => (
-                    <div
-                      key={analysis.id}
-                      className="p-3 rounded-lg bg-accent/5 border-l-4 border-accent/60"
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20">AI</Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(analysis.timestamp).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <p className="text-sm">{analysis.text}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Error Display */}
-      {error && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-4">
-            <p className="text-sm text-red-600">{error}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Hidden canvas for capture */}
-      <canvas ref={canvasRef} className="hidden" />
-    </div>
-  )
-
-  if (mode === 'modal') {
-    return (
-      <Dialog open={true} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl rounded-3xl border border-border/20 shadow-xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Camera className="w-5 h-5" />
-              Webcam Capture
-            </DialogTitle>
-          </DialogHeader>
-          <WebcamUI />
-        </DialogContent>
-      </Dialog>
-    )
-  }
-
-  if (mode === 'canvas') {
-    return (
-      <div className="flex h-full w-full flex-col overflow-hidden">
-        {/* Thin top controls */}
-        <div className="flex h-10 items-center justify-between border-b px-2 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-green-500" />
-            <span>Webcam</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="ghost" onClick={captureImage} disabled={webcamState !== 'active' || isCapturing}>
-              Capture
-            </Button>
-            <Button size="sm" variant="ghost" onClick={handleClose}>Close</Button>
-          </div>
-        </div>
-        <div className="flex min-h-0 flex-1 flex-col p-2">
-          <WebcamUI />
-        </div>
-      </div>
-    )
-  }
+  }, [])
 
   return (
-    <ToolCardWrapper
-      title="Webcam Capture"
-      description="Real-time video capture with AI analysis"
-      icon={<Camera className="w-4 h-4" />}
-    >
-      <WebcamUI />
-    </ToolCardWrapper>
+    <div className="h-full flex">
+      {/* Main Video Area */}
+      <div className="flex-1 p-4">
+        <div className="h-full bg-slate-900 rounded-lg overflow-hidden relative">
+          {isVideoOn && stream ? (
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover"
+              style={{
+                filter: `brightness(${brightness}%) contrast(${contrast}%)`,
+                transform: facingMode === "user" ? "scaleX(-1)" : "none",
+              }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-center text-white">
+                <CameraOff className="w-16 h-16 mx-auto mb-4 text-slate-400" />
+                <p className="text-lg">Camera is off</p>
+              </div>
+            </div>
+          )}
+
+          {/* Video Controls Overlay */}
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+            <div className="flex items-center gap-3 bg-black/50 backdrop-blur-sm rounded-full px-4 py-2">
+              <Button
+                variant={isAudioOn ? "secondary" : "destructive"}
+                size="sm"
+                onClick={toggleAudio}
+                className="rounded-full w-10 h-10 p-0"
+              >
+                {isAudioOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+              </Button>
+
+              <Button
+                variant={isVideoOn ? "secondary" : "destructive"}
+                size="sm"
+                onClick={toggleVideo}
+                className="rounded-full w-10 h-10 p-0"
+              >
+                {isVideoOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+              </Button>
+
+              <Button
+                variant="default"
+                size="sm"
+                onClick={takeScreenshot}
+                className="rounded-full w-10 h-10 p-0 bg-emerald-600 hover:bg-emerald-700"
+              >
+                <Camera className="w-4 h-4" />
+              </Button>
+
+              <Button variant="secondary" size="sm" className="rounded-full w-10 h-10 p-0">
+                <Settings className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Recording Indicator */}
+          {isRecording && (
+            <div className="absolute top-4 left-4">
+              <Badge variant="destructive" className="animate-pulse">
+                <div className="w-2 h-2 bg-white rounded-full mr-2"></div>
+                Recording {formatTime(recordingTime)}
+              </Badge>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Sidebar */}
+      <div className="w-80 bg-white border-l border-slate-200 p-4 space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Users className="w-5 h-5 text-emerald-600" />
+              Participants ({participants.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {participants.map((participant) => (
+              <div key={participant.id} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-emerald-700">{participant.name.charAt(0)}</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">{participant.name}</p>
+                    <p className="text-xs text-slate-500">
+                      {participant.id === "1" ? "host" : "participant"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <div className={`w-4 h-4 rounded ${participant.isVideoOn ? "bg-green-500" : "bg-red-500"}`}>
+                    {participant.isVideoOn ? (
+                      <Camera className="w-3 h-3 text-white m-0.5" />
+                    ) : (
+                      <CameraOff className="w-3 h-3 text-white m-0.5" />
+                    )}
+                  </div>
+                  <div className={`w-4 h-4 rounded ${participant.isAudioOn ? "bg-green-500" : "bg-red-500"}`}>
+                    {participant.isAudioOn ? (
+                      <Mic className="w-3 h-3 text-white m-0.5" />
+                    ) : (
+                      <MicOff className="w-3 h-3 text-white m-0.5" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Session Controls</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button
+              variant={isRecording ? "destructive" : "outline"}
+              className="w-full"
+              onClick={isRecording ? stopRecording : startRecording}
+            >
+              {isRecording ? "Stop Recording" : "Start Recording"}
+            </Button>
+            <Button variant="outline" className="w-full bg-transparent" onClick={switchCamera}>
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Switch Camera
+            </Button>
+            <Button variant="outline" className="w-full bg-transparent" onClick={takeScreenshot}>
+              <Download className="w-4 h-4 mr-2" />
+              Take Screenshot
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button variant="ghost" size="sm" className="w-full justify-start">
+              Switch to Canvas
+            </Button>
+            <Button variant="ghost" size="sm" className="w-full justify-start">
+              Start Workshop
+            </Button>
+            <Button variant="ghost" size="sm" className="w-full justify-start">
+              Share Screen
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Hidden canvas for screenshots */}
+      <canvas ref={canvasRef} className="hidden" />
+    </div>
   )
 }

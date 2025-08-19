@@ -158,3 +158,115 @@ export const GroundedCitation = ({ citations, className }: GroundedCitationProps
     </InlineCitationCard>
   );
 };
+
+// ===========================================
+// Minimal Carousel for Inline Citations (test page support)
+// ===========================================
+type CarouselContextValue = {
+  index: number
+  count: number
+  setCount: (n: number) => void
+  next: () => void
+  prev: () => void
+}
+
+const CarouselContext = React.createContext<CarouselContextValue | null>(null)
+
+export type InlineCitationCarouselProps = React.ComponentProps<'div'>
+
+export const InlineCitationCarousel = ({ className, children, ...props }: InlineCitationCarouselProps) => {
+  const [index, setIndex] = React.useState(0)
+  const [count, setCount] = React.useState(0)
+
+  const next = React.useCallback(() => setIndex(i => (count === 0 ? 0 : (i + 1) % count)), [count])
+  const prev = React.useCallback(() => setIndex(i => (count === 0 ? 0 : (i - 1 + count) % count)), [count])
+
+  const value = React.useMemo(() => ({ index, count, setCount, next, prev }), [index, count, setCount, next, prev])
+
+  return (
+    <CarouselContext.Provider value={value}>
+      <div className={cn('w-full', className)} {...props}>
+        {children}
+      </div>
+    </CarouselContext.Provider>
+  )
+}
+
+export type InlineCitationCarouselHeaderProps = React.ComponentProps<'div'>
+
+export const InlineCitationCarouselHeader = ({ className, children, ...props }: InlineCitationCarouselHeaderProps) => (
+  <div className={cn('flex items-center justify-between border-b', className)} {...props}>
+    {children}
+  </div>
+)
+
+export type InlineCitationCarouselContentProps = React.ComponentProps<'div'>
+
+export const InlineCitationCarouselContent = ({ className, children, ...props }: InlineCitationCarouselContentProps) => {
+  const ctx = React.useContext(CarouselContext)
+  const childArray = React.Children.toArray(children)
+
+  React.useEffect(() => {
+    if (ctx) ctx.setCount(childArray.length)
+  }, [ctx, childArray.length])
+
+  return (
+    <div className={cn('relative overflow-hidden', className)} {...props}>
+      {childArray.map((child, i) => (
+        <div key={i} className={cn(i === (ctx?.index ?? 0) ? 'block' : 'hidden')}>
+          {child}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export type InlineCitationCarouselItemProps = React.ComponentProps<'div'>
+
+export const InlineCitationCarouselItem = ({ className, children, ...props }: InlineCitationCarouselItemProps) => (
+  <div className={cn('p-3 space-y-2', className)} {...props}>
+    {children}
+  </div>
+)
+
+export type InlineCitationCarouselIndexProps = React.ComponentProps<'span'>
+
+export const InlineCitationCarouselIndex = ({ className, ...props }: InlineCitationCarouselIndexProps) => {
+  const ctx = React.useContext(CarouselContext)
+  const indexLabel = ctx ? `${Math.min(ctx.index + 1, Math.max(1, ctx.count))}/${Math.max(1, ctx.count)}` : '1/1'
+  return (
+    <span className={cn('text-xs text-muted-foreground', className)} {...props}>
+      {indexLabel}
+    </span>
+  )
+}
+
+export type InlineCitationCarouselNavButtonProps = React.ComponentProps<'button'>
+
+export const InlineCitationCarouselPrev = ({ className, children, ...props }: InlineCitationCarouselNavButtonProps) => {
+  const ctx = React.useContext(CarouselContext)
+  return (
+    <button
+      type="button"
+      onClick={() => ctx?.prev()}
+      className={cn('inline-flex h-6 w-6 items-center justify-center rounded border bg-card hover:bg-accent/10', className)}
+      {...props}
+    >
+      {children || <ArrowLeftIcon className="h-3.5 w-3.5" />}
+    </button>
+  )
+}
+
+export const InlineCitationCarouselNext = ({ className, children, ...props }: InlineCitationCarouselNavButtonProps) => {
+  const ctx = React.useContext(CarouselContext)
+  return (
+    <button
+      type="button"
+      onClick={() => ctx?.next()}
+      className={cn('inline-flex h-6 w-6 items-center justify-center rounded border bg-card hover:bg-accent/10', className)}
+      {...props}
+    >
+      {children || <ArrowRightIcon className="h-3.5 w-3.5" />}
+    </button>
+  )
+}

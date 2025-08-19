@@ -10,6 +10,8 @@ import { PermissionManager } from "@/components/permissions/PermissionManager"
 import { cn } from "@/lib/utils"
 import { StructuredData } from "./structured-data"
 import { CanvasProvider } from "@/components/providers/canvas-provider"
+import { ModuleProgressProvider } from "@/hooks/workshop/use-module-progress"
+import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -40,17 +42,22 @@ export default function RootLayout({
         <StructuredData />
       </head>
       <body className={cn("font-sans antialiased", fontSans.variable, fontDisplay.variable, fontMono.variable)}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <DemoSessionProvider>
             <MeetingProvider>
               <CanvasProvider>
-                <GlobalChrome>
-                  <main className="min-h-screen">
-                    {children}
-                  </main>
-                  <Toaster />
-                  <PermissionManager />
-                </GlobalChrome>
+                <ModuleProgressProvider>
+                  <GlobalChrome>
+                    <div className="min-h-screen relative">
+                      <AnimatedGridPattern
+                        className="-z-10 inset-x-0 inset-y-[-30%] h-[200%] skew-y-12 [mask-image:radial-gradient(500px_circle_at_center,white,transparent)] fill-[hsl(var(--accent))]/10 stroke-[hsl(var(--accent))]/10 text-[hsl(var(--accent))]/20"
+                      />
+                      {children}
+                    </div>
+                    <Toaster />
+                    <PermissionManager />
+                  </GlobalChrome>
+                </ModuleProgressProvider>
               </CanvasProvider>
             </MeetingProvider>
           </DemoSessionProvider>

@@ -16,6 +16,14 @@ export interface ROICalculatorProps {
   onComplete: (result: ROICalculationResult) => void
   onClose?: () => void
   onCancel?: () => void
+  /** Session id used for analytics + context prefill */
+  sessionId?: string | null
+  /** Optional defaults derived from chat lead context */
+  defaults?: {
+    companySize?: string
+    industry?: string
+    useCase?: string
+  }
 }
 
 export interface ROICalculatorModalProps {

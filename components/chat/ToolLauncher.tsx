@@ -8,14 +8,15 @@ import { useCanvas } from '@/components/providers/canvas-provider'
 
 export function ToolLauncher() {
   const { openCanvas } = useCanvas()
+  const contentId = React.useId().replace(/[:]/g, '-')
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button className="fixed bottom-[96px] right-4 h-14 w-14 rounded-full shadow-lg">
+        <Button className="fixed bottom-28 right-4 h-14 w-14 rounded-full shadow-lg" aria-haspopup="dialog" aria-controls={contentId}>
           <Plus className="h-6 w-6" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="h-[52vh] rounded-t-2xl">
+      <SheetContent id={contentId} side="bottom" className="h-[52vh] rounded-t-2xl" aria-label="Tool launcher">
         <div className="grid grid-cols-4 gap-3">
           <Button variant="outline" className="h-24 flex-col" onClick={() => openCanvas('webcam')}>
             <Camera className="h-6 w-6" /> Webcam

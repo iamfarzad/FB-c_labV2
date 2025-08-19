@@ -129,10 +129,8 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
                 "border-2 border-accent/40 ring-4 ring-accent/10",
                 "shadow-xl shadow-accent/25 backdrop-blur-sm",
                 "bg-gradient-to-br from-accent/20 to-accent/10",
-                // Responsive avatar sizes
-                "mobile:w-10 mobile:h-10",
-                "tablet:w-12 tablet:h-12",
-                "desktop:w-14 desktop:h-14",
+                // Responsive avatar sizes (Tailwind breakpoints)
+                "w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14",
               )}
             >
               <AvatarFallback className="bg-gradient-to-br from-accent via-accent/90 to-accent/80 text-accent-foreground shadow-inner">
@@ -140,7 +138,7 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
                   animate={{ rotate: [0, 5, -5, 0] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <FbcIcon className={cn("mobile:w-5 mobile:h-5", "tablet:w-6 tablet:h-6", "desktop:w-7 desktop:h-7")} />
+                  <FbcIcon className={cn("w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7")} />
                 </motion.div>
               </AvatarFallback>
             </Avatar>
@@ -160,9 +158,7 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
                 "absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full",
                 "border-2 border-card shadow-lg",
                 "flex items-center justify-center",
-                "mobile:w-3 mobile:h-3",
-                "tablet:w-4 tablet:h-4",
-                "desktop:w-5 desktop:h-5"
+                "w-3 h-3 md:w-4 md:h-4 lg:w-5 lg:h-5"
               )}
             >
               <Sparkles className="w-2 h-2 text-white" />
@@ -182,9 +178,7 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
                     "font-bold text-foreground tracking-tight",
                     "bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text",
                     // Responsive text sizes
-                    "mobile:text-sm",
-                    "tablet:text-base",
-                    "desktop:text-lg",
+                    "text-sm md:text-base lg:text-lg",
                   )}
                 >
                   {greeting}
@@ -227,9 +221,7 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
                   "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300",
                   "border border-green-200/50 dark:border-green-800/50",
                   "backdrop-blur-sm font-medium",
-                  "mobile:text-xs mobile:px-2 mobile:py-0.5",
-                  "tablet:text-xs tablet:px-2 tablet:py-1",
-                  "desktop:text-xs desktop:px-3 desktop:py-1"
+                  "text-xs px-2 py-0.5 md:py-1 lg:px-3 lg:py-1"
                 )}
               >
                 <Brain className="w-3 h-3 mr-1" />
@@ -282,23 +274,19 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
               // Enhanced button styling
               "rounded-xl font-medium",
               // Mobile: Icon only, larger screens: Icon + text
-              "mobile:px-3 mobile:py-2",
-              "tablet:px-4 tablet:py-2",
-              "desktop:px-5 desktop:py-2.5",
+              "px-3 py-2 md:px-4 lg:px-5 lg:py-2.5",
             )}
           >
             <motion.div
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             >
-              <FileText className={cn("mobile:w-4 mobile:h-4", "tablet:w-4 tablet:h-4", "desktop:w-4 desktop:h-4")} />
+              <FileText className="w-4 h-4" />
             </motion.div>
             <span
               className={cn(
                 // Hide text on mobile, show on larger screens
-                "mobile:hidden",
-                "tablet:inline",
-                "desktop:inline",
+                "hidden md:inline",
                 "font-medium"
               )}
             >
@@ -308,7 +296,7 @@ export function ChatHeader({ onDownloadSummary, activities, onNewChat, onActivit
         </motion.div>
 
         {/* Time Display - Desktop only */}
-        <div className="hidden desktop:block">
+        <div className="hidden lg:block">
           <div className="text-xs text-muted-foreground font-mono bg-muted/20 px-2 py-1 rounded-lg">
             {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </div>

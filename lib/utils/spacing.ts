@@ -32,11 +32,11 @@ export const spacing = {
   paddingLg: 'px-6 py-6',
   paddingXl: 'px-8 py-8',
   
-  // Responsive spacing
+  // Responsive spacing (Tailwind breakpoints)
   responsive: {
-    mobile: 'p-2 md:p-4',
-    tablet: 'p-3 md:p-4 lg:p-6',
-    desktop: 'p-4 md:p-6 lg:p-8'
+    base: 'p-2 md:p-4',       // 0+
+    md: 'p-3 md:p-4 lg:p-6',  // 768+
+    lg: 'p-4 md:p-6 lg:p-8',  // 1024+
   },
   
   // Layout spacing
@@ -52,17 +52,32 @@ export const spacing = {
 /**
  * Get consistent spacing class based on component type
  */
-export function getSpacing(type: 'component' | 'layout' | 'responsive' = 'component', size: keyof typeof spacing = 'md'): string {
+export type SpacingType = 'component' | 'layout' | 'responsive'
+export type ComponentSpacingSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' |
+  'gapXs' | 'gapSm' | 'gapMd' | 'gapLg' | 'gapXl' |
+  'marginXs' | 'marginSm' | 'marginMd' | 'marginLg' | 'marginXl' |
+  'paddingXs' | 'paddingSm' | 'paddingMd' | 'paddingLg' | 'paddingXl'
+export type LayoutSpacingSize = keyof typeof spacing.layout
+export type ResponsiveSpacingSize = keyof typeof spacing.responsive
+
+export function getSpacing(type: 'component', size?: ComponentSpacingSize): string
+export function getSpacing(type: 'layout', size?: LayoutSpacingSize): string
+export function getSpacing(type: 'responsive', size?: ResponsiveSpacingSize): string
+export function getSpacing(type: SpacingType = 'component', size?: string): string {
   if (type === 'layout') {
     return spacing.layout[size as keyof typeof spacing.layout] || spacing.layout.content
   }
   
   if (type === 'responsive') {
-    return spacing.responsive[size as keyof typeof spacing.responsive] || spacing.responsive.mobile
+    return spacing.responsive[size as keyof typeof spacing.responsive] || spacing.responsive.base
   }
   
-  return spacing[size] || spacing.md
+  return spacing[size as keyof typeof spacing] || spacing.md
 }
+
+export const getResponsiveSpacing = (size: ResponsiveSpacingSize = 'base') => getSpacing('responsive', size)
+export const getLayoutSpacing = (size: LayoutSpacingSize = 'content') => getSpacing('layout', size)
+export const getComponentSpacing = (size: ComponentSpacingSize = 'md') => getSpacing('component', size)
 
 /**
  * Common spacing patterns for specific UI elements

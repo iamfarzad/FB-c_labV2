@@ -78,7 +78,6 @@ export type PromptInputProps = HTMLAttributes<HTMLFormElement>;
 
 export const PromptInput = ({ className, ...props }: PromptInputProps) => (
   <form
-    aria-label="Chat composer"
     className={cn(
       'w-full divide-y overflow-hidden rounded-xl border bg-background shadow-sm',
       className,

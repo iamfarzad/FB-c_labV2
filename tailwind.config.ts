@@ -3,13 +3,11 @@ import type { Config } from "tailwindcss"
 const config = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
     "./lib/**/*.{ts,tsx}",
     "./hooks/**/*.{ts,tsx}",
-    "*.{js,ts,jsx,tsx,mdx}",
+    "./*.{js,ts,jsx,tsx,mdx}",
   ],
   prefix: "",
   theme: {
@@ -67,14 +65,10 @@ const config = {
           warning: "hsl(var(--chart-warning))",
           error: "hsl(var(--chart-error))",
         },
-        "orange-accent": "hsl(var(--color-orange-accent))",
-        "orange-accent-hover": "hsl(var(--color-orange-accent-hover))",
-        "gunmetal": "hsl(var(--color-gunmetal))",
-        "gunmetal-lighter": "hsl(var(--color-gunmetal-lighter))",
-        "light-silver": "hsl(var(--color-light-silver))",
-        "light-silver-darker": "hsl(var(--color-light-silver-darker))",
+        // Sidebar colors aligned with CSS tokens
         sidebar: {
-          background: "hsl(var(--sidebar-background))",
+          DEFAULT: "hsl(var(--sidebar))",
+          background: "hsl(var(--sidebar))",
           foreground: "hsl(var(--sidebar-foreground))",
           primary: "hsl(var(--sidebar-primary))",
           "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
@@ -83,37 +77,47 @@ const config = {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Backwards-compat brand aliases; prefer semantic `accent`
+        "orange-accent": "hsl(var(--accent))",
+        "orange-accent-hover": "var(--color-orange-accent-hover)",
+        "gunmetal": "var(--color-gunmetal)",
+        "gunmetal-lighter": "var(--color-gunmetal-lighter)",
+        "light-silver": "var(--color-light-silver)",
+        "light-silver-darker": "var(--color-light-silver-darker)",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      boxShadow: {
-        sm: "var(--shadow-sm)",
-        DEFAULT: "var(--shadow)",
-        md: "var(--shadow-md)",
-        lg: "var(--shadow-lg)",
-        xl: "var(--shadow-xl)",
-        "2xl": "var(--shadow-2xl)",
-      },
+      // Use Tailwind's built-in shadows; remove broken CSS-var shadows
+      // Custom durations/easings: keep essentials only
       transitionDuration: {
-        75: "var(--duration-75)",
-        100: "var(--duration-100)",
-        150: "var(--duration-150)",
-        200: "var(--duration-200)",
-        300: "var(--duration-300)",
-        500: "var(--duration-500)",
-        700: "var(--duration-700)",
-        1000: "var(--duration-1000)",
+        150: "150ms",
+        200: "200ms",
+        300: "300ms",
+        500: "500ms",
       },
       transitionTimingFunction: {
-        linear: "var(--ease-linear)",
-        in: "var(--ease-in)",
-        out: "var(--ease-out)",
-        "in-out": "var(--ease-in-out)",
-        bounce: "var(--ease-bounce)",
-        smooth: "var(--ease-smooth)",
+        smooth: "cubic-bezier(0.16, 1, 0.3, 1)",
+        bounce: "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+      },
+      // Responsive spacing aliases aligned with spacing.ts
+      spacing: {
+        'responsive-base': 'var(--spacing-responsive-base, 0.5rem)',
+        'responsive-md': 'var(--spacing-responsive-md, 0.75rem)',
+        'responsive-lg': 'var(--spacing-responsive-lg, 1rem)',
+      },
+      // Enhanced backdrop blur scale for glass effects
+      backdropBlur: {
+        xs: "2px",
+        sm: "4px",
+        DEFAULT: "8px",
+        md: "12px",
+        lg: "16px",
+        xl: "24px",
+        "2xl": "40px",
+        "3xl": "64px",
       },
       keyframes: {
         "accordion-down": {
@@ -128,11 +132,24 @@ const config = {
           from: { backgroundPosition: "200% 0" },
           to: { backgroundPosition: "-200% 0" },
         },
+        float: {
+          "0%, 100%": { transform: "translateY(0px) rotate(0deg)" },
+          "33%": { transform: "translateY(-10px) rotate(1deg)" },
+          "66%": { transform: "translateY(5px) rotate(-1deg)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200px 0" },
+          "100%": { backgroundPosition: "calc(200px + 100%) 0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shine: "shine 6s linear infinite",
+        float: "float 6s ease-in-out infinite",
+        shimmer: "shimmer 2s linear infinite",
+        "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "bounce-slow": "bounce 2s infinite",
       },
     },
   },

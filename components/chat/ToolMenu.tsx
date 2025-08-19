@@ -28,6 +28,8 @@ export function ToolMenu({
   disabled,
   className,
 }: ToolMenuProps) {
+  const contentId = React.useId()
+  const menuId = `tool-menu-${contentId.replace(/[:]/g, '-')}`
   return (
     <DropdownMenu>
       <Tooltip>
@@ -44,6 +46,8 @@ export function ToolMenu({
             className
           )}
           aria-label="Open tools"
+          aria-haspopup="menu"
+          aria-controls={menuId}
             >
               <Plus className="w-3.5 h-3.5" />
             </Button>
@@ -51,7 +55,7 @@ export function ToolMenu({
         </TooltipTrigger>
         <TooltipContent>Tools</TooltipContent>
       </Tooltip>
-      <DropdownMenuContent align="start" className="w-56">
+      <DropdownMenuContent id={menuId} align="start" className="w-56" aria-label="Tools menu">
         {onUploadDocument && (
           <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onUploadDocument}>
             <FileText className="w-4 h-4" /> Upload document

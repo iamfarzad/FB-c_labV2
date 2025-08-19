@@ -429,8 +429,8 @@ export async function POST(req: NextRequest) {
     // Get session ID from headers or cookies
     const sessionId = req.headers.get('x-intelligence-session-id') || req.cookies.get('demo-session-id')?.value;
 
-    // Authentication check (optional for demo)
-    const isAuthenticated = auth.success;
+    // Authentication check (optional for demo). Treat anon-* as unauthenticated
+    const isAuthenticated = !!(auth.userId && !auth.userId.startsWith('anon-'));
 
     // Parse and validate request
     const rawData = await req.json();
@@ -569,6 +569,39 @@ export async function POST(req: NextRequest) {
       searchSources = r.sources
     }
 
+    // Derive candidate URLs for Gemini urlContext tool (with env gating)
+    const urlContextEnabled = (process.env.URL_CONTEXT_ENABLED ?? 'true') === 'true'
+    const urlContextMax = Number(process.env.URL_CONTEXT_MAX_URLS ?? 10)
+    const urlAllowedDomains = String(process.env.URL_CONTEXT_ALLOWED_DOMAINS ?? '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+
+    const urlsForContext: string[] = []
+    try {
+      // from user message
+      const urlMatches = currentMessage.match(/https?:\/\/[^\s)]+/g) || []
+      urlsForContext.push(...urlMatches)
+      // from lead email domain or provided companyUrl
+      const emailDomain = (leadContext?.email || '').split('@')[1]
+      if (typeof leadContext?.companyUrl === 'string' && leadContext.companyUrl.startsWith('http')) urlsForContext.push(leadContext.companyUrl)
+      else if (emailDomain) urlsForContext.push(`https://${emailDomain}`)
+      // optional: add top search sources (kept small to avoid token bloat)
+      for (const s of searchSources.slice(0, 2)) if (s?.url) urlsForContext.push(s.url)
+    } catch {}
+
+    function withinAllowedDomains(u: string): boolean {
+      if (!urlAllowedDomains.length) return true
+      try {
+        const host = new URL(u).hostname
+        return urlAllowedDomains.some(dom => host === dom || host.endsWith(`.${dom}`))
+      } catch { return false }
+    }
+
+    const uniqueUrlsForContext = (enableUrlContext && urlContextEnabled)
+      ? Array.from(new Set(urlsForContext)).filter(withinAllowedDomains).slice(0, urlContextMax)
+      : []
+
     // Estimate tokens and select model
     const estimatedTokens = estimateTokensForMessages(sanitizedMessages);
     const modelSelection = selectModelForFeature('chat', estimatedTokens, !!sessionId);
@@ -653,11 +686,16 @@ ${getStageInstructions(conversationResult.newStage)}
 `;
     }
     
-    // Append URL context and search results to system prompt
+    // Append URL context, explicit URL list (for urlContext tool), and search results to system prompt
     if (urlContext) systemPrompt += urlContext
+    if (uniqueUrlsForContext.length) {
+      systemPrompt += `\n\nURL Context Sources (use when relevant):\n${uniqueUrlsForContext.map(u => `- ${u}`).join('\n')}`
+    }
     if (searchResultsText) systemPrompt += searchResultsText
 
-    const provider = (process.env.PROVIDER || 'gemini').toLowerCase()
+    // Provider alias mapping: allow "google" as synonym for gemini
+    const providerRaw = (process.env.PROVIDER || 'gemini').toLowerCase()
+    const provider = providerRaw === 'google' ? 'gemini' : providerRaw
     const usePerplexity = provider === 'perplexity'
     let responseStream: any
     let actualInputTokens = 0

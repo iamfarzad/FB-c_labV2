@@ -5,7 +5,7 @@ import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/comp
 import { Button } from '@/components/ui/button'
 import { FbcIcon } from '@/components/ui/fbc-icon'
 import { Video, Send, Download, Calculator, Monitor, Camera } from '@/lib/icon-mapping'
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, Maximize2, MoreHorizontal } from 'lucide-react'
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation'
 import { Message, MessageContent, MessageAvatar } from '@/components/ai-elements/message'
 import { Response } from '@/components/ai-elements/response'
@@ -34,6 +34,8 @@ import { useMeeting } from '@/components/providers/meeting-provider'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 export function AIEChat({ mode = 'full' as 'full' | 'dock', onOpenVoice }: { mode?: 'full' | 'dock', onOpenVoice?: () => void }) {
   const isDock = mode === 'dock'
@@ -476,12 +478,22 @@ export function AIEChat({ mode = 'full' as 'full' | 'dock', onOpenVoice }: { mod
         )}
 
         <div className="flex flex-1 min-h-0 flex-col">
-          <Conversation className="h-full">
-            <ConversationContent className={cn(
-              isDock
-                ? "mx-auto w-full max-w-3xl space-y-2 p-4 pb-4"
-                : "w-full max-w-none space-y-4 p-4 md:p-6 pb-28 md:pb-32"
-            )}>
+          <div className={cn('h-full', isDock && 'relative')}>
+            {isDock && (
+              <button
+                aria-label="Expand chat"
+                onClick={() => { try { window.location.href = '/chat' } catch {} }}
+                className="absolute right-2 top-2 z-10 inline-flex h-8 w-8 items-center justify-center rounded-md border border-border/50 bg-card/80 text-muted-foreground hover:text-foreground hover:bg-card"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </button>
+            )}
+            <Conversation className="h-full" role="log" aria-live="polite" aria-relevant="additions text" aria-atomic="false">
+              <ConversationContent className={cn(
+                isDock
+                  ? "mx-auto w-full max-w-3xl space-y-3 p-4 pb-4 bg-card border border-border/60 rounded-lg"
+                  : "w-full max-w-none space-y-4 p-4 md:p-6 pb-28 md:pb-32"
+              )}>
               {/* Personalized greeting when context is loaded and no messages yet */}
               {context && uiMessages.length === 0 && !isLoading && (
                 <Message from="assistant">
@@ -501,12 +513,17 @@ export function AIEChat({ mode = 'full' as 'full' | 'dock', onOpenVoice }: { mod
                     <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-60" />
                     <p className="text-sm">Ready to chat with F.B/c AI</p>
                     <p className="text-xs opacity-70 mt-1">Type a message below to get started</p>
+                    {!consentAllowed && (
+                      <p className="text-xs opacity-70 mt-2">Composer is disabled until consent is granted.</p>
+                    )}
                   </div>
                 </div>
               )}
               
+              <ol role="list" className="space-y-3">
               {uiMessages.map((m, idx) => (
-                <Message key={m.id} from={m.role}>
+                <li key={m.id} role="article" aria-roledescription="message" aria-label={`${m.role} message`}>
+                <Message from={m.role}>
                   {m.role === 'assistant' ? (
                     <div className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/40 bg-card/80 shadow-sm">
                       <FbcIcon className="h-4 w-4" />
@@ -581,12 +598,15 @@ export function AIEChat({ mode = 'full' as 'full' | 'dock', onOpenVoice }: { mod
                     )}
                   </MessageContent>
                 </Message>
+                </li>
               ))}
+              </ol>
 
               {/* demo code block removed; use Canvas 'code' instead */}
             </ConversationContent>
             <ConversationScrollButton className="bg-background/80 backdrop-blur z-50" />
           </Conversation>
+          </div>
 
           <div className={cn(
             isDock
@@ -607,7 +627,26 @@ export function AIEChat({ mode = 'full' as 'full' | 'dock', onOpenVoice }: { mod
                     onROI={() => { addLog('tool: ROI calculator'); emitUsed('roi'); }}
                     onVideoToApp={() => { openCanvas('video'); addLog('canvas: open video2app'); emitUsed('video2app'); }}
                   />
+                  {/* Context awareness indicator next to plus */}
+                  <Badge variant="secondary" className="ml-2 text-[11px]" aria-hidden>Context Aware</Badge>
                 </PromptInputTools>
+                {/* Far-right actions entry-point */}
+                <div className="ml-auto">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button aria-label="More actions" className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/40 bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-accent/10">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => { clearMessages(); addLog('chat: cleared') }}>Clear chat</DropdownMenuItem>
+                      <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => { try { window.location.href = '/chat' } catch {} }}>Expand</DropdownMenuItem>
+                      {liveEnabled && (
+                        <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => { setOpenVoice(true); addLog('voice: open overlay') }}>Voice</DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </PromptInputToolbar>
                 <PromptInputTextarea
                   placeholder="Message F.B/c… (paste a YouTube URL to open Video → App)"
@@ -679,11 +718,6 @@ export function AIEChat({ mode = 'full' as 'full' | 'dock', onOpenVoice }: { mod
                 </div>
                 <div className="flex items-center gap-3">
                   <FinishAndEmailButton sessionId={sessionId} addLog={addLog} />
-                  {/* Progress chip */}
-                  <div className="hidden md:inline-flex items-center gap-1 rounded-full border border-border/50 bg-card/60 px-2 py-0.5 text-[11px] text-muted-foreground">
-                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
-                    {context?.capabilities?.length || 0}/16 explored
-                  </div>
                   {/* Minimal icon buttons (no extra chrome) */}
                   {null}
                   <Tooltip>
@@ -704,7 +738,7 @@ export function AIEChat({ mode = 'full' as 'full' | 'dock', onOpenVoice }: { mod
                       <TooltipContent>Voice</TooltipContent>
                     </Tooltip>
                   )}
-                  <PromptInputSubmit status={!input || !consentAllowed ? 'submitted' : undefined} className="rounded-full" />
+                  <PromptInputSubmit status={isLoading ? 'submitted' : undefined} className="rounded-full" />
                 </div>
               </div>
             </PromptInput>

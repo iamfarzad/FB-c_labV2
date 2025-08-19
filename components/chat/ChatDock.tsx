@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { AIEChat } from "@/components/chat/AIEChat"
+import { UnifiedChatInterface } from "@/components/chat/unified/UnifiedChatInterface"
 import { Button } from "@/components/ui/button"
 import { Mic, X } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -27,7 +27,7 @@ export function ChatDock({ className }: ChatDockProps) {
         <div className="overflow-hidden">
           {/* Mobile-friendly height with safe viewport units; taller on md+ */}
           <div className="h-[48svh] md:h-80 overflow-auto p-2">
-            <AIEChat mode="dock" />
+            <UnifiedChatInterface messages={[]} isLoading={false} sessionId={null} mode="dock" />
           </div>
         </div>
       )}

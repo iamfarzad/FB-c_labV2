@@ -202,46 +202,174 @@ export function ScreenShare({
   }, [sendScreenFrame])
 
   const ScreenShareUI = () => (
-    <div className={cn('flex flex-col gap-4', mode === 'canvas' && 'h-full w-full overflow-hidden gap-3 p-2')}>
-      <div className="flex items-center justify-between">
-          <Badge variant={screenState === "sharing" ? "default" : "destructive"}>{screenState}</Badge>
-          <div className="flex items-center gap-2">
+    <div className="h-full flex">
+      {/* Main Screen Share Area */}
+      <div className="flex-1 p-4">
+        {screenState !== "sharing" ? (
+          <div className="h-full flex items-center justify-center">
+            <Card className="w-full max-w-2xl">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl text-slate-900 mb-2">Start Screen Sharing</CardTitle>
+                <p className="text-slate-600">Share your screen with AI-powered analysis</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  variant="outline"
+                  className="w-full h-auto p-6 flex items-start gap-4 hover:bg-emerald-50 hover:border-emerald-200 bg-transparent"
+                  onClick={startScreenShare}
+                  disabled={screenState === "initializing"}
+                >
+                  <Monitor className="w-8 h-8 text-emerald-600 mt-1" />
+                  <div className="text-left">
+                    <h3 className="font-semibold text-slate-900 mb-1">
+                      {screenState === "initializing" ? "Initializing..." : "Share Screen"}
+                    </h3>
+                    <p className="text-sm text-slate-600">
+                      {screenState === "initializing" 
+                        ? "Setting up screen sharing..." 
+                        : "Start sharing your screen for real-time analysis"}
+                    </p>
+                  </div>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="h-full bg-slate-900 rounded-lg overflow-hidden relative">
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-contain" />
+            <canvas ref={canvasRef} className="hidden" />
+            
+            {/* Status Badge */}
+            <div className="absolute top-4 left-4">
+              <Badge variant={screenState === "sharing" ? "default" : "destructive"} className="bg-red-600">
+                <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
+                {screenState === "sharing" ? "Live" : screenState}
+              </Badge>
+            </div>
+
+            {/* Analysis Button */}
+            {screenState === 'sharing' && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                <div className="flex items-center gap-3 bg-black/50 backdrop-blur-sm rounded-full px-4 py-2">
+                  <Button
+                    onClick={captureScreenshot}
+                    disabled={isAnalyzing}
+                    variant="secondary"
+                    size="sm"
+                    className="rounded-full"
+                  >
+                    {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={cleanup}
+                    className="rounded-full"
+                  >
+                    Stop Sharing
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Sidebar */}
+      <div className="w-80 bg-white border-l border-slate-200 p-4 space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Brain className="w-5 h-5 text-emerald-600" />
+              AI Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2">
               <Switch 
                 checked={isAutoAnalyzing} 
                 onCheckedChange={setIsAutoAnalyzing} 
                 disabled={screenState !== "sharing"} 
               />
-              <span className="text-xs">Auto Analysis</span>
-          </div>
-      </div>
-      <div className={cn('relative', mode === 'canvas' && 'flex-1 min-h-0')}>
-        <video ref={videoRef} autoPlay playsInline muted className={cn('w-full rounded-xl border border-border/20 bg-black shadow-md', mode === 'canvas' && 'h-full object-contain')} />
-        <canvas ref={canvasRef} className="hidden" />
-        {screenState === 'sharing' ? (
-          <Button 
-            onClick={captureScreenshot} 
-            disabled={isAnalyzing} 
-            className="absolute bottom-4 right-4 w-12 h-12 rounded-full"
-          >
-            {isAnalyzing ? <Loader2 className="w-6 h-6 animate-spin" /> : <Brain className="w-6 h-6" />}
-          </Button>
-        ) : (
-          <Button onClick={startScreenShare} className="absolute bottom-4 right-4">
-            Start Sharing
-          </Button>
-        )}
-      </div>
-      {analysisHistory.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-sm">Analysis History</CardTitle></CardHeader>
-          <CardContent className="space-y-2 max-h-40 overflow-y-auto">
-            {analysisHistory.map((a) => (
-              <p key={a.id} className="text-sm border-b pb-1">{a.text}</p>
-            ))}
+              <span className="text-sm">Auto Analysis (15s intervals)</span>
+            </div>
+            {isAnalyzing && (
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Analyzing screen content...
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+
+        {screenState === "sharing" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Session Controls</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button
+                onClick={captureScreenshot}
+                disabled={isAnalyzing}
+                className="w-full"
+                variant="outline"
+              >
+                {isAnalyzing ? "Analyzing..." : "Analyze Now"}
+              </Button>
+              <Button 
+                variant="destructive" 
+                className="w-full" 
+                onClick={cleanup}
+              >
+                Stop Sharing
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {analysisHistory.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Analysis History</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 max-h-60 overflow-y-auto">
+              {analysisHistory.map((analysis) => (
+                <div key={analysis.id} className="p-3 bg-slate-50 rounded-lg">
+                  <p className="text-sm text-slate-700">{analysis.text}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {new Date(analysis.timestamp).toLocaleTimeString()}
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button variant="ghost" size="sm" className="w-full justify-start">
+              Open Canvas
+            </Button>
+            <Button variant="ghost" size="sm" className="w-full justify-start">
+              Start Video Call
+            </Button>
+            <Button variant="ghost" size="sm" className="w-full justify-start">
+              Launch Workshop
+            </Button>
+          </CardContent>
+        </Card>
+
+        {error && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="pt-4">
+              <p className="text-red-600 text-sm">{error}</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   )
 

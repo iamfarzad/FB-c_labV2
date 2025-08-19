@@ -323,6 +323,8 @@ export const createOptimizedConfig = (
   const personaFun = (process.env.PERSONALITY || process.env.PERSONA || '').toLowerCase() === 'farzad' || process.env.PERSONA_FUN === 'true'
   const limits = { ...customLimits }
   const leadAggressive = (process.env.LEAD_MODE || '').toLowerCase() === 'aggressive'
+  const hardCap = Number(process.env.GEMINI_MAX_OUTPUT_TOKENS || process.env.NEXT_PUBLIC_GEMINI_MAX_OUTPUT_TOKENS || '')
+  const cap = Number.isFinite(hardCap) && hardCap > 0 ? Math.max(64, Math.min(4096, hardCap)) : undefined
   if (personaFun && !leadAggressive) {
     // Slightly increase temperature for a more human, lively tone, but keep within 0.95
     const baseTemp = limits.temperature ?? 0.7
@@ -333,6 +335,11 @@ export const createOptimizedConfig = (
     const baseTemp = limits.temperature ?? 0.7
     limits.temperature = Math.max(0.5, Math.min(baseTemp, 0.65))
     limits.maxOutputTokens = Math.min(1024, limits.maxOutputTokens ?? 1024)
+  }
+  if (cap) {
+    // Enforce global cap as a floor across features
+    if (!limits.maxOutputTokens) limits.maxOutputTokens = cap
+    else limits.maxOutputTokens = Math.min(limits.maxOutputTokens, cap)
   }
   return geminiConfig.createGenerationConfig(feature, limits);
 };

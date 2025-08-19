@@ -1,0 +1,196 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* F.B/c AI Design System - Brand Color Palette */
+:root {
+  /* Brand Colors */
+  --color-orange-accent: #ff5b04;
+  --color-orange-accent-hover: #e65200;
+  --color-gunmetal: #1a1a1a;
+  --color-gunmetal-lighter: #2a2a2a;
+  --color-light-silver: #f5f5f5;
+  --color-light-silver-darker: #e0e0e0;
+
+  /* Font Stack */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+
+  /* Border Radius */
+  --border-radius-minimal: 4px;
+  --border-radius-medium: 8px;
+
+  /* Shadows */
+  --shadow-minimal: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.15);
+
+  /* Glassmorphism */
+  --glass-bg: rgba(245, 245, 245, 0.8);
+  --glass-border: rgba(224, 224, 224, 0.3);
+  --glass-bg-dark: rgba(42, 42, 42, 0.8);
+  --glass-border-dark: rgba(74, 74, 74, 0.3);
+
+  /* Semantic Color Mapping */
+  --background: var(--color-light-silver);
+  --foreground: var(--color-gunmetal);
+  --card: var(--color-light-silver);
+  --card-foreground: var(--color-gunmetal);
+  --popover: var(--color-light-silver);
+  --popover-foreground: var(--color-gunmetal);
+  --primary: var(--color-orange-accent);
+  --primary-foreground: white;
+  --secondary: var(--color-light-silver-darker);
+  --secondary-foreground: var(--color-gunmetal);
+  --muted: var(--color-light-silver-darker);
+  --muted-foreground: #666666;
+  --accent: var(--color-orange-accent);
+  --accent-foreground: white;
+  --destructive: #dc2626;
+  --destructive-foreground: white;
+  --border: var(--color-light-silver-darker);
+  --input: var(--color-light-silver);
+  --ring: var(--color-orange-accent);
+  --radius: var(--border-radius-medium);
+
+  /* Sidebar */
+  --sidebar: var(--color-light-silver);
+  --sidebar-foreground: var(--color-gunmetal);
+  --sidebar-primary: var(--color-orange-accent);
+  --sidebar-primary-foreground: white;
+  --sidebar-accent: var(--color-light-silver-darker);
+  --sidebar-accent-foreground: var(--color-gunmetal);
+  --sidebar-border: var(--color-light-silver-darker);
+  --sidebar-ring: var(--color-orange-accent);
+}
+
+.dark {
+  --background: var(--color-gunmetal);
+  --foreground: var(--color-light-silver);
+  --card: var(--color-gunmetal-lighter);
+  --card-foreground: var(--color-light-silver);
+  --popover: var(--color-gunmetal-lighter);
+  --popover-foreground: var(--color-light-silver);
+  --primary: var(--color-orange-accent);
+  --primary-foreground: white;
+  --secondary: var(--color-gunmetal-lighter);
+  --secondary-foreground: var(--color-light-silver);
+  --muted: var(--color-gunmetal-lighter);
+  --muted-foreground: #999999;
+  --accent: var(--color-orange-accent);
+  --accent-foreground: white;
+  --border: var(--color-gunmetal-lighter);
+  --input: var(--color-gunmetal-lighter);
+  --ring: var(--color-orange-accent);
+
+  --glass-bg: var(--glass-bg-dark);
+  --glass-border: var(--glass-border-dark);
+
+  --sidebar: var(--color-gunmetal);
+  --sidebar-foreground: var(--color-light-silver);
+  --sidebar-primary: var(--color-orange-accent);
+  --sidebar-primary-foreground: white;
+  --sidebar-accent: var(--color-gunmetal-lighter);
+  --sidebar-accent-foreground: var(--color-light-silver);
+  --sidebar-border: var(--color-gunmetal-lighter);
+  --sidebar-ring: var(--color-orange-accent);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 8px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* F.B/c AI Custom Properties */
+  --color-orange-accent: #ff5b04;
+  --color-orange-accent-hover: #e65200;
+  --color-gunmetal: #1a1a1a;
+  --color-gunmetal-lighter: #2a2a2a;
+  --color-light-silver: #f5f5f5;
+  --color-light-silver-darker: #e0e0e0;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  --border-radius-minimal: 4px;
+  --border-radius-medium: 8px;
+  --shadow-minimal: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --glass-bg: rgba(245, 245, 245, 0.8);
+  --glass-border: rgba(224, 224, 224, 0.3);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+}
+
+/* F.B/c AI Component Classes */
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 
+           focus:ring-2 focus:ring-primary focus:ring-offset-2
+           px-4 py-2 rounded-md font-medium transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80
+           focus:ring-2 focus:ring-primary focus:ring-offset-2
+           px-4 py-2 rounded-md font-medium transition-colors;
+  }
+
+  .card-minimal {
+    @apply bg-card text-card-foreground rounded-md border border-border shadow-sm;
+  }
+
+  .card-glass {
+    @apply backdrop-blur-sm border rounded-md shadow-lg;
+    background: var(--glass-bg);
+    border-color: var(--glass-border);
+  }
+
+  .chat-bubble-user {
+    @apply bg-primary text-primary-foreground rounded-md px-4 py-2 max-w-xs ml-auto;
+  }
+
+  .chat-bubble-assistant {
+    @apply bg-secondary text-secondary-foreground rounded-md px-4 py-2 max-w-xs mr-auto;
+  }
+
+  .input-minimal {
+    @apply backdrop-blur-sm border rounded px-3 py-2 text-foreground
+           focus:ring-2 focus:ring-primary focus:border-transparent
+           placeholder:text-muted-foreground transition-all;
+    background: var(--glass-bg);
+    border-color: var(--glass-border);
+  }
+}
