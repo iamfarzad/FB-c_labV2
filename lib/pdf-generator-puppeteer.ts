@@ -33,37 +33,39 @@ export async function generatePdfWithPuppeteer(
 ): Promise<void> {
   const preferChrome = process.env.PDF_USE_PUPPETEER === 'true'
   // Prefer Chrome only if explicitly enabled; otherwise use pure JS pdf-lib
-  if (preferChrome) try {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
+  if (preferChrome) {
     try {
-      const page = await browser.newPage();
-      const htmlContent = generateHtmlContent(summaryData);
-      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-      await page.pdf({
-        path: outputPath,
-        format: 'A4',
-        margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
-        printBackground: true,
+      const browser = await puppeteer.launch({
+        headless: 'new' as any,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
       });
+      try {
+        const page = await browser.newPage();
+        const htmlContent = generateHtmlContent(summaryData);
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+        await page.pdf({
+          path: outputPath,
+          format: 'A4',
+          margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
+          printBackground: true,
+        });
+        return
+      } finally {
+        await browser.close();
+      }
+    } catch (err) {
+      console.error('Puppeteer failed, falling back to pdf-lib:', (err as any)?.message || err)
+      await generatePdfWithPdfLib(summaryData, outputPath)
       return
-    } finally {
-      await browser.close();
     }
-  } catch (err) {
-    console.error('Puppeteer not available, falling back to pdf-lib:', (err as any)?.message || err)
-    await generatePdfWithPdfLib(summaryData, outputPath)
   }
-  else {
-    await generatePdfWithPdfLib(summaryData, outputPath)
-  }
+  // default path
+  await generatePdfWithPdfLib(summaryData, outputPath)
 }
 
 async function generatePdfWithPdfLib(summaryData: SummaryData, outputPath: string): Promise<void> {
   const pdfDoc = await PDFDocument.create()
-  const page = pdfDoc.addPage([595.28, 841.89]) // A4 in points
+  let currentPage = pdfDoc.addPage([595.28, 841.89]) // A4 in points
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
 
@@ -71,11 +73,19 @@ async function generatePdfWithPdfLib(summaryData: SummaryData, outputPath: strin
   const marginX = 40
   const lineHeight = 14
 
+  const ensurePage = () => {
+    if (y < 80) {
+      currentPage = pdfDoc.addPage([595.28, 841.89])
+      y = 800
+    }
+  }
+
   const drawText = (text: string, opts?: { size?: number; color?: any; bold?: boolean }) => {
     const size = opts?.size ?? 11
     const color = opts?.color ?? rgb(0.1, 0.1, 0.1)
-    page.drawText(text, { x: marginX, y, size, color, font: opts?.bold ? fontBold : font })
+    currentPage.drawText(text, { x: marginX, y, size, color, font: opts?.bold ? fontBold : font })
     y -= lineHeight * 1.2
+    ensurePage()
   }
 
   // Header
@@ -108,8 +118,8 @@ async function generatePdfWithPdfLib(summaryData: SummaryData, outputPath: strin
 
   // Footer
   y = Math.max(y, 60)
-  page.drawText('Farzad Bayat — AI Consulting Specialist', { x: marginX, y: 50, size: 10, color: rgb(0.42, 0.45, 0.5), font })
-  page.drawText('www.farzadbayat.com', { x: marginX, y: 36, size: 10, color: rgb(0.98, 0.75, 0.14), font })
+  currentPage.drawText('Farzad Bayat — AI Consulting Specialist', { x: marginX, y: 50, size: 10, color: rgb(0.42, 0.45, 0.5), font })
+  currentPage.drawText('www.farzadbayat.com', { x: marginX, y: 36, size: 10, color: rgb(0.98, 0.75, 0.14), font })
 
   const pdfBytes = await pdfDoc.save()
   await fs.promises.writeFile(outputPath, pdfBytes)
@@ -122,21 +132,18 @@ async function generatePdfWithPdfLib(summaryData: SummaryData, outputPath: strin
       const test = line ? line + ' ' + word : word
       const width = (font.widthOfTextAtSize(test, size))
       if (width > maxWidth) {
-        page.drawText(line, { x: marginX, y, size, font, color: rgb(0.28, 0.32, 0.35) })
+        currentPage.drawText(line, { x: marginX, y, size, font, color: rgb(0.28, 0.32, 0.35) })
         y -= lineHeight
+        ensurePage()
         line = word
-        if (y < 80) { // add new page
-          y = 800
-          const newPage = pdfDoc.addPage([595.28, 841.89])
-          page.drawText = newPage.drawText.bind(newPage)
-        }
       } else {
         line = test
       }
     }
     if (line) {
-      page.drawText(line, { x: marginX, y, size, font, color: rgb(0.28, 0.32, 0.35) })
+      currentPage.drawText(line, { x: marginX, y, size, font, color: rgb(0.28, 0.32, 0.35) })
       y -= lineHeight
+      ensurePage()
     }
   }
 }
@@ -144,17 +151,45 @@ async function generatePdfWithPdfLib(summaryData: SummaryData, outputPath: strin
 /**
  * Generates HTML content for the PDF with modern design
  */
+function buildDefaultOrbLogoDataUri(): string {
+  try {
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="36" height="36" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0b1220" stop-opacity="0.10"/>
+      <stop offset="70%" stop-color="#0b1220" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#0b1220" stop-opacity="0.50"/>
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="50" cy="50" r="40" fill="url(#g)"/>
+  <path d="M 25 21 A 45 45 0 0 1 75 21" fill="none" stroke="#f97316" stroke-width="3" stroke-linecap="round" filter="url(#glow)"/>
+  <circle cx="50" cy="50" r="5" fill="#f97316" filter="url(#glow)"/>
+</svg>`
+    const base64 = (globalThis as any).Buffer
+      ? (globalThis as any).Buffer.from(svg).toString('base64')
+      : btoa(unescape(encodeURIComponent(svg)))
+    return `data:image/svg+xml;base64,${base64}`
+  } catch {
+    return ''
+  }
+}
+
 function generateHtmlContent(data: SummaryData): string {
   const { leadInfo, conversationHistory, leadResearch } = data;
-  // Embed brand logo as data URI if available
-  let logoDataUri = ''
-  try {
-    const logoPath = path.resolve(process.cwd(), 'public/pdf_watermark_logo/fb_bold_3dlogo_base64.svg')
-    const svg = fs.readFileSync(logoPath)
-    const base64 = Buffer.from(svg).toString('base64')
-    logoDataUri = `data:image/svg+xml;base64,${base64}`
-  } catch {}
+  // Embed brand logo as data URI if available via env; avoid fs/path for serverless safety
+  const logoDataUri = process.env.NEXT_PUBLIC_PDF_LOGO_DATA_URI || buildDefaultOrbLogoDataUri()
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.farzadbayat.com'
+  const esc = (s: any) => String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
   
   return `
 <!DOCTYPE html>
@@ -164,8 +199,6 @@ function generateHtmlContent(data: SummaryData): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>F.B/c AI Consulting - ${leadInfo.name} Report</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
     * {
       margin: 0;
       padding: 0;
@@ -173,7 +206,7 @@ function generateHtmlContent(data: SummaryData): string {
     }
     
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, Arial, sans-serif;
       color: #1f2937;
       line-height: 1.6;
       font-size: 10pt;
@@ -213,15 +246,30 @@ function generateHtmlContent(data: SummaryData): string {
       50% { transform: scale(1.1); opacity: 0.3; }
     }
     
-    header h1 {
-      font-size: 32pt;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
       position: relative;
       z-index: 1;
+      margin-bottom: 8px;
     }
-    
+
+    .brand .logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .brand .title {
+      font-size: 28pt;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
     header .subtitle {
       font-size: 14pt;
       font-weight: 400;
@@ -230,7 +278,7 @@ function generateHtmlContent(data: SummaryData): string {
       z-index: 1;
     }
     
-    header .logo { position: absolute; top: 16px; right: 16px; opacity: 0.18; width: 120px; height: auto; }
+    /* legacy corner logo removed in favor of inline brand */
     
     /* Content Sections */
     .content {
@@ -506,9 +554,11 @@ function generateHtmlContent(data: SummaryData): string {
   
   <div class="container">
     <header>
-      <h1>F.B/c AI Consulting</h1>
+      <div class="brand">
+        ${logoDataUri ? `<img class="logo" src="${logoDataUri}" alt="F.B/c"/>` : ''}
+        <div class="title">F.B/c AI Consulting</div>
+      </div>
       <p class="subtitle">AI-Powered Lead Generation & Consulting Report</p>
-      ${logoDataUri ? `<img class="logo" src="${logoDataUri}" alt="F.B/c"/>` : ''}
     </header>
     
     <div class="content">
@@ -517,25 +567,25 @@ function generateHtmlContent(data: SummaryData): string {
         <div class="info-grid">
           <div class="info-card">
             <strong>Name</strong>
-            <span>${leadInfo.name}</span>
+            <span>${esc(leadInfo.name)}</span>
           </div>
           <div class="info-card">
             <strong>Email</strong>
-            <span>${leadInfo.email}</span>
+            <span>${esc(leadInfo.email)}</span>
           </div>
           ${leadInfo.company ? `
           <div class="info-card">
             <strong>Company</strong>
-            <span>${leadInfo.company}</span>
+            <span>${esc(leadInfo.company)}</span>
           </div>` : ''}
           ${leadInfo.role ? `
           <div class="info-card">
             <strong>Role</strong>
-            <span>${leadInfo.role}</span>
+            <span>${esc(leadInfo.role)}</span>
           </div>` : ''}
           <div class="info-card">
             <strong>Session ID</strong>
-            <span>${data.sessionId}</span>
+            <span>${esc(data.sessionId)}</span>
           </div>
           <div class="info-card">
             <strong>Report Date</strong>
@@ -566,7 +616,7 @@ function generateHtmlContent(data: SummaryData): string {
       <div class="section">
         <h2>Executive Summary</h2>
         <div class="summary-text">
-          ${leadResearch.conversation_summary}
+          ${esc(leadResearch.conversation_summary)}
         </div>
       </div>
       ` : ''}
@@ -574,7 +624,7 @@ function generateHtmlContent(data: SummaryData): string {
       ${leadResearch?.consultant_brief ? `
       <div class="section">
         <h2>Consultant Brief</h2>
-        <p style="line-height: 1.8; color: #475569;">${leadResearch.consultant_brief}</p>
+        <p style="line-height: 1.8; color: #475569;">${esc(leadResearch.consultant_brief)}</p>
       </div>
       ` : ''}
 
@@ -595,7 +645,7 @@ function generateHtmlContent(data: SummaryData): string {
               ${message.role === 'user' ? '👤 Lead' : '🤖 F.B/c AI'} • ${new Date(message.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
             </div>
             <div class="conversation-content">
-              ${message.content.substring(0, 150)}${message.content.length > 150 ? '...' : ''}
+              ${esc(message.content).substring(0, 150)}${(message.content || '').length > 150 ? '...' : ''}
             </div>
           </div>
           `).join('')}
@@ -629,17 +679,19 @@ function generateHtmlContent(data: SummaryData): string {
       <div class="section page-break">
         <h2>Next Steps</h2>
         <div style="display:flex; gap:16px; align-items:center; margin:16px 0;">
-          <a href="${appUrl}/workshop" style="background:#f59e0b;color:#111827;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">Book Workshop</a>
-          <a href="${appUrl}/meetings/book" style="background:#111827;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">Schedule Consulting Call</a>
+          <a href="${appUrl}/meetings/book" style="background:#111827;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">Book 30‑min Discovery Call</a>
+          <a href="${appUrl}/workshop" style="background:#f59e0b;color:#111827;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">View Workshop</a>
         </div>
-        <p style="color:#475569">We recommend a 30–45 min discovery to confirm scope, quantify ROI, and agree on the first milestone.</p>
+        <p style="color:#475569">Recommended: a focused 30‑minute discovery to confirm scope, quantify ROI, and agree the first milestone.</p>
       </div>
     </div>
     
     <footer>
       <p>
-        <strong>Farzad Bayat</strong> - AI Consulting Specialist<br>
-        📧 bayatfarzad@gmail.com | 📱 +47 123 456 78 | 🌐 <a href="https://www.farzadbayat.com">www.farzadbayat.com</a>
+        <strong>Farzad Bayat</strong> — AI Consulting Specialist<br>
+        📧 <a href="mailto:contact@farzadbayat.com" style="color:#fbbf24;text-decoration:none;">contact@farzadbayat.com</a>
+        &nbsp;|&nbsp; 📱 <a href="tel:+4794446446" style="color:#fbbf24;text-decoration:none;">+47&nbsp;944&nbsp;46&nbsp;446</a>
+        &nbsp;|&nbsp; 🌐 <a href="https://www.farzadbayat.com">www.farzadbayat.com</a>
       </p>
     </footer>
   </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { FileText, PhoneCall, Mail, MoreHorizontal } from 'lucide-react'
+import { useToast } from '@/components/ui/use-toast'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,6 +23,7 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun, mode = 's
   const [isLoading, setIsLoading] = useState(false)
   const [finishOpen, setFinishOpen] = useState(false)
   const [finishEmail, setFinishEmail] = useState('contact@farzadbayat.com')
+  const { toast } = useToast()
 
   const [refreshTick, setRefreshTick] = useState(0)
 
@@ -87,25 +89,51 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun, mode = 's
       <div className="mt-2 w-full">
         {/* Desktop/Tablet: full buttons */}
         <div className="hidden sm:flex items-center justify-end gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className={outlineCtaClasses + ' rounded-full h-8 px-3'}
-            onClick={async () => {
-              try {
-                const res = await fetch('/api/export-summary', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ sessionId })
-                })
-                if (!res.ok) throw new Error(String(res.status))
-              } catch (e) {
-                console.error('Export summary failed', e)
-              }
-            }}
-          >
-            <FileText className="mr-2 h-3.5 w-3.5" /> Generate PDF
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                className="rounded-full h-8 px-3 bg-[var(--color-orange-accent)] hover:bg-[var(--color-orange-accent-hover)] text-white"
+              >
+                <FileText className="mr-2 h-3.5 w-3.5" /> Share Summary
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/export-summary', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ sessionId })
+                    })
+                    if (!res.ok) throw new Error(String(res.status))
+                    const blob = await res.blob()
+                    const url = window.URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    const cd = res.headers.get('Content-Disposition') || ''
+                    const match = cd.match(/filename="?([^";]+)"?/i)
+                    a.href = url
+                    a.download = match?.[1] || 'FB-c_Summary.pdf'
+                    document.body.appendChild(a)
+                    a.click()
+                    a.remove()
+                    window.URL.revokeObjectURL(url)
+                    toast({ title: 'PDF ready', description: 'Summary downloaded.' })
+                  } catch (e) {
+                    console.error('Export summary failed', e)
+                    toast({ title: 'PDF failed', description: 'Could not generate the PDF.', variant: 'destructive' })
+                  }
+                }}
+                className="gap-2"
+              >
+                <FileText className="h-4 w-4" /> Download PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFinishOpen(true)} className="gap-2">
+                <Mail className="h-4 w-4" /> Send via Email
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <BookCallButton
             size="sm"
             variant="outline"
@@ -113,13 +141,6 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun, mode = 's
           >
             <PhoneCall className="mr-2 h-3.5 w-3.5" /> Book a Call
           </BookCallButton>
-          <Button
-            size="sm"
-            className="rounded-full h-8 px-3 bg-[var(--color-orange-accent)] hover:bg-[var(--color-orange-accent-hover)] text-white"
-            onClick={() => setFinishOpen(true)}
-          >
-            <Mail className="mr-2 h-3.5 w-3.5" /> Finish & Email
-          </Button>
         </div>
 
         {/* Mobile: condensed menu */}
@@ -141,6 +162,17 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun, mode = 's
                       body: JSON.stringify({ sessionId })
                     })
                     if (!res.ok) throw new Error(String(res.status))
+                    const blob = await res.blob()
+                    const url = window.URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    const cd = res.headers.get('Content-Disposition') || ''
+                    const match = cd.match(/filename="?([^";]+)"?/i)
+                    a.href = url
+                    a.download = match?.[1] || 'FB-c_Summary.pdf'
+                    document.body.appendChild(a)
+                    a.click()
+                    a.remove()
+                    window.URL.revokeObjectURL(url)
                   } catch (e) {
                     console.error('Export summary failed', e)
                   }
@@ -186,8 +218,10 @@ export function SuggestedActions({ sessionId, stage = 'INTENT', onRun, mode = 's
                   })
                   if (!res.ok) throw new Error(`send failed: ${res.status}`)
                   setFinishOpen(false)
+                  toast({ title: 'Email sent', description: 'Summary was emailed to the recipient.' })
                 } catch (e) {
                   console.error('Email error:', e)
+                  toast({ title: 'Email failed', description: 'Could not send the email.', variant: 'destructive' })
                 }
               }}
               className="space-y-3"

@@ -16,6 +16,7 @@ export interface ToolMenuProps {
   onVideoToApp?: () => void
   disabled?: boolean
   className?: string
+  comingSoon?: Array<'document' | 'image' | 'webcam' | 'screen' | 'video'>
 }
 
 export function ToolMenu({
@@ -27,6 +28,7 @@ export function ToolMenu({
   onVideoToApp,
   disabled,
   className,
+  comingSoon = [],
 }: ToolMenuProps) {
   const contentId = React.useId()
   const menuId = `tool-menu-${contentId.replace(/[:]/g, '-')}`
@@ -57,23 +59,39 @@ export function ToolMenu({
       </Tooltip>
       <DropdownMenuContent id={menuId} align="start" className="w-56" aria-label="Tools menu">
         {onUploadDocument && (
-          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onUploadDocument}>
-            <FileText className="w-4 h-4" /> Upload document
+          <DropdownMenuItem
+            className="gap-3 cursor-pointer"
+            onClick={comingSoon.includes('document') ? undefined : onUploadDocument}
+            disabled={comingSoon.includes('document')}
+          >
+            <FileText className="w-4 h-4" /> Upload document{comingSoon.includes('document') ? ' (coming soon)' : ''}
           </DropdownMenuItem>
         )}
         {onUploadImage && (
-          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onUploadImage}>
-            <ImageIcon className="w-4 h-4" /> Upload image
+          <DropdownMenuItem
+            className="gap-3 cursor-pointer"
+            onClick={comingSoon.includes('image') ? undefined : onUploadImage}
+            disabled={comingSoon.includes('image')}
+          >
+            <ImageIcon className="w-4 h-4" /> Upload image{comingSoon.includes('image') ? ' (coming soon)' : ''}
           </DropdownMenuItem>
         )}
         {onWebcam && (
-          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onWebcam}>
-            <Camera className="w-4 h-4" /> Webcam capture
+          <DropdownMenuItem
+            className="gap-3 cursor-pointer"
+            onClick={comingSoon.includes('webcam') ? undefined : onWebcam}
+            disabled={comingSoon.includes('webcam')}
+          >
+            <Camera className="w-4 h-4" /> Webcam capture{comingSoon.includes('webcam') ? ' (coming soon)' : ''}
           </DropdownMenuItem>
         )}
         {onScreenShare && (
-          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onScreenShare}>
-            <Monitor className="w-4 h-4" /> Screen share
+          <DropdownMenuItem
+            className="gap-3 cursor-pointer"
+            onClick={comingSoon.includes('screen') ? undefined : onScreenShare}
+            disabled={comingSoon.includes('screen')}
+          >
+            <Monitor className="w-4 h-4" /> Screen share{comingSoon.includes('screen') ? ' (coming soon)' : ''}
           </DropdownMenuItem>
         )}
         {onROI && (
@@ -82,8 +100,12 @@ export function ToolMenu({
           </DropdownMenuItem>
         )}
         {onVideoToApp && (
-          <DropdownMenuItem className="gap-3 cursor-pointer" onClick={onVideoToApp}>
-            <Video className="w-4 h-4" /> Video → App
+          <DropdownMenuItem
+            className="gap-3 cursor-pointer"
+            onClick={comingSoon.includes('video') ? undefined : onVideoToApp}
+            disabled={comingSoon.includes('video')}
+          >
+            <Video className="w-4 h-4" /> Video → App{comingSoon.includes('video') ? ' (coming soon)' : ''}
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

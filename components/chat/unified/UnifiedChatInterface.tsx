@@ -31,6 +31,7 @@ import {
 } from '@/components/ai-elements/prompt-input'
 import { ToolMenu } from '@/components/chat/ToolMenu'
 import { ROICalculator } from '@/components/chat/tools/ROICalculator'
+import type { ChatMessage } from '@/types/chat'
 import { ToolCardWrapper } from '@/components/chat/ToolCardWrapper'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -579,6 +580,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                   onScreenShare={() => onToolAction?.('screen')}
                   onROI={() => { onToolAction?.('roi') }}
                   onVideoToApp={() => onToolAction?.('video')}
+                  comingSoon={['webcam','screen','video']}
                 />
                 <Badge className="ml-2 text-[11px] bg-accent/10 text-accent border-accent/20">
                   Context Aware
@@ -621,7 +623,20 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
           </PromptInput>
           </div>
         </div>
-        {/* ROI modal removed in favor of inline result card */}
+        {/* ROI inline tool host (invisible). Kept for future card-mode hosting if needed */}
+        {false && (
+          <ROICalculator 
+            mode="card"
+            onComplete={() => undefined}
+            onEmitMessage={(msg: ChatMessage) => onAssistantInject?.({
+              id: `msg-${Date.now()}-tool`,
+              role: msg.role as any,
+              type: (msg as any).type === 'roi.result' ? 'tool' : 'default',
+              content: 'Tool result',
+              metadata: { tools: [{ type: 'roiResult', data: (msg as any).payload }] }
+            })}
+          />
+        )}
       </div>
     </TooltipProvider>
   )
