@@ -592,27 +592,7 @@ export default function ChatPage() {
             </div>
           )}
 
-          {/* Stage Progress Indicator */}
-          <MobileStageProgress 
-            stages={stages.map((s, i) => ({
-              ...s,
-              current: i === stageProgress - 1,
-              done: i < stageProgress - 1
-            }))}
-            className="border-b border-border/40"
-          />
 
-          {/* AI Activity Indicator */}
-          {isLoading && (
-            <div className="absolute top-20 left-4 z-40">
-              <AIThinkingIndicator
-                context={aiActivity as any}
-                stage={`Stage ${stageProgress}/7`}
-                progress={Math.round((stageProgress / 7) * 100)}
-                className="bg-background/95 backdrop-blur border border-border/40 shadow-lg"
-              />
-            </div>
-          )}
 
           {/* Main Chat Interface */}
           <ErrorBoundary fallback={(e, reset) => (
@@ -636,23 +616,17 @@ export default function ChatPage() {
               onClearMessages={handleClearMessages}
               onToolAction={handleToolAction}
               className={!consentAllowed ? "pointer-events-none opacity-50" : ""}
-              stickyHeaderSlot={
-                <div className="flex items-center justify-between p-2 border-b border-border/40 bg-background/95 backdrop-blur">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">Stage {stageProgress}/7</span>
-                    <span className="text-xs text-muted-foreground">{stages[stageProgress - 1]?.label}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <SuggestedActions 
-                      sessionId={sessionId} 
-                      stage={stage as any} 
-                      onRun={handleSuggestionRun}
-                      mode="static"
-                    />
-                  </div>
+              stickyHeaderSlot={undefined}
+              composerTopSlot={
+                <div className="flex items-center justify-end gap-2 w-full">
+                  <SuggestedActions 
+                    sessionId={sessionId} 
+                    stage={stage as any} 
+                    onRun={handleSuggestionRun}
+                    mode="static"
+                  />
                 </div>
               }
-              composerTopSlot={undefined}
             />
           </ErrorBoundary>
 
