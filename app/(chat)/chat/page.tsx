@@ -17,6 +17,9 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import ErrorBoundary from "@/components/common/ErrorBoundary"
+// Add missing AI activity components
+import { AIThinkingIndicator } from "@/components/chat/AIThinkingIndicator"
+import { MobileStageProgress } from "@/components/collab/MobileStageProgress"
 
 // Finish & Email Button Component
 function FinishAndEmailButton({ sessionId }: { sessionId: string | null }) {
@@ -112,6 +115,21 @@ export default function ChatPage() {
   const [input, setInput] = useState("")
   const [stage, setStage] = useState<string>('GREETING')
   const [lead, setLead] = useState<{ name?: string; email?: string; company?: string } | undefined>()
+  
+  // AI Activity State
+  const [aiActivity, setAiActivity] = useState<string>('default')
+  const [stageProgress, setStageProgress] = useState(1)
+  
+  // Stage progression configuration
+  const stages = [
+    { id: 'GREETING', label: 'Initial Greeting', done: false, current: true },
+    { id: 'CONTEXT', label: 'Context Gathering', done: false, current: false },
+    { id: 'ANALYSIS', label: 'Problem Analysis', done: false, current: false },
+    { id: 'SOLUTION', label: 'Solution Design', done: false, current: false },
+    { id: 'ROI', label: 'ROI Calculation', done: false, current: false },
+    { id: 'IMPLEMENTATION', label: 'Implementation Plan', done: false, current: false },
+    { id: 'FOLLOWUP', label: 'Follow-up Setup', done: false, current: false }
+  ]
   
   // Consent Management
   const [consentChecked, setConsentChecked] = useState(false)
@@ -333,7 +351,15 @@ export default function ChatPage() {
               
               // Update stage if provided
               if (data.conversationStage) {
-                setStage(data.conversationStage as string)
+                const newStage = data.conversationStage as string
+                setStage(newStage)
+                
+                // Update stage progress
+                const stageIndex = stages.findIndex(s => s.id === newStage)
+                if (stageIndex !== -1) {
+                  setStageProgress(stageIndex + 1)
+                  setAiActivity('default') // Reset AI activity when stage changes
+                }
               }
               
               // Update lead data if provided
@@ -346,6 +372,22 @@ export default function ChatPage() {
                 console.log('🎯 Intelligence suggestions received:', data.suggestions)
                 // Trigger suggestions refresh
                 window.dispatchEvent(new CustomEvent('chat-capability-used'))
+              }
+              
+              // Detect AI activity based on content
+              if (data.content) {
+                const content = data.content.toLowerCase()
+                if (content.includes('researching') || content.includes('searching')) {
+                  setAiActivity('searching_web')
+                } else if (content.includes('calculating') || content.includes('roi')) {
+                  setAiActivity('calculating_roi')
+                } else if (content.includes('analyzing') || content.includes('document')) {
+                  setAiActivity('analyzing_document')
+                } else if (content.includes('generating') || content.includes('code')) {
+                  setAiActivity('generating_code')
+                } else {
+                  setAiActivity('default')
+                }
               }
               
               // Handle sources
@@ -550,6 +592,28 @@ export default function ChatPage() {
             </div>
           )}
 
+          {/* Stage Progress Indicator */}
+          <MobileStageProgress 
+            stages={stages.map((s, i) => ({
+              ...s,
+              current: i === stageProgress - 1,
+              done: i < stageProgress - 1
+            }))}
+            className="border-b border-border/40"
+          />
+
+          {/* AI Activity Indicator */}
+          {isLoading && (
+            <div className="absolute top-20 left-4 z-40">
+              <AIThinkingIndicator
+                context={aiActivity as any}
+                stage={`Stage ${stageProgress}/7`}
+                progress={Math.round((stageProgress / 7) * 100)}
+                className="bg-background/95 backdrop-blur border border-border/40 shadow-lg"
+              />
+            </div>
+          )}
+
           {/* Main Chat Interface */}
           <ErrorBoundary fallback={(e, reset) => (
             <div className="mx-auto max-w-3xl p-4">
@@ -572,17 +636,23 @@ export default function ChatPage() {
               onClearMessages={handleClearMessages}
               onToolAction={handleToolAction}
               className={!consentAllowed ? "pointer-events-none opacity-50" : ""}
-              stickyHeaderSlot={undefined}
-              composerTopSlot={
-                <div className="flex items-center justify-end gap-2 w-full">
-                  <SuggestedActions 
-                    sessionId={sessionId} 
-                    stage={stage as any} 
-                    onRun={handleSuggestionRun}
-                    mode="static"
-                  />
+              stickyHeaderSlot={
+                <div className="flex items-center justify-between p-2 border-b border-border/40 bg-background/95 backdrop-blur">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Stage {stageProgress}/7</span>
+                    <span className="text-xs text-muted-foreground">{stages[stageProgress - 1]?.label}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <SuggestedActions 
+                      sessionId={sessionId} 
+                      stage={stage as any} 
+                      onRun={handleSuggestionRun}
+                      mode="static"
+                    />
+                  </div>
                 </div>
               }
+              composerTopSlot={undefined}
             />
           </ErrorBoundary>
 
