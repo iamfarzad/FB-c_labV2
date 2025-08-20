@@ -79,8 +79,4 @@ export function checkDevelopmentConfig() {
       console.warn(`⚠️ Supabase environment variables missing for full test execution: ${missingVars.join(", ")}`)
     }
   }
-<<<<<<< Current (Your changes)
 }
-=======
-} 
->>>>>>> Incoming (Background Agent changes)
