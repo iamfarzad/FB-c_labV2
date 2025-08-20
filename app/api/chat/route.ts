@@ -6,8 +6,7 @@ import { getSupabase } from '@/lib/supabase/server';
 import type { NextRequest } from 'next/server';
 import { chatRequestSchema, validateRequest, sanitizeString } from '@/lib/validation';
 import { logServerActivity } from '@/lib/server-activity-logger';
-import { ConversationStateManager } from '@/lib/conversation-state-manager';
-import { LeadManager, ConversationStage } from '@/lib/lead-manager';
+// Legacy imports removed - using new Conversational Intelligence system
 import { checkDevelopmentConfig } from '@/lib/config';
 import { withFullSecurity } from '@/lib/api-security';
 import { ModelSelector } from '@/lib/model-selector';
@@ -247,19 +246,7 @@ async function processGoogleSearch(message: string, leadContext: any, correlatio
   }
 }
 
-function getStageInstructions(stage: ConversationStage): string {
-  const instructions = {
-    [ConversationStage.GREETING]: "Welcome the user warmly and ask for their name in a natural, conversational way.",
-    [ConversationStage.NAME_COLLECTION]: "Acknowledge their name and ask for their work email to provide personalized insights.",
-    [ConversationStage.EMAIL_CAPTURE]: "Thank them for the email and explain you'll research their company for context.",
-    [ConversationStage.BACKGROUND_RESEARCH]: "Share insights about their company and transition to understanding their challenges.",
-    [ConversationStage.PROBLEM_DISCOVERY]: "Ask specific questions about their pain points and business challenges.",
-    [ConversationStage.SOLUTION_PRESENTATION]: "Present tailored AI solutions based on their specific challenges.",
-    [ConversationStage.CALL_TO_ACTION]: "Offer next steps like scheduling a consultation or getting a custom proposal."
-  };
-  
-  return instructions[stage] || "Continue the conversation naturally.";
-}
+// Legacy stage instructions removed - using new intelligence system
 
 async function buildEnhancedSystemPrompt(leadContext: any, currentMessage: string, sessionId: string | null): Promise<string> {
   const basePrompt = `You are F.B/c AI — Farzad Bayat, Consulting. One person. Speak in first person.
@@ -316,66 +303,7 @@ Current Client Context:
 - Industry: ${leadContext.industry || 'Not specified'}
 - Email: ${leadContext.email || 'Not specified'}`
 
-    // Try to fetch grounded search results for this lead
-    try {
-      const { LeadManager } = await import('@/lib/lead-manager');
-      const leadManager = new LeadManager();
-      
-      // For demo sessions, try to find the lead by email without user authentication
-      let lead = null;
-      
-      if (sessionId) {
-        // In demo mode, try to find lead by email in the current session
-        try {
-          const { getSupabase } = await import('@/lib/supabase/server');
-          const supabase = getSupabase();
-          
-          // Query lead_summaries table directly for demo sessions
-          const { data: leads, error } = await supabase
-            .from('lead_summaries')
-            .select('*')
-            .eq('email', leadContext.email)
-            .order('created_at', { ascending: false })
-            .limit(1);
-          
-          if (!error && leads && leads.length > 0) {
-            lead = leads[0];
-            console.info('✅ Found lead in database:', { leadId: lead.id, email: lead.email });
-          } else {
-            console.info('❌ No lead found for email:', leadContext.email);
-          }
-        } catch (dbError) {
-          console.error('Failed to fetch lead from database:', dbError);
-        }
-      } else {
-        // For authenticated users, use the existing method
-        const leads = await leadManager.getUserLeads();
-        lead = leads.find(l => l.email === leadContext.email);
-      }
-      
-      if (lead) {
-        console.info('🔍 Fetching search results for lead:', lead.id);
-        const searchResults = await leadManager.getLeadSearchResults(lead.id);
-        
-        console.info('📊 Search results found:', searchResults?.length || 0);
-        
-        if (searchResults && searchResults.length > 0) {
-          enhancedContext += `
-
-Background Research (from online sources):
-${searchResults.map((result, index) => `
-${index + 1}. ${result.title || 'Untitled'}
-   Source: ${result.url}
-   Summary: ${result.snippet || 'No description available'}
-`).join('')}
-
-Use this background research to personalize your responses for ${leadContext.name}. Reference specific details from their online presence when relevant to provide more targeted and valuable advice.`
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch lead search results:', error);
-      // Continue without search results if there's an error
-    }
+    // Legacy lead search removed - using new intelligence system
 
     enhancedContext += `
 
@@ -502,52 +430,76 @@ export async function POST(req: NextRequest) {
       }
     } catch {}
 
-    // Initialize conversation state management if lead generation is enabled
-    let conversationResult = null;
+    // Initialize Conversational Intelligence if enabled
+    let intelligenceResult = null;
     let leadData = leadContext;
     
-    console.info('🔍 Lead generation check:', {
+    console.info('🔍 Intelligence check:', {
       enableLeadGeneration,
       conversationSessionId,
       sessionId,
       condition: enableLeadGeneration && (conversationSessionId || sessionId)
     });
     
-    const leadStagesEnabled = process.env.LEAD_STAGES_ENABLED !== 'false'
-    if (enableLeadGeneration && leadStagesEnabled && (conversationSessionId || sessionId)) {
+    const intelligenceEnabled = process.env.INTELLIGENCE_ENABLED !== 'false'
+    if (enableLeadGeneration && intelligenceEnabled && (conversationSessionId || sessionId)) {
       try {
-        const conversationManager = ConversationStateManager.getInstance();
         const effectiveSessionId = conversationSessionId || sessionId || `session-${Date.now()}`;
         
-        console.info('🎯 Initializing conversation manager with session:', effectiveSessionId);
+        console.info('🎯 Processing with Conversational Intelligence:', effectiveSessionId);
         
-        // Initialize conversation state if it doesn't exist
-        let conversationState = conversationManager.getConversationState(effectiveSessionId);
-        if (!conversationState) {
-          conversationState = await conversationManager.initializeConversation(effectiveSessionId);
+        // Detect intent from user message
+        const intentResponse = await fetch(`${req.nextUrl.origin}/api/intelligence/intent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            sessionId: effectiveSessionId, 
+            userMessage: currentMessage 
+          })
+        });
+        
+        if (intentResponse.ok) {
+          const intentData = await intentResponse.json();
+          console.info('🎯 Intent detected:', intentData);
         }
         
-        // Process message through conversation state manager
-        conversationResult = await conversationManager.processMessage(
-          effectiveSessionId,
-          currentMessage,
-          leadData?.id || null
-        );
+        // Get tool suggestions
+        const suggestionsResponse = await fetch(`${req.nextUrl.origin}/api/intelligence/suggestions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            sessionId: effectiveSessionId,
+            stage: 'INTENT'
+          })
+        });
         
-        // Update lead data with any new information extracted
-        if (conversationResult.updatedState.context.leadData) {
-          leadData = { ...leadData, ...conversationResult.updatedState.context.leadData };
+        if (suggestionsResponse.ok) {
+          const suggestionsData = await suggestionsResponse.json();
+          console.info('🎯 Suggestions generated:', suggestionsData);
+          intelligenceResult = suggestionsData;
         }
         
-        console.info('🎯 Conversation state processed:', {
+        // Update lead data with any new information from context
+        try {
+          const contextResponse = await fetch(`${req.nextUrl.origin}/api/intelligence/context?sessionId=${effectiveSessionId}`);
+          if (contextResponse.ok) {
+            const contextData = await contextResponse.json();
+            if (contextData.output?.lead) {
+              leadData = { ...leadData, ...contextData.output.lead };
+            }
+          }
+        } catch (error) {
+          console.warn('Context fetch failed:', error);
+        }
+        
+        console.info('🎯 Intelligence processed:', {
           sessionId: effectiveSessionId,
-          currentStage: conversationResult.newStage,
-          shouldTriggerResearch: conversationResult.shouldTriggerResearch,
+          intelligenceResult,
           leadData: leadData
         });
         
-        // Trigger company research if needed
-        if (conversationResult.shouldTriggerResearch && leadData?.email) {
+        // Trigger company research if needed (legacy fallback)
+        if (leadData?.email && !leadData?.company_context) {
           console.info('🔍 Triggering company research for:', leadData.email);
           // This will be handled by the Google Search processing below
         }
@@ -680,17 +632,17 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
     
-    // Add conversation stage context if available
-    if (conversationResult) {
-      systemPrompt += `\n\n**Conversation Context:**
-- Current Stage: ${conversationResult.newStage}
+    // Add intelligence context if available
+    if (intelligenceResult) {
+      systemPrompt += `\n\n**Intelligence Context:**
+- Suggestions Available: ${intelligenceResult.output?.suggestions?.length || 0}
 - Lead Name: ${leadData?.name || 'Not provided yet'}
 - Lead Email: ${leadData?.email || 'Not provided yet'}
 - Company: ${leadData?.company || leadData?.emailDomain || 'Not identified yet'}
-- Pain Points: ${leadData?.painPoints?.join(', ') || 'Not identified yet'}
+- Intent Type: ${intelligenceResult.output?.intent?.type || 'unknown'}
 
-**Stage-Specific Instructions:**
-${getStageInstructions(conversationResult.newStage)}
+**Available Actions:**
+${intelligenceResult.output?.suggestions?.map((s: any) => `- ${s.label}`).join('\n') || 'None detected'}
 `;
     }
     
@@ -758,10 +710,8 @@ ${getStageInstructions(conversationResult.newStage)}
           content: m.content,
         })),
       ]
-      const stageForModel = conversationResult?.newStage
-      const earlyStage =
-        stageForModel === ConversationStage.GREETING ||
-        stageForModel === ConversationStage.NAME_COLLECTION
+      const stageForModel = intelligenceResult?.output?.stage || 'INTENT'
+      const earlyStage = stageForModel === 'GREETING' || stageForModel === 'NAME_COLLECTION'
       const pplxModel = earlyStage ? 'sonar-reasoning-pro' : 'sonar-pro'
       const enableSearch = !earlyStage
       responseStream = streamPerplexity({
@@ -864,28 +814,29 @@ ${getStageInstructions(conversationResult.newStage)}
       async start(controller) {
         const encoder = new TextEncoder();
         try {
-          // Send conversation state as first event if available
-          console.info('🎯 Stream start - conversationResult:', conversationResult ? {
-            newStage: conversationResult.newStage,
+          // Send intelligence state as first event if available
+          console.info('🎯 Stream start - intelligenceResult:', intelligenceResult ? {
+            suggestions: intelligenceResult.output?.suggestions?.length || 0,
             hasLeadData: !!leadData
           } : 'null');
           
-          if (conversationResult) {
+          if (intelligenceResult) {
             const stateData = {
-              conversationStage: conversationResult.newStage,
+              conversationStage: 'INTENT',
+              suggestions: intelligenceResult.output?.suggestions || [],
               leadData: leadData ? {
                 name: leadData.name,
                 email: leadData.email,
                 company: leadData.company || leadData.emailDomain
               } : undefined
             };
-            console.info('🎯 Sending conversation state:', stateData);
+            console.info('🎯 Sending intelligence state:', stateData);
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(stateData)}\n\n`));
           }
 
           // Send coach suggestion if we can infer one from the latest user message and context
           try {
-    const nb = computeNextBestCapability(currentMessage, { hasUrlContext: !!urlContext, hasSearch: !!searchResultsText, lead: leadData, stage: conversationResult?.newStage })
+    const nb = computeNextBestCapability(currentMessage, { hasUrlContext: !!urlContext, hasSearch: !!searchResultsText, lead: leadData, stage: 'INTENT' })
             if (nb.nextBest) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ nextBest: nb.nextBest, suggestions: nb.suggestions })}\n\n`))
             }

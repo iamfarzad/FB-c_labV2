@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ChatFooter } from '@/components/chat/ChatFooter';
+// Legacy import - component archived
 
 // Mock complex child components to isolate footer
 jest.mock('@/components/chat/ToolMenu', () => ({

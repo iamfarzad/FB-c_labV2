@@ -8,9 +8,9 @@ import type { UnifiedMessage } from "@/components/chat/unified/UnifiedChatInterf
 import { useConversationalIntelligence } from "@/hooks/useConversationalIntelligence"
 import { ErrorHandler } from "@/components/chat/ErrorHandler"
 import VoiceOverlay from "@/components/chat/VoiceOverlay"
-import { LeadProgressIndicator } from "@/components/chat/LeadProgressIndicator"
+// Legacy LeadProgressIndicator removed - using new intelligence system
 import SuggestedActions from "@/components/intelligence/SuggestedActions"
-import { ConversationStage } from "@/lib/lead-manager"
+// Legacy ConversationStage removed - using new intelligence system
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -110,7 +110,7 @@ export default function ChatPage() {
   const [error, setError] = useState<Error | null>(null)
   const [openVoice, setOpenVoice] = useState(false)
   const [input, setInput] = useState("")
-  const [stage, setStage] = useState<ConversationStage>(ConversationStage.GREETING)
+  const [stage, setStage] = useState<string>('GREETING')
   const [lead, setLead] = useState<{ name?: string; email?: string; company?: string } | undefined>()
   
   // Consent Management
@@ -333,12 +333,19 @@ export default function ChatPage() {
               
               // Update stage if provided
               if (data.conversationStage) {
-                setStage(data.conversationStage as ConversationStage)
+                setStage(data.conversationStage as string)
               }
               
               // Update lead data if provided
               if (data.leadData) {
                 setLead(data.leadData)
+              }
+              
+              // Handle intelligence suggestions
+              if (data.suggestions && Array.isArray(data.suggestions)) {
+                console.log('🎯 Intelligence suggestions received:', data.suggestions)
+                // Trigger suggestions refresh
+                window.dispatchEvent(new CustomEvent('chat-capability-used'))
               }
               
               // Handle sources
@@ -610,16 +617,7 @@ export default function ChatPage() {
             </div>
           )}
 
-          {/* Lead Progress Indicator */}
-          <div className="pointer-events-none fixed right-4 top-24 z-50 hidden md:block">
-            <div className="pointer-events-auto">
-              <LeadProgressIndicator 
-                currentStage={stage} 
-                leadData={lead} 
-                variant="rail" 
-              />
-            </div>
-          </div>
+          {/* Lead Progress Indicator - Removed legacy component */}
 
           {/* Suggested Actions moved into sticky header of message list via stickyHeaderSlot */}
 

@@ -1,5 +1,48 @@
 ## [Unreleased]
 
+### 🔗 Conversational Intelligence Integration
+- **Connected Chat to Intelligence APIs**: Updated `/api/chat/route.ts` to use new Conversational Intelligence system
+  - Replaced legacy LeadManager with new intelligence APIs
+  - Added intent detection calls to `/api/intelligence/intent`
+  - Added tool suggestions calls to `/api/intelligence/suggestions`
+  - Added context management via `/api/intelligence/context`
+  - Added `INTELLIGENCE_ENABLED` environment variable control
+- **Enhanced Chat Page Intelligence**: Updated chat page to handle intelligence responses
+  - Added intelligence suggestions handling in SSE stream
+  - Added suggestions refresh triggers via `chat-capability-used` events
+  - Connected stage progression with intelligence data
+  - Added intelligence context to system prompts
+- **Fixed Legacy Code Conflicts**: Resolved conflicts between old and new systems
+  - Removed references to legacy `conversationResult` variables
+  - Updated stage handling to use intelligence data
+  - Fixed linter errors from legacy code references
+  - Maintained backward compatibility with existing features
+- **Archived Legacy Lead Management System**: Moved old system to archive
+  - Archived `lib/lead-manager.ts` to `archive/legacy-lead-management/`
+  - Archived `lib/conversation-state-manager.ts` to `archive/legacy-lead-management/`
+  - Archived `app/api/lead-capture/route.ts` to `archive/legacy-lead-management/`
+  - Archived `components/chat/LeadProgressIndicator.tsx` to `archive/legacy-lead-management/`
+  - Removed all legacy imports and references from active code
+  - Cleaned up ConversationStage enum usage throughout codebase
+- **Archived Legacy UI/UX Components**: Moved old design system components to archive
+  - Archived duplicate `components/collab/VoiceOverlay.tsx` to `archive/legacy-ui-components/`
+  - Archived legacy `components/chat/ChatHeader.tsx` to `archive/legacy-ui-components/`
+  - Archived legacy `components/chat/ChatFooter.tsx` to `archive/legacy-ui-components/`
+  - Archived legacy `components/chat/LeadCaptureFlow.tsx` to `archive/legacy-ui-components/`
+  - Archived legacy `components/chat/ChatPane.tsx` to `archive/legacy-ui-components/`
+  - Archived legacy `components/chat/ChatLayout.tsx` to `archive/legacy-ui-components/`
+  - Archived legacy `components/chat/ChatDock.tsx` to `archive/legacy-ui-components/`
+  - Archived legacy `components/ui-test-dashboard.tsx` to `archive/legacy-ui-components/`
+  - Archived legacy `components/learning-dashboard.tsx` to `archive/legacy-ui-components/`
+  - Archived legacy `components/test-status-indicator.tsx` to `archive/legacy-ui-components/`
+  - Archived legacy `components/chat/lead-capture/` directory to `archive/legacy-ui-components/`
+  - Archived legacy `components/chat/header/` directory to `archive/legacy-ui-components/`
+  - Archived legacy `components/chat/footer/` directory to `archive/legacy-ui-components/`
+  - Archived legacy `components/chat/sidebar/` directory to `archive/legacy-ui-components/`
+  - Archived legacy `tests/ChatFooter.test.tsx` to `archive/legacy-ui-components/`
+  - Removed all legacy UI imports and references from active code
+  - Consolidated design system to use modern UnifiedChatInterface and AI Elements
+
 ### 🔒 Security & Performance Hardening
 - **URL Security Guards**: Added comprehensive URL validation and security checks
   - Created `lib/security/url-guards.ts` with DNS resolution, IP blocking, and content validation
