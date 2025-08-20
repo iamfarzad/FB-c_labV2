@@ -40,7 +40,7 @@ function getRateState(sessionId: string) {
 
 function generateETag(data: any): string {
   const jsonString = JSON.stringify(data)
-  return crypto.createHash('md5').update(jsonString).digest('hex')
+  return crypto.createHash('sha256').update(jsonString).digest('hex')
 }
 
 function parseIfNoneMatch(header: string | null): string[] {
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
     if (ifNoneMatchList.includes(etagHash)) {
       const res304 = new NextResponse(null, { status: 304 })
       res304.headers.set('ETag', etag)
-      res304.headers.set('Cache-Control', 'private, max-age=5, must-revalidate')
+      res304.headers.set('Cache-Control', 'no-store')
       res304.headers.set('Vary', 'If-None-Match')
       const state304 = getRateState(sessionId)
       res304.headers.set('X-RateLimit-Limit', String(RATE_LIMIT_MAX_REQUESTS))
@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
     const response = NextResponse.json({ ok: true, output: snapshot, ...snapshot } as any)
     const state200 = getRateState(sessionId)
     response.headers.set('ETag', etag)
-    response.headers.set('Cache-Control', 'private, max-age=5, must-revalidate')
+    response.headers.set('Cache-Control', 'no-store')
     response.headers.set('Vary', 'If-None-Match')
     response.headers.set('X-RateLimit-Limit', String(RATE_LIMIT_MAX_REQUESTS))
     response.headers.set('X-RateLimit-Remaining', String(state200.remaining))

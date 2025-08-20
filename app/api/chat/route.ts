@@ -10,12 +10,17 @@ import { ConversationStateManager } from '@/lib/conversation-state-manager';
 import { LeadManager, ConversationStage } from '@/lib/lead-manager';
 import { checkDevelopmentConfig } from '@/lib/config';
 import { withFullSecurity } from '@/lib/api-security';
-import { selectModelForFeature, estimateTokensForMessages } from '@/lib/model-selector';
+import { ModelSelector } from '@/lib/model-selector';
 import { enforceBudgetAndLog } from '@/lib/token-usage-logger';
 import URLContextService from '@/lib/services/url-context-service';
 import GoogleSearchService from '@/lib/services/google-search-service';
 import { createOptimizedConfig, optimizeConversation, type ConversationMessage } from '@/lib/gemini-config-enhanced';
 import { shouldUseMockForRequest, createMockRedirectResponse, logApiRouting } from '@/lib/api-router';
+
+// Force dynamic rendering and disable caching
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -603,8 +608,11 @@ export async function POST(req: NextRequest) {
       : []
 
     // Estimate tokens and select model
-    const estimatedTokens = estimateTokensForMessages(sanitizedMessages);
-    const modelSelection = selectModelForFeature('chat', estimatedTokens, !!sessionId);
+    const estimatedTokens = sanitizedMessages.reduce((total, msg) => total + (msg.content?.length || 0) * 0.3, 0);
+    const modelSelection = {
+      model: ModelSelector.selectModel('chat', { prioritizeLatency: false }),
+      reason: 'chat-optimized'
+    };
 
     // Log AI processing start activity
     const processingActivityId = await logServerActivity({

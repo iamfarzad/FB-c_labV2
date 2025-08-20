@@ -1,5 +1,40 @@
 ## [Unreleased]
 
+### 🔒 Security & Performance Hardening
+- **URL Security Guards**: Added comprehensive URL validation and security checks
+  - Created `lib/security/url-guards.ts` with DNS resolution, IP blocking, and content validation
+  - Added `validateOutboundUrl()` for protocol and network security checks
+  - Added `checkAllowedDomain()` for domain allowlist enforcement
+  - Added `headPreflight()` for content-type and size validation
+- **API Route Hardening**: Enhanced security across all API endpoints
+  - Added `dynamic = 'force-dynamic'` exports to prevent caching
+  - Added `revalidate = 0` and `fetchCache = 'force-no-store'` for security
+  - Added `Cache-Control: no-store` headers to all responses
+  - Updated `/api/tools/url/route.ts` with URL validation and security checks
+  - Updated `/api/chat/route.ts` with dynamic rendering and cache prevention
+  - Updated `/api/intelligence/context/route.ts` with SHA-256 ETags and no-store headers
+- **URL Context Service Security**: Enhanced URL processing with security measures
+  - Enforced HTTPS-only URLs for security
+  - Added stream-based reading with 5MB content limit
+  - Added content-type validation for HTML/XHTML only
+  - Implemented proper error handling for security violations
+- **Chat Page Optimization**: Added duplicate fetch prevention
+  - Added `fetchedOnceRef` to prevent duplicate context fetches
+  - Updated consent useEffect to use one-shot fetch pattern
+  - Fixed TypeScript type issues with message metadata
+- **Google Grounding Enhancement**: Improved citation extraction
+  - Added `extractCitations()` helper function for cleaner code
+  - Refactored citation extraction to use centralized helper
+  - Improved error handling and type safety
+- **Intelligence Configuration**: Created centralized configuration
+  - Added `lib/config/intelligence.ts` with URL context settings
+  - Added environment variable configuration for all security settings
+  - Added provider timeout and embedding dimension constants
+- **Environment Configuration**: Added comprehensive security settings
+  - Added `.env.example` with all security and performance configurations
+  - Added URL context settings, provider timeouts, and security flags
+  - Added documentation for all new environment variables
+
 ### Fixed
 - **Conversational Intelligence Duplicate Class**: Fixed duplicate `ConversationalIntelligence` class definition in `lib/intelligence/conversational-intelligence.ts`
   - Removed the basic implementation (lines 5-33) that was conflicting with the advanced implementation

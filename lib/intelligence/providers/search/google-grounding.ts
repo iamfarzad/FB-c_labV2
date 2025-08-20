@@ -12,6 +12,28 @@ export class GoogleGroundingProvider {
   }
 
   /**
+   * Extract citations from Gemini response metadata
+   */
+  private extractCitations(candidate: any): GroundedCitation[] {
+    const citations: GroundedCitation[] = []
+
+    // Search grounding citations
+    const chunks = candidate?.groundingMetadata?.groundingChunks ?? []
+    const searchCitations: GroundedCitation[] = (Array.isArray(chunks) ? chunks : [])
+      .map((c: any) => c.web)
+      .filter(Boolean)
+      .map((w: any) => ({ uri: w.uri, title: w.title, description: w.snippet, source: 'search' as const }))
+
+    // URL Context citations (if available)
+    const urlMeta = candidate?.urlContextMetadata?.urlMetadata ?? []
+    const urlCitations: GroundedCitation[] = (Array.isArray(urlMeta) ? urlMeta : [])
+      .map((m: any) => ({ uri: m.retrievedUrl || m.url || m.uri, title: m.title, description: m.snippet, source: 'url' as const }))
+
+    citations.push(...urlCitations, ...searchCitations)
+    return citations
+  }
+
+  /**
    * Generate a grounded answer using Google Search and optional URL Context.
    * If urls are provided, the urlContext tool will be enabled and Gemini will
    * fetch content directly from those URLs to ground its response. When no URLs
@@ -43,19 +65,8 @@ export class GoogleGroundingProvider {
 
       const candidate = (res as any).candidates?.[0] || {}
 
-      // Search grounding citations
-      const chunks = candidate?.groundingMetadata?.groundingChunks ?? []
-      const searchCitations: GroundedCitation[] = (Array.isArray(chunks) ? chunks : [])
-        .map((c: any) => c.web)
-        .filter(Boolean)
-        .map((w: any) => ({ uri: w.uri, title: w.title, description: w.snippet, source: 'search' as const }))
-
-      // URL Context citations (if available)
-      const urlMeta = candidate?.urlContextMetadata?.urlMetadata ?? []
-      const urlCitations: GroundedCitation[] = (Array.isArray(urlMeta) ? urlMeta : [])
-        .map((m: any) => ({ uri: m.retrievedUrl || m.url || m.uri, title: m.title, description: m.snippet, source: 'url' as const }))
-
-      const citations: GroundedCitation[] = [...urlCitations, ...searchCitations]
+      // Extract citations using helper function
+      const citations = this.extractCitations(candidate)
 
       return { text, citations, raw: res }
     } catch (error) {

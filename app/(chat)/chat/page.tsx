@@ -3,7 +3,7 @@
 import { DemoSessionProvider } from "@/components/demo-session-manager"
 import { PageShell } from "@/components/page-shell"
 import { UnifiedChatInterface } from "@/components/chat/unified/UnifiedChatInterface"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import type { UnifiedMessage } from "@/components/chat/unified/UnifiedChatInterface"
 import { useConversationalIntelligence } from "@/hooks/useConversationalIntelligence"
 import { ErrorHandler } from "@/components/chat/ErrorHandler"
@@ -119,6 +119,9 @@ export default function ChatPage() {
   const [consentDenied, setConsentDenied] = useState(false)
   const [consentEmail, setConsentEmail] = useState('')
   const [consentCompany, setConsentCompany] = useState('')
+  
+  // Prevent duplicate fetches
+  const fetchedOnceRef = useRef(false)
 
   // Conversational Intelligence
   const { 
@@ -202,9 +205,10 @@ export default function ChatPage() {
     })()
   }, [])
 
-  // Fetch intelligence context when consent is allowed
+  // Fetch intelligence context when consent is allowed (one-shot)
   useEffect(() => {
-    if (consentAllowed) {
+    if (consentAllowed && !fetchedOnceRef.current) {
+      fetchedOnceRef.current = true
       fetchContextFromLocalSession()
     }
   }, [consentAllowed, fetchContextFromLocalSession])
@@ -372,11 +376,12 @@ export default function ChatPage() {
     } catch {}
   }
 
-  const handleToolAction = (tool: string, data?: any) => {
+  const handleToolAction = async (tool: string, data?: any) => {
     console.log('Tool action:', tool, data)
+    
     if (tool === 'roi:complete') {
       const toolMessage: UnifiedMessage = {
-        id: `msg-${Date.now()}-roi` ,
+        id: `msg-${Date.now()}-roi`,
         role: 'assistant',
         type: 'tool',
         content: 'ROI analysis complete. Here is your summary:',
@@ -386,6 +391,67 @@ export default function ChatPage() {
         }
       }
       setMessages(prev => [...prev, toolMessage])
+    }
+    
+    // Handle task generation
+    if (tool === 'generate-tasks') {
+      try {
+        const response = await fetch('/api/tools/task-generator', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: data?.prompt || 'Create a task list',
+            context: data?.context || ''
+          })
+        })
+        
+        if (!response.ok) throw new Error('Task generation failed')
+        
+        const result = await response.json()
+        
+        const taskMessage: UnifiedMessage = {
+          id: `msg-${Date.now()}-task`,
+          role: 'assistant',
+          type: 'tool',
+          content: 'I\'ve created a task list for you:',
+          metadata: {
+            timestamp: new Date(),
+            tools: [{ type: 'taskResult', data: result.output }]
+          }
+        }
+        setMessages(prev => [...prev, taskMessage])
+      } catch (error) {
+        console.error('Task generation error:', error)
+      }
+    }
+    
+    // Handle web preview
+    if (tool === 'web-preview') {
+      try {
+        const response = await fetch('/api/tools/web-preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: data?.url })
+        })
+        
+        if (!response.ok) throw new Error('Web preview failed')
+        
+        const result = await response.json()
+        
+        const previewMessage: UnifiedMessage = {
+          id: `msg-${Date.now()}-preview`,
+          role: 'assistant',
+          type: 'tool',
+          content: `Here's a preview of ${data?.url}:`,
+          metadata: {
+            timestamp: new Date(),
+            tools: [{ type: 'webPreview', data: result.output }]
+          }
+        }
+        setMessages(prev => [...prev, previewMessage])
+      } catch (error) {
+        console.error('Web preview error:', error)
+      }
     }
   }
 

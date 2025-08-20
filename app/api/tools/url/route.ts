@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import URLContextService from '@/lib/services/url-context-service'
 import { recordCapabilityUsed } from '@/lib/context/capabilities'
+import { validateOutboundUrl, checkAllowedDomain, headPreflight } from '@/lib/security/url-guards'
+
+// Force dynamic rendering and disable caching
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
 // Simple per-session rate limiter and idempotency cache (in-memory)
 const rl = new Map<string, { count: number; reset: number }>()
@@ -28,7 +34,10 @@ export async function POST(req: NextRequest) {
     // Rate limit per session
     const rlKey = `url:${sessionId || 'anon'}`
     if (!checkRate(rlKey, 10, 60_000)) {
-      return NextResponse.json({ ok: false, error: 'Rate limit exceeded' }, { status: 429 })
+      return NextResponse.json({ ok: false, error: 'Rate limit exceeded' }, { 
+        status: 429,
+        headers: { 'Cache-Control': 'no-store' }
+      })
     }
 
     // Idempotency (optional via header)
@@ -36,19 +45,48 @@ export async function POST(req: NextRequest) {
       const k = `${sessionId}:${idemKey}`
       const cached = idem.get(k)
       if (cached && cached.expires > Date.now()) {
-        return NextResponse.json(cached.body)
+        return NextResponse.json(cached.body, { headers: { 'Cache-Control': 'no-store' } })
       }
     }
 
     if (!url && !text) {
-      return NextResponse.json({ ok: false, error: 'Provide url or text' }, { status: 400 })
+      return NextResponse.json({ ok: false, error: 'Provide url or text' }, { 
+        status: 400,
+        headers: { 'Cache-Control': 'no-store' }
+      })
     }
 
     let analysis: any = null
     if (url) {
-      const urls = Array.isArray(url) ? url : [String(url)]
-      const results = await URLContextService.analyzeMultipleURLs(urls)
-      analysis = results?.[0] || null
+      // URL validation and security checks
+      try {
+        const urls = Array.isArray(url) ? url : [String(url)]
+        
+        // Validate each URL before processing
+        for (const rawUrl of urls) {
+          const validatedUrl = await validateOutboundUrl(rawUrl)
+          
+          // Check allowed domains if configured
+          const allowedDomains = process.env.URL_CONTEXT_ALLOWED_DOMAINS?.split(',').map(d => d.trim()).filter(Boolean) || []
+          if (!checkAllowedDomain(validatedUrl, allowedDomains)) {
+            return NextResponse.json({ ok: false, error: 'Domain not allowed' }, { 
+              status: 403,
+              headers: { 'Cache-Control': 'no-store' }
+            })
+          }
+          
+          // Preflight check for content type and size
+          await headPreflight(validatedUrl, 8000, 5_000_000)
+        }
+        
+        const results = await URLContextService.analyzeMultipleURLs(urls)
+        analysis = results?.[0] || null
+      } catch (error: any) {
+        return NextResponse.json({ ok: false, error: error.message || 'URL validation failed' }, { 
+          status: 400,
+          headers: { 'Cache-Control': 'no-store' }
+        })
+      }
     } else if (text) {
       const content = String(text)
       analysis = {
@@ -73,9 +111,12 @@ export async function POST(req: NextRequest) {
       idem.set(k, { expires: Date.now() + 5 * 60_000, body: response })
     }
 
-    return NextResponse.json(response)
+    return NextResponse.json(response, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error: any) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Unknown error' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: error?.message || 'Unknown error' }, { 
+      status: 500,
+      headers: { 'Cache-Control': 'no-store' }
+    })
   }
 }
 

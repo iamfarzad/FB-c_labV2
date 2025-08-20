@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Page Render Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .component-list {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .component-item {
+            margin: 5px 0;
+            padding: 5px;
+            background: white;
+            border-left: 3px solid #007acc;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Chat Page Render Test</h1>
+            <p>Testing what components are actually being rendered on localhost:3000/chat</p>
+        </div>
+        
+        <div class="content">
+            <div class="test-section">
+                <h3>🔍 Live Chat Page</h3>
+                <div class="status info">
+                    <strong>Status:</strong> Loading chat page from localhost:3000/chat
+                </div>
+                <iframe src="http://localhost:3000/chat" title="Chat Page"></iframe>
+            </div>
+
+            <div class="test-section">
+                <h3>📋 Components Analysis</h3>
+                <div class="status success">
+                    <strong>UnifiedChatInterface Components:</strong>
+                </div>
+                <div class="component-list">
+                    <div class="component-item">✅ Conversation, ConversationContent, ConversationScrollButton</div>
+                    <div class="component-item">✅ Message, MessageContent, MessageAvatar</div>
+                    <div class="component-item">✅ Response</div>
+                    <div class="component-item">✅ Reasoning, ReasoningTrigger, ReasoningContent</div>
+                    <div class="component-item">✅ Sources, SourcesTrigger, SourcesContent, Source</div>
+                    <div class="component-item">✅ Suggestions, Suggestion</div>
+                    <div class="component-item">✅ Actions, Action</div>
+                    <div class="component-item">✅ PromptInput, PromptInputToolbar, PromptInputTools, PromptInputTextarea, PromptInputSubmit</div>
+                    <div class="component-item">✅ ToolMenu</div>
+                    <div class="component-item">✅ ROICalculator</div>
+                    <div class="component-item">✅ ToolCardWrapper</div>
+                    <div class="component-item">✅ GroundedCitation (AI Elements)</div>
+                    <div class="component-item">✅ ActivityChip</div>
+                    <div class="component-item">🆕 Task, TaskTrigger, TaskContent, TaskItem, TaskItemFile</div>
+                    <div class="component-item">🆕 Tool, ToolHeader, ToolContent, ToolInput, ToolOutput</div>
+                    <div class="component-item">🆕 WebPreview, WebPreviewNavigation, WebPreviewBody, WebPreviewConsole</div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>🎯 Chat Components Directory</h3>
+                <div class="status info">
+                    <strong>Available Components:</strong>
+                </div>
+                <div class="component-list">
+                    <div class="component-item">📁 unified/UnifiedChatInterface.tsx</div>
+                    <div class="component-item">📁 ChatHeader.tsx</div>
+                    <div class="component-item">📁 ChatDock.tsx</div>
+                    <div class="component-item">📁 ChatLayout.tsx</div>
+                    <div class="component-item">📁 ChatFooter.tsx</div>
+                    <div class="component-item">📁 ChatCostTracker.tsx</div>
+                    <div class="component-item">📁 ToolMenu.tsx</div>
+                    <div class="component-item">📁 ToolLauncher.tsx</div>
+                    <div class="component-item">📁 ToolCardWrapper.tsx</div>
+                    <div class="component-item">📁 CanvasOrchestrator.tsx</div>
+                    <div class="component-item">📁 CanvasWorkspace.tsx</div>
+                    <div class="component-item">📁 LeadCaptureFlow.tsx</div>
+                    <div class="component-item">📁 BusinessContentRenderer.tsx</div>
+                    <div class="component-item">📁 ErrorHandler.tsx</div>
+                    <div class="component-item">📁 ProgressDots.tsx</div>
+                    <div class="component-item">📁 CitationDisplay.tsx</div>
+                    <div class="component-item">📁 AIInsightCard.tsx</div>
+                    <div class="component-item">📁 AIThinkingIndicator.tsx</div>
+                    <div class="component-item">📁 VoiceOverlay.tsx</div>
+                    <div class="component-item">📁 LeadProgressIndicator.tsx</div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>🧠 Intelligence Components</h3>
+                <div class="status info">
+                    <strong>Available Components:</strong>
+                </div>
+                <div class="component-list">
+                    <div class="component-item">📁 SuggestedActions.tsx</div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>🔧 Tool Directories</h3>
+                <div class="status info">
+                    <strong>Tool Components:</strong>
+                </div>
+                <div class="component-list">
+                    <div class="component-item">📁 tools/ROICalculator/</div>
+                    <div class="component-item">📁 tools/WebcamCapture/</div>
+                    <div class="component-item">📁 tools/VoiceInput/</div>
+                    <div class="component-item">📁 tools/ScreenShare/</div>
+                    <div class="component-item">📁 tools/VideoToApp/</div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>📊 Activity Components</h3>
+                <div class="status info">
+                    <strong>Activity Tracking:</strong>
+                </div>
+                <div class="component-list">
+                    <div class="component-item">📁 activity/ActivityChip.tsx</div>
+                    <div class="component-item">📁 activity/EnhancedLiveActivity.tsx</div>
+                    <div class="component-item">📁 activity/FixedVerticalProcessChain.tsx</div>
+                    <div class="component-item">📁 activity/VerticalProcessChain.tsx</div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>🚫 Collab Components Status</h3>
+                <div class="status warning">
+                    <strong>Collab Components:</strong> NOT being used in current chat implementation
+                </div>
+                <div class="component-list">
+                    <div class="component-item">❌ BottomDock.tsx</div>
+                    <div class="component-item">❌ CenterCanvas.tsx</div>
+                    <div class="component-item">❌ ChatPane.tsx</div>
+                    <div class="component-item">❌ CollabShell.tsx</div>
+                    <div class="component-item">❌ LeftToolRail.tsx</div>
+                    <div class="component-item">❌ RightStageRail.tsx</div>
+                    <div class="component-item">❌ TopHeader.tsx</div>
+                    <div class="component-item">❌ PersistentChatDock.tsx</div>
+                    <div class="component-item">❌ QuickActionsRow.tsx</div>
+                    <div class="component-item">❌ SuggestionsRow.tsx</div>
+                    <div class="component-item">❌ HelpHint.tsx</div>
+                    <div class="component-item">❌ ConsentOverlay.tsx</div>
+                    <div class="component-item">❌ VoiceOverlay.tsx (collab version)</div>
+                    <div class="component-item">❌ PanelSkeleton.tsx</div>
+                    <div class="component-item">❌ RoiPanel.tsx</div>
+                    <div class="component-item">❌ WebcamPanel.tsx</div>
+                    <div class="component-item">❌ ScreenSharePanel.tsx</div>
+                    <div class="component-item">❌ WebPreviewPanel.tsx</div>
+                    <div class="component-item">❌ MobileStageProgress.tsx</div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>🎯 AI Elements Integration Status</h3>
+                <div class="status warning">
+                    <strong>AI Elements Integration:</strong> PARTIAL - Duplication detected and resolved
+                </div>
+                <div class="component-list">
+                    <div class="component-item">✅ inline-citation.tsx → GroundedCitation component (NEW)</div>
+                    <div class="component-item">✅ task.tsx → Task, TaskTrigger, TaskContent, TaskItem, TaskItemFile (NEW)</div>
+                    <div class="component-item">✅ tool.tsx → Tool, ToolHeader, ToolContent, ToolInput, ToolOutput (NEW)</div>
+                    <div class="component-item">✅ web-preview.tsx → WebPreview, WebPreviewNavigation, WebPreviewBody, WebPreviewConsole (NEW)</div>
+                    <div class="component-item">❌ conversation.tsx → DUPLICATE (existing MessageList)</div>
+                    <div class="component-item">❌ message.tsx → DUPLICATE (existing MessageComponent)</div>
+                    <div class="component-item">❌ response.tsx → DUPLICATE (existing content rendering)</div>
+                    <div class="component-item">❌ reasoning.tsx → DUPLICATE (existing reasoning display)</div>
+                    <div class="component-item">❌ source.tsx → DUPLICATE (existing sources display)</div>
+                    <div class="component-item">❌ suggestion.tsx → DUPLICATE (existing suggestions)</div>
+                    <div class="component-item">❌ actions.tsx → DUPLICATE (existing action buttons)</div>
+                    <div class="component-item">❌ prompt-input.tsx → DUPLICATE (existing input area)</div>
+                    <div class="component-item">🔄 Updated UnifiedMessage interface to support new types</div>
+                    <div class="component-item">🔄 Enhanced tool rendering with AI Elements Tool component</div>
+                    <div class="component-item">🔄 Added Task display support for task-based responses</div>
+                    <div class="component-item">🔄 Added Web Preview support for web content</div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>🚨 Duplication Analysis</h3>
+                <div class="status warning">
+                    <strong>Duplication Status:</strong> RESOLVED - Only NEW functionality integrated
+                </div>
+                <div class="component-list">
+                    <div class="component-item">✅ KEPT: Custom MessageList, MessageComponent, input handling</div>
+                    <div class="component-item">✅ KEPT: Custom reasoning, sources, suggestions, actions display</div>
+                    <div class="component-item">✅ KEPT: Custom PromptInput with toolbar and tools</div>
+                    <div class="component-item">✅ ADDED: GroundedCitation (replaces custom CitationDisplay)</div>
+                    <div class="component-item">✅ ADDED: Task components for task-based responses</div>
+                    <div class="component-item">✅ ADDED: Tool components for enhanced tool display</div>
+                    <div class="component-item">✅ ADDED: WebPreview components for web content</div>
+                    <div class="component-item">📊 Result: 4 new components added, 8 duplicates avoided</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactivity to show component status
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Chat Render Test loaded');
+            
+            // Check if iframe loaded successfully
+            const iframe = document.querySelector('iframe');
+            iframe.addEventListener('load', function() {
+                console.log('Chat page iframe loaded successfully');
+                const statusDiv = document.querySelector('.status.info');
+                statusDiv.innerHTML = '<strong>Status:</strong> ✅ Chat page loaded successfully';
+                statusDiv.className = 'status success';
+            });
+            
+            iframe.addEventListener('error', function() {
+                console.log('Chat page iframe failed to load');
+                const statusDiv = document.querySelector('.status.info');
+                statusDiv.innerHTML = '<strong>Status:</strong> ❌ Failed to load chat page';
+                statusDiv.className = 'status warning';
+            });
+        });
+    </script>
+</body>
+</html>

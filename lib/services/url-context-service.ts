@@ -58,7 +58,39 @@ export class URLContextService {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const html = await response.text();
+      // Content-type validation
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('text/html') && !contentType.includes('application/xhtml+xml')) {
+        throw new Error('Unsupported content type: ' + contentType);
+      }
+
+      // Stream-based reading with 5MB limit
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body available');
+      }
+
+      const decoder = new TextDecoder();
+      let html = '';
+      const maxBytes = 5_000_000; // 5MB limit
+      let totalBytes = 0;
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          totalBytes += value.length;
+          if (totalBytes > maxBytes) {
+            reader.releaseLock();
+            throw new Error('Content too large (exceeds 5MB limit)');
+          }
+          
+          html += decoder.decode(value, { stream: true });
+        }
+      } finally {
+        reader.releaseLock();
+      }
       
       // Parse HTML with JSDOM
       const dom = new JSDOM(html);
@@ -117,9 +149,9 @@ export class URLContextService {
       
       const urlObj = new URL(url);
       
-      // Security check - only allow HTTP/HTTPS
-      if (!['http:', 'https:'].includes(urlObj.protocol)) {
-        throw new Error('Only HTTP and HTTPS URLs are supported');
+      // Security check - only allow HTTPS
+      if (urlObj.protocol !== 'https:') {
+        throw new Error('Only HTTPS URLs are supported for security');
       }
       
       return urlObj.toString();

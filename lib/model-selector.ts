@@ -21,68 +21,6 @@ export type ModelRequirements = {
   highVolume?: boolean         // High request volume
 }
 
-// Simple token estimation (rough approximation)
-export function estimateTokensForMessages(messages: any[]): number {
-  let totalTokens = 0
-  for (const message of messages) {
-    // Rough estimation: 1 token ≈ 4 characters
-    totalTokens += Math.ceil(message.content.length / 4)
-  }
-  return totalTokens
-}
-
-// Simple token estimation for strings
-export function estimateTokens(input: string | any[]): number {
-  if (typeof input === 'string') {
-    // Rough estimation: 1 token ≈ 4 characters
-    return Math.ceil(input.length / 4)
-  } else if (Array.isArray(input)) {
-    // Handle array of messages
-    return estimateTokensForMessages(input)
-  } else {
-    // Fallback for unknown types
-    return 1000 // Conservative estimate
-  }
-}
-
-// Model selection for specific features
-export function selectModelForFeature(feature: string, estimatedTokens: number, hasSession: boolean): { 
-  model: string
-  estimatedCost?: number
-  reason?: string 
-} {
-  const inputCost = 0.075 // Cost per 1M input tokens for gemini-2.5-flash
-  const outputCost = 0.30 // Cost per 1M output tokens for gemini-2.5-flash
-  const estimatedOutputTokens = estimatedTokens * 0.8 // Rough estimate
-  
-  const estimatedCost = ((estimatedTokens / 1_000_000) * inputCost) + ((estimatedOutputTokens / 1_000_000) * outputCost)
-  
-  // For demo sessions, use the default model
-  if (hasSession) {
-    return { 
-      model: config.ai.gemini.models.default,
-      estimatedCost,
-      reason: 'Using default model for demo session'
-    }
-  }
-  
-  // For high token usage, prefer cost-effective model
-  if (estimatedTokens > 10000) {
-    return { 
-      model: config.ai.gemini.models.default,
-      estimatedCost,
-      reason: 'Using cost-effective model for high token usage'
-    }
-  }
-  
-  // For chat and other features, use default model
-  return { 
-    model: config.ai.gemini.models.default,
-    estimatedCost,
-    reason: 'Using default model for standard usage'
-  }
-}
-
 export class ModelSelector {
   /**
    * Select optimal Gemini model based on use case
