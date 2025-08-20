@@ -282,32 +282,80 @@ export default function ChatPage() {
 
       if (!response.ok) throw new Error('Chat request failed')
 
-      const data = await response.json()
+      // Handle SSE stream response
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
       
-      // Update stage if provided
-      if (data.conversationStage) {
-        setStage(data.conversationStage as ConversationStage)
+      if (!reader) {
+        throw new Error('No reader available')
       }
-      
-      // Update lead data if provided
-      if (data.leadData) {
-        setLead(data.leadData)
-      }
-      
-      // Add assistant message
+
+      // Create assistant message placeholder
       const assistantMessage: UnifiedMessage = {
         id: `msg-${Date.now()}-ai`,
         role: 'assistant',
-        content: data.content || data.message || '',
+        content: '',
         metadata: {
-          timestamp: new Date(),
-          sources: data.sources,
-          citations: data.citations,
-          suggestions: data.suggestions
+          timestamp: new Date()
         }
       }
       
       setMessages(prev => [...prev, assistantMessage])
+
+      let assistantContent = ''
+      let assistantSources: Array<{ title?: string; url: string }> | undefined
+
+      while (true) {
+        const { done, value } = await reader.read()
+        
+        if (done) break
+        
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split('\n')
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6))
+              
+              if (data.content) {
+                assistantContent += data.content
+                setMessages(prev => prev.map(msg => 
+                  msg.id === assistantMessage.id 
+                    ? { ...msg, content: assistantContent }
+                    : msg
+                ))
+              }
+              
+              // Update stage if provided
+              if (data.conversationStage) {
+                setStage(data.conversationStage as ConversationStage)
+              }
+              
+              // Update lead data if provided
+              if (data.leadData) {
+                setLead(data.leadData)
+              }
+              
+              // Handle sources
+              if (data.sources && Array.isArray(data.sources)) {
+                assistantSources = data.sources
+                setMessages(prev => prev.map(msg => 
+                  msg.id === assistantMessage.id 
+                    ? { ...msg, metadata: { ...msg.metadata, sources: assistantSources } }
+                    : msg
+                ))
+              }
+              
+              if (data.error) {
+                throw new Error(data.error)
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse streaming data:', parseError)
+            }
+          }
+        }
+      }
     } catch (err) {
       console.error('Chat error:', err)
       setError(err as Error)
