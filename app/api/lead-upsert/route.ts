@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getSupabase } from '@/lib/supabase/server'
-import { LeadManager } from '@/lib/lead-manager'
 
 const Body = z.object({
   email: z.string().email(),
@@ -51,11 +50,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, leadId: `temp-${Date.now()}`, simulated: true })
     }
 
-    // Optionally analyze domain to enrich (best-effort)
-    try {
-      const lm = new LeadManager()
-      await lm.analyzeEmailDomain(email)
-    } catch {}
+    // Note: Legacy domain analysis removed - using new intelligence system instead
+    console.info('Lead upsert successful:', { email, leadId: created.id })
 
     return NextResponse.json({ ok: true, leadId: created.id })
   } catch (e) {

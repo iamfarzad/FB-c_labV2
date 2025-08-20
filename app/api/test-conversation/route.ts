@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ConversationStateManager } from '@/lib/conversation-state-manager'
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,31 +6,18 @@ export async function POST(request: NextRequest) {
     
     console.info('Test conversation endpoint called:', { message, sessionId })
     
-    const manager = ConversationStateManager.getInstance()
+    // Simple test response - legacy conversation state manager removed
+    const testResponse = `Test response for: "${message}" (Session: ${sessionId})`
     
-    // Initialize if needed
-    let state = manager.getConversationState(sessionId)
-    if (!state) {
-      state = await manager.initializeConversation(sessionId)
-      console.info('Initialized new conversation:', state)
-    }
-    
-    // Process message
-    const result = await manager.processMessage(sessionId, message)
-    
-    console.info('Conversation result:', {
-      newStage: result.newStage,
-      leadData: result.updatedState.context.leadData,
-      response: result.response.substring(0, 100) + '...'
-    })
+    console.info('Test conversation response:', testResponse)
     
     return NextResponse.json({
       success: true,
       result: {
-        response: result.response,
-        newStage: result.newStage,
-        leadData: result.updatedState.context.leadData,
-        shouldTriggerResearch: result.shouldTriggerResearch
+        response: testResponse,
+        newStage: 'TEST',
+        leadData: null,
+        shouldTriggerResearch: false
       }
     })
   } catch (error) {
