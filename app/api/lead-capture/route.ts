@@ -1,4 +1,4 @@
-import { LeadManagementService } from "@/lib/lead-management"
+import { LeadManager } from "@/lib/lead-manager"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 import { leadCaptureSchema, validateRequest, sanitizeString, sanitizeEmail } from "@/lib/validation"
@@ -59,8 +59,8 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    // Use the new LeadManagementService
-    const leadManagementService = new LeadManagementService()
+    // Use the unified LeadManager
+    const leadManager = new LeadManager()
 
     // Prepare data for lead_summaries table
     const leadRecord = {
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     // Save lead using the service
     let data
     try {
-      data = await leadManagementService.createLeadSummary(leadRecord)
+      data = await leadManager.createLeadSummary(leadRecord)
       console.info('Lead saved successfully:', data.id)
     } catch (error) {
       console.error('Failed to save lead to database:', error)

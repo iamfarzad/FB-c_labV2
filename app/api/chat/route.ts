@@ -313,8 +313,8 @@ Current Client Context:
 
     // Try to fetch grounded search results for this lead
     try {
-      const { LeadManagementService } = await import('@/lib/lead-management');
-      const leadManager = new LeadManagementService();
+      const { LeadManager } = await import('@/lib/lead-manager');
+      const leadManager = new LeadManager();
       
       // For demo sessions, try to find the lead by email without user authentication
       let lead = null;

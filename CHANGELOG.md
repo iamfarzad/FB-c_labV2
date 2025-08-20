@@ -1,5 +1,16 @@
 ## [Unreleased]
 
+### Fixed
+- **Conversational Intelligence Duplicate Class**: Fixed duplicate `ConversationalIntelligence` class definition in `lib/intelligence/conversational-intelligence.ts`
+  - Removed the basic implementation (lines 5-33) that was conflicting with the advanced implementation
+  - Fixed incomplete method bodies in `researchLead` and `suggestTools` methods
+  - Corrected method signatures to match the actual implementations
+  - Resolved TypeScript compilation errors and linter issues
+- **Duplicate Hook**: Fixed duplicate `useLeadContext` function definitions in `hooks/useLeadContext.ts`
+  - Removed duplicate implementation and kept single clean version
+- **Duplicate Config**: Fixed duplicate `INTEL_CONFIG` exports in `lib/config/intelligence.ts`
+  - Merged configurations into single comprehensive config object
+
 ### Changed
 - Integrated `UnifiedChatInterface` into the main chat page (`app/(chat)/chat/page.tsx`), replacing legacy usage patterns.
 - Updated `components/chat/ChatDock.tsx` and `app/test-collab-chat/page.tsx` to use `UnifiedChatInterface` instead of `AIEChat`.
@@ -11,6 +22,48 @@
 - API: `/api/tools/search` now accepts optional `urls: string[]` to ground answers with specific URLs; returns unified citations.
 - Chat: `app/api/chat/route.ts` derives candidate URLs from the user message, lead email domain or `companyUrl`, and top search sources; appends a de-duplicated list to the system prompt when URL Context is enabled. Keeps consent gating and rate limits intact.
 - UI: server stream now includes sources derived from grounding; client can render citations from URL and Search.
+
+### Added - Missing Conversational Intelligence Components
+- **Consent Component Analysis**: Identified existing `ConsentOverlay.tsx` component for user consent collection
+  - Existing component handles basic consent flow
+  - No additional consent components needed (avoiding duplication)
+- **Events API**: Created `app/(edge)/api/intelligence/events/route.ts` for telemetry tracking
+  - Validates event data with Zod schema
+  - Supports session tracking, tool usage, intent detection events
+  - Ready for integration with analytics services
+
+### Changed - Lead Management Consolidation
+- **Unified Lead Management**: Merged `LeadManagementService` into `LeadManager` to create a stronger, unified system
+  - **Before**: Two separate systems (`lib/lead-manager.ts` + `lib/lead-management.ts`)
+  - **After**: Single unified `LeadManager` with all functionality
+  - **Benefits**: Eliminated code duplication, improved maintainability, single source of truth
+  - **Updated imports**: All API routes now use the unified `LeadManager`
+  - **Removed**: `lib/lead-management.ts` (consolidated into `LeadManager`)
+  - **Removed**: `lib/conversation/state-manager.ts` (unused simple version)
+
+### Changed - Conversational Intelligence Consolidation
+- **Unified Enrich Normalizers**: Consolidated duplicate normalizer functions
+  - **Before**: Two sets of normalizers (`lib/intelligence/enrich/` + `lib/intelligence/providers/enrich/`)
+  - **After**: Single advanced implementation in `lib/intelligence/providers/enrich/`
+  - **Benefits**: Eliminated duplicate code, improved maintainability
+  - **Removed**: `lib/intelligence/enrich/company-normalizer.ts` (simple version)
+  - **Removed**: `lib/intelligence/enrich/person-normalizer.ts` (simple version)
+  - **Removed**: `lib/intelligence/enrich/` directory (empty)
+  - **Removed**: `hooks/useLeadContext.ts` (unused dead code)
+  - **Active**: `lib/intelligence/providers/enrich/` normalizers used by `lead-research.ts`
+
+### Changed - Additional Duplicate Cleanup
+- **Removed Unused Hooks**: Deleted dead code that was not imported anywhere
+  - **Removed**: `hooks/use-analysis-history.ts` - Not imported anywhere (dead code)
+  - **Removed**: `hooks/useTranslation.ts` - Not imported anywhere (custom implementation, using react-i18next instead)
+- **Archive Context Analysis**: Confirmed `archive/collaborative-dashboard/contexts/app-context.tsx` is not used
+  - **Status**: Archive version (363 lines) vs current shim (17 lines) - both serve different purposes
+  - **Action**: Kept both as they serve different purposes (archive preservation vs minimal shim)
+- **Voice Hook Analysis**: Confirmed voice-related hooks are not duplicates
+  - **Archive**: Simple MediaRecorder-based implementation (86 lines)
+  - **Current**: Sophisticated AudioContext-based implementation with VAD (273 lines)
+  - **Status**: Different approaches, both serve different use cases
+- **Benefits**: Eliminated dead code, reduced bundle size, cleaner codebase structure
 
 
 ### Planned (next)
