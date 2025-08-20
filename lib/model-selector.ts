@@ -21,6 +21,24 @@ export type ModelRequirements = {
   highVolume?: boolean         // High request volume
 }
 
+/**
+ * Estimate token count for text (rough approximation)
+ * 1 token ≈ 4 characters for English text
+ */
+export function estimateTokens(text: string): number {
+  if (!text) return 0
+  // Rough approximation: 1 token ≈ 4 characters
+  return Math.ceil(text.length / 4)
+}
+
+/**
+ * Select model for specific feature/use case
+ * Alias for ModelSelector.selectModel for backward compatibility
+ */
+export function selectModelForFeature(useCase: UseCase, requirements: ModelRequirements = {}): string {
+  return ModelSelector.selectModel(useCase, requirements)
+}
+
 export class ModelSelector {
   /**
    * Select optimal Gemini model based on use case
