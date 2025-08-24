@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getSupabase } from '@/lib/supabase/server';
 import { logServerActivity } from '@/lib/server-activity-logger';
-import { generatePdfWithPuppeteer, generatePdfPath, sanitizeTextForPdf } from '@/lib/pdf-generator-puppeteer';
+import { generatePdf, generatePdfPath, sanitizeTextForPdf } from '@/lib/pdf-generator';
 import fs from 'fs';
 import { recordCapabilityUsed } from '@/lib/context/capabilities';
 
@@ -163,11 +163,11 @@ export async function POST(req: NextRequest) {
       sessionId
     };
 
-    // Generate PDF using the PDF generator
+    // Generate PDF using the consolidated PDF generator
     const pdfPath = generatePdfPath(sessionId, leadInfo.name);
     
     try {
-      await generatePdfWithPuppeteer(summaryData, pdfPath);
+      await generatePdf(summaryData, pdfPath);
       
       // Read the generated PDF file
       const pdfBuffer = fs.readFileSync(pdfPath);
